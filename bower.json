@@ -1,11 +1,11 @@
 {
-  "name": "js-stellar-lib",
-  "homepage": "https://github.com/stellar/bower-js-stellar-lib",
+  "name": "stellar-sdk",
+  "homepage": "https://github.com/stellar/bower-js-stellar-sdk",
   "authors": [
     "Stellar Development Foundation"
   ],
   "description": "Main Stellar client library for the Javascript language",
-  "main": "./stellar-lib.min.js",
+  "main": "./stellar-sdk.min.js",
   "keywords": [
     "stellar"
   ],
