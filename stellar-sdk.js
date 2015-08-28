@@ -1,4 +1,4 @@
-var StellarLib =
+var StellarSdk =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
