@@ -50,8 +50,8 @@ var StellarSdk =
 	__webpack_require__(1);
 
 	module.exports = __webpack_require__(5);
-	module.exports.axios = __webpack_require__(97);
-	module.exports.bluebird = __webpack_require__(114);
+	module.exports.axios = __webpack_require__(98);
+	module.exports.bluebird = __webpack_require__(115);
 	module.exports.StellarBase = __webpack_require__(9);
 
 /***/ },
@@ -2715,12 +2715,12 @@ var StellarSdk =
 	var xdr = _stellarBase.xdr;
 	var Account = _stellarBase.Account;
 
-	var axios = __webpack_require__(97);
-	var toBluebird = __webpack_require__(114).resolve;
-	var URI = __webpack_require__(115);
-	var URITemplate = __webpack_require__(119);
+	var axios = __webpack_require__(98);
+	var toBluebird = __webpack_require__(115).resolve;
+	var URI = __webpack_require__(116);
+	var URITemplate = __webpack_require__(120);
 
-	var EventSource = typeof window === "undefined" ? __webpack_require__(120) : window.EventSource;
+	var EventSource = typeof window === "undefined" ? __webpack_require__(121) : window.EventSource;
 
 	/**
 	* @class Server
@@ -3193,11 +3193,16 @@ var StellarSdk =
 	exports.UnsignedHyper = _jsXdr.UnsignedHyper;
 	exports.Hyper = _jsXdr.Hyper;
 	exports.Transaction = __webpack_require__(89).Transaction;
-	exports.TransactionBuilder = __webpack_require__(93).TransactionBuilder;
+	exports.TransactionBuilder = __webpack_require__(94).TransactionBuilder;
 	exports.Asset = __webpack_require__(91).Asset;
 	exports.Operation = __webpack_require__(90).Operation;
-	exports.Memo = __webpack_require__(96).Memo;
-	exports.Account = __webpack_require__(95).Account;
+	exports.Memo = __webpack_require__(97).Memo;
+	exports.Account = __webpack_require__(96).Account;
+
+	var _network = __webpack_require__(93);
+
+	exports.Network = _network.Network;
+	exports.Networks = _network.Networks;
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(75)));
 
@@ -5603,7 +5608,7 @@ var StellarSdk =
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Automatically generated on 2015-07-27T16:14:51+02:00
+	// Automatically generated on 2015-09-01T12:50:28+02:00
 	// DO NOT EDIT or your changes may be overwritten
 
 	/* jshint maxstatements:2147483647  */
@@ -6014,7 +6019,7 @@ var StellarSdk =
 	  //       SequenceNumber seqNum;    // last sequence number used for this account
 	  //       uint32 numSubEntries;     // number of sub-entries this account has
 	  //                                 // drives the reserve
-	  //       AccountID* inflationDest; // Account to vote during inflation
+	  //       AccountID* inflationDest; // Account to vote for during inflation
 	  //       uint32 flags;             // see AccountFlags
 	  //  
 	  //       string32 homeDomain; // can be used for reverse federation and memo lookup
@@ -6069,7 +6074,7 @@ var StellarSdk =
 	  //   struct TrustLineEntry
 	  //   {
 	  //       AccountID accountID; // account this trustline belongs to
-	  //       Asset asset;   // type of asset (with issuer)
+	  //       Asset asset;         // type of asset (with issuer)
 	  //       int64 balance;       // how much of this asset the user has.
 	  //                            // Asset defines the unit for this;
 	  //  
@@ -6122,8 +6127,8 @@ var StellarSdk =
 	  //       AccountID sellerID;
 	  //       uint64 offerID;
 	  //       Asset selling; // A
-	  //       Asset buying; // B
-	  //       int64 amount;       // amount of A
+	  //       Asset buying;  // B
+	  //       int64 amount;  // amount of A
 	  //  
 	  //       /* price for this offer:
 	  //           price of A in terms of B
@@ -6147,18 +6152,18 @@ var StellarSdk =
 
 	  // === xdr source ============================================================
 	  //
-	  //   union LedgerEntry switch (LedgerEntryType type)
-	  //   {
-	  //   case ACCOUNT:
-	  //       AccountEntry account;
-	  //   case TRUSTLINE:
-	  //       TrustLineEntry trustLine;
-	  //   case OFFER:
-	  //       OfferEntry offer;
-	  //   };
+	  //   union switch (LedgerEntryType type)
+	  //       {
+	  //       case ACCOUNT:
+	  //           AccountEntry account;
+	  //       case TRUSTLINE:
+	  //           TrustLineEntry trustLine;
+	  //       case OFFER:
+	  //           OfferEntry offer;
+	  //       }
 	  //
 	  // ===========================================================================
-	  xdr.union("LedgerEntry", {
+	  xdr.union("LedgerEntryData", {
 	    switchOn: xdr.lookup("LedgerEntryType"),
 	    switchName: "type",
 	    switches: [["account", "account"], ["trustline", "trustLine"], ["offer", "offer"]],
@@ -6166,6 +6171,50 @@ var StellarSdk =
 	      account: xdr.lookup("AccountEntry"),
 	      trustLine: xdr.lookup("TrustLineEntry"),
 	      offer: xdr.lookup("OfferEntry") } });
+
+	  // === xdr source ============================================================
+	  //
+	  //   union switch (int v)
+	  //       {
+	  //       case 0:
+	  //           void;
+	  //       }
+	  //
+	  // ===========================================================================
+	  xdr.union("LedgerEntryExt", {
+	    switchOn: xdr.int(),
+	    switchName: "v",
+	    switches: [[0, xdr["void"]()]],
+	    arms: {} });
+
+	  // === xdr source ============================================================
+	  //
+	  //   struct LedgerEntry
+	  //   {
+	  //       uint32 lastModifiedLedgerSeq; // ledger the LedgerEntry was last changed
+	  //  
+	  //       union switch (LedgerEntryType type)
+	  //       {
+	  //       case ACCOUNT:
+	  //           AccountEntry account;
+	  //       case TRUSTLINE:
+	  //           TrustLineEntry trustLine;
+	  //       case OFFER:
+	  //           OfferEntry offer;
+	  //       }
+	  //       data;
+	  //  
+	  //       // reserved for future use
+	  //       union switch (int v)
+	  //       {
+	  //       case 0:
+	  //           void;
+	  //       }
+	  //       ext;
+	  //   };
+	  //
+	  // ===========================================================================
+	  xdr.struct("LedgerEntry", [["lastModifiedLedgerSeq", xdr.lookup("Uint32")], ["data", xdr.lookup("LedgerEntryData")], ["ext", xdr.lookup("LedgerEntryExt")]]);
 
 	  // === xdr source ============================================================
 	  //
@@ -6829,7 +6878,7 @@ var StellarSdk =
 	  //   struct PaymentOp
 	  //   {
 	  //       AccountID destination; // recipient of the payment
-	  //       Asset asset;     // what they end up with
+	  //       Asset asset;           // what they end up with
 	  //       int64 amount;          // amount they end up with
 	  //   };
 	  //
@@ -6841,12 +6890,12 @@ var StellarSdk =
 	  //   struct PathPaymentOp
 	  //   {
 	  //       Asset sendAsset; // asset we pay with
-	  //       int64 sendMax;         // the maximum amount of sendAsset to
-	  //                              // send (excluding fees).
-	  //                              // The operation will fail if can't be met
+	  //       int64 sendMax;   // the maximum amount of sendAsset to
+	  //                        // send (excluding fees).
+	  //                        // The operation will fail if can't be met
 	  //  
 	  //       AccountID destination; // recipient of the payment
-	  //       Asset destAsset; // what they end up with
+	  //       Asset destAsset;       // what they end up with
 	  //       int64 destAmount;      // amount they end up with
 	  //  
 	  //       Asset path<5>; // additional hops it must go through to get there
@@ -6875,10 +6924,10 @@ var StellarSdk =
 	  //
 	  //   struct CreatePassiveOfferOp
 	  //   {
-	  //       Asset selling;  // A
-	  //       Asset buying;   // B
-	  //       int64 amount;   // amount taker gets. if set to 0, delete the offer
-	  //       Price price;    // cost of A in terms of B
+	  //       Asset selling; // A
+	  //       Asset buying;  // B
+	  //       int64 amount;  // amount taker gets. if set to 0, delete the offer
+	  //       Price price;   // cost of A in terms of B
 	  //   };
 	  //
 	  // ===========================================================================
@@ -6930,7 +6979,7 @@ var StellarSdk =
 	  //       case ASSET_TYPE_CREDIT_ALPHANUM4:
 	  //           opaque assetCode4[4];
 	  //  
-	  //   	case ASSET_TYPE_CREDIT_ALPHANUM12:
+	  //       case ASSET_TYPE_CREDIT_ALPHANUM12:
 	  //           opaque assetCode12[12];
 	  //  
 	  //           // add other asset types here in the future
@@ -6956,7 +7005,7 @@ var StellarSdk =
 	  //       case ASSET_TYPE_CREDIT_ALPHANUM4:
 	  //           opaque assetCode4[4];
 	  //  
-	  //   	case ASSET_TYPE_CREDIT_ALPHANUM12:
+	  //       case ASSET_TYPE_CREDIT_ALPHANUM12:
 	  //           opaque assetCode12[12];
 	  //  
 	  //           // add other asset types here in the future
@@ -7169,20 +7218,20 @@ var StellarSdk =
 	  //   struct ClaimOfferAtom
 	  //   {
 	  //       // emited to identify the offer
-	  //       AccountID offerOwner; // Account that owns the offer
+	  //       AccountID sellerID; // Account that owns the offer
 	  //       uint64 offerID;
 	  //  
 	  //       // amount and asset taken from the owner
-	  //       Asset assetClaimed;
-	  //       int64 amountClaimed;
+	  //       Asset assetSold;
+	  //       int64 amountSold;
 	  //  
-	  //       // amount and assetsent to the owner
-	  //       Asset assetSend;
-	  //       int64 amountSend;
+	  //       // amount and asset sent to the owner
+	  //       Asset assetBought;
+	  //       int64 amountBought;
 	  //   };
 	  //
 	  // ===========================================================================
-	  xdr.struct("ClaimOfferAtom", [["offerOwner", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["assetClaimed", xdr.lookup("Asset")], ["amountClaimed", xdr.lookup("Int64")], ["assetSend", xdr.lookup("Asset")], ["amountSend", xdr.lookup("Int64")]]);
+	  xdr.struct("ClaimOfferAtom", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["assetSold", xdr.lookup("Asset")], ["amountSold", xdr.lookup("Int64")], ["assetBought", xdr.lookup("Asset")], ["amountBought", xdr.lookup("Int64")]]);
 
 	  // === xdr source ============================================================
 	  //
@@ -7238,7 +7287,7 @@ var StellarSdk =
 	  //       PAYMENT_SRC_NO_TRUST = -3,       // no trust line on source account
 	  //       PAYMENT_SRC_NOT_AUTHORIZED = -4, // source not authorized to transfer
 	  //       PAYMENT_NO_DESTINATION = -5,     // destination account does not exist
-	  //       PAYMENT_NO_TRUST = -6, // destination missing a trust line for asset
+	  //       PAYMENT_NO_TRUST = -6,       // destination missing a trust line for asset
 	  //       PAYMENT_NOT_AUTHORIZED = -7, // destination not authorized to hold asset
 	  //       PAYMENT_LINE_FULL = -8       // destination would go above their limit
 	  //   };
@@ -7286,11 +7335,12 @@ var StellarSdk =
 	  //       PATH_PAYMENT_SRC_NO_TRUST = -3,       // no trust line on source account
 	  //       PATH_PAYMENT_SRC_NOT_AUTHORIZED = -4, // source not authorized to transfer
 	  //       PATH_PAYMENT_NO_DESTINATION = -5,     // destination account does not exist
-	  //       PATH_PAYMENT_NO_TRUST = -6,       // dest missing a trust line for asset
-	  //       PATH_PAYMENT_NOT_AUTHORIZED = -7, // dest not authorized to hold asset
-	  //       PATH_PAYMENT_LINE_FULL = -8,      // dest would go above their limit
-	  //       PATH_PAYMENT_TOO_FEW_OFFERS = -9, // not enough offers to satisfy path
-	  //       PATH_PAYMENT_OVER_SENDMAX = -10   // could not satisfy sendmax
+	  //       PATH_PAYMENT_NO_TRUST = -6,           // dest missing a trust line for asset
+	  //       PATH_PAYMENT_NOT_AUTHORIZED = -7,     // dest not authorized to hold asset
+	  //       PATH_PAYMENT_LINE_FULL = -8,          // dest would go above their limit
+	  //       PATH_PAYMENT_TOO_FEW_OFFERS = -9,     // not enough offers to satisfy path
+	  //       PATH_PAYMENT_OFFER_CROSS_SELF = -10,  // would cross one of its own offers
+	  //       PATH_PAYMENT_OVER_SENDMAX = -11       // could not satisfy sendmax
 	  //   };
 	  //
 	  // ===========================================================================
@@ -7305,7 +7355,8 @@ var StellarSdk =
 	    pathPaymentNotAuthorized: -7,
 	    pathPaymentLineFull: -8,
 	    pathPaymentTooFewOffer: -9,
-	    pathPaymentOverSendmax: -10 });
+	    pathPaymentOfferCrossSelf: -10,
+	    pathPaymentOverSendmax: -11 });
 
 	  // === xdr source ============================================================
 	  //
@@ -7619,7 +7670,7 @@ var StellarSdk =
 	  //   union AccountMergeResult switch (AccountMergeResultCode code)
 	  //   {
 	  //   case ACCOUNT_MERGE_SUCCESS:
-	  //       void;
+	  //       int64 sourceAccountBalance; // how much got transfered from source account
 	  //   default:
 	  //       void;
 	  //   };
@@ -7628,8 +7679,9 @@ var StellarSdk =
 	  xdr.union("AccountMergeResult", {
 	    switchOn: xdr.lookup("AccountMergeResultCode"),
 	    switchName: "code",
-	    switches: [["accountMergeSuccess", xdr["void"]()]],
-	    arms: {},
+	    switches: [["accountMergeSuccess", "sourceAccountBalance"]],
+	    arms: {
+	      sourceAccountBalance: xdr.lookup("Int64") },
 	    defaultArm: xdr["void"]() });
 
 	  // === xdr source ============================================================
@@ -7784,7 +7836,7 @@ var StellarSdk =
 	  //   {
 	  //       txSUCCESS = 0, // all operations succeeded
 	  //  
-	  //       txFAILED = -1, // one of the operations failed (but none were applied)
+	  //       txFAILED = -1, // one of the operations failed (none were applied)
 	  //  
 	  //       txTOO_EARLY = -2,         // ledger closeTime before minTime
 	  //       txTOO_LATE = -3,          // ledger closeTime after maxTime
@@ -23321,7 +23373,9 @@ var StellarSdk =
 	        currentQueue = queue;
 	        queue = [];
 	        while (++queueIndex < len) {
-	            currentQueue[queueIndex].run();
+	            if (currentQueue) {
+	                currentQueue[queueIndex].run();
+	            }
 	        }
 	        queueIndex = -1;
 	        len = queue.length;
@@ -23373,7 +23427,6 @@ var StellarSdk =
 	    throw new Error('process.binding is not supported');
 	};
 
-	// TODO(shtylman)
 	process.cwd = function () { return '/' };
 	process.chdir = function (dir) {
 	    throw new Error('process.chdir is not supported');
@@ -29734,6 +29787,11 @@ var StellarSdk =
 	        return this._secretSeed;
 	      }
 	    },
+	    rawSecretKey: {
+	      value: function rawSecretKey() {
+	        return this._secretKey;
+	      }
+	    },
 	    canSign: {
 	      value: function canSign() {
 	        return !!this._secretKey;
@@ -30659,6 +30717,8 @@ var StellarSdk =
 
 	var Operation = __webpack_require__(90).Operation;
 
+	var Network = __webpack_require__(93).Network;
+
 	var _lodash = __webpack_require__(18);
 
 	var map = _lodash.map;
@@ -30709,7 +30769,7 @@ var StellarSdk =
 
 	            /**
 	            * Signs the transaction with the given Keypair.
-	            * @param {Keypair[]} keypairs
+	            * @param {...Keypair} keypairs
 	            */
 
 	            value: function sign() {
@@ -30758,12 +30818,7 @@ var StellarSdk =
 	            */
 
 	            value: function signatureBase() {
-	                return Buffer.concat([this.signatureBasePrefix(), this.tx.toXDR()]);
-	            }
-	        },
-	        signatureBasePrefix: {
-	            value: function signatureBasePrefix() {
-	                return xdr.EnvelopeType.envelopeTypeTx().toXDR();
+	                return Buffer.concat([Network.current().networkId(), xdr.EnvelopeType.envelopeTypeTx().toXDR(), this.tx.toXDR()]);
 	            }
 	        },
 	        toEnvelope: {
@@ -30818,6 +30873,8 @@ var StellarSdk =
 
 	var padRight = _lodash.padRight;
 	var trimRight = _lodash.trimRight;
+	var isUndefined = _lodash.isUndefined;
+	var isString = _lodash.isString;
 
 	/**
 	* @class Operation
@@ -30958,7 +31015,7 @@ var StellarSdk =
 	            * @param {object} opts
 	            * @param {Asset} opts.asset - The asset for the trust line.
 	            * @param {string} [opts.limit] - The limit for the asset, defaults to max int64.
-	            *                                If the limit is set to 0 it deletes the trustline.
+	            *                                If the limit is set to "0" it deletes the trustline.
 	            * @param {string} [opts.source] - The source account (defaults to transaction source).
 	            * @returns {xdr.ChangeTrustOp}
 	            */
@@ -30966,6 +31023,9 @@ var StellarSdk =
 	            value: function changeTrust(opts) {
 	                var attributes = {};
 	                attributes.line = opts.asset.toXdrObject();
+	                if (!isUndefined(opts.limit) && !isString(opts.limit)) {
+	                    throw new TypeError("limit argument must be of type String");
+	                }
 	                var limit = opts.limit ? opts.limit : "9223372036854775807";
 	                attributes.limit = Hyper.fromString(limit);
 	                if (opts.source) {
@@ -31125,7 +31185,7 @@ var StellarSdk =
 	            * @param {Asset} selling - What you're selling.
 	            * @param {Asset} buying - What you're buying.
 	            * @param {string} amount - The total amount you're selling. If 0, deletes the offer.
-	            * @param {number} price - The exchange rate ratio (takerpay / takerget)
+	            * @param {number} price - The exchange rate ratio (selling / buying)
 	            * @param {string} [opts.source] - The source account (defaults to transaction source).
 	            * @returns {xdr.CreatePassiveOfferOp}
 	            */
@@ -31235,6 +31295,7 @@ var StellarSdk =
 	                    case "changeTrust":
 	                        result.type = "changeTrust";
 	                        result.line = Asset.fromOperation(attrs.line());
+	                        result.limit = attrs.limit().toString();
 	                        break;
 	                    case "allowTrust":
 	                        result.type = "allowTrust";
@@ -31319,7 +31380,11 @@ var StellarSdk =
 
 	var encodeCheck = __webpack_require__(75).encodeCheck;
 
-	var padRight = __webpack_require__(18).padRight;
+	var _lodash = __webpack_require__(18);
+
+	var clone = _lodash.clone;
+	var padRight = _lodash.padRight;
+	var trimRight = _lodash.trimRight;
 
 	/**
 	* Asset class represents an asset, either the native asset ("XLM")
@@ -31347,9 +31412,7 @@ var StellarSdk =
 	            throw new Error("Issuer cannot be null");
 	        }
 
-	        // pad code with null bytes if necessary
-	        var padLength = code.length <= 4 ? 4 : 12;
-	        this.code = padRight(code, padLength, "\u0000");
+	        this.code = code;
 	        this.issuer = issuer;
 	    }
 
@@ -31374,13 +31437,37 @@ var StellarSdk =
 	                        xdrTypeString = "assetTypeCreditAlphanum12";
 	                    }
 
+	                    // pad code with null bytes if necessary
+	                    var padLength = this.code.length <= 4 ? 4 : 12;
+	                    var paddedCode = padRight(this.code, padLength, "\u0000");
+
 	                    var assetType = new xdrType({
-	                        assetCode: this.code,
+	                        assetCode: paddedCode,
 	                        issuer: Keypair.fromAddress(this.issuer).accountId()
 	                    });
 
 	                    return new xdr.Asset(xdrTypeString, assetType);
 	                }
+	            }
+	        },
+	        getCode: {
+
+	            /**
+	             * Return the asset code
+	             */
+
+	            value: function getCode() {
+	                return clone(this.code);
+	            }
+	        },
+	        getIssuer: {
+
+	            /**
+	             * Return the asset issuer
+	             **/
+
+	            value: function getIssuer() {
+	                return clone(this.issuer);
 	            }
 	        },
 	        isNative: {
@@ -31400,7 +31487,7 @@ var StellarSdk =
 	            */
 
 	            value: function equals(asset) {
-	                return this.code == asset.code && this.issuer == asset.issuer;
+	                return this.code == asset.getCode() && this.issuer == asset.getIssuer();
 	            }
 	        }
 	    }, {
@@ -31423,6 +31510,7 @@ var StellarSdk =
 
 	            value: function fromOperation(cx) {
 	                var anum = undefined,
+	                    code = undefined,
 	                    issuer = undefined;
 	                switch (cx["switch"]()) {
 	                    case xdr.AssetType.assetTypeNative():
@@ -31430,11 +31518,13 @@ var StellarSdk =
 	                    case xdr.AssetType.assetTypeCreditAlphanum4():
 	                        anum = cx.alphaNum4();
 	                        issuer = encodeCheck("accountId", anum.issuer().ed25519());
-	                        return new this(anum.assetCode(), issuer);
+	                        code = trimRight(anum.assetCode(), "\u0000");
+	                        return new this(code, issuer);
 	                    case xdr.AssetType.assetTypeCreditAlphanum12():
 	                        anum = cx.alphaNum12();
 	                        issuer = encodeCheck("accountId", anum.issuer().ed25519());
-	                        return new this(anum.assetCode(), issuer);
+	                        code = trimRight(anum.assetCode(), "\u0000");
+	                        return new this(code, issuer);
 	                    default:
 	                        throw new Error("Invalid asset type: " + cx["switch"]().name);
 	                }
@@ -31498,7 +31588,101 @@ var StellarSdk =
 
 	var _createClass = __webpack_require__(28)["default"];
 
-	var _toConsumableArray = __webpack_require__(94)["default"];
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	var hash = __webpack_require__(58).hash;
+
+	var Networks = {
+		PUBLIC: "Public Global Stellar Network ; September 2015",
+		TESTNET: "Test SDF Network ; September 2015" };
+
+	exports.Networks = Networks;
+	var current;
+
+	/**
+	 * The Network class provides helper methods to get the passphrase or id for different
+	 * stellar networks.  It also provides the current() class method that returns the network
+	 * that will be used by this process for the purposes of generating signatures
+	 *
+	 * The public network is the default, but you can also override the default by using the `use`,
+	 * `usePublicNet` and `useTestNet` helper methods
+	 *
+	 */
+
+	var Network = exports.Network = (function () {
+		function Network(networkPassphrase) {
+			_classCallCheck(this, Network);
+
+			this._networkPassphrase = networkPassphrase;
+		}
+
+		_createClass(Network, {
+			networkPassphrase: {
+				value: function networkPassphrase() {
+					return this._networkPassphrase;
+				}
+			},
+			networkId: {
+				value: function networkId() {
+					return hash(this.networkPassphrase());
+				}
+			}
+		}, {
+			useDefault: {
+				value: function useDefault() {
+					this.usePublicNet();
+				}
+			},
+			usePublicNet: {
+				value: function usePublicNet() {
+					this.use(new Network(Networks.PUBLIC));
+				}
+			},
+			useTestNet: {
+				value: function useTestNet() {
+					this.use(new Network(Networks.TESTNET));
+				}
+			},
+			use: {
+				value: function use(network) {
+					current = network;
+				}
+			},
+			current: {
+				value: (function (_current) {
+					var _currentWrapper = function current() {
+						return _current.apply(this, arguments);
+					};
+
+					_currentWrapper.toString = function () {
+						return _current.toString();
+					};
+
+					return _currentWrapper;
+				})(function () {
+					return current;
+				})
+			}
+		});
+
+		return Network;
+	})();
+
+	Network.useDefault();
+
+/***/ },
+/* 94 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _classCallCheck = __webpack_require__(26)["default"];
+
+	var _createClass = __webpack_require__(28)["default"];
+
+	var _toConsumableArray = __webpack_require__(95)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
@@ -31510,13 +31694,13 @@ var StellarSdk =
 	var hash = _index.hash;
 	var Keypair = _index.Keypair;
 
-	var Account = __webpack_require__(95).Account;
+	var Account = __webpack_require__(96).Account;
 
 	var Operation = __webpack_require__(90).Operation;
 
 	var Transaction = __webpack_require__(89).Transaction;
 
-	var Memo = __webpack_require__(96).Memo;
+	var Memo = __webpack_require__(97).Memo;
 
 	var map = __webpack_require__(18).map;
 
@@ -31648,7 +31832,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 94 */
+/* 95 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31668,7 +31852,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 95 */
+/* 96 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -31724,7 +31908,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 96 */
+/* 97 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -31857,28 +32041,28 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
 
 /***/ },
-/* 97 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(98);
+	module.exports = __webpack_require__(99);
 
 /***/ },
-/* 98 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(99);
-	var utils = __webpack_require__(100);
-	var deprecatedMethod = __webpack_require__(101);
-	var dispatchRequest = __webpack_require__(102);
-	var InterceptorManager = __webpack_require__(109);
+	var defaults = __webpack_require__(100);
+	var utils = __webpack_require__(101);
+	var deprecatedMethod = __webpack_require__(102);
+	var dispatchRequest = __webpack_require__(103);
+	var InterceptorManager = __webpack_require__(110);
 
 	// Polyfill ES6 Promise if needed
 	(function () {
 	  // webpack is being used to set es6-promise to the native Promise
 	  // for the standalone build. It's necessary to make sure polyfill exists.
-	  var P = __webpack_require__(110);
+	  var P = __webpack_require__(111);
 	  if (P && typeof P.polyfill === 'function') {
 	    P.polyfill();
 	  }
@@ -31941,7 +32125,7 @@ var StellarSdk =
 	axios.all = function (promises) {
 	  return Promise.all(promises);
 	};
-	axios.spread = __webpack_require__(113);
+	axios.spread = __webpack_require__(114);
 
 	// Expose interceptors
 	axios.interceptors = {
@@ -31980,12 +32164,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 99 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 
 	var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 	var DEFAULT_CONTENT_TYPE = {
@@ -32038,7 +32222,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 100 */
+/* 101 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -32261,7 +32445,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 101 */
+/* 102 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -32289,7 +32473,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 102 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -32306,11 +32490,11 @@ var StellarSdk =
 	    try {
 	      // For browsers use XHR adapter
 	      if (typeof window !== 'undefined') {
-	        __webpack_require__(103)(resolve, reject, config);
+	        __webpack_require__(104)(resolve, reject, config);
 	      }
 	      // For node use HTTP adapter
 	      else if (typeof process !== 'undefined') {
-	        __webpack_require__(103)(resolve, reject, config);
+	        __webpack_require__(104)(resolve, reject, config);
 	      }
 	    } catch (e) {
 	      reject(e);
@@ -32322,20 +32506,20 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31)))
 
 /***/ },
-/* 103 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	/*global ActiveXObject:true*/
 
-	var defaults = __webpack_require__(99);
-	var utils = __webpack_require__(100);
-	var buildUrl = __webpack_require__(104);
-	var cookies = __webpack_require__(105);
-	var parseHeaders = __webpack_require__(106);
-	var transformData = __webpack_require__(107);
-	var urlIsSameOrigin = __webpack_require__(108);
+	var defaults = __webpack_require__(100);
+	var utils = __webpack_require__(101);
+	var buildUrl = __webpack_require__(105);
+	var cookies = __webpack_require__(106);
+	var parseHeaders = __webpack_require__(107);
+	var transformData = __webpack_require__(108);
+	var urlIsSameOrigin = __webpack_require__(109);
 
 	module.exports = function xhrAdapter(resolve, reject, config) {
 	  // Transform request data
@@ -32434,12 +32618,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 104 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 
 	function encode(val) {
 	  return encodeURIComponent(val).
@@ -32492,12 +32676,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 105 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 
 	module.exports = {
 	  write: function write(name, value, expires, path, domain, secure) {
@@ -32535,12 +32719,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 106 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 
 	/**
 	 * Parse headers into an object
@@ -32575,12 +32759,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 107 */
+/* 108 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 
 	/**
 	 * Transform the data for a request or a response
@@ -32600,12 +32784,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 108 */
+/* 109 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 	var msie = /(msie|trident)/i.test(navigator.userAgent);
 	var urlParsingNode = document.createElement('a');
 	var originUrl;
@@ -32658,12 +32842,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 109 */
+/* 110 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(100);
+	var utils = __webpack_require__(101);
 
 	function InterceptorManager() {
 	  this.handlers = [];
@@ -32716,7 +32900,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 110 */
+/* 111 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var require;var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(process, setImmediate, global, module) {/*!
@@ -32855,7 +33039,7 @@ var StellarSdk =
 	    function lib$es6$promise$asap$$attemptVertex() {
 	      try {
 	        var r = require;
-	        var vertx = __webpack_require__(112);
+	        var vertx = __webpack_require__(113);
 	        lib$es6$promise$asap$$vertxNext = vertx.runOnLoop || vertx.runOnContext;
 	        return lib$es6$promise$asap$$useVertxTimer();
 	      } catch(e) {
@@ -33692,10 +33876,10 @@ var StellarSdk =
 	}).call(this);
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31), __webpack_require__(111).setImmediate, (function() { return this; }()), __webpack_require__(19)(module)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31), __webpack_require__(112).setImmediate, (function() { return this; }()), __webpack_require__(19)(module)))
 
 /***/ },
-/* 111 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(31).nextTick;
@@ -33774,16 +33958,16 @@ var StellarSdk =
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(111).setImmediate, __webpack_require__(111).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(112).setImmediate, __webpack_require__(112).clearImmediate))
 
 /***/ },
-/* 112 */
+/* 113 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 113 */
+/* 114 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -33816,13 +34000,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 114 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
 	 * The MIT License (MIT)
 	 * 
-	 * Copyright (c) 2014 Petka Antonov
+	 * Copyright (c) 2013-2015 Petka Antonov
 	 * 
 	 * Permission is hereby granted, free of charge, to any person obtaining a copy
 	 * of this software and associated documentation files (the "Software"), to deal
@@ -33844,7 +34028,7 @@ var StellarSdk =
 	 * 
 	 */
 	/**
-	 * bluebird build version 2.9.34
+	 * bluebird build version 2.10.0
 	 * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, cancel, using, filter, any, each, timers
 	*/
 	!function(e){if(true)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -34901,6 +35085,8 @@ var StellarSdk =
 	                    (!!process.env["BLUEBIRD_DEBUG"] ||
 	                     process.env["NODE_ENV"] === "development"));
 
+	if (util.isNode && process.env["BLUEBIRD_DEBUG"] == 0) debugging = false;
+
 	if (debugging) {
 	    async.disableTrampolineIfNecessary();
 	}
@@ -35091,6 +35277,8 @@ var StellarSdk =
 	            undefined,
 	            undefined
 	       );
+	    } else if (value instanceof Promise) {
+	        value._ignoreRejections();
 	    }
 	    return this._then(returner, undefined, undefined, value, undefined);
 	};
@@ -36031,6 +36219,7 @@ var StellarSdk =
 	}
 	util.notEnumerableProp(Promise, "_getDomain", getDomain);
 
+	var UNDEFINED_BINDING = {};
 	var async = _dereq_("./async.js");
 	var errors = _dereq_("./errors.js");
 	var TypeError = Promise.TypeError = errors.TypeError;
@@ -36315,7 +36504,9 @@ var StellarSdk =
 	        ? this._receiver0
 	        : this[
 	            index * 5 - 5 + 4];
-	    if (ret === undefined && this._isBound()) {
+	    if (ret === UNDEFINED_BINDING) {
+	        return undefined;
+	    } else if (ret === undefined && this._isBound()) {
 	        return this._boundValue();
 	    }
 	    return ret;
@@ -36360,6 +36551,7 @@ var StellarSdk =
 	    var promise = follower._promiseAt(index);
 	    var receiver = follower._receiverAt(index);
 	    if (promise instanceof Promise) promise._setIsMigrated();
+	    if (receiver === undefined) receiver = UNDEFINED_BINDING;
 	    this._addCallbacks(fulfill, reject, progress, promise, receiver, null);
 	};
 
@@ -38285,10 +38477,20 @@ var StellarSdk =
 	                        "you must pass at least 2 arguments to Promise.using");
 	        var fn = arguments[len - 1];
 	        if (typeof fn !== "function") return apiRejection("fn must be a function\u000a\u000a    See http://goo.gl/916lJJ\u000a");
-	        len--;
+
+	        var input;
+	        var spreadArgs = true;
+	        if (len === 2 && Array.isArray(arguments[0])) {
+	            input = arguments[0];
+	            len = input.length;
+	            spreadArgs = false;
+	        } else {
+	            input = arguments;
+	            len--;
+	        }
 	        var resources = new Array(len);
 	        for (var i = 0; i < len; ++i) {
-	            var resource = arguments[i];
+	            var resource = input[i];
 	            if (Disposer.isDisposer(resource)) {
 	                var disposer = resource;
 	                resource = resource.promise();
@@ -38312,7 +38514,8 @@ var StellarSdk =
 	                promise._pushContext();
 	                var ret;
 	                try {
-	                    ret = fn.apply(undefined, vals);
+	                    ret = spreadArgs
+	                        ? fn.apply(undefined, vals) : fn.call(undefined,  vals);
 	                } finally {
 	                    promise._popContext();
 	                }
@@ -38676,10 +38879,10 @@ var StellarSdk =
 
 	},{"./es5.js":14}]},{},[4])(4)
 	});                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31), (function() { return this; }()), __webpack_require__(111).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31), (function() { return this; }()), __webpack_require__(112).setImmediate))
 
 /***/ },
-/* 115 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -38700,7 +38903,7 @@ var StellarSdk =
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
 	  if (true) {
 	    // Node
-	    module.exports = factory(__webpack_require__(116), __webpack_require__(117), __webpack_require__(118));
+	    module.exports = factory(__webpack_require__(117), __webpack_require__(118), __webpack_require__(119));
 	  } else if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
 	    define(['./punycode', './IPv6', './SecondLevelDomains'], factory);
@@ -40819,7 +41022,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 116 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! http://mths.be/punycode v1.2.3 by @mathias */
@@ -41332,7 +41535,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19)(module), (function() { return this; }())))
 
 /***/ },
-/* 117 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -41526,7 +41729,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 118 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -41773,7 +41976,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 119 */
+/* 120 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
@@ -41795,7 +41998,7 @@ var StellarSdk =
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
 	  if (true) {
 	    // Node
-	    module.exports = factory(__webpack_require__(115));
+	    module.exports = factory(__webpack_require__(116));
 	  } else if (typeof define === 'function' && define.amd) {
 	    // AMD. Register as an anonymous module.
 	    define(['./URI'], factory);
@@ -42278,14 +42481,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 120 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {var original = __webpack_require__(121)
-	  , parse = __webpack_require__(126).parse
-	  , events = __webpack_require__(131)
-	  , https = __webpack_require__(132)
-	  , http = __webpack_require__(133)
+	/* WEBPACK VAR INJECTION */(function(process) {var original = __webpack_require__(122)
+	  , parse = __webpack_require__(127).parse
+	  , events = __webpack_require__(132)
+	  , https = __webpack_require__(133)
+	  , http = __webpack_require__(134)
 	  , util = __webpack_require__(30);
 
 	function isPlainObject(obj) {
@@ -42597,12 +42800,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31)))
 
 /***/ },
-/* 121 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var parse = __webpack_require__(122);
+	var parse = __webpack_require__(123);
 
 	/**
 	 * Transform an URL to a valid origin value.
@@ -42663,14 +42866,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 122 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var required = __webpack_require__(123)
-	  , lolcation = __webpack_require__(124)
-	  , qs = __webpack_require__(125);
+	var required = __webpack_require__(124)
+	  , lolcation = __webpack_require__(125)
+	  , qs = __webpack_require__(126);
 
 	var keys = ',,protocol,username,password,host,hostname,port,pathname,query,hash'.split(',')
 	  , inherit = { protocol: 1, host: 1, hostname: 1 }
@@ -42880,7 +43083,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 123 */
+/* 124 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -42924,7 +43127,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 124 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -42954,7 +43157,7 @@ var StellarSdk =
 	 */
 	module.exports = function lolcation(loc) {
 	  loc = loc || global.location || {};
-	  URL = URL || __webpack_require__(122);
+	  URL = URL || __webpack_require__(123);
 
 	  var finaldestination = {}
 	    , type = typeof loc
@@ -42976,7 +43179,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 125 */
+/* 126 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -43043,7 +43246,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 126 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -43067,7 +43270,7 @@ var StellarSdk =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(127);
+	var punycode = __webpack_require__(128);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -43139,7 +43342,7 @@ var StellarSdk =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(128);
+	    querystring = __webpack_require__(129);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && isObject(url) && url instanceof Url) return url;
@@ -43756,7 +43959,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 127 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -44291,17 +44494,17 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19)(module), (function() { return this; }())))
 
 /***/ },
-/* 128 */
+/* 129 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(129);
-	exports.encode = exports.stringify = __webpack_require__(130);
+	exports.decode = exports.parse = __webpack_require__(130);
+	exports.encode = exports.stringify = __webpack_require__(131);
 
 
 /***/ },
-/* 129 */
+/* 130 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -44387,7 +44590,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 130 */
+/* 131 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -44457,7 +44660,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 131 */
+/* 132 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -44764,10 +44967,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 132 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var http = __webpack_require__(133);
+	var http = __webpack_require__(134);
 
 	var https = module.exports;
 
@@ -44783,13 +44986,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 133 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var http = module.exports;
-	var EventEmitter = __webpack_require__(131).EventEmitter;
-	var Request = __webpack_require__(134);
-	var url = __webpack_require__(126)
+	var EventEmitter = __webpack_require__(132).EventEmitter;
+	var Request = __webpack_require__(135);
+	var url = __webpack_require__(127)
 
 	http.request = function (params, cb) {
 	    if (typeof params === 'string') {
@@ -44933,13 +45136,13 @@ var StellarSdk =
 	};
 
 /***/ },
-/* 134 */
+/* 135 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stream = __webpack_require__(135);
-	var Response = __webpack_require__(152);
-	var Base64 = __webpack_require__(153);
-	var inherits = __webpack_require__(154);
+	var Stream = __webpack_require__(136);
+	var Response = __webpack_require__(153);
+	var Base64 = __webpack_require__(154);
+	var inherits = __webpack_require__(155);
 
 	var Request = module.exports = function (xhr, params) {
 	    var self = this;
@@ -45148,7 +45351,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 135 */
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -45174,15 +45377,15 @@ var StellarSdk =
 
 	module.exports = Stream;
 
-	var EE = __webpack_require__(131).EventEmitter;
-	var inherits = __webpack_require__(136);
+	var EE = __webpack_require__(132).EventEmitter;
+	var inherits = __webpack_require__(137);
 
 	inherits(Stream, EE);
-	Stream.Readable = __webpack_require__(137);
-	Stream.Writable = __webpack_require__(148);
-	Stream.Duplex = __webpack_require__(149);
-	Stream.Transform = __webpack_require__(150);
-	Stream.PassThrough = __webpack_require__(151);
+	Stream.Readable = __webpack_require__(138);
+	Stream.Writable = __webpack_require__(149);
+	Stream.Duplex = __webpack_require__(150);
+	Stream.Transform = __webpack_require__(151);
+	Stream.PassThrough = __webpack_require__(152);
 
 	// Backwards-compat with node 0.4.x
 	Stream.Stream = Stream;
@@ -45281,7 +45484,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 136 */
+/* 137 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -45310,20 +45513,20 @@ var StellarSdk =
 
 
 /***/ },
-/* 137 */
+/* 138 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(138);
-	exports.Stream = __webpack_require__(135);
+	exports = module.exports = __webpack_require__(139);
+	exports.Stream = __webpack_require__(136);
 	exports.Readable = exports;
-	exports.Writable = __webpack_require__(144);
-	exports.Duplex = __webpack_require__(143);
-	exports.Transform = __webpack_require__(146);
-	exports.PassThrough = __webpack_require__(147);
+	exports.Writable = __webpack_require__(145);
+	exports.Duplex = __webpack_require__(144);
+	exports.Transform = __webpack_require__(147);
+	exports.PassThrough = __webpack_require__(148);
 
 
 /***/ },
-/* 138 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -45350,7 +45553,7 @@ var StellarSdk =
 	module.exports = Readable;
 
 	/*<replacement>*/
-	var isArray = __webpack_require__(139);
+	var isArray = __webpack_require__(140);
 	/*</replacement>*/
 
 
@@ -45360,7 +45563,7 @@ var StellarSdk =
 
 	Readable.ReadableState = ReadableState;
 
-	var EE = __webpack_require__(131).EventEmitter;
+	var EE = __webpack_require__(132).EventEmitter;
 
 	/*<replacement>*/
 	if (!EE.listenerCount) EE.listenerCount = function(emitter, type) {
@@ -45368,18 +45571,18 @@ var StellarSdk =
 	};
 	/*</replacement>*/
 
-	var Stream = __webpack_require__(135);
+	var Stream = __webpack_require__(136);
 
 	/*<replacement>*/
-	var util = __webpack_require__(140);
-	util.inherits = __webpack_require__(141);
+	var util = __webpack_require__(141);
+	util.inherits = __webpack_require__(142);
 	/*</replacement>*/
 
 	var StringDecoder;
 
 
 	/*<replacement>*/
-	var debug = __webpack_require__(142);
+	var debug = __webpack_require__(143);
 	if (debug && debug.debuglog) {
 	  debug = debug.debuglog('stream');
 	} else {
@@ -45391,7 +45594,7 @@ var StellarSdk =
 	util.inherits(Readable, Stream);
 
 	function ReadableState(options, stream) {
-	  var Duplex = __webpack_require__(143);
+	  var Duplex = __webpack_require__(144);
 
 	  options = options || {};
 
@@ -45452,14 +45655,14 @@ var StellarSdk =
 	  this.encoding = null;
 	  if (options.encoding) {
 	    if (!StringDecoder)
-	      StringDecoder = __webpack_require__(145).StringDecoder;
+	      StringDecoder = __webpack_require__(146).StringDecoder;
 	    this.decoder = new StringDecoder(options.encoding);
 	    this.encoding = options.encoding;
 	  }
 	}
 
 	function Readable(options) {
-	  var Duplex = __webpack_require__(143);
+	  var Duplex = __webpack_require__(144);
 
 	  if (!(this instanceof Readable))
 	    return new Readable(options);
@@ -45562,7 +45765,7 @@ var StellarSdk =
 	// backwards compatibility.
 	Readable.prototype.setEncoding = function(enc) {
 	  if (!StringDecoder)
-	    StringDecoder = __webpack_require__(145).StringDecoder;
+	    StringDecoder = __webpack_require__(146).StringDecoder;
 	  this._readableState.decoder = new StringDecoder(enc);
 	  this._readableState.encoding = enc;
 	  return this;
@@ -46281,7 +46484,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31)))
 
 /***/ },
-/* 139 */
+/* 140 */
 /***/ function(module, exports) {
 
 	module.exports = Array.isArray || function (arr) {
@@ -46290,7 +46493,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 140 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// Copyright Joyent, Inc. and other Node contributors.
@@ -46403,7 +46606,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
 
 /***/ },
-/* 141 */
+/* 142 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -46432,13 +46635,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 142 */
+/* 143 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 143 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -46479,12 +46682,12 @@ var StellarSdk =
 
 
 	/*<replacement>*/
-	var util = __webpack_require__(140);
-	util.inherits = __webpack_require__(141);
+	var util = __webpack_require__(141);
+	util.inherits = __webpack_require__(142);
 	/*</replacement>*/
 
-	var Readable = __webpack_require__(138);
-	var Writable = __webpack_require__(144);
+	var Readable = __webpack_require__(139);
+	var Writable = __webpack_require__(145);
 
 	util.inherits(Duplex, Readable);
 
@@ -46534,7 +46737,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31)))
 
 /***/ },
-/* 144 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -46572,11 +46775,11 @@ var StellarSdk =
 
 
 	/*<replacement>*/
-	var util = __webpack_require__(140);
-	util.inherits = __webpack_require__(141);
+	var util = __webpack_require__(141);
+	util.inherits = __webpack_require__(142);
 	/*</replacement>*/
 
-	var Stream = __webpack_require__(135);
+	var Stream = __webpack_require__(136);
 
 	util.inherits(Writable, Stream);
 
@@ -46587,7 +46790,7 @@ var StellarSdk =
 	}
 
 	function WritableState(options, stream) {
-	  var Duplex = __webpack_require__(143);
+	  var Duplex = __webpack_require__(144);
 
 	  options = options || {};
 
@@ -46675,7 +46878,7 @@ var StellarSdk =
 	}
 
 	function Writable(options) {
-	  var Duplex = __webpack_require__(143);
+	  var Duplex = __webpack_require__(144);
 
 	  // Writable ctor is applied to Duplexes, though they're not
 	  // instanceof Writable, they're instanceof Readable.
@@ -47018,7 +47221,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(31)))
 
 /***/ },
-/* 145 */
+/* 146 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -47245,7 +47448,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 146 */
+/* 147 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -47314,11 +47517,11 @@ var StellarSdk =
 
 	module.exports = Transform;
 
-	var Duplex = __webpack_require__(143);
+	var Duplex = __webpack_require__(144);
 
 	/*<replacement>*/
-	var util = __webpack_require__(140);
-	util.inherits = __webpack_require__(141);
+	var util = __webpack_require__(141);
+	util.inherits = __webpack_require__(142);
 	/*</replacement>*/
 
 	util.inherits(Transform, Duplex);
@@ -47460,7 +47663,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 147 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -47490,11 +47693,11 @@ var StellarSdk =
 
 	module.exports = PassThrough;
 
-	var Transform = __webpack_require__(146);
+	var Transform = __webpack_require__(147);
 
 	/*<replacement>*/
-	var util = __webpack_require__(140);
-	util.inherits = __webpack_require__(141);
+	var util = __webpack_require__(141);
+	util.inherits = __webpack_require__(142);
 	/*</replacement>*/
 
 	util.inherits(PassThrough, Transform);
@@ -47512,24 +47715,17 @@ var StellarSdk =
 
 
 /***/ },
-/* 148 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(144)
-
-
-/***/ },
 /* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(143)
+	module.exports = __webpack_require__(145)
 
 
 /***/ },
 /* 150 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(146)
+	module.exports = __webpack_require__(144)
 
 
 /***/ },
@@ -47543,7 +47739,14 @@ var StellarSdk =
 /* 152 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stream = __webpack_require__(135);
+	module.exports = __webpack_require__(148)
+
+
+/***/ },
+/* 153 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Stream = __webpack_require__(136);
 	var util = __webpack_require__(30);
 
 	var Response = module.exports = function (res) {
@@ -47666,7 +47869,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 153 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
 	;(function () {
@@ -47732,7 +47935,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 154 */
+/* 155 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
