@@ -2634,6 +2634,7 @@ var StellarSdk =
 	exports.Operation = _stellarBase.Operation;
 	exports.Keypair = _stellarBase.Keypair;
 	exports.Memo = _stellarBase.Memo;
+	exports.Network = _stellarBase.Network;
 	exports.xdr = _stellarBase.xdr;
 
 /***/ },
