@@ -2635,6 +2635,7 @@ var StellarSdk =
 	exports.Keypair = _stellarBase.Keypair;
 	exports.Memo = _stellarBase.Memo;
 	exports.Network = _stellarBase.Network;
+	exports.Networks = _stellarBase.Networks;
 	exports.xdr = _stellarBase.xdr;
 
 /***/ },
@@ -20523,11 +20524,11 @@ var StellarSdk =
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
 	module.exports = includeIoMixin;
 
-	var Cursor = __webpack_require__(21).Cursor;
+	var Cursor = __webpack_require__(25).Cursor;
 
 	var _lodash = __webpack_require__(18);
 
@@ -20547,7 +20548,21 @@ var StellarSdk =
 	    return cursor.slice(bytesWritten).buffer();
 	  },
 
-	  fromXDR: function fromXDR(buffer) {
+	  fromXDR: function fromXDR(input) {
+	    var format = arguments[1] === undefined ? "raw" : arguments[1];
+
+	    var buffer = undefined;
+	    switch (format) {
+	      case "raw":
+	        buffer = input;break;
+	      case "hex":
+	        buffer = new Buffer(input, "hex");break;
+	      case "base64":
+	        buffer = new Buffer(input, "base64");break;
+	      default:
+	        throw new Error("Invalid format " + format + ", must be \"raw\", \"hex\", \"base64\"");
+	    }
+
 	    var cursor = new Cursor(buffer);
 	    var result = this.read(cursor);
 
@@ -20581,70 +20596,23 @@ var StellarSdk =
 	    extend(obj.prototype, instanceMethods);
 	  }
 	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
-
-	var _classCallCheck = __webpack_require__(26)["default"];
-
-	var _inherits = __webpack_require__(27)["default"];
-
-	var _createClass = __webpack_require__(28)["default"];
-
-	var _interopRequire = __webpack_require__(10)["default"];
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var BaseCursor = _interopRequire(__webpack_require__(29));
-
-	var calculatePadding = __webpack_require__(34).calculatePadding;
-
-	var Cursor = exports.Cursor = (function (_BaseCursor) {
-	  function Cursor() {
-	    _classCallCheck(this, Cursor);
-
-	    if (_BaseCursor != null) {
-	      _BaseCursor.apply(this, arguments);
-	    }
-	  }
-
-	  _inherits(Cursor, _BaseCursor);
-
-	  _createClass(Cursor, {
-	    writeBufferPadded: {
-	      value: function writeBufferPadded(buffer) {
-	        var padding = calculatePadding(buffer.length);
-	        var paddingBuffer = new Buffer(padding);
-	        paddingBuffer.fill(0);
-
-	        return this.copyFrom(new Cursor(buffer)).copyFrom(new Cursor(paddingBuffer));
-	      }
-	    }
-	  });
-
-	  return Cursor;
-	})(BaseCursor);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
-
-/***/ },
-/* 22 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer) {/*!
+	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
 	 * The buffer module from node.js, for the browser.
 	 *
 	 * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
 	 * @license  MIT
 	 */
+	/* eslint-disable no-proto */
 
-	var base64 = __webpack_require__(23)
-	var ieee754 = __webpack_require__(24)
-	var isArray = __webpack_require__(25)
+	var base64 = __webpack_require__(22)
+	var ieee754 = __webpack_require__(23)
+	var isArray = __webpack_require__(24)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -20680,20 +20648,22 @@ var StellarSdk =
 	 * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
 	 * get the Object implementation, which is slower but behaves correctly.
 	 */
-	Buffer.TYPED_ARRAY_SUPPORT = (function () {
-	  function Bar () {}
-	  try {
-	    var arr = new Uint8Array(1)
-	    arr.foo = function () { return 42 }
-	    arr.constructor = Bar
-	    return arr.foo() === 42 && // typed array instances can be augmented
-	        arr.constructor === Bar && // constructor can be set
-	        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-	        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
-	  } catch (e) {
-	    return false
-	  }
-	})()
+	Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
+	  ? global.TYPED_ARRAY_SUPPORT
+	  : (function () {
+	      function Bar () {}
+	      try {
+	        var arr = new Uint8Array(1)
+	        arr.foo = function () { return 42 }
+	        arr.constructor = Bar
+	        return arr.foo() === 42 && // typed array instances can be augmented
+	            arr.constructor === Bar && // constructor can be set
+	            typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+	            arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+	      } catch (e) {
+	        return false
+	      }
+	    })()
 
 	function kMaxLength () {
 	  return Buffer.TYPED_ARRAY_SUPPORT
@@ -20849,10 +20819,16 @@ var StellarSdk =
 	  return that
 	}
 
+	if (Buffer.TYPED_ARRAY_SUPPORT) {
+	  Buffer.prototype.__proto__ = Uint8Array.prototype
+	  Buffer.__proto__ = Uint8Array
+	}
+
 	function allocate (that, length) {
 	  if (Buffer.TYPED_ARRAY_SUPPORT) {
 	    // Return an augmented `Uint8Array` instance, for best performance
 	    that = Buffer._augment(new Uint8Array(length))
+	    that.__proto__ = Buffer.prototype
 	  } else {
 	    // Fallback: Return an object instance of the Buffer class
 	    that.length = length
@@ -22169,10 +22145,10 @@ var StellarSdk =
 	  return i
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer, (function() { return this; }())))
 
 /***/ },
-/* 23 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -22302,7 +22278,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 24 */
+/* 23 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -22392,7 +22368,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 25 */
+/* 24 */
 /***/ function(module, exports) {
 
 	
@@ -22429,6 +22405,55 @@ var StellarSdk =
 	  return !! val && '[object Array]' == str.call(val);
 	};
 
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
+
+	var _classCallCheck = __webpack_require__(26)["default"];
+
+	var _inherits = __webpack_require__(27)["default"];
+
+	var _createClass = __webpack_require__(28)["default"];
+
+	var _interopRequire = __webpack_require__(10)["default"];
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var BaseCursor = _interopRequire(__webpack_require__(29));
+
+	var calculatePadding = __webpack_require__(34).calculatePadding;
+
+	var Cursor = exports.Cursor = (function (_BaseCursor) {
+	  function Cursor() {
+	    _classCallCheck(this, Cursor);
+
+	    if (_BaseCursor != null) {
+	      _BaseCursor.apply(this, arguments);
+	    }
+	  }
+
+	  _inherits(Cursor, _BaseCursor);
+
+	  _createClass(Cursor, {
+	    writeBufferPadded: {
+	      value: function writeBufferPadded(buffer) {
+	        var padding = calculatePadding(buffer.length);
+	        var paddingBuffer = new Buffer(padding);
+	        paddingBuffer.fill(0);
+
+	        return this.copyFrom(new Cursor(buffer)).copyFrom(new Cursor(paddingBuffer));
+	      }
+	    }
+	  });
+
+	  return Cursor;
+	})(BaseCursor);
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 26 */
@@ -22743,7 +22768,7 @@ var StellarSdk =
 
 	module.exports = Cursor;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 30 */
@@ -24947,7 +24972,7 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(String.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 46 */
@@ -25005,7 +25030,7 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(Opaque.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 47 */
@@ -25074,7 +25099,7 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(VarOpaque.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 48 */
@@ -26402,7 +26427,8 @@ var StellarSdk =
 	  var d = this._d
 	  var e = this._e
 
-	  var j = 0, k
+	  var j = 0
+	  var k
 
 	  /*
 	   * SHA-1 has a bitwise rotate left operation. But, SHA is not
@@ -26454,7 +26480,7 @@ var StellarSdk =
 	module.exports = Sha
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 61 */
@@ -26559,7 +26585,7 @@ var StellarSdk =
 
 	module.exports = Hash
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 63 */
@@ -26614,7 +26640,8 @@ var StellarSdk =
 	  var d = this._d
 	  var e = this._e
 
-	  var j = 0, k
+	  var j = 0
+	  var k
 
 	  function calcW () { return rol(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16], 1) }
 	  function loop (w, f) {
@@ -26661,7 +26688,7 @@ var StellarSdk =
 
 	module.exports = Sha1
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 64 */
@@ -26720,7 +26747,7 @@ var StellarSdk =
 
 	module.exports = Sha224
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 65 */
@@ -26876,7 +26903,7 @@ var StellarSdk =
 
 	module.exports = Sha256
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 66 */
@@ -26939,7 +26966,7 @@ var StellarSdk =
 
 	module.exports = Sha384
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 67 */
@@ -27057,7 +27084,8 @@ var StellarSdk =
 	  var gl = this._gl | 0
 	  var hl = this._hl | 0
 
-	  var i = 0, j = 0
+	  var i = 0
+	  var j = 0
 	  var Wi, Wil
 	  function calcW () {
 	    var x = W[j - 15 * 2]
@@ -27191,7 +27219,7 @@ var StellarSdk =
 
 	module.exports = Sha512
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 68 */
@@ -27266,7 +27294,7 @@ var StellarSdk =
 	    };
 	  })();
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 69 */
@@ -30128,7 +30156,7 @@ var StellarSdk =
 
 	})(typeof module !== 'undefined' && module.exports ? module.exports : (window.nacl = window.nacl || {}));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 76 */
@@ -30320,7 +30348,7 @@ var StellarSdk =
 
 	  return Keypair;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 78 */
@@ -30440,7 +30468,7 @@ var StellarSdk =
 	  return true;
 	}
 	// decimal 33
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 79 */
@@ -30644,7 +30672,7 @@ var StellarSdk =
 
 	  return true;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 81 */
@@ -30808,7 +30836,7 @@ var StellarSdk =
 	    return decoded.slice(0, plainPos);
 	};
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 83 */
@@ -30835,7 +30863,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -30879,7 +30907,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -30910,7 +30938,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -30941,7 +30969,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -30972,7 +31000,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -31003,7 +31031,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -31034,7 +31062,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -31069,7 +31097,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -31100,7 +31128,7 @@ var StellarSdk =
 	// Generated by CoffeeScript 1.9.2
 	var Buffer, TABLE, create;
 
-	Buffer = __webpack_require__(22).Buffer;
+	Buffer = __webpack_require__(21).Buffer;
 
 	create = __webpack_require__(85);
 
@@ -31269,7 +31297,7 @@ var StellarSdk =
 
 	    return Transaction;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 95 */
@@ -32037,7 +32065,7 @@ var StellarSdk =
 	 * that will be used by this process for the purposes of generating signatures
 	 *
 	 * The public network is the default, but you can also override the default by using the `use`,
-	 * `usePublicNet` and `useTestNet` helper methods
+	 * `usePublicNetwork` and `useTestNetwork` helper methods
 	 *
 	 */
 
@@ -32062,17 +32090,39 @@ var StellarSdk =
 		}, {
 			useDefault: {
 				value: function useDefault() {
-					this.usePublicNet();
+					this.useTestNetwork();
 				}
 			},
-			usePublicNet: {
-				value: function usePublicNet() {
+			usePublicNetwork: {
+				value: function usePublicNetwork() {
 					this.use(new Network(Networks.PUBLIC));
 				}
 			},
-			useTestNet: {
-				value: function useTestNet() {
+			usePublicNet: {
+
+				/**
+	    * Alias for `usePublicNetwork`.
+	    * @deprecated Use `usePublicNetwork` method
+	    */
+
+				value: function usePublicNet() {
+					this.usePublicNetwork();
+				}
+			},
+			useTestNetwork: {
+				value: function useTestNetwork() {
 					this.use(new Network(Networks.TESTNET));
+				}
+			},
+			useTestNet: {
+
+				/**
+	    * Alias for `useTestNetwork`.
+	    * @deprecated Use `useTestNetwork` method
+	    */
+
+				value: function useTestNet() {
+					this.useTestNetwork();
 				}
 			},
 			use: {
@@ -32468,7 +32518,7 @@ var StellarSdk =
 
 	    return Memo;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 103 */
@@ -45988,7 +46038,7 @@ var StellarSdk =
 
 
 	/*<replacement>*/
-	var Buffer = __webpack_require__(22).Buffer;
+	var Buffer = __webpack_require__(21).Buffer;
 	/*</replacement>*/
 
 	Readable.ReadableState = ReadableState;
@@ -47033,7 +47083,7 @@ var StellarSdk =
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21).Buffer))
 
 /***/ },
 /* 147 */
@@ -47198,7 +47248,7 @@ var StellarSdk =
 	module.exports = Writable;
 
 	/*<replacement>*/
-	var Buffer = __webpack_require__(22).Buffer;
+	var Buffer = __webpack_require__(21).Buffer;
 	/*</replacement>*/
 
 	Writable.WritableState = WritableState;
@@ -47675,7 +47725,7 @@ var StellarSdk =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var Buffer = __webpack_require__(22).Buffer;
+	var Buffer = __webpack_require__(21).Buffer;
 
 	var isBufferEncoding = Buffer.isEncoding
 	  || function(encoding) {
