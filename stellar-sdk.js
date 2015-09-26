@@ -51,8 +51,8 @@ var StellarSdk =
 
 	module.exports = __webpack_require__(185);
 	module.exports.axios = __webpack_require__(196);
-	module.exports.bluebird = __webpack_require__(252);
-	module.exports.StellarBase = __webpack_require__(261);
+	module.exports.bluebird = __webpack_require__(253);
+	module.exports.StellarBase = __webpack_require__(262);
 
 /***/ },
 /* 1 */
@@ -5081,70 +5081,11 @@ var StellarSdk =
 	  }
 	});
 
-	// expose classes from stellar-base
+	// expose classes and functions from stellar-base
 
-	var _stellarBase = __webpack_require__(261);
+	var _stellarBase = __webpack_require__(262);
 
-	Object.defineProperty(exports, "Account", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Account;
-	  }
-	});
-	Object.defineProperty(exports, "Transaction", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Transaction;
-	  }
-	});
-	Object.defineProperty(exports, "TransactionBuilder", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.TransactionBuilder;
-	  }
-	});
-	Object.defineProperty(exports, "Asset", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Asset;
-	  }
-	});
-	Object.defineProperty(exports, "Operation", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Operation;
-	  }
-	});
-	Object.defineProperty(exports, "Keypair", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Keypair;
-	  }
-	});
-	Object.defineProperty(exports, "Memo", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Memo;
-	  }
-	});
-	Object.defineProperty(exports, "Network", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Network;
-	  }
-	});
-	Object.defineProperty(exports, "Networks", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.Networks;
-	  }
-	});
-	Object.defineProperty(exports, "xdr", {
-	  enumerable: true,
-	  get: function get() {
-	    return _stellarBase.xdr;
-	  }
-	});
+	_defaults(exports, _interopExportWildcard(_stellarBase, _defaults));
 
 /***/ },
 /* 186 */
@@ -5222,26 +5163,26 @@ var StellarSdk =
 
 	var _account_call_builder = __webpack_require__(189);
 
-	var _ledger_call_builder = __webpack_require__(253);
+	var _ledger_call_builder = __webpack_require__(254);
 
-	var _transaction_call_builder = __webpack_require__(254);
+	var _transaction_call_builder = __webpack_require__(255);
 
-	var _operation_call_builder = __webpack_require__(255);
+	var _operation_call_builder = __webpack_require__(256);
 
-	var _offer_call_builder = __webpack_require__(256);
+	var _offer_call_builder = __webpack_require__(257);
 
-	var _orderbook_call_builder = __webpack_require__(257);
+	var _orderbook_call_builder = __webpack_require__(258);
 
-	var _payment_call_builder = __webpack_require__(258);
+	var _payment_call_builder = __webpack_require__(259);
 
-	var _effect_call_builder = __webpack_require__(259);
+	var _effect_call_builder = __webpack_require__(260);
 
-	var _friendbot_builder = __webpack_require__(260);
+	var _friendbot_builder = __webpack_require__(261);
 
-	var _stellarBase = __webpack_require__(261);
+	var _stellarBase = __webpack_require__(262);
 
 	var axios = __webpack_require__(196);
-	var toBluebird = __webpack_require__(252).resolve;
+	var toBluebird = __webpack_require__(253).resolve;
 	var URI = __webpack_require__(191);
 	var URITemplate = __webpack_require__(191).URITemplate;
 
@@ -5518,7 +5459,7 @@ var StellarSdk =
 
 	var axios = __webpack_require__(196);
 	var EventSource = typeof window === 'undefined' ? __webpack_require__(214) : window.EventSource;
-	var toBluebird = __webpack_require__(252).resolve;
+	var toBluebird = __webpack_require__(253).resolve;
 
 	/**
 	* @class Builder
@@ -10771,7 +10712,7 @@ var StellarSdk =
 	  , events = __webpack_require__(225)
 	  , https = __webpack_require__(226)
 	  , http = __webpack_require__(227)
-	  , util = __webpack_require__(249);
+	  , util = __webpack_require__(250);
 
 	function isPlainObject(obj) {
 	  return Object.getPrototypeOf(obj) === Object.prototype;
@@ -13422,8 +13363,8 @@ var StellarSdk =
 /***/ function(module, exports, __webpack_require__) {
 
 	var Stream = __webpack_require__(229);
-	var Response = __webpack_require__(248);
-	var Base64 = __webpack_require__(251);
+	var Response = __webpack_require__(249);
+	var Base64 = __webpack_require__(252);
 	var inherits = __webpack_require__(230);
 
 	var Request = module.exports = function (xhr, params) {
@@ -13664,10 +13605,10 @@ var StellarSdk =
 
 	inherits(Stream, EE);
 	Stream.Readable = __webpack_require__(231);
-	Stream.Writable = __webpack_require__(244);
-	Stream.Duplex = __webpack_require__(245);
-	Stream.Transform = __webpack_require__(246);
-	Stream.PassThrough = __webpack_require__(247);
+	Stream.Writable = __webpack_require__(245);
+	Stream.Duplex = __webpack_require__(246);
+	Stream.Transform = __webpack_require__(247);
+	Stream.PassThrough = __webpack_require__(248);
 
 	// Backwards-compat with node 0.4.x
 	Stream.Stream = Stream;
@@ -13798,14 +13739,13 @@ var StellarSdk =
 /* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stream = __webpack_require__(229); // hack to fix a circular dependency issue when used with browserify
 	exports = module.exports = __webpack_require__(232);
-	exports.Stream = Stream;
+	exports.Stream = __webpack_require__(229);
 	exports.Readable = exports;
-	exports.Writable = __webpack_require__(240);
-	exports.Duplex = __webpack_require__(241);
-	exports.Transform = __webpack_require__(242);
-	exports.PassThrough = __webpack_require__(243);
+	exports.Writable = __webpack_require__(241);
+	exports.Duplex = __webpack_require__(240);
+	exports.Transform = __webpack_require__(243);
+	exports.PassThrough = __webpack_require__(244);
 
 
 /***/ },
@@ -13863,15 +13803,29 @@ var StellarSdk =
 
 	var StringDecoder;
 
+
+	/*<replacement>*/
+	var debug = __webpack_require__(239);
+	if (debug && debug.debuglog) {
+	  debug = debug.debuglog('stream');
+	} else {
+	  debug = function () {};
+	}
+	/*</replacement>*/
+
+
 	util.inherits(Readable, Stream);
 
 	function ReadableState(options, stream) {
+	  var Duplex = __webpack_require__(240);
+
 	  options = options || {};
 
 	  // the point at which it stops calling _read() to fill the buffer
 	  // Note: 0 is a valid value, means "don't call _read preemptively ever"
 	  var hwm = options.highWaterMark;
-	  this.highWaterMark = (hwm || hwm === 0) ? hwm : 16 * 1024;
+	  var defaultHwm = options.objectMode ? 16 : 16 * 1024;
+	  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
 
 	  // cast to ints.
 	  this.highWaterMark = ~~this.highWaterMark;
@@ -13880,19 +13834,13 @@ var StellarSdk =
 	  this.length = 0;
 	  this.pipes = null;
 	  this.pipesCount = 0;
-	  this.flowing = false;
+	  this.flowing = null;
 	  this.ended = false;
 	  this.endEmitted = false;
 	  this.reading = false;
 
-	  // In streams that never have any data, and do push(null) right away,
-	  // the consumer can miss the 'end' event if they do some I/O before
-	  // consuming the stream.  So, we don't emit('end') until some reading
-	  // happens.
-	  this.calledRead = false;
-
 	  // a flag to be able to tell if the onwrite cb is called immediately,
-	  // or on a later tick.  We set this to true at first, becuase any
+	  // or on a later tick.  We set this to true at first, because any
 	  // actions that shouldn't happen until "later" should generally also
 	  // not happen before the first write call.
 	  this.sync = true;
@@ -13907,6 +13855,9 @@ var StellarSdk =
 	  // object stream flag. Used to make read(n) ignore n and to
 	  // make all the buffer merging and length checks go away
 	  this.objectMode = !!options.objectMode;
+
+	  if (stream instanceof Duplex)
+	    this.objectMode = this.objectMode || !!options.readableObjectMode;
 
 	  // Crypto is kind of old and crusty.  Historically, its default string
 	  // encoding is 'binary' so we have to make this configurable.
@@ -13927,13 +13878,15 @@ var StellarSdk =
 	  this.encoding = null;
 	  if (options.encoding) {
 	    if (!StringDecoder)
-	      StringDecoder = __webpack_require__(239).StringDecoder;
+	      StringDecoder = __webpack_require__(242).StringDecoder;
 	    this.decoder = new StringDecoder(options.encoding);
 	    this.encoding = options.encoding;
 	  }
 	}
 
 	function Readable(options) {
+	  var Duplex = __webpack_require__(240);
+
 	  if (!(this instanceof Readable))
 	    return new Readable(options);
 
@@ -13952,7 +13905,7 @@ var StellarSdk =
 	Readable.prototype.push = function(chunk, encoding) {
 	  var state = this._readableState;
 
-	  if (typeof chunk === 'string' && !state.objectMode) {
+	  if (util.isString(chunk) && !state.objectMode) {
 	    encoding = encoding || state.defaultEncoding;
 	    if (encoding !== state.encoding) {
 	      chunk = new Buffer(chunk, encoding);
@@ -13973,7 +13926,7 @@ var StellarSdk =
 	  var er = chunkInvalid(state, chunk);
 	  if (er) {
 	    stream.emit('error', er);
-	  } else if (chunk === null || chunk === undefined) {
+	  } else if (util.isNullOrUndefined(chunk)) {
 	    state.reading = false;
 	    if (!state.ended)
 	      onEofChunk(stream, state);
@@ -13988,17 +13941,24 @@ var StellarSdk =
 	      if (state.decoder && !addToFront && !encoding)
 	        chunk = state.decoder.write(chunk);
 
-	      // update the buffer info.
-	      state.length += state.objectMode ? 1 : chunk.length;
-	      if (addToFront) {
-	        state.buffer.unshift(chunk);
-	      } else {
+	      if (!addToFront)
 	        state.reading = false;
-	        state.buffer.push(chunk);
-	      }
 
-	      if (state.needReadable)
-	        emitReadable(stream);
+	      // if we want the data now, just emit it.
+	      if (state.flowing && state.length === 0 && !state.sync) {
+	        stream.emit('data', chunk);
+	        stream.read(0);
+	      } else {
+	        // update the buffer info.
+	        state.length += state.objectMode ? 1 : chunk.length;
+	        if (addToFront)
+	          state.buffer.unshift(chunk);
+	        else
+	          state.buffer.push(chunk);
+
+	        if (state.needReadable)
+	          emitReadable(stream);
+	      }
 
 	      maybeReadMore(stream, state);
 	    }
@@ -14028,9 +13988,10 @@ var StellarSdk =
 	// backwards compatibility.
 	Readable.prototype.setEncoding = function(enc) {
 	  if (!StringDecoder)
-	    StringDecoder = __webpack_require__(239).StringDecoder;
+	    StringDecoder = __webpack_require__(242).StringDecoder;
 	  this._readableState.decoder = new StringDecoder(enc);
 	  this._readableState.encoding = enc;
+	  return this;
 	};
 
 	// Don't raise the hwm > 128MB
@@ -14054,7 +14015,7 @@ var StellarSdk =
 	  if (state.objectMode)
 	    return n === 0 ? 0 : 1;
 
-	  if (n === null || isNaN(n)) {
+	  if (isNaN(n) || util.isNull(n)) {
 	    // only flow one buffer at a time
 	    if (state.flowing && state.buffer.length)
 	      return state.buffer[0].length;
@@ -14086,12 +14047,11 @@ var StellarSdk =
 
 	// you can override either this method, or the async _read(n) below.
 	Readable.prototype.read = function(n) {
+	  debug('read', n);
 	  var state = this._readableState;
-	  state.calledRead = true;
 	  var nOrig = n;
-	  var ret;
 
-	  if (typeof n !== 'number' || n > 0)
+	  if (!util.isNumber(n) || n > 0)
 	    state.emittedReadable = false;
 
 	  // if we're doing read(0) to trigger a readable event, but we
@@ -14100,7 +14060,11 @@ var StellarSdk =
 	  if (n === 0 &&
 	      state.needReadable &&
 	      (state.length >= state.highWaterMark || state.ended)) {
-	    emitReadable(this);
+	    debug('read: emitReadable', state.length, state.ended);
+	    if (state.length === 0 && state.ended)
+	      endReadable(this);
+	    else
+	      emitReadable(this);
 	    return null;
 	  }
 
@@ -14108,28 +14072,9 @@ var StellarSdk =
 
 	  // if we've ended, and we're now clear, then finish it up.
 	  if (n === 0 && state.ended) {
-	    ret = null;
-
-	    // In cases where the decoder did not receive enough data
-	    // to produce a full chunk, then immediately received an
-	    // EOF, state.buffer will contain [<Buffer >, <Buffer 00 ...>].
-	    // howMuchToRead will see this and coerce the amount to
-	    // read to zero (because it's looking at the length of the
-	    // first <Buffer > in state.buffer), and we'll end up here.
-	    //
-	    // This can only happen via state.decoder -- no other venue
-	    // exists for pushing a zero-length chunk into state.buffer
-	    // and triggering this behavior. In this case, we return our
-	    // remaining data and end the stream, if appropriate.
-	    if (state.length > 0 && state.decoder) {
-	      ret = fromList(n, state);
-	      state.length -= ret.length;
-	    }
-
 	    if (state.length === 0)
 	      endReadable(this);
-
-	    return ret;
+	    return null;
 	  }
 
 	  // All the actual chunk generation logic needs to be
@@ -14156,17 +14101,23 @@ var StellarSdk =
 
 	  // if we need a readable event, then we need to do some reading.
 	  var doRead = state.needReadable;
+	  debug('need readable', doRead);
 
 	  // if we currently have less than the highWaterMark, then also read some
-	  if (state.length - n <= state.highWaterMark)
+	  if (state.length === 0 || state.length - n < state.highWaterMark) {
 	    doRead = true;
+	    debug('length less than watermark', doRead);
+	  }
 
 	  // however, if we've ended, then there's no point, and if we're already
 	  // reading, then it's unnecessary.
-	  if (state.ended || state.reading)
+	  if (state.ended || state.reading) {
 	    doRead = false;
+	    debug('reading or ended', doRead);
+	  }
 
 	  if (doRead) {
+	    debug('do read');
 	    state.reading = true;
 	    state.sync = true;
 	    // if the length is currently zero, then we *need* a readable event.
@@ -14177,18 +14128,18 @@ var StellarSdk =
 	    state.sync = false;
 	  }
 
-	  // If _read called its callback synchronously, then `reading`
-	  // will be false, and we need to re-evaluate how much data we
-	  // can return to the user.
+	  // If _read pushed data synchronously, then `reading` will be false,
+	  // and we need to re-evaluate how much data we can return to the user.
 	  if (doRead && !state.reading)
 	    n = howMuchToRead(nOrig, state);
 
+	  var ret;
 	  if (n > 0)
 	    ret = fromList(n, state);
 	  else
 	    ret = null;
 
-	  if (ret === null) {
+	  if (util.isNull(ret)) {
 	    state.needReadable = true;
 	    n = 0;
 	  }
@@ -14200,21 +14151,21 @@ var StellarSdk =
 	  if (state.length === 0 && !state.ended)
 	    state.needReadable = true;
 
-	  // If we happened to read() exactly the remaining amount in the
-	  // buffer, and the EOF has been seen at this point, then make sure
-	  // that we emit 'end' on the very next tick.
-	  if (state.ended && !state.endEmitted && state.length === 0)
+	  // If we tried to read() past the EOF, then emit end on the next tick.
+	  if (nOrig !== n && state.ended && state.length === 0)
 	    endReadable(this);
+
+	  if (!util.isNull(ret))
+	    this.emit('data', ret);
 
 	  return ret;
 	};
 
 	function chunkInvalid(state, chunk) {
 	  var er = null;
-	  if (!Buffer.isBuffer(chunk) &&
-	      'string' !== typeof chunk &&
-	      chunk !== null &&
-	      chunk !== undefined &&
+	  if (!util.isBuffer(chunk) &&
+	      !util.isString(chunk) &&
+	      !util.isNullOrUndefined(chunk) &&
 	      !state.objectMode) {
 	    er = new TypeError('Invalid non-string/buffer chunk');
 	  }
@@ -14232,12 +14183,8 @@ var StellarSdk =
 	  }
 	  state.ended = true;
 
-	  // if we've ended and we have some data left, then emit
-	  // 'readable' now to make sure it gets picked up.
-	  if (state.length > 0)
-	    emitReadable(stream);
-	  else
-	    endReadable(stream);
+	  // emit 'readable' now to make sure it gets picked up.
+	  emitReadable(stream);
 	}
 
 	// Don't emit readable right away in sync mode, because this can trigger
@@ -14246,20 +14193,22 @@ var StellarSdk =
 	function emitReadable(stream) {
 	  var state = stream._readableState;
 	  state.needReadable = false;
-	  if (state.emittedReadable)
-	    return;
-
-	  state.emittedReadable = true;
-	  if (state.sync)
-	    process.nextTick(function() {
+	  if (!state.emittedReadable) {
+	    debug('emitReadable', state.flowing);
+	    state.emittedReadable = true;
+	    if (state.sync)
+	      process.nextTick(function() {
+	        emitReadable_(stream);
+	      });
+	    else
 	      emitReadable_(stream);
-	    });
-	  else
-	    emitReadable_(stream);
+	  }
 	}
 
 	function emitReadable_(stream) {
+	  debug('emit readable');
 	  stream.emit('readable');
+	  flow(stream);
 	}
 
 
@@ -14282,6 +14231,7 @@ var StellarSdk =
 	  var len = state.length;
 	  while (!state.reading && !state.flowing && !state.ended &&
 	         state.length < state.highWaterMark) {
+	    debug('maybeReadMore read 0');
 	    stream.read(0);
 	    if (len === state.length)
 	      // didn't get any data, stop spinning.
@@ -14316,6 +14266,7 @@ var StellarSdk =
 	      break;
 	  }
 	  state.pipesCount += 1;
+	  debug('pipe count=%d opts=%j', state.pipesCount, pipeOpts);
 
 	  var doEnd = (!pipeOpts || pipeOpts.end !== false) &&
 	              dest !== process.stdout &&
@@ -14329,11 +14280,14 @@ var StellarSdk =
 
 	  dest.on('unpipe', onunpipe);
 	  function onunpipe(readable) {
-	    if (readable !== src) return;
-	    cleanup();
+	    debug('onunpipe');
+	    if (readable === src) {
+	      cleanup();
+	    }
 	  }
 
 	  function onend() {
+	    debug('onend');
 	    dest.end();
 	  }
 
@@ -14345,6 +14299,7 @@ var StellarSdk =
 	  dest.on('drain', ondrain);
 
 	  function cleanup() {
+	    debug('cleanup');
 	    // cleanup event handlers once the pipe is broken
 	    dest.removeListener('close', onclose);
 	    dest.removeListener('finish', onfinish);
@@ -14353,19 +14308,34 @@ var StellarSdk =
 	    dest.removeListener('unpipe', onunpipe);
 	    src.removeListener('end', onend);
 	    src.removeListener('end', cleanup);
+	    src.removeListener('data', ondata);
 
 	    // if the reader is waiting for a drain event from this
 	    // specific writer, then it would cause it to never start
 	    // flowing again.
 	    // So, if this is awaiting a drain, then we just call it now.
 	    // If we don't know, then assume that we are waiting for one.
-	    if (!dest._writableState || dest._writableState.needDrain)
+	    if (state.awaitDrain &&
+	        (!dest._writableState || dest._writableState.needDrain))
 	      ondrain();
+	  }
+
+	  src.on('data', ondata);
+	  function ondata(chunk) {
+	    debug('ondata');
+	    var ret = dest.write(chunk);
+	    if (false === ret) {
+	      debug('false write response, pause',
+	            src._readableState.awaitDrain);
+	      src._readableState.awaitDrain++;
+	      src.pause();
+	    }
 	  }
 
 	  // if the dest has an error, then stop piping into it.
 	  // however, don't suppress the throwing behavior for this.
 	  function onerror(er) {
+	    debug('onerror', er);
 	    unpipe();
 	    dest.removeListener('error', onerror);
 	    if (EE.listenerCount(dest, 'error') === 0)
@@ -14389,12 +14359,14 @@ var StellarSdk =
 	  }
 	  dest.once('close', onclose);
 	  function onfinish() {
+	    debug('onfinish');
 	    dest.removeListener('close', onclose);
 	    unpipe();
 	  }
 	  dest.once('finish', onfinish);
 
 	  function unpipe() {
+	    debug('unpipe');
 	    src.unpipe(dest);
 	  }
 
@@ -14403,16 +14375,8 @@ var StellarSdk =
 
 	  // start the flow if it hasn't been started already.
 	  if (!state.flowing) {
-	    // the handler that waits for readable events after all
-	    // the data gets sucked out in flow.
-	    // This would be easier to follow with a .once() handler
-	    // in flow(), but that is too slow.
-	    this.on('readable', pipeOnReadable);
-
-	    state.flowing = true;
-	    process.nextTick(function() {
-	      flow(src);
-	    });
+	    debug('pipe resume');
+	    src.resume();
 	  }
 
 	  return dest;
@@ -14420,63 +14384,15 @@ var StellarSdk =
 
 	function pipeOnDrain(src) {
 	  return function() {
-	    var dest = this;
 	    var state = src._readableState;
-	    state.awaitDrain--;
-	    if (state.awaitDrain === 0)
+	    debug('pipeOnDrain', state.awaitDrain);
+	    if (state.awaitDrain)
+	      state.awaitDrain--;
+	    if (state.awaitDrain === 0 && EE.listenerCount(src, 'data')) {
+	      state.flowing = true;
 	      flow(src);
-	  };
-	}
-
-	function flow(src) {
-	  var state = src._readableState;
-	  var chunk;
-	  state.awaitDrain = 0;
-
-	  function write(dest, i, list) {
-	    var written = dest.write(chunk);
-	    if (false === written) {
-	      state.awaitDrain++;
 	    }
-	  }
-
-	  while (state.pipesCount && null !== (chunk = src.read())) {
-
-	    if (state.pipesCount === 1)
-	      write(state.pipes, 0, null);
-	    else
-	      forEach(state.pipes, write);
-
-	    src.emit('data', chunk);
-
-	    // if anyone needs a drain, then we have to wait for that.
-	    if (state.awaitDrain > 0)
-	      return;
-	  }
-
-	  // if every destination was unpiped, either before entering this
-	  // function, or in the while loop, then stop flowing.
-	  //
-	  // NB: This is a pretty rare edge case.
-	  if (state.pipesCount === 0) {
-	    state.flowing = false;
-
-	    // if there were data event listeners added, then switch to old mode.
-	    if (EE.listenerCount(src, 'data') > 0)
-	      emitDataEvents(src);
-	    return;
-	  }
-
-	  // at this point, no one needed a drain, so we just ran out of data
-	  // on the next readable event, start it over again.
-	  state.ranOut = true;
-	}
-
-	function pipeOnReadable() {
-	  if (this._readableState.ranOut) {
-	    this._readableState.ranOut = false;
-	    flow(this);
-	  }
+	  };
 	}
 
 
@@ -14499,7 +14415,6 @@ var StellarSdk =
 	    // got a match.
 	    state.pipes = null;
 	    state.pipesCount = 0;
-	    this.removeListener('readable', pipeOnReadable);
 	    state.flowing = false;
 	    if (dest)
 	      dest.emit('unpipe', this);
@@ -14514,7 +14429,6 @@ var StellarSdk =
 	    var len = state.pipesCount;
 	    state.pipes = null;
 	    state.pipesCount = 0;
-	    this.removeListener('readable', pipeOnReadable);
 	    state.flowing = false;
 
 	    for (var i = 0; i < len; i++)
@@ -14542,8 +14456,11 @@ var StellarSdk =
 	Readable.prototype.on = function(ev, fn) {
 	  var res = Stream.prototype.on.call(this, ev, fn);
 
-	  if (ev === 'data' && !this._readableState.flowing)
-	    emitDataEvents(this);
+	  // If listening to data, and it has not explicitly been paused,
+	  // then call resume to start the flow of data on the next tick.
+	  if (ev === 'data' && false !== this._readableState.flowing) {
+	    this.resume();
+	  }
 
 	  if (ev === 'readable' && this.readable) {
 	    var state = this._readableState;
@@ -14552,7 +14469,11 @@ var StellarSdk =
 	      state.emittedReadable = false;
 	      state.needReadable = true;
 	      if (!state.reading) {
-	        this.read(0);
+	        var self = this;
+	        process.nextTick(function() {
+	          debug('readable nexttick read 0');
+	          self.read(0);
+	        });
 	      } else if (state.length) {
 	        emitReadable(this, state);
 	      }
@@ -14566,63 +14487,54 @@ var StellarSdk =
 	// pause() and resume() are remnants of the legacy readable stream API
 	// If the user uses them, then switch into old mode.
 	Readable.prototype.resume = function() {
-	  emitDataEvents(this);
-	  this.read(0);
-	  this.emit('resume');
+	  var state = this._readableState;
+	  if (!state.flowing) {
+	    debug('resume');
+	    state.flowing = true;
+	    if (!state.reading) {
+	      debug('resume read 0');
+	      this.read(0);
+	    }
+	    resume(this, state);
+	  }
+	  return this;
 	};
+
+	function resume(stream, state) {
+	  if (!state.resumeScheduled) {
+	    state.resumeScheduled = true;
+	    process.nextTick(function() {
+	      resume_(stream, state);
+	    });
+	  }
+	}
+
+	function resume_(stream, state) {
+	  state.resumeScheduled = false;
+	  stream.emit('resume');
+	  flow(stream);
+	  if (state.flowing && !state.reading)
+	    stream.read(0);
+	}
 
 	Readable.prototype.pause = function() {
-	  emitDataEvents(this, true);
-	  this.emit('pause');
+	  debug('call pause flowing=%j', this._readableState.flowing);
+	  if (false !== this._readableState.flowing) {
+	    debug('pause');
+	    this._readableState.flowing = false;
+	    this.emit('pause');
+	  }
+	  return this;
 	};
 
-	function emitDataEvents(stream, startPaused) {
+	function flow(stream) {
 	  var state = stream._readableState;
-
+	  debug('flow', state.flowing);
 	  if (state.flowing) {
-	    // https://github.com/isaacs/readable-stream/issues/16
-	    throw new Error('Cannot switch to old mode now.');
+	    do {
+	      var chunk = stream.read();
+	    } while (null !== chunk && state.flowing);
 	  }
-
-	  var paused = startPaused || false;
-	  var readable = false;
-
-	  // convert to an old-style stream.
-	  stream.readable = true;
-	  stream.pipe = Stream.prototype.pipe;
-	  stream.on = stream.addListener = Stream.prototype.on;
-
-	  stream.on('readable', function() {
-	    readable = true;
-
-	    var c;
-	    while (!paused && (null !== (c = stream.read())))
-	      stream.emit('data', c);
-
-	    if (c === null) {
-	      readable = false;
-	      stream._readableState.needReadable = true;
-	    }
-	  });
-
-	  stream.pause = function() {
-	    paused = true;
-	    this.emit('pause');
-	  };
-
-	  stream.resume = function() {
-	    paused = false;
-	    if (readable)
-	      process.nextTick(function() {
-	        stream.emit('readable');
-	      });
-	    else
-	      this.read(0);
-	    this.emit('resume');
-	  };
-
-	  // now make it start, just in case it hadn't already.
-	  stream.emit('readable');
 	}
 
 	// wrap an old-style stream as the async data source.
@@ -14634,6 +14546,7 @@ var StellarSdk =
 
 	  var self = this;
 	  stream.on('end', function() {
+	    debug('wrapped end');
 	    if (state.decoder && !state.ended) {
 	      var chunk = state.decoder.end();
 	      if (chunk && chunk.length)
@@ -14644,14 +14557,10 @@ var StellarSdk =
 	  });
 
 	  stream.on('data', function(chunk) {
+	    debug('wrapped data');
 	    if (state.decoder)
 	      chunk = state.decoder.write(chunk);
-
-	    // don't skip over falsy values in objectMode
-	    //if (state.objectMode && util.isNullOrUndefined(chunk))
-	    if (state.objectMode && (chunk === null || chunk === undefined))
-	      return;
-	    else if (!state.objectMode && (!chunk || !chunk.length))
+	    if (!chunk || !state.objectMode && !chunk.length)
 	      return;
 
 	    var ret = self.push(chunk);
@@ -14664,8 +14573,7 @@ var StellarSdk =
 	  // proxy all the other methods.
 	  // important when wrapping filters and duplexes.
 	  for (var i in stream) {
-	    if (typeof stream[i] === 'function' &&
-	        typeof this[i] === 'undefined') {
+	    if (util.isFunction(stream[i]) && util.isUndefined(this[i])) {
 	      this[i] = function(method) { return function() {
 	        return stream[method].apply(stream, arguments);
 	      }}(i);
@@ -14681,6 +14589,7 @@ var StellarSdk =
 	  // when we try to consume some more bytes, simply unpause the
 	  // underlying stream.
 	  self._read = function(n) {
+	    debug('wrapped _read', n);
 	    if (paused) {
 	      paused = false;
 	      stream.resume();
@@ -14769,7 +14678,7 @@ var StellarSdk =
 	  if (state.length > 0)
 	    throw new Error('endReadable called on non-empty stream');
 
-	  if (!state.endEmitted && state.calledRead) {
+	  if (!state.endEmitted) {
 	    state.ended = true;
 	    process.nextTick(function() {
 	      // Check that we didn't get one last unshift.
@@ -16729,6 +16638,592 @@ var StellarSdk =
 
 /***/ },
 /* 239 */
+/***/ function(module, exports) {
+
+	/* (ignored) */
+
+/***/ },
+/* 240 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// a duplex stream is just a stream that is both readable and writable.
+	// Since JS doesn't have multiple prototypal inheritance, this class
+	// prototypally inherits from Readable, and then parasitically from
+	// Writable.
+
+	module.exports = Duplex;
+
+	/*<replacement>*/
+	var objectKeys = Object.keys || function (obj) {
+	  var keys = [];
+	  for (var key in obj) keys.push(key);
+	  return keys;
+	}
+	/*</replacement>*/
+
+
+	/*<replacement>*/
+	var util = __webpack_require__(238);
+	util.inherits = __webpack_require__(230);
+	/*</replacement>*/
+
+	var Readable = __webpack_require__(232);
+	var Writable = __webpack_require__(241);
+
+	util.inherits(Duplex, Readable);
+
+	forEach(objectKeys(Writable.prototype), function(method) {
+	  if (!Duplex.prototype[method])
+	    Duplex.prototype[method] = Writable.prototype[method];
+	});
+
+	function Duplex(options) {
+	  if (!(this instanceof Duplex))
+	    return new Duplex(options);
+
+	  Readable.call(this, options);
+	  Writable.call(this, options);
+
+	  if (options && options.readable === false)
+	    this.readable = false;
+
+	  if (options && options.writable === false)
+	    this.writable = false;
+
+	  this.allowHalfOpen = true;
+	  if (options && options.allowHalfOpen === false)
+	    this.allowHalfOpen = false;
+
+	  this.once('end', onend);
+	}
+
+	// the no-half-open enforcer
+	function onend() {
+	  // if we allow half-open state, or if the writable side ended,
+	  // then we're ok.
+	  if (this.allowHalfOpen || this._writableState.ended)
+	    return;
+
+	  // no more data can be written.
+	  // But allow more writes to happen in this tick.
+	  process.nextTick(this.end.bind(this));
+	}
+
+	function forEach (xs, f) {
+	  for (var i = 0, l = xs.length; i < l; i++) {
+	    f(xs[i], i);
+	  }
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184)))
+
+/***/ },
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	// A bit simpler than readable streams.
+	// Implement an async ._write(chunk, cb), and it'll handle all
+	// the drain event emission and buffering.
+
+	module.exports = Writable;
+
+	/*<replacement>*/
+	var Buffer = __webpack_require__(234).Buffer;
+	/*</replacement>*/
+
+	Writable.WritableState = WritableState;
+
+
+	/*<replacement>*/
+	var util = __webpack_require__(238);
+	util.inherits = __webpack_require__(230);
+	/*</replacement>*/
+
+	var Stream = __webpack_require__(229);
+
+	util.inherits(Writable, Stream);
+
+	function WriteReq(chunk, encoding, cb) {
+	  this.chunk = chunk;
+	  this.encoding = encoding;
+	  this.callback = cb;
+	}
+
+	function WritableState(options, stream) {
+	  var Duplex = __webpack_require__(240);
+
+	  options = options || {};
+
+	  // the point at which write() starts returning false
+	  // Note: 0 is a valid value, means that we always return false if
+	  // the entire buffer is not flushed immediately on write()
+	  var hwm = options.highWaterMark;
+	  var defaultHwm = options.objectMode ? 16 : 16 * 1024;
+	  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
+
+	  // object stream flag to indicate whether or not this stream
+	  // contains buffers or objects.
+	  this.objectMode = !!options.objectMode;
+
+	  if (stream instanceof Duplex)
+	    this.objectMode = this.objectMode || !!options.writableObjectMode;
+
+	  // cast to ints.
+	  this.highWaterMark = ~~this.highWaterMark;
+
+	  this.needDrain = false;
+	  // at the start of calling end()
+	  this.ending = false;
+	  // when end() has been called, and returned
+	  this.ended = false;
+	  // when 'finish' is emitted
+	  this.finished = false;
+
+	  // should we decode strings into buffers before passing to _write?
+	  // this is here so that some node-core streams can optimize string
+	  // handling at a lower level.
+	  var noDecode = options.decodeStrings === false;
+	  this.decodeStrings = !noDecode;
+
+	  // Crypto is kind of old and crusty.  Historically, its default string
+	  // encoding is 'binary' so we have to make this configurable.
+	  // Everything else in the universe uses 'utf8', though.
+	  this.defaultEncoding = options.defaultEncoding || 'utf8';
+
+	  // not an actual buffer we keep track of, but a measurement
+	  // of how much we're waiting to get pushed to some underlying
+	  // socket or file.
+	  this.length = 0;
+
+	  // a flag to see when we're in the middle of a write.
+	  this.writing = false;
+
+	  // when true all writes will be buffered until .uncork() call
+	  this.corked = 0;
+
+	  // a flag to be able to tell if the onwrite cb is called immediately,
+	  // or on a later tick.  We set this to true at first, because any
+	  // actions that shouldn't happen until "later" should generally also
+	  // not happen before the first write call.
+	  this.sync = true;
+
+	  // a flag to know if we're processing previously buffered items, which
+	  // may call the _write() callback in the same tick, so that we don't
+	  // end up in an overlapped onwrite situation.
+	  this.bufferProcessing = false;
+
+	  // the callback that's passed to _write(chunk,cb)
+	  this.onwrite = function(er) {
+	    onwrite(stream, er);
+	  };
+
+	  // the callback that the user supplies to write(chunk,encoding,cb)
+	  this.writecb = null;
+
+	  // the amount that is being written when _write is called.
+	  this.writelen = 0;
+
+	  this.buffer = [];
+
+	  // number of pending user-supplied write callbacks
+	  // this must be 0 before 'finish' can be emitted
+	  this.pendingcb = 0;
+
+	  // emit prefinish if the only thing we're waiting for is _write cbs
+	  // This is relevant for synchronous Transform streams
+	  this.prefinished = false;
+
+	  // True if the error was already emitted and should not be thrown again
+	  this.errorEmitted = false;
+	}
+
+	function Writable(options) {
+	  var Duplex = __webpack_require__(240);
+
+	  // Writable ctor is applied to Duplexes, though they're not
+	  // instanceof Writable, they're instanceof Readable.
+	  if (!(this instanceof Writable) && !(this instanceof Duplex))
+	    return new Writable(options);
+
+	  this._writableState = new WritableState(options, this);
+
+	  // legacy.
+	  this.writable = true;
+
+	  Stream.call(this);
+	}
+
+	// Otherwise people can pipe Writable streams, which is just wrong.
+	Writable.prototype.pipe = function() {
+	  this.emit('error', new Error('Cannot pipe. Not readable.'));
+	};
+
+
+	function writeAfterEnd(stream, state, cb) {
+	  var er = new Error('write after end');
+	  // TODO: defer error events consistently everywhere, not just the cb
+	  stream.emit('error', er);
+	  process.nextTick(function() {
+	    cb(er);
+	  });
+	}
+
+	// If we get something that is not a buffer, string, null, or undefined,
+	// and we're not in objectMode, then that's an error.
+	// Otherwise stream chunks are all considered to be of length=1, and the
+	// watermarks determine how many objects to keep in the buffer, rather than
+	// how many bytes or characters.
+	function validChunk(stream, state, chunk, cb) {
+	  var valid = true;
+	  if (!util.isBuffer(chunk) &&
+	      !util.isString(chunk) &&
+	      !util.isNullOrUndefined(chunk) &&
+	      !state.objectMode) {
+	    var er = new TypeError('Invalid non-string/buffer chunk');
+	    stream.emit('error', er);
+	    process.nextTick(function() {
+	      cb(er);
+	    });
+	    valid = false;
+	  }
+	  return valid;
+	}
+
+	Writable.prototype.write = function(chunk, encoding, cb) {
+	  var state = this._writableState;
+	  var ret = false;
+
+	  if (util.isFunction(encoding)) {
+	    cb = encoding;
+	    encoding = null;
+	  }
+
+	  if (util.isBuffer(chunk))
+	    encoding = 'buffer';
+	  else if (!encoding)
+	    encoding = state.defaultEncoding;
+
+	  if (!util.isFunction(cb))
+	    cb = function() {};
+
+	  if (state.ended)
+	    writeAfterEnd(this, state, cb);
+	  else if (validChunk(this, state, chunk, cb)) {
+	    state.pendingcb++;
+	    ret = writeOrBuffer(this, state, chunk, encoding, cb);
+	  }
+
+	  return ret;
+	};
+
+	Writable.prototype.cork = function() {
+	  var state = this._writableState;
+
+	  state.corked++;
+	};
+
+	Writable.prototype.uncork = function() {
+	  var state = this._writableState;
+
+	  if (state.corked) {
+	    state.corked--;
+
+	    if (!state.writing &&
+	        !state.corked &&
+	        !state.finished &&
+	        !state.bufferProcessing &&
+	        state.buffer.length)
+	      clearBuffer(this, state);
+	  }
+	};
+
+	function decodeChunk(state, chunk, encoding) {
+	  if (!state.objectMode &&
+	      state.decodeStrings !== false &&
+	      util.isString(chunk)) {
+	    chunk = new Buffer(chunk, encoding);
+	  }
+	  return chunk;
+	}
+
+	// if we're already writing something, then just put this
+	// in the queue, and wait our turn.  Otherwise, call _write
+	// If we return false, then we need a drain event, so set that flag.
+	function writeOrBuffer(stream, state, chunk, encoding, cb) {
+	  chunk = decodeChunk(state, chunk, encoding);
+	  if (util.isBuffer(chunk))
+	    encoding = 'buffer';
+	  var len = state.objectMode ? 1 : chunk.length;
+
+	  state.length += len;
+
+	  var ret = state.length < state.highWaterMark;
+	  // we must ensure that previous needDrain will not be reset to false.
+	  if (!ret)
+	    state.needDrain = true;
+
+	  if (state.writing || state.corked)
+	    state.buffer.push(new WriteReq(chunk, encoding, cb));
+	  else
+	    doWrite(stream, state, false, len, chunk, encoding, cb);
+
+	  return ret;
+	}
+
+	function doWrite(stream, state, writev, len, chunk, encoding, cb) {
+	  state.writelen = len;
+	  state.writecb = cb;
+	  state.writing = true;
+	  state.sync = true;
+	  if (writev)
+	    stream._writev(chunk, state.onwrite);
+	  else
+	    stream._write(chunk, encoding, state.onwrite);
+	  state.sync = false;
+	}
+
+	function onwriteError(stream, state, sync, er, cb) {
+	  if (sync)
+	    process.nextTick(function() {
+	      state.pendingcb--;
+	      cb(er);
+	    });
+	  else {
+	    state.pendingcb--;
+	    cb(er);
+	  }
+
+	  stream._writableState.errorEmitted = true;
+	  stream.emit('error', er);
+	}
+
+	function onwriteStateUpdate(state) {
+	  state.writing = false;
+	  state.writecb = null;
+	  state.length -= state.writelen;
+	  state.writelen = 0;
+	}
+
+	function onwrite(stream, er) {
+	  var state = stream._writableState;
+	  var sync = state.sync;
+	  var cb = state.writecb;
+
+	  onwriteStateUpdate(state);
+
+	  if (er)
+	    onwriteError(stream, state, sync, er, cb);
+	  else {
+	    // Check if we're actually ready to finish, but don't emit yet
+	    var finished = needFinish(stream, state);
+
+	    if (!finished &&
+	        !state.corked &&
+	        !state.bufferProcessing &&
+	        state.buffer.length) {
+	      clearBuffer(stream, state);
+	    }
+
+	    if (sync) {
+	      process.nextTick(function() {
+	        afterWrite(stream, state, finished, cb);
+	      });
+	    } else {
+	      afterWrite(stream, state, finished, cb);
+	    }
+	  }
+	}
+
+	function afterWrite(stream, state, finished, cb) {
+	  if (!finished)
+	    onwriteDrain(stream, state);
+	  state.pendingcb--;
+	  cb();
+	  finishMaybe(stream, state);
+	}
+
+	// Must force callback to be called on nextTick, so that we don't
+	// emit 'drain' before the write() consumer gets the 'false' return
+	// value, and has a chance to attach a 'drain' listener.
+	function onwriteDrain(stream, state) {
+	  if (state.length === 0 && state.needDrain) {
+	    state.needDrain = false;
+	    stream.emit('drain');
+	  }
+	}
+
+
+	// if there's something in the buffer waiting, then process it
+	function clearBuffer(stream, state) {
+	  state.bufferProcessing = true;
+
+	  if (stream._writev && state.buffer.length > 1) {
+	    // Fast case, write everything using _writev()
+	    var cbs = [];
+	    for (var c = 0; c < state.buffer.length; c++)
+	      cbs.push(state.buffer[c].callback);
+
+	    // count the one we are adding, as well.
+	    // TODO(isaacs) clean this up
+	    state.pendingcb++;
+	    doWrite(stream, state, true, state.length, state.buffer, '', function(err) {
+	      for (var i = 0; i < cbs.length; i++) {
+	        state.pendingcb--;
+	        cbs[i](err);
+	      }
+	    });
+
+	    // Clear buffer
+	    state.buffer = [];
+	  } else {
+	    // Slow case, write chunks one-by-one
+	    for (var c = 0; c < state.buffer.length; c++) {
+	      var entry = state.buffer[c];
+	      var chunk = entry.chunk;
+	      var encoding = entry.encoding;
+	      var cb = entry.callback;
+	      var len = state.objectMode ? 1 : chunk.length;
+
+	      doWrite(stream, state, false, len, chunk, encoding, cb);
+
+	      // if we didn't call the onwrite immediately, then
+	      // it means that we need to wait until it does.
+	      // also, that means that the chunk and cb are currently
+	      // being processed, so move the buffer counter past them.
+	      if (state.writing) {
+	        c++;
+	        break;
+	      }
+	    }
+
+	    if (c < state.buffer.length)
+	      state.buffer = state.buffer.slice(c);
+	    else
+	      state.buffer.length = 0;
+	  }
+
+	  state.bufferProcessing = false;
+	}
+
+	Writable.prototype._write = function(chunk, encoding, cb) {
+	  cb(new Error('not implemented'));
+
+	};
+
+	Writable.prototype._writev = null;
+
+	Writable.prototype.end = function(chunk, encoding, cb) {
+	  var state = this._writableState;
+
+	  if (util.isFunction(chunk)) {
+	    cb = chunk;
+	    chunk = null;
+	    encoding = null;
+	  } else if (util.isFunction(encoding)) {
+	    cb = encoding;
+	    encoding = null;
+	  }
+
+	  if (!util.isNullOrUndefined(chunk))
+	    this.write(chunk, encoding);
+
+	  // .end() fully uncorks
+	  if (state.corked) {
+	    state.corked = 1;
+	    this.uncork();
+	  }
+
+	  // ignore unnecessary end() calls.
+	  if (!state.ending && !state.finished)
+	    endWritable(this, state, cb);
+	};
+
+
+	function needFinish(stream, state) {
+	  return (state.ending &&
+	          state.length === 0 &&
+	          !state.finished &&
+	          !state.writing);
+	}
+
+	function prefinish(stream, state) {
+	  if (!state.prefinished) {
+	    state.prefinished = true;
+	    stream.emit('prefinish');
+	  }
+	}
+
+	function finishMaybe(stream, state) {
+	  var need = needFinish(stream, state);
+	  if (need) {
+	    if (state.pendingcb === 0) {
+	      prefinish(stream, state);
+	      state.finished = true;
+	      stream.emit('finish');
+	    } else
+	      prefinish(stream, state);
+	  }
+	  return need;
+	}
+
+	function endWritable(stream, state, cb) {
+	  state.ending = true;
+	  finishMaybe(stream, state);
+	  if (cb) {
+	    if (state.finished)
+	      process.nextTick(cb);
+	    else
+	      stream.once('finish', cb);
+	  }
+	  state.ended = true;
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184)))
+
+/***/ },
+/* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -16955,496 +17450,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 240 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// A bit simpler than readable streams.
-	// Implement an async ._write(chunk, cb), and it'll handle all
-	// the drain event emission and buffering.
-
-	module.exports = Writable;
-
-	/*<replacement>*/
-	var Buffer = __webpack_require__(234).Buffer;
-	/*</replacement>*/
-
-	Writable.WritableState = WritableState;
-
-
-	/*<replacement>*/
-	var util = __webpack_require__(238);
-	util.inherits = __webpack_require__(230);
-	/*</replacement>*/
-
-	var Stream = __webpack_require__(229);
-
-	util.inherits(Writable, Stream);
-
-	function WriteReq(chunk, encoding, cb) {
-	  this.chunk = chunk;
-	  this.encoding = encoding;
-	  this.callback = cb;
-	}
-
-	function WritableState(options, stream) {
-	  options = options || {};
-
-	  // the point at which write() starts returning false
-	  // Note: 0 is a valid value, means that we always return false if
-	  // the entire buffer is not flushed immediately on write()
-	  var hwm = options.highWaterMark;
-	  this.highWaterMark = (hwm || hwm === 0) ? hwm : 16 * 1024;
-
-	  // object stream flag to indicate whether or not this stream
-	  // contains buffers or objects.
-	  this.objectMode = !!options.objectMode;
-
-	  // cast to ints.
-	  this.highWaterMark = ~~this.highWaterMark;
-
-	  this.needDrain = false;
-	  // at the start of calling end()
-	  this.ending = false;
-	  // when end() has been called, and returned
-	  this.ended = false;
-	  // when 'finish' is emitted
-	  this.finished = false;
-
-	  // should we decode strings into buffers before passing to _write?
-	  // this is here so that some node-core streams can optimize string
-	  // handling at a lower level.
-	  var noDecode = options.decodeStrings === false;
-	  this.decodeStrings = !noDecode;
-
-	  // Crypto is kind of old and crusty.  Historically, its default string
-	  // encoding is 'binary' so we have to make this configurable.
-	  // Everything else in the universe uses 'utf8', though.
-	  this.defaultEncoding = options.defaultEncoding || 'utf8';
-
-	  // not an actual buffer we keep track of, but a measurement
-	  // of how much we're waiting to get pushed to some underlying
-	  // socket or file.
-	  this.length = 0;
-
-	  // a flag to see when we're in the middle of a write.
-	  this.writing = false;
-
-	  // a flag to be able to tell if the onwrite cb is called immediately,
-	  // or on a later tick.  We set this to true at first, becuase any
-	  // actions that shouldn't happen until "later" should generally also
-	  // not happen before the first write call.
-	  this.sync = true;
-
-	  // a flag to know if we're processing previously buffered items, which
-	  // may call the _write() callback in the same tick, so that we don't
-	  // end up in an overlapped onwrite situation.
-	  this.bufferProcessing = false;
-
-	  // the callback that's passed to _write(chunk,cb)
-	  this.onwrite = function(er) {
-	    onwrite(stream, er);
-	  };
-
-	  // the callback that the user supplies to write(chunk,encoding,cb)
-	  this.writecb = null;
-
-	  // the amount that is being written when _write is called.
-	  this.writelen = 0;
-
-	  this.buffer = [];
-
-	  // True if the error was already emitted and should not be thrown again
-	  this.errorEmitted = false;
-	}
-
-	function Writable(options) {
-	  var Duplex = __webpack_require__(241);
-
-	  // Writable ctor is applied to Duplexes, though they're not
-	  // instanceof Writable, they're instanceof Readable.
-	  if (!(this instanceof Writable) && !(this instanceof Duplex))
-	    return new Writable(options);
-
-	  this._writableState = new WritableState(options, this);
-
-	  // legacy.
-	  this.writable = true;
-
-	  Stream.call(this);
-	}
-
-	// Otherwise people can pipe Writable streams, which is just wrong.
-	Writable.prototype.pipe = function() {
-	  this.emit('error', new Error('Cannot pipe. Not readable.'));
-	};
-
-
-	function writeAfterEnd(stream, state, cb) {
-	  var er = new Error('write after end');
-	  // TODO: defer error events consistently everywhere, not just the cb
-	  stream.emit('error', er);
-	  process.nextTick(function() {
-	    cb(er);
-	  });
-	}
-
-	// If we get something that is not a buffer, string, null, or undefined,
-	// and we're not in objectMode, then that's an error.
-	// Otherwise stream chunks are all considered to be of length=1, and the
-	// watermarks determine how many objects to keep in the buffer, rather than
-	// how many bytes or characters.
-	function validChunk(stream, state, chunk, cb) {
-	  var valid = true;
-	  if (!Buffer.isBuffer(chunk) &&
-	      'string' !== typeof chunk &&
-	      chunk !== null &&
-	      chunk !== undefined &&
-	      !state.objectMode) {
-	    var er = new TypeError('Invalid non-string/buffer chunk');
-	    stream.emit('error', er);
-	    process.nextTick(function() {
-	      cb(er);
-	    });
-	    valid = false;
-	  }
-	  return valid;
-	}
-
-	Writable.prototype.write = function(chunk, encoding, cb) {
-	  var state = this._writableState;
-	  var ret = false;
-
-	  if (typeof encoding === 'function') {
-	    cb = encoding;
-	    encoding = null;
-	  }
-
-	  if (Buffer.isBuffer(chunk))
-	    encoding = 'buffer';
-	  else if (!encoding)
-	    encoding = state.defaultEncoding;
-
-	  if (typeof cb !== 'function')
-	    cb = function() {};
-
-	  if (state.ended)
-	    writeAfterEnd(this, state, cb);
-	  else if (validChunk(this, state, chunk, cb))
-	    ret = writeOrBuffer(this, state, chunk, encoding, cb);
-
-	  return ret;
-	};
-
-	function decodeChunk(state, chunk, encoding) {
-	  if (!state.objectMode &&
-	      state.decodeStrings !== false &&
-	      typeof chunk === 'string') {
-	    chunk = new Buffer(chunk, encoding);
-	  }
-	  return chunk;
-	}
-
-	// if we're already writing something, then just put this
-	// in the queue, and wait our turn.  Otherwise, call _write
-	// If we return false, then we need a drain event, so set that flag.
-	function writeOrBuffer(stream, state, chunk, encoding, cb) {
-	  chunk = decodeChunk(state, chunk, encoding);
-	  if (Buffer.isBuffer(chunk))
-	    encoding = 'buffer';
-	  var len = state.objectMode ? 1 : chunk.length;
-
-	  state.length += len;
-
-	  var ret = state.length < state.highWaterMark;
-	  // we must ensure that previous needDrain will not be reset to false.
-	  if (!ret)
-	    state.needDrain = true;
-
-	  if (state.writing)
-	    state.buffer.push(new WriteReq(chunk, encoding, cb));
-	  else
-	    doWrite(stream, state, len, chunk, encoding, cb);
-
-	  return ret;
-	}
-
-	function doWrite(stream, state, len, chunk, encoding, cb) {
-	  state.writelen = len;
-	  state.writecb = cb;
-	  state.writing = true;
-	  state.sync = true;
-	  stream._write(chunk, encoding, state.onwrite);
-	  state.sync = false;
-	}
-
-	function onwriteError(stream, state, sync, er, cb) {
-	  if (sync)
-	    process.nextTick(function() {
-	      cb(er);
-	    });
-	  else
-	    cb(er);
-
-	  stream._writableState.errorEmitted = true;
-	  stream.emit('error', er);
-	}
-
-	function onwriteStateUpdate(state) {
-	  state.writing = false;
-	  state.writecb = null;
-	  state.length -= state.writelen;
-	  state.writelen = 0;
-	}
-
-	function onwrite(stream, er) {
-	  var state = stream._writableState;
-	  var sync = state.sync;
-	  var cb = state.writecb;
-
-	  onwriteStateUpdate(state);
-
-	  if (er)
-	    onwriteError(stream, state, sync, er, cb);
-	  else {
-	    // Check if we're actually ready to finish, but don't emit yet
-	    var finished = needFinish(stream, state);
-
-	    if (!finished && !state.bufferProcessing && state.buffer.length)
-	      clearBuffer(stream, state);
-
-	    if (sync) {
-	      process.nextTick(function() {
-	        afterWrite(stream, state, finished, cb);
-	      });
-	    } else {
-	      afterWrite(stream, state, finished, cb);
-	    }
-	  }
-	}
-
-	function afterWrite(stream, state, finished, cb) {
-	  if (!finished)
-	    onwriteDrain(stream, state);
-	  cb();
-	  if (finished)
-	    finishMaybe(stream, state);
-	}
-
-	// Must force callback to be called on nextTick, so that we don't
-	// emit 'drain' before the write() consumer gets the 'false' return
-	// value, and has a chance to attach a 'drain' listener.
-	function onwriteDrain(stream, state) {
-	  if (state.length === 0 && state.needDrain) {
-	    state.needDrain = false;
-	    stream.emit('drain');
-	  }
-	}
-
-
-	// if there's something in the buffer waiting, then process it
-	function clearBuffer(stream, state) {
-	  state.bufferProcessing = true;
-
-	  for (var c = 0; c < state.buffer.length; c++) {
-	    var entry = state.buffer[c];
-	    var chunk = entry.chunk;
-	    var encoding = entry.encoding;
-	    var cb = entry.callback;
-	    var len = state.objectMode ? 1 : chunk.length;
-
-	    doWrite(stream, state, len, chunk, encoding, cb);
-
-	    // if we didn't call the onwrite immediately, then
-	    // it means that we need to wait until it does.
-	    // also, that means that the chunk and cb are currently
-	    // being processed, so move the buffer counter past them.
-	    if (state.writing) {
-	      c++;
-	      break;
-	    }
-	  }
-
-	  state.bufferProcessing = false;
-	  if (c < state.buffer.length)
-	    state.buffer = state.buffer.slice(c);
-	  else
-	    state.buffer.length = 0;
-	}
-
-	Writable.prototype._write = function(chunk, encoding, cb) {
-	  cb(new Error('not implemented'));
-	};
-
-	Writable.prototype.end = function(chunk, encoding, cb) {
-	  var state = this._writableState;
-
-	  if (typeof chunk === 'function') {
-	    cb = chunk;
-	    chunk = null;
-	    encoding = null;
-	  } else if (typeof encoding === 'function') {
-	    cb = encoding;
-	    encoding = null;
-	  }
-
-	  if (typeof chunk !== 'undefined' && chunk !== null)
-	    this.write(chunk, encoding);
-
-	  // ignore unnecessary end() calls.
-	  if (!state.ending && !state.finished)
-	    endWritable(this, state, cb);
-	};
-
-
-	function needFinish(stream, state) {
-	  return (state.ending &&
-	          state.length === 0 &&
-	          !state.finished &&
-	          !state.writing);
-	}
-
-	function finishMaybe(stream, state) {
-	  var need = needFinish(stream, state);
-	  if (need) {
-	    state.finished = true;
-	    stream.emit('finish');
-	  }
-	  return need;
-	}
-
-	function endWritable(stream, state, cb) {
-	  state.ending = true;
-	  finishMaybe(stream, state);
-	  if (cb) {
-	    if (state.finished)
-	      process.nextTick(cb);
-	    else
-	      stream.once('finish', cb);
-	  }
-	  state.ended = true;
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184)))
-
-/***/ },
-/* 241 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	// a duplex stream is just a stream that is both readable and writable.
-	// Since JS doesn't have multiple prototypal inheritance, this class
-	// prototypally inherits from Readable, and then parasitically from
-	// Writable.
-
-	module.exports = Duplex;
-
-	/*<replacement>*/
-	var objectKeys = Object.keys || function (obj) {
-	  var keys = [];
-	  for (var key in obj) keys.push(key);
-	  return keys;
-	}
-	/*</replacement>*/
-
-
-	/*<replacement>*/
-	var util = __webpack_require__(238);
-	util.inherits = __webpack_require__(230);
-	/*</replacement>*/
-
-	var Readable = __webpack_require__(232);
-	var Writable = __webpack_require__(240);
-
-	util.inherits(Duplex, Readable);
-
-	forEach(objectKeys(Writable.prototype), function(method) {
-	  if (!Duplex.prototype[method])
-	    Duplex.prototype[method] = Writable.prototype[method];
-	});
-
-	function Duplex(options) {
-	  if (!(this instanceof Duplex))
-	    return new Duplex(options);
-
-	  Readable.call(this, options);
-	  Writable.call(this, options);
-
-	  if (options && options.readable === false)
-	    this.readable = false;
-
-	  if (options && options.writable === false)
-	    this.writable = false;
-
-	  this.allowHalfOpen = true;
-	  if (options && options.allowHalfOpen === false)
-	    this.allowHalfOpen = false;
-
-	  this.once('end', onend);
-	}
-
-	// the no-half-open enforcer
-	function onend() {
-	  // if we allow half-open state, or if the writable side ended,
-	  // then we're ok.
-	  if (this.allowHalfOpen || this._writableState.ended)
-	    return;
-
-	  // no more data can be written.
-	  // But allow more writes to happen in this tick.
-	  process.nextTick(this.end.bind(this));
-	}
-
-	function forEach (xs, f) {
-	  for (var i = 0, l = xs.length; i < l; i++) {
-	    f(xs[i], i);
-	  }
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184)))
-
-/***/ },
-/* 242 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -17513,7 +17519,7 @@ var StellarSdk =
 
 	module.exports = Transform;
 
-	var Duplex = __webpack_require__(241);
+	var Duplex = __webpack_require__(240);
 
 	/*<replacement>*/
 	var util = __webpack_require__(238);
@@ -17546,7 +17552,7 @@ var StellarSdk =
 	  ts.writechunk = null;
 	  ts.writecb = null;
 
-	  if (data !== null && data !== undefined)
+	  if (!util.isNullOrUndefined(data))
 	    stream.push(data);
 
 	  if (cb)
@@ -17566,7 +17572,7 @@ var StellarSdk =
 
 	  Duplex.call(this, options);
 
-	  var ts = this._transformState = new TransformState(options, this);
+	  this._transformState = new TransformState(options, this);
 
 	  // when the writable side finishes, then flush out anything remaining.
 	  var stream = this;
@@ -17579,8 +17585,8 @@ var StellarSdk =
 	  // sync guard flag.
 	  this._readableState.sync = false;
 
-	  this.once('finish', function() {
-	    if ('function' === typeof this._flush)
+	  this.once('prefinish', function() {
+	    if (util.isFunction(this._flush))
 	      this._flush(function(er) {
 	        done(stream, er);
 	      });
@@ -17628,7 +17634,7 @@ var StellarSdk =
 	Transform.prototype._read = function(n) {
 	  var ts = this._transformState;
 
-	  if (ts.writechunk !== null && ts.writecb && !ts.transforming) {
+	  if (!util.isNull(ts.writechunk) && ts.writecb && !ts.transforming) {
 	    ts.transforming = true;
 	    this._transform(ts.writechunk, ts.writeencoding, ts.afterTransform);
 	  } else {
@@ -17646,7 +17652,6 @@ var StellarSdk =
 	  // if there's nothing in the write buffer, then that means
 	  // that nothing more will ever be provided
 	  var ws = stream._writableState;
-	  var rs = stream._readableState;
 	  var ts = stream._transformState;
 
 	  if (ws.length)
@@ -17660,7 +17665,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 243 */
+/* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -17690,7 +17695,7 @@ var StellarSdk =
 
 	module.exports = PassThrough;
 
-	var Transform = __webpack_require__(242);
+	var Transform = __webpack_require__(243);
 
 	/*<replacement>*/
 	var util = __webpack_require__(238);
@@ -17712,13 +17717,6 @@ var StellarSdk =
 
 
 /***/ },
-/* 244 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(240)
-
-
-/***/ },
 /* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -17729,7 +17727,7 @@ var StellarSdk =
 /* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(242)
+	module.exports = __webpack_require__(240)
 
 
 /***/ },
@@ -17743,8 +17741,15 @@ var StellarSdk =
 /* 248 */
 /***/ function(module, exports, __webpack_require__) {
 
+	module.exports = __webpack_require__(244)
+
+
+/***/ },
+/* 249 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var Stream = __webpack_require__(229);
-	var util = __webpack_require__(249);
+	var util = __webpack_require__(250);
 
 	var Response = module.exports = function (res) {
 	    this.offset = 0;
@@ -17866,7 +17871,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 249 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -18394,7 +18399,7 @@ var StellarSdk =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(250);
+	exports.isBuffer = __webpack_require__(251);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -18459,7 +18464,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(184)))
 
 /***/ },
-/* 250 */
+/* 251 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -18470,7 +18475,7 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 251 */
+/* 252 */
 /***/ function(module, exports, __webpack_require__) {
 
 	;(function () {
@@ -18536,7 +18541,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 252 */
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
@@ -23423,7 +23428,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184), (function() { return this; }()), __webpack_require__(210).setImmediate))
 
 /***/ },
-/* 253 */
+/* 254 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23474,7 +23479,7 @@ var StellarSdk =
 	exports.LedgerCallBuilder = LedgerCallBuilder;
 
 /***/ },
-/* 254 */
+/* 255 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23537,7 +23542,7 @@ var StellarSdk =
 	exports.TransactionCallBuilder = TransactionCallBuilder;
 
 /***/ },
-/* 255 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23606,7 +23611,7 @@ var StellarSdk =
 	exports.OperationCallBuilder = OperationCallBuilder;
 
 /***/ },
-/* 256 */
+/* 257 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -23623,7 +23628,7 @@ var StellarSdk =
 
 	var _call_builder = __webpack_require__(190);
 
-	var _orderbook_call_builder = __webpack_require__(257);
+	var _orderbook_call_builder = __webpack_require__(258);
 
 	var _errors = __webpack_require__(186);
 
@@ -23659,7 +23664,7 @@ var StellarSdk =
 	exports.OfferCallBuilder = OfferCallBuilder;
 
 /***/ },
-/* 257 */
+/* 258 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -23667,6 +23672,8 @@ var StellarSdk =
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
@@ -23708,13 +23715,21 @@ var StellarSdk =
 	        }
 	    }
 
+	    _createClass(OrderbookCallBuilder, [{
+	        key: "trades",
+	        value: function trades() {
+	            this.filter.push(['order_book', 'trades']);
+	            return this;
+	        }
+	    }]);
+
 	    return OrderbookCallBuilder;
 	})(_call_builder.CallBuilder);
 
 	exports.OrderbookCallBuilder = OrderbookCallBuilder;
 
 /***/ },
-/* 258 */
+/* 259 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23777,7 +23792,7 @@ var StellarSdk =
 	exports.PaymentCallBuilder = PaymentCallBuilder;
 
 /***/ },
-/* 259 */
+/* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -23846,7 +23861,7 @@ var StellarSdk =
 	exports.EffectCallBuilder = EffectCallBuilder;
 
 /***/ },
-/* 260 */
+/* 261 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -23880,7 +23895,7 @@ var StellarSdk =
 	exports.FriendbotBuilder = FriendbotBuilder;
 
 /***/ },
-/* 261 */
+/* 262 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -23895,37 +23910,37 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(262));
+	var xdr = _interopRequire(__webpack_require__(263));
 
 	exports.xdr = xdr;
-	exports.hash = __webpack_require__(300).hash;
+	exports.hash = __webpack_require__(301).hash;
 
-	var _signing = __webpack_require__(309);
+	var _signing = __webpack_require__(310);
 
 	exports.sign = _signing.sign;
 	exports.verify = _signing.verify;
-	exports.Keypair = __webpack_require__(318).Keypair;
+	exports.Keypair = __webpack_require__(319).Keypair;
 
-	var _jsXdr = __webpack_require__(263);
+	var _jsXdr = __webpack_require__(264);
 
 	exports.UnsignedHyper = _jsXdr.UnsignedHyper;
 	exports.Hyper = _jsXdr.Hyper;
-	exports.Transaction = __webpack_require__(334).Transaction;
-	exports.TransactionBuilder = __webpack_require__(339).TransactionBuilder;
-	exports.Asset = __webpack_require__(336).Asset;
-	exports.Operation = __webpack_require__(335).Operation;
-	exports.Memo = __webpack_require__(341).Memo;
-	exports.Account = __webpack_require__(340).Account;
+	exports.Transaction = __webpack_require__(335).Transaction;
+	exports.TransactionBuilder = __webpack_require__(340).TransactionBuilder;
+	exports.Asset = __webpack_require__(337).Asset;
+	exports.Operation = __webpack_require__(336).Operation;
+	exports.Memo = __webpack_require__(342).Memo;
+	exports.Account = __webpack_require__(341).Account;
 
-	var _network = __webpack_require__(338);
+	var _network = __webpack_require__(339);
 
 	exports.Network = _network.Network;
 	exports.Networks = _network.Networks;
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(321)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(322)));
 
 /***/ },
-/* 262 */
+/* 263 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -23938,7 +23953,7 @@ var StellarSdk =
 	/* jshint maxstatements:2147483647  */
 	/* jshint esnext:true  */
 
-	var XDR = _interopRequireWildcard(__webpack_require__(263));
+	var XDR = _interopRequireWildcard(__webpack_require__(264));
 
 	var types = XDR.config(function (xdr) {
 
@@ -26344,34 +26359,34 @@ var StellarSdk =
 	module.exports = types;
 
 /***/ },
-/* 263 */
+/* 264 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _defaults = __webpack_require__(264)["default"];
+	var _defaults = __webpack_require__(265)["default"];
 
-	var _interopRequireWildcard = __webpack_require__(266)["default"];
+	var _interopRequireWildcard = __webpack_require__(267)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(267)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(268)));
 
-	var _config = __webpack_require__(297);
+	var _config = __webpack_require__(298);
 
 	_defaults(exports, _interopRequireWildcard(_config));
 
 	var config = _config.config;
 
 /***/ },
-/* 264 */
+/* 265 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
 	exports["default"] = function (obj, defaults) {
 	  var keys = _core.Object.getOwnPropertyNames(defaults);
@@ -26392,7 +26407,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 265 */
+/* 266 */
 /***/ function(module, exports) {
 
 	/**
@@ -28738,7 +28753,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 266 */
+/* 267 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -28752,24 +28767,22 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 267 */
+/* 268 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _defaults = __webpack_require__(264)["default"];
+	var _defaults = __webpack_require__(265)["default"];
 
-	var _interopRequireWildcard = __webpack_require__(266)["default"];
+	var _interopRequireWildcard = __webpack_require__(267)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(268)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(269)));
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(278)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(281)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(279)));
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(282)));
 
@@ -28799,23 +28812,25 @@ var StellarSdk =
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(295)));
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(299)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(296)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(300)));
 
 /***/ },
-/* 268 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(270).isNumber;
+	var isNumber = __webpack_require__(271).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Int = {
 
@@ -28853,7 +28868,7 @@ var StellarSdk =
 	includeIoMixin(Int);
 
 /***/ },
-/* 269 */
+/* 270 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -28865,7 +28880,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 270 */
+/* 271 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -41223,16 +41238,16 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(193)(module), (function() { return this; }())))
 
 /***/ },
-/* 271 */
+/* 272 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
 	module.exports = includeIoMixin;
 
-	var Cursor = __webpack_require__(272).Cursor;
+	var Cursor = __webpack_require__(273).Cursor;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var extend = _lodash.extend;
 	var isFunction = _lodash.isFunction;
@@ -41301,26 +41316,26 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 272 */
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var BaseCursor = _interopRequire(__webpack_require__(276));
+	var BaseCursor = _interopRequire(__webpack_require__(277));
 
-	var calculatePadding = __webpack_require__(277).calculatePadding;
+	var calculatePadding = __webpack_require__(278).calculatePadding;
 
 	var Cursor = exports.Cursor = (function (_BaseCursor) {
 	  function Cursor() {
@@ -41350,7 +41365,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 273 */
+/* 274 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -41364,7 +41379,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 274 */
+/* 275 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -41388,7 +41403,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 275 */
+/* 276 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -41414,7 +41429,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 276 */
+/* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var Cursor = function(buffer)
@@ -41636,7 +41651,7 @@ var StellarSdk =
 			parent.call(this, buffer);
 		};
 
-		__webpack_require__(249).inherits(C, parent);
+		__webpack_require__(250).inherits(C, parent);
 
 		C.extend = parent.extend;
 		C.define = parent.define;
@@ -41665,7 +41680,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 277 */
+/* 278 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -41689,30 +41704,30 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 278 */
+/* 279 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _get = __webpack_require__(279)["default"];
+	var _get = __webpack_require__(280)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Long = _interopRequire(__webpack_require__(280));
+	var Long = _interopRequire(__webpack_require__(281));
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Hyper = exports.Hyper = (function (_Long) {
 	  function Hyper(low, high) {
@@ -41769,12 +41784,12 @@ var StellarSdk =
 	Hyper.MIN_VALUE = new Hyper(Long.MIN_VALUE.low, Long.MIN_VALUE.high);
 
 /***/ },
-/* 279 */
+/* 280 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
 	exports["default"] = function get(_x, _x2, _x3) {
 	  var _again = true;
@@ -41817,10 +41832,10 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 280 */
+/* 281 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {/*
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {/*
 	 Copyright 2013 Daniel Wirtz <dcode@dcode.io>
 	 Copyright 2009 The Closure Library Authors. All Rights Reserved.
 
@@ -41842,7 +41857,16 @@ var StellarSdk =
 	 * Released under the Apache License, Version 2.0
 	 * see: https://github.com/dcodeIO/Long.js for details
 	 */
-	(function(global) {
+	(function(global, factory) {
+
+	    /* AMD */ if ("function" === 'function' && __webpack_require__(212)["amd"])
+	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    /* CommonJS */ else if ("function" === 'function' && typeof module === "object" && module && module["exports"])
+	        module["exports"] = factory();
+	    /* Global */ else
+	        (global["dcodeIO"] = global["dcodeIO"] || {})["Long"] = factory();
+
+	})(this, function() {
 	    "use strict";
 
 	    /**
@@ -41897,13 +41921,28 @@ var StellarSdk =
 	    // methods on which they depend.
 
 	    /**
+	     * An indicator used to reliably determine if an object is a Long or not.
+	     * @type {boolean}
+	     * @const
+	     * @expose
+	     * @private
+	     */
+	    Long.__isLong__;
+
+	    Object.defineProperty(Long.prototype, "__isLong__", {
+	        value: true,
+	        enumerable: false,
+	        configurable: false
+	    });
+
+	    /**
 	     * Tests if the specified object is a Long.
 	     * @param {*} obj Object
 	     * @returns {boolean}
 	     * @expose
 	     */
 	    Long.isLong = function(obj) {
-	        return (obj && obj instanceof Long) === true;
+	        return (obj && obj["__isLong__"]) === true;
 	    };
 
 	    /**
@@ -42042,13 +42081,13 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.fromValue = function(val) {
+	        if (val /* is compatible */ instanceof Long)
+	            return val;
 	        if (typeof val === 'number')
 	            return Long.fromNumber(val);
 	        if (typeof val === 'string')
 	            return Long.fromString(val);
-	        if (Long.isLong(val))
-	            return val;
-	        // Throws for not an object (undefined, null):
+	        // Throws for non-objects, converts non-instanceof Long:
 	        return new Long(val.low, val.high, val.unsigned);
 	    };
 
@@ -42338,9 +42377,7 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.prototype.notEquals = function(other) {
-	        if (!Long.isLong(other))
-	            other = Long.fromValue(other);
-	        return !this.equals(other);
+	        return !this.equals(/* validates */ other);
 	    };
 
 	    /**
@@ -42350,9 +42387,7 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.prototype.lessThan = function(other) {
-	        if (!Long.isLong(other))
-	            other = Long.fromValue(other);
-	        return this.compare(other) < 0;
+	        return this.compare(/* validates */ other) < 0;
 	    };
 
 	    /**
@@ -42362,9 +42397,7 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.prototype.lessThanOrEqual = function(other) {
-	        if (!Long.isLong(other))
-	            other = Long.fromValue(other);
-	        return this.compare(other) <= 0;
+	        return this.compare(/* validates */ other) <= 0;
 	    };
 
 	    /**
@@ -42374,9 +42407,7 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.prototype.greaterThan = function(other) {
-	        if (!Long.isLong(other))
-	            other = Long.fromValue(other);
-	        return this.compare(other) > 0;
+	        return this.compare(/* validates */ other) > 0;
 	    };
 
 	    /**
@@ -42386,9 +42417,7 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.prototype.greaterThanOrEqual = function(other) {
-	        if (!Long.isLong(other))
-	            other = Long.fromValue(other);
-	        return this.compare(other) >= 0;
+	        return this.compare(/* validates */ other) >= 0;
 	    };
 
 	    /**
@@ -42399,6 +42428,8 @@ var StellarSdk =
 	     * @expose
 	     */
 	    Long.prototype.compare = function(other) {
+	        if (!Long.isLong(other))
+	            other = Long.fromValue(other);
 	        if (this.equals(other))
 	            return 0;
 	        var thisNeg = this.isNegative(),
@@ -42756,32 +42787,26 @@ var StellarSdk =
 	        return new Long(this.low, this.high, true);
 	    };
 
-	    /* CommonJS */ if ("function" === 'function' && typeof module === 'object' && module && typeof exports === 'object' && exports)
-	        module["exports"] = Long;
-	    /* AMD */ else if ("function" === 'function' && __webpack_require__(212)["amd"])
-	        !(__WEBPACK_AMD_DEFINE_RESULT__ = function() { return Long; }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	    /* Global */ else
-	        (global["dcodeIO"] = global["dcodeIO"] || {})["Long"] = Long;
-
-	})(this);
+	    return Long;
+	});
 
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(193)(module)))
 
 /***/ },
-/* 281 */
+/* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(270).isNumber;
+	var isNumber = __webpack_require__(271).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var UnsignedInt = {
 
@@ -42823,30 +42848,30 @@ var StellarSdk =
 	includeIoMixin(UnsignedInt);
 
 /***/ },
-/* 282 */
+/* 283 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _get = __webpack_require__(279)["default"];
+	var _get = __webpack_require__(280)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Long = _interopRequire(__webpack_require__(280));
+	var Long = _interopRequire(__webpack_require__(281));
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var UnsignedHyper = exports.UnsignedHyper = (function (_Long) {
 	  function UnsignedHyper(low, high) {
@@ -42904,20 +42929,20 @@ var StellarSdk =
 	UnsignedHyper.MIN_VALUE = new UnsignedHyper(Long.MIN_VALUE.low, Long.MIN_VALUE.high);
 
 /***/ },
-/* 283 */
+/* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(270).isNumber;
+	var isNumber = __webpack_require__(271).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Float = {
 
@@ -42941,20 +42966,20 @@ var StellarSdk =
 	includeIoMixin(Float);
 
 /***/ },
-/* 284 */
+/* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(270).isNumber;
+	var isNumber = __webpack_require__(271).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Double = {
 
@@ -42978,18 +43003,18 @@ var StellarSdk =
 	includeIoMixin(Double);
 
 /***/ },
-/* 285 */
+/* 286 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Quadruple = {
 	  /* jshint unused: false */
@@ -43010,22 +43035,22 @@ var StellarSdk =
 	includeIoMixin(Quadruple);
 
 /***/ },
-/* 286 */
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(268).Int;
+	var Int = __webpack_require__(269).Int;
 
-	var isBoolean = __webpack_require__(270).isBoolean;
+	var isBoolean = __webpack_require__(271).isBoolean;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Bool = {
 	  read: function read(io) {
@@ -43055,30 +43080,30 @@ var StellarSdk =
 	includeIoMixin(Bool);
 
 /***/ },
-/* 287 */
+/* 288 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(268).Int;
+	var Int = __webpack_require__(269).Int;
 
-	var UnsignedInt = __webpack_require__(281).UnsignedInt;
+	var UnsignedInt = __webpack_require__(282).UnsignedInt;
 
-	var calculatePadding = __webpack_require__(277).calculatePadding;
+	var calculatePadding = __webpack_require__(278).calculatePadding;
 
-	var isString = __webpack_require__(270).isString;
+	var isString = __webpack_require__(271).isString;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var String = exports.String = (function () {
 	  function String() {
@@ -43132,24 +43157,24 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 288 */
+/* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var calculatePadding = __webpack_require__(277).calculatePadding;
+	var calculatePadding = __webpack_require__(278).calculatePadding;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Opaque = exports.Opaque = (function () {
 	  function Opaque(length) {
@@ -43190,28 +43215,28 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 289 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(268).Int;
+	var Int = __webpack_require__(269).Int;
 
-	var UnsignedInt = __webpack_require__(281).UnsignedInt;
+	var UnsignedInt = __webpack_require__(282).UnsignedInt;
 
-	var calculatePadding = __webpack_require__(277).calculatePadding;
+	var calculatePadding = __webpack_require__(278).calculatePadding;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var VarOpaque = exports.VarOpaque = (function () {
 	  function VarOpaque() {
@@ -43259,29 +43284,29 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 290 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var all = _lodash.all;
 	var each = _lodash.each;
 	var times = _lodash.times;
 	var isArray = _lodash.isArray;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Array = exports.Array = (function () {
 	  function Array(childType, length) {
@@ -43342,33 +43367,33 @@ var StellarSdk =
 	includeIoMixin(Array.prototype);
 
 /***/ },
-/* 291 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(268).Int;
+	var Int = __webpack_require__(269).Int;
 
-	var UnsignedInt = __webpack_require__(281).UnsignedInt;
+	var UnsignedInt = __webpack_require__(282).UnsignedInt;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var all = _lodash.all;
 	var each = _lodash.each;
 	var times = _lodash.times;
 	var isArray = _lodash.isArray;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var VarArray = exports.VarArray = (function () {
 	  function VarArray(childType) {
@@ -43438,29 +43463,29 @@ var StellarSdk =
 	includeIoMixin(VarArray.prototype);
 
 /***/ },
-/* 292 */
+/* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Bool = __webpack_require__(286).Bool;
+	var Bool = __webpack_require__(287).Bool;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var isNull = _lodash.isNull;
 	var isUndefined = _lodash.isUndefined;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Option = exports.Option = (function () {
 	  function Option(childType) {
@@ -43508,20 +43533,20 @@ var StellarSdk =
 	includeIoMixin(Option.prototype);
 
 /***/ },
-/* 293 */
+/* 294 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isUndefined = __webpack_require__(270).isUndefined;
+	var isUndefined = __webpack_require__(271).isUndefined;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Void = {
 	  /* jshint unused: false */
@@ -43544,35 +43569,35 @@ var StellarSdk =
 	includeIoMixin(Void);
 
 /***/ },
-/* 294 */
+/* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _get = __webpack_require__(279)["default"];
+	var _get = __webpack_require__(280)["default"];
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(268).Int;
+	var Int = __webpack_require__(269).Int;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var each = _lodash.each;
 	var vals = _lodash.values;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Enum = exports.Enum = (function () {
 	  function Enum(name, value) {
@@ -43673,39 +43698,39 @@ var StellarSdk =
 	includeIoMixin(Enum);
 
 /***/ },
-/* 295 */
+/* 296 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _get = __webpack_require__(279)["default"];
+	var _get = __webpack_require__(280)["default"];
 
-	var _slicedToArray = __webpack_require__(296)["default"];
+	var _slicedToArray = __webpack_require__(297)["default"];
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var each = _lodash.each;
 	var map = _lodash.map;
 	var isUndefined = _lodash.isUndefined;
 	var zipObject = _lodash.zipObject;
 
-	var Reference = __webpack_require__(297).Reference;
+	var Reference = __webpack_require__(298).Reference;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Struct = exports.Struct = (function () {
 	  function Struct(attributes) {
@@ -43815,12 +43840,12 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 296 */
+/* 297 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
 	exports["default"] = function (arr, i) {
 	  if (Array.isArray(arr)) {
@@ -43843,29 +43868,29 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 297 */
+/* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _interopRequireWildcard = __webpack_require__(266)["default"];
+	var _interopRequireWildcard = __webpack_require__(267)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	exports.config = config;
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var XDR = _interopRequireWildcard(__webpack_require__(267));
+	var XDR = _interopRequireWildcard(__webpack_require__(268));
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var isUndefined = _lodash.isUndefined;
 	var isPlainObject = _lodash.isPlainObject;
@@ -43874,7 +43899,7 @@ var StellarSdk =
 	var map = _lodash.map;
 	var pick = _lodash.pick;
 
-	var sequencify = _interopRequire(__webpack_require__(298));
+	var sequencify = _interopRequire(__webpack_require__(299));
 
 	// types is the root
 	var types = {};
@@ -44212,7 +44237,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 298 */
+/* 299 */
 /***/ function(module, exports) {
 
 	/*jshint node:true */
@@ -44264,40 +44289,40 @@ var StellarSdk =
 
 
 /***/ },
-/* 299 */
+/* 300 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(273)["default"];
+	var _classCallCheck = __webpack_require__(274)["default"];
 
-	var _createClass = __webpack_require__(275)["default"];
+	var _createClass = __webpack_require__(276)["default"];
 
-	var _inherits = __webpack_require__(274)["default"];
+	var _inherits = __webpack_require__(275)["default"];
 
-	var _get = __webpack_require__(279)["default"];
+	var _get = __webpack_require__(280)["default"];
 
-	var _slicedToArray = __webpack_require__(296)["default"];
+	var _slicedToArray = __webpack_require__(297)["default"];
 
-	var _core = __webpack_require__(265)["default"];
+	var _core = __webpack_require__(266)["default"];
 
-	var _interopRequire = __webpack_require__(269)["default"];
+	var _interopRequire = __webpack_require__(270)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var each = _lodash.each;
 	var isUndefined = _lodash.isUndefined;
 	var isString = _lodash.isString;
 
-	var Void = __webpack_require__(293).Void;
+	var Void = __webpack_require__(294).Void;
 
-	var Reference = __webpack_require__(297).Reference;
+	var Reference = __webpack_require__(298).Reference;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(271));
+	var includeIoMixin = _interopRequire(__webpack_require__(272));
 
 	var Union = exports.Union = (function () {
 	  function Union(aSwitch, value) {
@@ -44493,7 +44518,7 @@ var StellarSdk =
 	includeIoMixin(Union);
 
 /***/ },
-/* 300 */
+/* 301 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -44503,7 +44528,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var sha256 = __webpack_require__(301).sha256;
+	var sha256 = __webpack_require__(302).sha256;
 
 	function hash(data) {
 	  var hasher = new sha256();
@@ -44512,7 +44537,7 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 301 */
+/* 302 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function SHA (algorithm) {
@@ -44524,16 +44549,16 @@ var StellarSdk =
 	  return new Algorithm()
 	}
 
-	exports.sha = __webpack_require__(302)
-	exports.sha1 = __webpack_require__(304)
-	exports.sha224 = __webpack_require__(305)
-	exports.sha256 = __webpack_require__(306)
-	exports.sha384 = __webpack_require__(307)
-	exports.sha512 = __webpack_require__(308)
+	exports.sha = __webpack_require__(303)
+	exports.sha1 = __webpack_require__(305)
+	exports.sha224 = __webpack_require__(306)
+	exports.sha256 = __webpack_require__(307)
+	exports.sha384 = __webpack_require__(308)
+	exports.sha512 = __webpack_require__(309)
 
 
 /***/ },
-/* 302 */
+/* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -44545,7 +44570,7 @@ var StellarSdk =
 	 */
 
 	var inherits = __webpack_require__(230)
-	var Hash = __webpack_require__(303)
+	var Hash = __webpack_require__(304)
 
 	var W = new Array(80)
 
@@ -44640,7 +44665,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 303 */
+/* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
@@ -44716,7 +44741,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 304 */
+/* 305 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -44729,7 +44754,7 @@ var StellarSdk =
 	 */
 
 	var inherits = __webpack_require__(230)
-	var Hash = __webpack_require__(303)
+	var Hash = __webpack_require__(304)
 
 	var W = new Array(80)
 
@@ -44819,7 +44844,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 305 */
+/* 306 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -44831,8 +44856,8 @@ var StellarSdk =
 	 */
 
 	var inherits = __webpack_require__(230)
-	var Sha256 = __webpack_require__(306)
-	var Hash = __webpack_require__(303)
+	var Sha256 = __webpack_require__(307)
+	var Hash = __webpack_require__(304)
 
 	var W = new Array(64)
 
@@ -44878,7 +44903,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 306 */
+/* 307 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -44890,7 +44915,7 @@ var StellarSdk =
 	 */
 
 	var inherits = __webpack_require__(230)
-	var Hash = __webpack_require__(303)
+	var Hash = __webpack_require__(304)
 
 	var K = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -45026,12 +45051,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 307 */
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(230)
-	var SHA512 = __webpack_require__(308)
-	var Hash = __webpack_require__(303)
+	var SHA512 = __webpack_require__(309)
+	var Hash = __webpack_require__(304)
 
 	var W = new Array(160)
 
@@ -45089,11 +45114,11 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 308 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(230)
-	var Hash = __webpack_require__(303)
+	var Hash = __webpack_require__(304)
 
 	var K = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -45362,7 +45387,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 309 */
+/* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -45393,7 +45418,7 @@ var StellarSdk =
 	  (function () {
 	    // NOTE: we use commonjs style require here because es6 imports
 	    // can only occur at the top level.  thanks, obama.
-	    var ed25519 = __webpack_require__(310);
+	    var ed25519 = __webpack_require__(311);
 
 	    actualMethods.sign = function (data, secretKey) {
 	      data = new Buffer(data);
@@ -45412,7 +45437,7 @@ var StellarSdk =
 	} else {
 	  (function () {
 	    // fallback to tweetnacl.js if we're in the browser
-	    var nacl = __webpack_require__(316);
+	    var nacl = __webpack_require__(317);
 
 	    actualMethods.sign = function (data, secretKey) {
 	      data = new Buffer(data);
@@ -45437,14 +45462,14 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 310 */
+/* 311 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(311)('ed25519');
+	module.exports = __webpack_require__(312)('ed25519');
 
 
 /***/ },
-/* 311 */
+/* 312 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, __filename) {
@@ -45453,7 +45478,7 @@ var StellarSdk =
 	 */
 
 	var fs = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"fs\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()))
-	  , path = __webpack_require__(312)
+	  , path = __webpack_require__(313)
 	  , join = path.join
 	  , dirname = path.dirname
 	  , exists = fs.existsSync || path.existsSync
@@ -45522,7 +45547,7 @@ var StellarSdk =
 	    }))
 	    tries.push(n)
 	    try {
-	      b = opts.path ? /*require.resolve*/(__webpack_require__(313).resolve(n)) : __webpack_require__(313)(n)
+	      b = opts.path ? /*require.resolve*/(__webpack_require__(314).resolve(n)) : __webpack_require__(314)(n)
 	      if (!opts.path) {
 	        b.path = n
 	      }
@@ -45617,7 +45642,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184), "/index.js"))
 
 /***/ },
-/* 312 */
+/* 313 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -45848,12 +45873,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(184)))
 
 /***/ },
-/* 313 */
+/* 314 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var map = {
-		"./bindings": 311,
-		"./bindings.js": 311
+		"./bindings": 312,
+		"./bindings.js": 312
 	};
 	function webpackContext(req) {
 		return __webpack_require__(webpackContextResolve(req));
@@ -45866,13 +45891,13 @@ var StellarSdk =
 	};
 	webpackContext.resolve = webpackContextResolve;
 	module.exports = webpackContext;
-	webpackContext.id = 313;
+	webpackContext.id = 314;
 
 
 /***/ },
-/* 314 */,
 /* 315 */,
-/* 316 */
+/* 316 */,
+/* 317 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {(function(nacl) {
@@ -48281,7 +48306,7 @@ var StellarSdk =
 	    }
 	  } else if (true) {
 	    // Node.js.
-	    crypto = __webpack_require__(317);
+	    crypto = __webpack_require__(318);
 	    if (crypto) {
 	      nacl.setPRNG(function(x, n) {
 	        var i, v = crypto.randomBytes(n);
@@ -48297,13 +48322,13 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 317 */
+/* 318 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 318 */
+/* 319 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48320,18 +48345,18 @@ var StellarSdk =
 	  value: true
 	});
 
-	var _signing = __webpack_require__(309);
+	var _signing = __webpack_require__(310);
 
 	var sign = _signing.sign;
 	var verify = _signing.verify;
 
-	var base58 = _interopRequireWildcard(__webpack_require__(319));
+	var base58 = _interopRequireWildcard(__webpack_require__(320));
 
-	var strkey = _interopRequireWildcard(__webpack_require__(321));
+	var strkey = _interopRequireWildcard(__webpack_require__(322));
 
-	var xdr = _interopRequire(__webpack_require__(262));
+	var xdr = _interopRequire(__webpack_require__(263));
 
-	var nacl = __webpack_require__(316);
+	var nacl = __webpack_require__(317);
 
 	var Keypair = exports.Keypair = (function () {
 	  function Keypair(keysAndSeed) {
@@ -48492,7 +48517,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 319 */
+/* 320 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48507,16 +48532,16 @@ var StellarSdk =
 	  value: true
 	});
 
-	var bs58 = _interopRequire(__webpack_require__(320));
+	var bs58 = _interopRequire(__webpack_require__(321));
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var isUndefined = _lodash.isUndefined;
 	var isNull = _lodash.isNull;
 
-	var hash = __webpack_require__(300).hash;
+	var hash = __webpack_require__(301).hash;
 
-	var nacl = __webpack_require__(316);
+	var nacl = __webpack_require__(317);
 
 	var versionBytes = {
 	  accountId: 0, // decimal 0
@@ -48612,7 +48637,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 320 */
+/* 321 */
 /***/ function(module, exports) {
 
 	// vendored from http://cryptocoinjs.com/modules/misc/bs58/
@@ -48711,7 +48736,7 @@ var StellarSdk =
 	};
 
 /***/ },
-/* 321 */
+/* 322 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48724,11 +48749,11 @@ var StellarSdk =
 	  value: true
 	});
 
-	var base32 = _interopRequire(__webpack_require__(322));
+	var base32 = _interopRequire(__webpack_require__(323));
 
-	var crc = _interopRequire(__webpack_require__(323));
+	var crc = _interopRequire(__webpack_require__(324));
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var contains = _lodash.contains;
 	var isUndefined = _lodash.isUndefined;
@@ -48822,7 +48847,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 322 */
+/* 323 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -49140,25 +49165,25 @@ var StellarSdk =
 
 
 /***/ },
-/* 323 */
+/* 324 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
 	module.exports = {
-	  crc1: __webpack_require__(324),
-	  crc8: __webpack_require__(326),
-	  crc81wire: __webpack_require__(327),
-	  crc16: __webpack_require__(328),
-	  crc16ccitt: __webpack_require__(329),
-	  crc16modbus: __webpack_require__(330),
-	  crc16xmodem: __webpack_require__(331),
-	  crc24: __webpack_require__(332),
-	  crc32: __webpack_require__(333)
+	  crc1: __webpack_require__(325),
+	  crc8: __webpack_require__(327),
+	  crc81wire: __webpack_require__(328),
+	  crc16: __webpack_require__(329),
+	  crc16ccitt: __webpack_require__(330),
+	  crc16modbus: __webpack_require__(331),
+	  crc16xmodem: __webpack_require__(332),
+	  crc24: __webpack_require__(333),
+	  crc32: __webpack_require__(334)
 	};
 
 
 /***/ },
-/* 324 */
+/* 325 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49166,7 +49191,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	module.exports = create('crc1', function(buf, previous) {
 	  var accum, byte, crc, i, len;
@@ -49185,7 +49210,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 325 */
+/* 326 */
 /***/ function(module, exports) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49202,7 +49227,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 326 */
+/* 327 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49210,7 +49235,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x00, 0x07, 0x0e, 0x09, 0x1c, 0x1b, 0x12, 0x15, 0x38, 0x3f, 0x36, 0x31, 0x24, 0x23, 0x2a, 0x2d, 0x70, 0x77, 0x7e, 0x79, 0x6c, 0x6b, 0x62, 0x65, 0x48, 0x4f, 0x46, 0x41, 0x54, 0x53, 0x5a, 0x5d, 0xe0, 0xe7, 0xee, 0xe9, 0xfc, 0xfb, 0xf2, 0xf5, 0xd8, 0xdf, 0xd6, 0xd1, 0xc4, 0xc3, 0xca, 0xcd, 0x90, 0x97, 0x9e, 0x99, 0x8c, 0x8b, 0x82, 0x85, 0xa8, 0xaf, 0xa6, 0xa1, 0xb4, 0xb3, 0xba, 0xbd, 0xc7, 0xc0, 0xc9, 0xce, 0xdb, 0xdc, 0xd5, 0xd2, 0xff, 0xf8, 0xf1, 0xf6, 0xe3, 0xe4, 0xed, 0xea, 0xb7, 0xb0, 0xb9, 0xbe, 0xab, 0xac, 0xa5, 0xa2, 0x8f, 0x88, 0x81, 0x86, 0x93, 0x94, 0x9d, 0x9a, 0x27, 0x20, 0x29, 0x2e, 0x3b, 0x3c, 0x35, 0x32, 0x1f, 0x18, 0x11, 0x16, 0x03, 0x04, 0x0d, 0x0a, 0x57, 0x50, 0x59, 0x5e, 0x4b, 0x4c, 0x45, 0x42, 0x6f, 0x68, 0x61, 0x66, 0x73, 0x74, 0x7d, 0x7a, 0x89, 0x8e, 0x87, 0x80, 0x95, 0x92, 0x9b, 0x9c, 0xb1, 0xb6, 0xbf, 0xb8, 0xad, 0xaa, 0xa3, 0xa4, 0xf9, 0xfe, 0xf7, 0xf0, 0xe5, 0xe2, 0xeb, 0xec, 0xc1, 0xc6, 0xcf, 0xc8, 0xdd, 0xda, 0xd3, 0xd4, 0x69, 0x6e, 0x67, 0x60, 0x75, 0x72, 0x7b, 0x7c, 0x51, 0x56, 0x5f, 0x58, 0x4d, 0x4a, 0x43, 0x44, 0x19, 0x1e, 0x17, 0x10, 0x05, 0x02, 0x0b, 0x0c, 0x21, 0x26, 0x2f, 0x28, 0x3d, 0x3a, 0x33, 0x34, 0x4e, 0x49, 0x40, 0x47, 0x52, 0x55, 0x5c, 0x5b, 0x76, 0x71, 0x78, 0x7f, 0x6a, 0x6d, 0x64, 0x63, 0x3e, 0x39, 0x30, 0x37, 0x22, 0x25, 0x2c, 0x2b, 0x06, 0x01, 0x08, 0x0f, 0x1a, 0x1d, 0x14, 0x13, 0xae, 0xa9, 0xa0, 0xa7, 0xb2, 0xb5, 0xbc, 0xbb, 0x96, 0x91, 0x98, 0x9f, 0x8a, 0x8d, 0x84, 0x83, 0xde, 0xd9, 0xd0, 0xd7, 0xc2, 0xc5, 0xcc, 0xcb, 0xe6, 0xe1, 0xe8, 0xef, 0xfa, 0xfd, 0xf4, 0xf3];
 
@@ -49233,7 +49258,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 327 */
+/* 328 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49241,7 +49266,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83, 0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41, 0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e, 0x5f, 0x01, 0xe3, 0xbd, 0x3e, 0x60, 0x82, 0xdc, 0x23, 0x7d, 0x9f, 0xc1, 0x42, 0x1c, 0xfe, 0xa0, 0xe1, 0xbf, 0x5d, 0x03, 0x80, 0xde, 0x3c, 0x62, 0xbe, 0xe0, 0x02, 0x5c, 0xdf, 0x81, 0x63, 0x3d, 0x7c, 0x22, 0xc0, 0x9e, 0x1d, 0x43, 0xa1, 0xff, 0x46, 0x18, 0xfa, 0xa4, 0x27, 0x79, 0x9b, 0xc5, 0x84, 0xda, 0x38, 0x66, 0xe5, 0xbb, 0x59, 0x07, 0xdb, 0x85, 0x67, 0x39, 0xba, 0xe4, 0x06, 0x58, 0x19, 0x47, 0xa5, 0xfb, 0x78, 0x26, 0xc4, 0x9a, 0x65, 0x3b, 0xd9, 0x87, 0x04, 0x5a, 0xb8, 0xe6, 0xa7, 0xf9, 0x1b, 0x45, 0xc6, 0x98, 0x7a, 0x24, 0xf8, 0xa6, 0x44, 0x1a, 0x99, 0xc7, 0x25, 0x7b, 0x3a, 0x64, 0x86, 0xd8, 0x5b, 0x05, 0xe7, 0xb9, 0x8c, 0xd2, 0x30, 0x6e, 0xed, 0xb3, 0x51, 0x0f, 0x4e, 0x10, 0xf2, 0xac, 0x2f, 0x71, 0x93, 0xcd, 0x11, 0x4f, 0xad, 0xf3, 0x70, 0x2e, 0xcc, 0x92, 0xd3, 0x8d, 0x6f, 0x31, 0xb2, 0xec, 0x0e, 0x50, 0xaf, 0xf1, 0x13, 0x4d, 0xce, 0x90, 0x72, 0x2c, 0x6d, 0x33, 0xd1, 0x8f, 0x0c, 0x52, 0xb0, 0xee, 0x32, 0x6c, 0x8e, 0xd0, 0x53, 0x0d, 0xef, 0xb1, 0xf0, 0xae, 0x4c, 0x12, 0x91, 0xcf, 0x2d, 0x73, 0xca, 0x94, 0x76, 0x28, 0xab, 0xf5, 0x17, 0x49, 0x08, 0x56, 0xb4, 0xea, 0x69, 0x37, 0xd5, 0x8b, 0x57, 0x09, 0xeb, 0xb5, 0x36, 0x68, 0x8a, 0xd4, 0x95, 0xcb, 0x29, 0x77, 0xf4, 0xaa, 0x48, 0x16, 0xe9, 0xb7, 0x55, 0x0b, 0x88, 0xd6, 0x34, 0x6a, 0x2b, 0x75, 0x97, 0xc9, 0x4a, 0x14, 0xf6, 0xa8, 0x74, 0x2a, 0xc8, 0x96, 0x15, 0x4b, 0xa9, 0xf7, 0xb6, 0xe8, 0x0a, 0x54, 0xd7, 0x89, 0x6b, 0x35];
 
@@ -49264,7 +49289,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 328 */
+/* 329 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49272,7 +49297,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241, 0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440, 0xcc01, 0x0cc0, 0x0d80, 0xcd41, 0x0f00, 0xcfc1, 0xce81, 0x0e40, 0x0a00, 0xcac1, 0xcb81, 0x0b40, 0xc901, 0x09c0, 0x0880, 0xc841, 0xd801, 0x18c0, 0x1980, 0xd941, 0x1b00, 0xdbc1, 0xda81, 0x1a40, 0x1e00, 0xdec1, 0xdf81, 0x1f40, 0xdd01, 0x1dc0, 0x1c80, 0xdc41, 0x1400, 0xd4c1, 0xd581, 0x1540, 0xd701, 0x17c0, 0x1680, 0xd641, 0xd201, 0x12c0, 0x1380, 0xd341, 0x1100, 0xd1c1, 0xd081, 0x1040, 0xf001, 0x30c0, 0x3180, 0xf141, 0x3300, 0xf3c1, 0xf281, 0x3240, 0x3600, 0xf6c1, 0xf781, 0x3740, 0xf501, 0x35c0, 0x3480, 0xf441, 0x3c00, 0xfcc1, 0xfd81, 0x3d40, 0xff01, 0x3fc0, 0x3e80, 0xfe41, 0xfa01, 0x3ac0, 0x3b80, 0xfb41, 0x3900, 0xf9c1, 0xf881, 0x3840, 0x2800, 0xe8c1, 0xe981, 0x2940, 0xeb01, 0x2bc0, 0x2a80, 0xea41, 0xee01, 0x2ec0, 0x2f80, 0xef41, 0x2d00, 0xedc1, 0xec81, 0x2c40, 0xe401, 0x24c0, 0x2580, 0xe541, 0x2700, 0xe7c1, 0xe681, 0x2640, 0x2200, 0xe2c1, 0xe381, 0x2340, 0xe101, 0x21c0, 0x2080, 0xe041, 0xa001, 0x60c0, 0x6180, 0xa141, 0x6300, 0xa3c1, 0xa281, 0x6240, 0x6600, 0xa6c1, 0xa781, 0x6740, 0xa501, 0x65c0, 0x6480, 0xa441, 0x6c00, 0xacc1, 0xad81, 0x6d40, 0xaf01, 0x6fc0, 0x6e80, 0xae41, 0xaa01, 0x6ac0, 0x6b80, 0xab41, 0x6900, 0xa9c1, 0xa881, 0x6840, 0x7800, 0xb8c1, 0xb981, 0x7940, 0xbb01, 0x7bc0, 0x7a80, 0xba41, 0xbe01, 0x7ec0, 0x7f80, 0xbf41, 0x7d00, 0xbdc1, 0xbc81, 0x7c40, 0xb401, 0x74c0, 0x7580, 0xb541, 0x7700, 0xb7c1, 0xb681, 0x7640, 0x7200, 0xb2c1, 0xb381, 0x7340, 0xb101, 0x71c0, 0x7080, 0xb041, 0x5000, 0x90c1, 0x9181, 0x5140, 0x9301, 0x53c0, 0x5280, 0x9241, 0x9601, 0x56c0, 0x5780, 0x9741, 0x5500, 0x95c1, 0x9481, 0x5440, 0x9c01, 0x5cc0, 0x5d80, 0x9d41, 0x5f00, 0x9fc1, 0x9e81, 0x5e40, 0x5a00, 0x9ac1, 0x9b81, 0x5b40, 0x9901, 0x59c0, 0x5880, 0x9841, 0x8801, 0x48c0, 0x4980, 0x8941, 0x4b00, 0x8bc1, 0x8a81, 0x4a40, 0x4e00, 0x8ec1, 0x8f81, 0x4f40, 0x8d01, 0x4dc0, 0x4c80, 0x8c41, 0x4400, 0x84c1, 0x8581, 0x4540, 0x8701, 0x47c0, 0x4680, 0x8641, 0x8201, 0x42c0, 0x4380, 0x8341, 0x4100, 0x81c1, 0x8081, 0x4040];
 
@@ -49295,7 +49320,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 329 */
+/* 330 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49303,7 +49328,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7, 0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef, 0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6, 0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de, 0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485, 0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d, 0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4, 0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc, 0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823, 0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b, 0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12, 0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a, 0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41, 0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49, 0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70, 0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78, 0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f, 0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067, 0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e, 0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256, 0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d, 0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405, 0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c, 0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634, 0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab, 0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3, 0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a, 0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92, 0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9, 0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1, 0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8, 0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0];
 
@@ -49326,7 +49351,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 330 */
+/* 331 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49334,7 +49359,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x0000, 0xc0c1, 0xc181, 0x0140, 0xc301, 0x03c0, 0x0280, 0xc241, 0xc601, 0x06c0, 0x0780, 0xc741, 0x0500, 0xc5c1, 0xc481, 0x0440, 0xcc01, 0x0cc0, 0x0d80, 0xcd41, 0x0f00, 0xcfc1, 0xce81, 0x0e40, 0x0a00, 0xcac1, 0xcb81, 0x0b40, 0xc901, 0x09c0, 0x0880, 0xc841, 0xd801, 0x18c0, 0x1980, 0xd941, 0x1b00, 0xdbc1, 0xda81, 0x1a40, 0x1e00, 0xdec1, 0xdf81, 0x1f40, 0xdd01, 0x1dc0, 0x1c80, 0xdc41, 0x1400, 0xd4c1, 0xd581, 0x1540, 0xd701, 0x17c0, 0x1680, 0xd641, 0xd201, 0x12c0, 0x1380, 0xd341, 0x1100, 0xd1c1, 0xd081, 0x1040, 0xf001, 0x30c0, 0x3180, 0xf141, 0x3300, 0xf3c1, 0xf281, 0x3240, 0x3600, 0xf6c1, 0xf781, 0x3740, 0xf501, 0x35c0, 0x3480, 0xf441, 0x3c00, 0xfcc1, 0xfd81, 0x3d40, 0xff01, 0x3fc0, 0x3e80, 0xfe41, 0xfa01, 0x3ac0, 0x3b80, 0xfb41, 0x3900, 0xf9c1, 0xf881, 0x3840, 0x2800, 0xe8c1, 0xe981, 0x2940, 0xeb01, 0x2bc0, 0x2a80, 0xea41, 0xee01, 0x2ec0, 0x2f80, 0xef41, 0x2d00, 0xedc1, 0xec81, 0x2c40, 0xe401, 0x24c0, 0x2580, 0xe541, 0x2700, 0xe7c1, 0xe681, 0x2640, 0x2200, 0xe2c1, 0xe381, 0x2340, 0xe101, 0x21c0, 0x2080, 0xe041, 0xa001, 0x60c0, 0x6180, 0xa141, 0x6300, 0xa3c1, 0xa281, 0x6240, 0x6600, 0xa6c1, 0xa781, 0x6740, 0xa501, 0x65c0, 0x6480, 0xa441, 0x6c00, 0xacc1, 0xad81, 0x6d40, 0xaf01, 0x6fc0, 0x6e80, 0xae41, 0xaa01, 0x6ac0, 0x6b80, 0xab41, 0x6900, 0xa9c1, 0xa881, 0x6840, 0x7800, 0xb8c1, 0xb981, 0x7940, 0xbb01, 0x7bc0, 0x7a80, 0xba41, 0xbe01, 0x7ec0, 0x7f80, 0xbf41, 0x7d00, 0xbdc1, 0xbc81, 0x7c40, 0xb401, 0x74c0, 0x7580, 0xb541, 0x7700, 0xb7c1, 0xb681, 0x7640, 0x7200, 0xb2c1, 0xb381, 0x7340, 0xb101, 0x71c0, 0x7080, 0xb041, 0x5000, 0x90c1, 0x9181, 0x5140, 0x9301, 0x53c0, 0x5280, 0x9241, 0x9601, 0x56c0, 0x5780, 0x9741, 0x5500, 0x95c1, 0x9481, 0x5440, 0x9c01, 0x5cc0, 0x5d80, 0x9d41, 0x5f00, 0x9fc1, 0x9e81, 0x5e40, 0x5a00, 0x9ac1, 0x9b81, 0x5b40, 0x9901, 0x59c0, 0x5880, 0x9841, 0x8801, 0x48c0, 0x4980, 0x8941, 0x4b00, 0x8bc1, 0x8a81, 0x4a40, 0x4e00, 0x8ec1, 0x8f81, 0x4f40, 0x8d01, 0x4dc0, 0x4c80, 0x8c41, 0x4400, 0x84c1, 0x8581, 0x4540, 0x8701, 0x47c0, 0x4680, 0x8641, 0x8201, 0x42c0, 0x4380, 0x8341, 0x4100, 0x81c1, 0x8081, 0x4040];
 
@@ -49357,7 +49382,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 331 */
+/* 332 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49365,7 +49390,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	module.exports = create('xmodem', function(buf, previous) {
 	  var code, count, crc, i;
@@ -49392,7 +49417,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 332 */
+/* 333 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49400,7 +49425,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x000000, 0x864cfb, 0x8ad50d, 0x0c99f6, 0x93e6e1, 0x15aa1a, 0x1933ec, 0x9f7f17, 0xa18139, 0x27cdc2, 0x2b5434, 0xad18cf, 0x3267d8, 0xb42b23, 0xb8b2d5, 0x3efe2e, 0xc54e89, 0x430272, 0x4f9b84, 0xc9d77f, 0x56a868, 0xd0e493, 0xdc7d65, 0x5a319e, 0x64cfb0, 0xe2834b, 0xee1abd, 0x685646, 0xf72951, 0x7165aa, 0x7dfc5c, 0xfbb0a7, 0x0cd1e9, 0x8a9d12, 0x8604e4, 0x00481f, 0x9f3708, 0x197bf3, 0x15e205, 0x93aefe, 0xad50d0, 0x2b1c2b, 0x2785dd, 0xa1c926, 0x3eb631, 0xb8faca, 0xb4633c, 0x322fc7, 0xc99f60, 0x4fd39b, 0x434a6d, 0xc50696, 0x5a7981, 0xdc357a, 0xd0ac8c, 0x56e077, 0x681e59, 0xee52a2, 0xe2cb54, 0x6487af, 0xfbf8b8, 0x7db443, 0x712db5, 0xf7614e, 0x19a3d2, 0x9fef29, 0x9376df, 0x153a24, 0x8a4533, 0x0c09c8, 0x00903e, 0x86dcc5, 0xb822eb, 0x3e6e10, 0x32f7e6, 0xb4bb1d, 0x2bc40a, 0xad88f1, 0xa11107, 0x275dfc, 0xdced5b, 0x5aa1a0, 0x563856, 0xd074ad, 0x4f0bba, 0xc94741, 0xc5deb7, 0x43924c, 0x7d6c62, 0xfb2099, 0xf7b96f, 0x71f594, 0xee8a83, 0x68c678, 0x645f8e, 0xe21375, 0x15723b, 0x933ec0, 0x9fa736, 0x19ebcd, 0x8694da, 0x00d821, 0x0c41d7, 0x8a0d2c, 0xb4f302, 0x32bff9, 0x3e260f, 0xb86af4, 0x2715e3, 0xa15918, 0xadc0ee, 0x2b8c15, 0xd03cb2, 0x567049, 0x5ae9bf, 0xdca544, 0x43da53, 0xc596a8, 0xc90f5e, 0x4f43a5, 0x71bd8b, 0xf7f170, 0xfb6886, 0x7d247d, 0xe25b6a, 0x641791, 0x688e67, 0xeec29c, 0x3347a4, 0xb50b5f, 0xb992a9, 0x3fde52, 0xa0a145, 0x26edbe, 0x2a7448, 0xac38b3, 0x92c69d, 0x148a66, 0x181390, 0x9e5f6b, 0x01207c, 0x876c87, 0x8bf571, 0x0db98a, 0xf6092d, 0x7045d6, 0x7cdc20, 0xfa90db, 0x65efcc, 0xe3a337, 0xef3ac1, 0x69763a, 0x578814, 0xd1c4ef, 0xdd5d19, 0x5b11e2, 0xc46ef5, 0x42220e, 0x4ebbf8, 0xc8f703, 0x3f964d, 0xb9dab6, 0xb54340, 0x330fbb, 0xac70ac, 0x2a3c57, 0x26a5a1, 0xa0e95a, 0x9e1774, 0x185b8f, 0x14c279, 0x928e82, 0x0df195, 0x8bbd6e, 0x872498, 0x016863, 0xfad8c4, 0x7c943f, 0x700dc9, 0xf64132, 0x693e25, 0xef72de, 0xe3eb28, 0x65a7d3, 0x5b59fd, 0xdd1506, 0xd18cf0, 0x57c00b, 0xc8bf1c, 0x4ef3e7, 0x426a11, 0xc426ea, 0x2ae476, 0xaca88d, 0xa0317b, 0x267d80, 0xb90297, 0x3f4e6c, 0x33d79a, 0xb59b61, 0x8b654f, 0x0d29b4, 0x01b042, 0x87fcb9, 0x1883ae, 0x9ecf55, 0x9256a3, 0x141a58, 0xefaaff, 0x69e604, 0x657ff2, 0xe33309, 0x7c4c1e, 0xfa00e5, 0xf69913, 0x70d5e8, 0x4e2bc6, 0xc8673d, 0xc4fecb, 0x42b230, 0xddcd27, 0x5b81dc, 0x57182a, 0xd154d1, 0x26359f, 0xa07964, 0xace092, 0x2aac69, 0xb5d37e, 0x339f85, 0x3f0673, 0xb94a88, 0x87b4a6, 0x01f85d, 0x0d61ab, 0x8b2d50, 0x145247, 0x921ebc, 0x9e874a, 0x18cbb1, 0xe37b16, 0x6537ed, 0x69ae1b, 0xefe2e0, 0x709df7, 0xf6d10c, 0xfa48fa, 0x7c0401, 0x42fa2f, 0xc4b6d4, 0xc82f22, 0x4e63d9, 0xd11cce, 0x575035, 0x5bc9c3, 0xdd8538];
 
@@ -49423,7 +49448,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 333 */
+/* 334 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Generated by CoffeeScript 1.9.2
@@ -49431,7 +49456,7 @@ var StellarSdk =
 
 	Buffer = __webpack_require__(234).Buffer;
 
-	create = __webpack_require__(325);
+	create = __webpack_require__(326);
 
 	TABLE = [0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988, 0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2, 0xf3b97148, 0x84be41de, 0x1adad47d, 0x6ddde4eb, 0xf4d4b551, 0x83d385c7, 0x136c9856, 0x646ba8c0, 0xfd62f97a, 0x8a65c9ec, 0x14015c4f, 0x63066cd9, 0xfa0f3d63, 0x8d080df5, 0x3b6e20c8, 0x4c69105e, 0xd56041e4, 0xa2677172, 0x3c03e4d1, 0x4b04d447, 0xd20d85fd, 0xa50ab56b, 0x35b5a8fa, 0x42b2986c, 0xdbbbc9d6, 0xacbcf940, 0x32d86ce3, 0x45df5c75, 0xdcd60dcf, 0xabd13d59, 0x26d930ac, 0x51de003a, 0xc8d75180, 0xbfd06116, 0x21b4f4b5, 0x56b3c423, 0xcfba9599, 0xb8bda50f, 0x2802b89e, 0x5f058808, 0xc60cd9b2, 0xb10be924, 0x2f6f7c87, 0x58684c11, 0xc1611dab, 0xb6662d3d, 0x76dc4190, 0x01db7106, 0x98d220bc, 0xefd5102a, 0x71b18589, 0x06b6b51f, 0x9fbfe4a5, 0xe8b8d433, 0x7807c9a2, 0x0f00f934, 0x9609a88e, 0xe10e9818, 0x7f6a0dbb, 0x086d3d2d, 0x91646c97, 0xe6635c01, 0x6b6b51f4, 0x1c6c6162, 0x856530d8, 0xf262004e, 0x6c0695ed, 0x1b01a57b, 0x8208f4c1, 0xf50fc457, 0x65b0d9c6, 0x12b7e950, 0x8bbeb8ea, 0xfcb9887c, 0x62dd1ddf, 0x15da2d49, 0x8cd37cf3, 0xfbd44c65, 0x4db26158, 0x3ab551ce, 0xa3bc0074, 0xd4bb30e2, 0x4adfa541, 0x3dd895d7, 0xa4d1c46d, 0xd3d6f4fb, 0x4369e96a, 0x346ed9fc, 0xad678846, 0xda60b8d0, 0x44042d73, 0x33031de5, 0xaa0a4c5f, 0xdd0d7cc9, 0x5005713c, 0x270241aa, 0xbe0b1010, 0xc90c2086, 0x5768b525, 0x206f85b3, 0xb966d409, 0xce61e49f, 0x5edef90e, 0x29d9c998, 0xb0d09822, 0xc7d7a8b4, 0x59b33d17, 0x2eb40d81, 0xb7bd5c3b, 0xc0ba6cad, 0xedb88320, 0x9abfb3b6, 0x03b6e20c, 0x74b1d29a, 0xead54739, 0x9dd277af, 0x04db2615, 0x73dc1683, 0xe3630b12, 0x94643b84, 0x0d6d6a3e, 0x7a6a5aa8, 0xe40ecf0b, 0x9309ff9d, 0x0a00ae27, 0x7d079eb1, 0xf00f9344, 0x8708a3d2, 0x1e01f268, 0x6906c2fe, 0xf762575d, 0x806567cb, 0x196c3671, 0x6e6b06e7, 0xfed41b76, 0x89d32be0, 0x10da7a5a, 0x67dd4acc, 0xf9b9df6f, 0x8ebeeff9, 0x17b7be43, 0x60b08ed5, 0xd6d6a3e8, 0xa1d1937e, 0x38d8c2c4, 0x4fdff252, 0xd1bb67f1, 0xa6bc5767, 0x3fb506dd, 0x48b2364b, 0xd80d2bda, 0xaf0a1b4c, 0x36034af6, 0x41047a60, 0xdf60efc3, 0xa867df55, 0x316e8eef, 0x4669be79, 0xcb61b38c, 0xbc66831a, 0x256fd2a0, 0x5268e236, 0xcc0c7795, 0xbb0b4703, 0x220216b9, 0x5505262f, 0xc5ba3bbe, 0xb2bd0b28, 0x2bb45a92, 0x5cb36a04, 0xc2d7ffa7, 0xb5d0cf31, 0x2cd99e8b, 0x5bdeae1d, 0x9b64c2b0, 0xec63f226, 0x756aa39c, 0x026d930a, 0x9c0906a9, 0xeb0e363f, 0x72076785, 0x05005713, 0x95bf4a82, 0xe2b87a14, 0x7bb12bae, 0x0cb61b38, 0x92d28e9b, 0xe5d5be0d, 0x7cdcefb7, 0x0bdbdf21, 0x86d3d2d4, 0xf1d4e242, 0x68ddb3f8, 0x1fda836e, 0x81be16cd, 0xf6b9265b, 0x6fb077e1, 0x18b74777, 0x88085ae6, 0xff0f6a70, 0x66063bca, 0x11010b5c, 0x8f659eff, 0xf862ae69, 0x616bffd3, 0x166ccf45, 0xa00ae278, 0xd70dd2ee, 0x4e048354, 0x3903b3c2, 0xa7672661, 0xd06016f7, 0x4969474d, 0x3e6e77db, 0xaed16a4a, 0xd9d65adc, 0x40df0b66, 0x37d83bf0, 0xa9bcae53, 0xdebb9ec5, 0x47b2cf7f, 0x30b5ffe9, 0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693, 0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94, 0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d];
 
@@ -49454,7 +49479,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 334 */
+/* 335 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -49467,18 +49492,18 @@ var StellarSdk =
 	    value: true
 	});
 
-	var _index = __webpack_require__(261);
+	var _index = __webpack_require__(262);
 
 	var xdr = _index.xdr;
 	var hash = _index.hash;
 
-	var encodeCheck = __webpack_require__(321).encodeCheck;
+	var encodeCheck = __webpack_require__(322).encodeCheck;
 
-	var Operation = __webpack_require__(335).Operation;
+	var Operation = __webpack_require__(336).Operation;
 
-	var Network = __webpack_require__(338).Network;
+	var Network = __webpack_require__(339).Network;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var map = _lodash.map;
 	var each = _lodash.each;
@@ -49601,7 +49626,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(234).Buffer))
 
 /***/ },
-/* 335 */
+/* 336 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -49614,7 +49639,7 @@ var StellarSdk =
 	    value: true
 	});
 
-	var _index = __webpack_require__(261);
+	var _index = __webpack_require__(262);
 
 	var xdr = _index.xdr;
 	var Keypair = _index.Keypair;
@@ -49622,13 +49647,13 @@ var StellarSdk =
 	var UnsignedHyper = _index.UnsignedHyper;
 	var hash = _index.hash;
 
-	var encodeCheck = __webpack_require__(321).encodeCheck;
+	var encodeCheck = __webpack_require__(322).encodeCheck;
 
-	var Asset = __webpack_require__(336).Asset;
+	var Asset = __webpack_require__(337).Asset;
 
-	var best_r = __webpack_require__(337).best_r;
+	var best_r = __webpack_require__(338).best_r;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var padRight = _lodash.padRight;
 	var trimRight = _lodash.trimRight;
@@ -50119,7 +50144,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 336 */
+/* 337 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -50132,14 +50157,14 @@ var StellarSdk =
 	    value: true
 	});
 
-	var _index = __webpack_require__(261);
+	var _index = __webpack_require__(262);
 
 	var xdr = _index.xdr;
 	var Keypair = _index.Keypair;
 
-	var encodeCheck = __webpack_require__(321).encodeCheck;
+	var encodeCheck = __webpack_require__(322).encodeCheck;
 
-	var _lodash = __webpack_require__(270);
+	var _lodash = __webpack_require__(271);
 
 	var clone = _lodash.clone;
 	var padRight = _lodash.padRight;
@@ -50295,7 +50320,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 337 */
+/* 338 */
 /***/ function(module, exports) {
 
 	
@@ -50338,7 +50363,7 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 338 */
+/* 339 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -50351,7 +50376,7 @@ var StellarSdk =
 		value: true
 	});
 
-	var hash = __webpack_require__(300).hash;
+	var hash = __webpack_require__(301).hash;
 
 	var Networks = {
 		PUBLIC: "Public Global Stellar Network ; September 2015",
@@ -50454,7 +50479,7 @@ var StellarSdk =
 	Network.useDefault();
 
 /***/ },
-/* 339 */
+/* 340 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -50469,21 +50494,21 @@ var StellarSdk =
 	    value: true
 	});
 
-	var _index = __webpack_require__(261);
+	var _index = __webpack_require__(262);
 
 	var xdr = _index.xdr;
 	var hash = _index.hash;
 	var Keypair = _index.Keypair;
 
-	var Account = __webpack_require__(340).Account;
+	var Account = __webpack_require__(341).Account;
 
-	var Operation = __webpack_require__(335).Operation;
+	var Operation = __webpack_require__(336).Operation;
 
-	var Transaction = __webpack_require__(334).Transaction;
+	var Transaction = __webpack_require__(335).Transaction;
 
-	var Memo = __webpack_require__(341).Memo;
+	var Memo = __webpack_require__(342).Memo;
 
-	var map = __webpack_require__(270).map;
+	var map = __webpack_require__(271).map;
 
 	var FEE = 1000;
 	var MIN_LEDGER = 0;
@@ -50613,7 +50638,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 340 */
+/* 341 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -50626,7 +50651,7 @@ var StellarSdk =
 	    value: true
 	});
 
-	var decodeCheck = __webpack_require__(321).decodeCheck;
+	var decodeCheck = __webpack_require__(322).decodeCheck;
 
 	/**
 	* @class Account
@@ -50672,7 +50697,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 341 */
+/* 342 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -50685,7 +50710,7 @@ var StellarSdk =
 	    value: true
 	});
 
-	var xdr = __webpack_require__(261).xdr;
+	var xdr = __webpack_require__(262).xdr;
 
 	/**
 	* @class Memo
