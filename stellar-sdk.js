@@ -5306,9 +5306,8 @@ var StellarSdk =
 	    _createClass(Server, [{
 	        key: "submitTransaction",
 	        value: function submitTransaction(transaction) {
-	            var promise = axios.post(URI(this.serverURL).path('transactions').toString(), {
-	                tx: transaction.toEnvelope().toXDR().toString("base64")
-	            }).then(function (response) {
+	            var tx = encodeURIComponent(transaction.toEnvelope().toXDR().toString("base64"));
+	            var promise = axios.post(URI(this.serverURL).path('transactions').toString(), "tx=" + tx).then(function (response) {
 	                return response.data;
 	            })["catch"](function (response) {
 	                if (response instanceof Error) {
