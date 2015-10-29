@@ -2140,12 +2140,20 @@ var StellarSdk =
 	      var _this3 = this;
 
 	      return function (opts) {
+	        var uri = undefined;
+
 	        if (link.template) {
 	          var template = URITemplate(link.href);
-	          return _this3._sendNormalRequest(URI(template.expand(opts)).authority(_this3.url.authority()).protocol(_this3.url.protocol()));
+	          uri = URI(template.expand(opts));
 	        } else {
-	          return _this3._sendNormalRequest(URI(link.href).authority(_this3.url.authority()).protocol(_this3.url.protocol()));
+	          uri = URI(link.href);
 	        }
+
+	        uri = uri.authority(_this3.url.authority()).protocol(_this3.url.protocol());
+
+	        return _this3._sendNormalRequest(uri).then(function (r) {
+	          return _this3._parseRecord(r);
+	        });
 	      };
 	    }
 
