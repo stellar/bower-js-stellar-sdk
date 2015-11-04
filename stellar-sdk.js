@@ -2126,13 +2126,20 @@ var StellarSdk =
 	      var _this2 = this;
 
 	      this.checkFilter();
-	      var es = new EventSource(this.url.toString());
-	      es.onmessage = function (message) {
-	        var result = message.data ? _this2._parseRecord(JSON.parse(message.data)) : message;
-	        options.onmessage(result);
-	      };
-	      es.onerror = options.onerror;
-	      return es;
+	      try {
+	        var es = new EventSource(this.url.toString());
+	        es.onmessage = function (message) {
+	          var result = message.data ? _this2._parseRecord(JSON.parse(message.data)) : message;
+	          options.onmessage(result);
+	        };
+	        es.onerror = options.onerror;
+	        return es;
+	      } catch (err) {
+	        if (options.onerror) {
+	          options.onerror('EventSource not supported');
+	        }
+	        return false;
+	      }
 	    }
 	  }, {
 	    key: "_requestFnForLink",
@@ -6544,27 +6551,13 @@ var StellarSdk =
 	 * @api public
 	 */
 	function origin(url) {
-	  if ('string' === typeof url) {
-	    //
-	    // In order to correctly parse an URL it needs to be prefixed with
-	    // a protocol or the parsers will all assume that the information we've
-	    // given is a pathname instead of an URL. So we need to do a sanity check
-	    // before parsing.
-	    //
-	    if (!/^(http|ws|file|blob)s?:/i.test(url)) url = 'http://'+ url;
-	    url = parse(url.toLowerCase());
-	  }
+	  if ('string' === typeof url) url = parse(url);
 
 	  //
 	  // 6.2.  ASCII Serialization of an Origin
 	  // http://tools.ietf.org/html/rfc6454#section-6.2
 	  //
-	  // @TODO If we cannot generate a proper origin from the URL because
-	  // origin/host/port information is missing we should return the string `null`
-	  //
-
-	  var protocol = url.protocol
-	    , port = url.port && +url.port;
+	  if (!url.protocol || !url.hostname) return 'null';
 
 	  //
 	  // 4. Origin of a URI
@@ -6573,7 +6566,7 @@ var StellarSdk =
 	  // States that url.scheme, host should be converted to lower case. This also
 	  // makes it easier to match origins as everything is just lower case.
 	  //
-	  return (url.protocol +'//'+ url.hostname + (!port ? '' : ':'+ port)).toLowerCase();
+	  return (url.protocol +'//'+ url.host).toLowerCase();
 	}
 
 	/**
@@ -6602,12 +6595,31 @@ var StellarSdk =
 
 	var required = __webpack_require__(32)
 	  , lolcation = __webpack_require__(33)
-	  , qs = __webpack_require__(34);
+	  , qs = __webpack_require__(34)
+	  , relativere = /^\/(?!\/)/;
 
-	var keys = ',,protocol,username,password,host,hostname,port,pathname,query,hash'.split(',')
-	  , inherit = { protocol: 1, host: 1, hostname: 1 }
-	  , relativere = /^\/(?!\/)/
-	  , parts = keys.length;
+	/**
+	 * These are the parse instructions for the URL parsers, it informs the parser
+	 * about:
+	 *
+	 * 0. The char it Needs to parse, if it's a string it should be done using
+	 *    indexOf, RegExp using exec and NaN means set as current value.
+	 * 1. The property we should set when parsing this value.
+	 * 2. Indication if it's backwards or forward parsing, when set as number it's
+	 *    the value of extra chars that should be split off.
+	 * 3. Inherit from location if non existing in the parser.
+	 * 4. `toLowerCase` the resulting value.
+	 */
+	var instructions = [
+	  ['#', 'hash'],                        // Extract from the back.
+	  ['?', 'query'],                       // Extract from the back.
+	  ['//', 'protocol', 2, 1, 1],          // Extract from the front.
+	  ['/', 'pathname'],                    // Extract from the back.
+	  ['@', 'auth', 1],                     // Extract from the front.
+	  [NaN, 'host', undefined, 1, 1],       // Set left over value.
+	  [/\:(\d+)$/, 'port'],                 // RegExp the back.
+	  [NaN, 'hostname', undefined, 1, 1]    // Set left over.
+	];
 
 	/**
 	 * The actual URL instance. Instead of returning an object we've opted-in to
@@ -6625,46 +6637,11 @@ var StellarSdk =
 	    return new URL(address, location, parser);
 	  }
 
-	  //
-	  // Story time children:
-	  //
-	  // FireFox 34 has some problems with their Regular Expression engine and
-	  // executing a RegExp can cause a `too much recursion` error. We initially fixed
-	  // this by moving the Regular Expression in the URL constructor so it's created
-	  // every single time. This fixed it for some URL's but the more complex the
-	  // URL's get the easier it is to trigger. Complexer URL like:
-	  //
-	  //   https://www.mozilla.org/en-US/firefox/34.0/whatsnew/?oldversion=33.1
-	  //
-	  // Still triggered the recursion error. After talking with Chrome and FireFox
-	  // engineers it seemed to be caused by:
-	  //
-	  //   https://code.google.com/p/v8/issues/detail?id=430
-	  //
-	  // As FireFox started using Chrome's RegExp engine. After testing various of
-	  // workarounds I finally stumbled upon this gem, use new RegExp as it sometimes
-	  // behaves different then a RegExp literal. The biggest problem with this
-	  // FireFox problem is that it's super hard to reproduce as our "normal" test
-	  // suite doesn't catch it. The only way to reproduce it was run the parser in
-	  // jsperf.com (uses the benchmark module from npm) and supply it the URL
-	  // mentioned above as URL to parse.
-	  //
-	  // Steps for compiling the new RegExp:
-	  //
-	  // 1. Take the regular RegExp as seen below.
-	  // 2. Escape the RegExp using XRegExp.escape from http://xregexp.com/tests/
-	  // 3. ??
-	  // 4. Profit.
-	  //
-	  // RegExp source: /^(?:(?:(([^:\/#\?]+:)?(?:(?:\/\/)(?:(?:(?:([^:@\/#\?]+)(?:\:([^:@\/#\?]*))?)@)?(([^:\/#\?\]\[]+|\[[^\/\]@#?]+\])(?:\:([0-9]+))?))?)?)?((?:\/?(?:[^\/\?#]+\/+)*)(?:[^\?#]*)))?(\?[^#]+)?)(#.*)?/
-	  //
-	  var regexp = new RegExp('\^\(\?:\(\?:\(\(\[\^:\\/\#\\\?\]\+:\)\?\(\?:\(\?:\\/\\/\)\(\?:\(\?:\(\?:\(\[\^:@\\/\#\\\?\]\+\)\(\?:\\:\(\[\^:@\\/\#\\\?\]\*\)\)\?\)@\)\?\(\(\[\^:\\/\#\\\?\\\]\\\[\]\+\|\\\[\[\^\\/\\\]@\#\?\]\+\\\]\)\(\?:\\:\(\[0\-9\]\+\)\)\?\)\)\?\)\?\)\?\(\(\?:\\/\?\(\?:\[\^\\/\\\?\#\]\+\\/\+\)\*\)\(\?:\[\^\\\?\#\]\*\)\)\)\?\(\\\?\[\^\#\]\+\)\?\)\(\#\.\*\)\?')
-	    , relative = relativere.test(address)
-	    , bits = regexp.exec(address)
+	  var relative = relativere.test(address)
+	    , parse, instruction, index, key
 	    , type = typeof location
 	    , url = this
-	    , i = 0
-	    , key;
+	    , i = 0;
 
 	  //
 	  // The following if statements allows this module two have compatibility with
@@ -6688,17 +6665,37 @@ var StellarSdk =
 
 	  location = lolcation(location);
 
-	  for (; i < parts; key = keys[++i]) {
-	    if (!key) continue;
+	  for (; i < instructions.length; i++) {
+	    instruction = instructions[i];
+	    parse = instruction[0];
+	    key = instruction[1];
 
-	    url[key] = bits[i] || (key in inherit || ('port' === key && relative) ? location[key] || '' : '');
+	    if (parse !== parse) {
+	      url[key] = address;
+	    } else if ('string' === typeof parse) {
+	      if (~(index = address.indexOf(parse))) {
+	        if ('number' === typeof instruction[2]) {
+	          url[key] = address.slice(0, index);
+	          address = address.slice(index + instruction[2]);
+	        } else {
+	          url[key] = address.slice(index);
+	          address = address.slice(0, index);
+	        }
+	      }
+	    } else if (index = parse.exec(address)) {
+	      url[key] = index[1];
+	      address = address.slice(0, address.length - index[0].length);
+	    }
+
+	    url[key] = url[key] || (instruction[3] || ('port' === key && relative) ? location[key] || '' : '');
 
 	    //
-	    // The protocol, host, host name should always be lower cased even if they
-	    // are supplied in uppercase. This way, when people generate an `origin`
-	    // it be correct.
+	    // Hostname, host and protocol should be lowercased so they can be used to
+	    // create a proper `origin`.
 	    //
-	    if (i === 2 || i === 5 || i === 6) url[key] = url[key].toLowerCase();
+	    if (instruction[4]) {
+	      url[key] = url[key].toLowerCase();
+	    }
 	  }
 
 	  //
@@ -6716,6 +6713,16 @@ var StellarSdk =
 	  if (!required(url.port, url.protocol)) {
 	    url.host = url.hostname;
 	    url.port = '';
+	  }
+
+	  //
+	  // Parse down the `auth` for the username and password.
+	  //
+	  url.username = url.password = '';
+	  if (url.auth) {
+	    instruction = url.auth.split(':');
+	    url.username = instruction[0] || '';
+	    url.password = instruction[1] || '';
 	  }
 
 	  //
@@ -6737,7 +6744,10 @@ var StellarSdk =
 	  var url = this;
 
 	  if ('query' === part) {
-	    if ('string' === typeof value) value = (fn || qs.parse)(value);
+	    if ('string' === typeof value && value.length) {
+	      value = (fn || qs.parse)(value);
+	    }
+
 	    url[part] = value;
 	  } else if ('port' === part) {
 	    url[part] = value;
@@ -6783,19 +6793,19 @@ var StellarSdk =
 	    , url = this
 	    , result = url.protocol +'//';
 
-	  if (url.username) result += url.username +':'+ url.password +'@';
+	  if (url.username) {
+	    result += url.username;
+	    if (url.password) result += ':'+ url.password;
+	    result += '@';
+	  }
 
 	  result += url.hostname;
 	  if (url.port) result += ':'+ url.port;
 
 	  result += url.pathname;
 
-	  if (url.query) {
-	    if ('object' === typeof url.query) query = stringify(url.query);
-	    else query = url.query;
-
-	    result += (query.charAt(0) === '?' ? '' : '?') + query;
-	  }
+	  query = 'object' === typeof url.query ? stringify(url.query) : url.query;
+	  if (query) result += '?' !== query.charAt(0) ? '?'+ query : query;
 
 	  if (url.hash) result += url.hash;
 
@@ -6842,7 +6852,7 @@ var StellarSdk =
 	    return port !== 443;
 
 	    case 'ftp':
-	    return port !== 22;
+	    return port !== 21;
 
 	    case 'gopher':
 	    return port !== 70;
