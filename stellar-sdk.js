@@ -58033,6 +58033,11 @@ var StellarSdk =
 	                    return false;
 	                }
 
+	                // Decimal places (max 7)
+	                if (amount.decimalPlaces() > 7) {
+	                    return false;
+	                }
+
 	                // Infinity
 	                if (!amount.isFinite()) {
 	                    return false;
@@ -61287,6 +61292,8 @@ var StellarSdk =
 	var isString = _lodash.isString;
 	var isUndefined = _lodash.isUndefined;
 
+	var UnsignedHyper = __webpack_require__(81).UnsignedHyper;
+
 	var BigNumber = _interopRequire(__webpack_require__(152));
 
 	/**
@@ -61379,7 +61386,7 @@ var StellarSdk =
 	                    throw error;
 	                }
 
-	                return xdr.Memo.memoId(id);
+	                return xdr.Memo.memoId(UnsignedHyper.fromString(id));
 	            })
 	        },
 	        hash: {
