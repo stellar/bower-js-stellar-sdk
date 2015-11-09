@@ -2079,6 +2079,9 @@ var StellarSdk =
 	var toBluebird = __webpack_require__(67).resolve;
 	var _ = __webpack_require__(69);
 
+	var TIMEOUT = 5 * 1000;
+
+	exports.TIMEOUT = TIMEOUT;
 	/**
 	* @class Builder
 	*/
@@ -2197,7 +2200,7 @@ var StellarSdk =
 	      }
 
 	      url.addQuery('c', Math.random());
-	      var promise = axios.get(url.toString()).then(function (response) {
+	      var promise = axios.get(url.toString(), { timeout: TIMEOUT }).then(function (response) {
 	        return response.data;
 	      })["catch"](this._handleNetworkError);
 	      return toBluebird(promise);
