@@ -2079,9 +2079,6 @@ var StellarSdk =
 	var toBluebird = __webpack_require__(67).resolve;
 	var _ = __webpack_require__(69);
 
-	var TIMEOUT = 5 * 1000;
-
-	exports.TIMEOUT = TIMEOUT;
 	/**
 	* @class Builder
 	*/
@@ -2200,7 +2197,7 @@ var StellarSdk =
 	      }
 
 	      url.addQuery('c', Math.random());
-	      var promise = axios.get(url.toString(), { timeout: TIMEOUT }).then(function (response) {
+	      var promise = axios.get(url.toString()).then(function (response) {
 	        return response.data;
 	      })["catch"](this._handleNetworkError);
 	      return toBluebird(promise);
@@ -5386,10 +5383,18 @@ var StellarSdk =
 	var dispatchRequest = __webpack_require__(20);
 	var InterceptorManager = __webpack_require__(27);
 
-	var axios = module.exports = function axios(config) {
+	var axios = module.exports = function (config) {
+	  // Allow for axios('example/url'[, config]) a la fetch API
+	  if (typeof config === 'string') {
+	    config = utils.merge({
+	      url: arguments[0]
+	    }, arguments[1]);
+	  }
+
 	  config = utils.merge({
 	    method: 'get',
 	    headers: {},
+	    timeout: defaults.timeout,
 	    transformRequest: defaults.transformRequest,
 	    transformResponse: defaults.transformResponse
 	  }, config);
@@ -5676,6 +5681,27 @@ var StellarSdk =
 	}
 
 	/**
+	 * Determine if we're running in a standard browser environment
+	 *
+	 * This allows axios to run in a web worker, and react-native.
+	 * Both environments support XMLHttpRequest, but not fully standard globals.
+	 *
+	 * web workers:
+	 *  typeof window -> undefined
+	 *  typeof document -> undefined
+	 *
+	 * react-native:
+	 *  typeof document.createelement -> undefined
+	 */
+	function isStandardBrowserEnv() {
+	  return (
+	    typeof window !== 'undefined' &&
+	    typeof document !== 'undefined' &&
+	    typeof document.createElement === 'function'
+	  );
+	}
+
+	/**
 	 * Iterate over an Array or an Object invoking a function for each item.
 	 *
 	 * If `obj` is an Array or arguments callback will be called passing
@@ -5756,6 +5782,7 @@ var StellarSdk =
 	  isDate: isDate,
 	  isFile: isFile,
 	  isBlob: isBlob,
+	  isStandardBrowserEnv: isStandardBrowserEnv,
 	  forEach: forEach,
 	  merge: merge,
 	  trim: trim
@@ -5806,10 +5833,8 @@ var StellarSdk =
 	var defaults = __webpack_require__(18);
 	var utils = __webpack_require__(19);
 	var buildUrl = __webpack_require__(22);
-	var cookies = __webpack_require__(23);
-	var parseHeaders = __webpack_require__(24);
-	var transformData = __webpack_require__(25);
-	var urlIsSameOrigin = __webpack_require__(26);
+	var parseHeaders = __webpack_require__(23);
+	var transformData = __webpack_require__(24);
 
 	module.exports = function xhrAdapter(resolve, reject, config) {
 	  // Transform request data
@@ -5866,11 +5891,20 @@ var StellarSdk =
 	  };
 
 	  // Add xsrf header
-	  var xsrfValue = urlIsSameOrigin(config.url) ?
-	      cookies.read(config.xsrfCookieName || defaults.xsrfCookieName) :
-	      undefined;
-	  if (xsrfValue) {
-	    requestHeaders[config.xsrfHeaderName || defaults.xsrfHeaderName] = xsrfValue;
+	  // This is only done if running in a standard browser environment.
+	  // Specifically not if we're in a web worker, or react-native.
+	  if (utils.isStandardBrowserEnv()) {
+	    var cookies = __webpack_require__(25);
+	    var urlIsSameOrigin = __webpack_require__(26);
+
+	    // Add xsrf header
+	    var xsrfValue = urlIsSameOrigin(config.url) ?
+	        cookies.read(config.xsrfCookieName || defaults.xsrfCookieName) :
+	        undefined;
+
+	    if (xsrfValue) {
+	      requestHeaders[config.xsrfHeaderName || defaults.xsrfHeaderName] = xsrfValue;
+	    }
 	  }
 
 	  // Add headers to the request
@@ -5983,6 +6017,77 @@ var StellarSdk =
 
 	var utils = __webpack_require__(19);
 
+	/**
+	 * Parse headers into an object
+	 *
+	 * ```
+	 * Date: Wed, 27 Aug 2014 08:58:49 GMT
+	 * Content-Type: application/json
+	 * Connection: keep-alive
+	 * Transfer-Encoding: chunked
+	 * ```
+	 *
+	 * @param {String} headers Headers needing to be parsed
+	 * @returns {Object} Headers parsed into an object
+	 */
+	module.exports = function parseHeaders(headers) {
+	  var parsed = {}, key, val, i;
+
+	  if (!headers) { return parsed; }
+
+	  utils.forEach(headers.split('\n'), function(line) {
+	    i = line.indexOf(':');
+	    key = utils.trim(line.substr(0, i)).toLowerCase();
+	    val = utils.trim(line.substr(i + 1));
+
+	    if (key) {
+	      parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+	    }
+	  });
+
+	  return parsed;
+	};
+
+
+/***/ },
+/* 24 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var utils = __webpack_require__(19);
+
+	/**
+	 * Transform the data for a request or a response
+	 *
+	 * @param {Object|String} data The data to be transformed
+	 * @param {Array} headers The headers for the request or response
+	 * @param {Array|Function} fns A single function or Array of functions
+	 * @returns {*} The resulting transformed data
+	 */
+	module.exports = function transformData(data, headers, fns) {
+	  utils.forEach(fns, function (fn) {
+	    data = fn(data, headers);
+	  });
+
+	  return data;
+	};
+
+
+/***/ },
+/* 25 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	/**
+	 * WARNING:
+	 *  This file makes references to objects that aren't safe in all environments.
+	 *  Please see lib/utils.isStandardBrowserEnv before including this file.
+	 */
+
+	var utils = __webpack_require__(19);
+
 	module.exports = {
 	  write: function write(name, value, expires, path, domain, secure) {
 	    var cookie = [];
@@ -6019,75 +6124,16 @@ var StellarSdk =
 
 
 /***/ },
-/* 24 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var utils = __webpack_require__(19);
-
-	/**
-	 * Parse headers into an object
-	 *
-	 * ```
-	 * Date: Wed, 27 Aug 2014 08:58:49 GMT
-	 * Content-Type: application/json
-	 * Connection: keep-alive
-	 * Transfer-Encoding: chunked
-	 * ```
-	 *
-	 * @param {String} headers Headers needing to be parsed
-	 * @returns {Object} Headers parsed into an object
-	 */
-	module.exports = function parseHeaders(headers) {
-	  var parsed = {}, key, val, i;
-
-	  if (!headers) { return parsed; }
-
-	  utils.forEach(headers.split('\n'), function(line) {
-	    i = line.indexOf(':');
-	    key = utils.trim(line.substr(0, i)).toLowerCase();
-	    val = utils.trim(line.substr(i + 1));
-
-	    if (key) {
-	      parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
-	    }
-	  });
-
-	  return parsed;
-	};
-
-
-/***/ },
-/* 25 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	var utils = __webpack_require__(19);
-
-	/**
-	 * Transform the data for a request or a response
-	 *
-	 * @param {Object|String} data The data to be transformed
-	 * @param {Array} headers The headers for the request or response
-	 * @param {Array|Function} fns A single function or Array of functions
-	 * @returns {*} The resulting transformed data
-	 */
-	module.exports = function transformData(data, headers, fns) {
-	  utils.forEach(fns, function (fn) {
-	    data = fn(data, headers);
-	  });
-
-	  return data;
-	};
-
-
-/***/ },
 /* 26 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	/**
+	 * WARNING:
+	 *  This file makes references to objects that aren't safe in all environments.
+	 *  Please see lib/utils.isStandardBrowserEnv before including this file.
+	 */
 
 	var utils = __webpack_require__(19);
 	var msie = /(msie|trident)/i.test(navigator.userAgent);
@@ -6227,7 +6273,7 @@ var StellarSdk =
 	 */
 	module.exports = function spread(callback) {
 	  return function (arr) {
-	    callback.apply(null, arr);
+	    return callback.apply(null, arr);
 	  };
 	};
 
@@ -61396,7 +61442,7 @@ var StellarSdk =
 
 	            /**
 	            * Creates and returns a "hash" memo.
-	            * @param {array|string} hash - 32 byte hash
+	            * @param {array|string} hash - 32 byte hash or hex encoded string
 	            */
 
 	            value: (function (_hash) {
@@ -61410,14 +61456,17 @@ var StellarSdk =
 
 	                return _hashWrapper;
 	            })(function (hash) {
-	                var error = new Error("Expects a 32 byte hash value. Got " + hash);
+	                var error = new Error("Expects a 32 byte hash value or hex encoded string. Got " + hash);
 
 	                if (isUndefined(hash)) {
 	                    throw error;
 	                }
 
-	                if (isString(hash) && Buffer.byteLength(hash) != 32) {
-	                    throw error;
+	                if (isString(hash)) {
+	                    if (!/^[0-9A-Fa-f]{64}$/g.test(hash)) {
+	                        throw error;
+	                    }
+	                    hash = new Buffer(hash, "hex");
 	                }
 
 	                if (!hash.length || hash.length != 32) {
@@ -61431,18 +61480,21 @@ var StellarSdk =
 
 	            /**
 	            * Creates and returns a "return hash" memo.
-	            * @param {array|string} hash - 32 byte hash
+	            * @param {array|string} hash - 32 byte hash or hex encoded string
 	            */
 
 	            value: function returnHash(hash) {
-	                var error = new Error("Expects a 32 byte hash value. Got " + hash);
+	                var error = new Error("Expects a 32 byte hash value or hex encoded string. Got " + hash);
 
 	                if (isUndefined(hash)) {
 	                    throw error;
 	                }
 
-	                if (isString(hash) && Buffer.byteLength(hash) != 32) {
-	                    throw error;
+	                if (isString(hash)) {
+	                    if (!/^[0-9A-Fa-f]{64}$/g.test(hash)) {
+	                        throw error;
+	                    }
+	                    hash = new Buffer(hash, "hex");
 	                }
 
 	                if (!hash.length || hash.length != 32) {
