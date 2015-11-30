@@ -597,6 +597,8 @@ var StellarSdk =
 
 	_defaults(exports, _interopExportWildcard(_stellarBase, _defaults));
 
+	exports["default"] = module.exports;
+
 /***/ },
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
@@ -2196,6 +2198,7 @@ var StellarSdk =
 	        url = url.protocol(this.url.protocol());
 	      }
 
+	      // Temp fix for: https://github.com/stellar/js-stellar-sdk/issues/15
 	      url.addQuery('c', Math.random());
 	      var promise = axios.get(url.toString()).then(function (response) {
 	        return response.data;
@@ -11768,7 +11771,7 @@ var StellarSdk =
 	      }
 
 	      // valid surrogate pair
-	      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+	      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
 	    } else if (leadSurrogate) {
 	      // valid bmp char, but last char was a lead
 	      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
@@ -12134,8 +12137,12 @@ var StellarSdk =
 
 	// NOTE: These type checking functions intentionally don't use `instanceof`
 	// because it is fragile and can be easily faked with `Object.create()`.
-	function isArray(ar) {
-	  return Array.isArray(ar);
+
+	function isArray(arg) {
+	  if (Array.isArray) {
+	    return Array.isArray(arg);
+	  }
+	  return objectToString(arg) === '[object Array]';
 	}
 	exports.isArray = isArray;
 
@@ -12175,7 +12182,7 @@ var StellarSdk =
 	exports.isUndefined = isUndefined;
 
 	function isRegExp(re) {
-	  return isObject(re) && objectToString(re) === '[object RegExp]';
+	  return objectToString(re) === '[object RegExp]';
 	}
 	exports.isRegExp = isRegExp;
 
@@ -12185,13 +12192,12 @@ var StellarSdk =
 	exports.isObject = isObject;
 
 	function isDate(d) {
-	  return isObject(d) && objectToString(d) === '[object Date]';
+	  return objectToString(d) === '[object Date]';
 	}
 	exports.isDate = isDate;
 
 	function isError(e) {
-	  return isObject(e) &&
-	      (objectToString(e) === '[object Error]' || e instanceof Error);
+	  return (objectToString(e) === '[object Error]' || e instanceof Error);
 	}
 	exports.isError = isError;
 
@@ -12210,14 +12216,12 @@ var StellarSdk =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	function isBuffer(arg) {
-	  return Buffer.isBuffer(arg);
-	}
-	exports.isBuffer = isBuffer;
+	exports.isBuffer = Buffer.isBuffer;
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
 	}
+
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(49).Buffer))
 
 /***/ },
@@ -31635,14 +31639,14 @@ var StellarSdk =
 	        _get(Object.getPrototypeOf(OrderbookCallBuilder.prototype), "constructor", this).call(this, url);
 	        this.url.segment('order_book');
 	        if (!selling.isNative()) {
-	            this.url.addQuery("selling_asset_type", 'credit_alphanum4');
+	            this.url.addQuery("selling_asset_type", selling.getAssetType());
 	            this.url.addQuery("selling_asset_code", selling.getCode());
 	            this.url.addQuery("selling_asset_issuer", selling.getIssuer());
 	        } else {
 	            this.url.addQuery("selling_asset_type", 'native');
 	        }
 	        if (!buying.isNative()) {
-	            this.url.addQuery("buying_asset_type", 'credit_alphanum4');
+	            this.url.addQuery("buying_asset_type", buying.getAssetType());
 	            this.url.addQuery("buying_asset_code", buying.getCode());
 	            this.url.addQuery("buying_asset_issuer", buying.getIssuer());
 	        } else {
@@ -57830,7 +57834,7 @@ var StellarSdk =
 	            * @param {Asset} buying - What you're buying.
 	            * @param {string} amount - The total amount you're selling. If 0, deletes the offer.
 	            * @param {number|string|BigNumber} price - The exchange rate ratio (takerpay / takerget)
-	            * @param {string} offerId - If 0, will create a new offer (default). Otherwise, edits an exisiting offer.
+	            * @param {number|string} offerId - If 0, will create a new offer (default). Otherwise, edits an exisiting offer.
 	            * @param {string} [opts.source] - The source account (defaults to transaction source).
 	            * @returns {xdr.ManageOfferOp}
 	            */
@@ -57839,8 +57843,8 @@ var StellarSdk =
 	                var attributes = {};
 	                attributes.selling = opts.selling.toXdrObject();
 	                attributes.buying = opts.buying.toXdrObject();
-	                if (!this.isValidAmount(opts.amount)) {
-	                    throw new TypeError("amount argument must be of type String and represent a positive number");
+	                if (!this.isValidAmount(opts.amount, true)) {
+	                    throw new TypeError("amount argument must be of type String and represent a positive number or zero");
 	                }
 	                attributes.amount = this._toXDRAmount(opts.amount);
 	                if (isUndefined(opts.price)) {
@@ -57849,9 +57853,7 @@ var StellarSdk =
 	                attributes.price = this._toXDRPrice(opts.price);
 
 	                if (!isUndefined(opts.offerId)) {
-	                    if (!isString(opts.offerId)) {
-	                        throw new TypeError("offerId argument must be of type String");
-	                    }
+	                    opts.offerId = opts.offerId.toString();
 	                } else {
 	                    opts.offerId = "0";
 	                }
