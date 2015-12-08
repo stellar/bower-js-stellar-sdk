@@ -2082,40 +2082,54 @@ var StellarSdk =
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
 	});
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	var _call_builder = __webpack_require__(11);
 
 	var AccountCallBuilder = (function (_CallBuilder) {
-	    _inherits(AccountCallBuilder, _CallBuilder);
+	  _inherits(AccountCallBuilder, _CallBuilder);
 
-	    /**
-	     * Creates a new {@link AccountCallBuilder} pointed to server defined by serverUrl.
-	     *
-	     * Do not create this object directly, use {@link Server#accounts}.
-	     * @see [All Accounts](https://www.stellar.org/developers/horizon/reference/accounts-all.html)
-	     * @constructor
-	     * @extends CallBuilder
-	     * @param {string} serverUrl Horizon server URL.
-	     */
+	  /**
+	   * Creates a new {@link AccountCallBuilder} pointed to server defined by serverUrl.
+	   *
+	   * Do not create this object directly, use {@link Server#accounts}.
+	   * @see [All Accounts](https://www.stellar.org/developers/horizon/reference/accounts-all.html)
+	   * @constructor
+	   * @extends CallBuilder
+	   * @param {string} serverUrl Horizon server URL.
+	   */
 
-	    function AccountCallBuilder(serverUrl) {
-	        _classCallCheck(this, AccountCallBuilder);
+	  function AccountCallBuilder(serverUrl) {
+	    _classCallCheck(this, AccountCallBuilder);
 
-	        _get(Object.getPrototypeOf(AccountCallBuilder.prototype), 'constructor', this).call(this, serverUrl);
-	        this.url.segment('accounts');
+	    _get(Object.getPrototypeOf(AccountCallBuilder.prototype), "constructor", this).call(this, serverUrl);
+	    this.url.segment('accounts');
+	  }
+
+	  /**
+	   * Returns information and links relating to a single account.
+	   * The balances section in the returned JSON will also list all the trust lines this account has set up.
+	   *
+	   * @deprecated use accountId method instead
+	   */
+
+	  _createClass(AccountCallBuilder, [{
+	    key: "address",
+	    value: function address(id) {
+	      console.warn("AccountCallBuilder#address is deprecated, please use AccountCallBuilder#accountId instead");
+	      return this.accountId(id);
 	    }
 
 	    /**
@@ -2123,19 +2137,18 @@ var StellarSdk =
 	     * The balances section in the returned JSON will also list all the trust lines this account has set up.
 	     *
 	     * @see [Account Details](https://www.stellar.org/developers/horizon/reference/accounts-single.html)
-	     * @param {string} accountId For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
+	     * @param {string} id For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
 	     * @returns {AccountCallBuilder}
 	     */
+	  }, {
+	    key: "accountId",
+	    value: function accountId(id) {
+	      this.filter.push(['accounts', id]);
+	      return this;
+	    }
+	  }]);
 
-	    _createClass(AccountCallBuilder, [{
-	        key: 'address',
-	        value: function address(accountId) {
-	            this.filter.push(['accounts', accountId]);
-	            return this;
-	        }
-	    }]);
-
-	    return AccountCallBuilder;
+	  return AccountCallBuilder;
 	})(_call_builder.CallBuilder);
 
 	exports.AccountCallBuilder = AccountCallBuilder;
