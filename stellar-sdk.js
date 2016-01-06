@@ -1805,6 +1805,8 @@ var StellarSdk =
 
 	var _stellarBase = __webpack_require__(79);
 
+	var _lodash = __webpack_require__(69);
+
 	var axios = __webpack_require__(16);
 	var toBluebird = __webpack_require__(67).resolve;
 	var URI = __webpack_require__(12);
@@ -1819,23 +1821,26 @@ var StellarSdk =
 	     * Server handles a network connection to a [Horizon](https://www.stellar.org/developers/horizon/learn/index.html)
 	     * instance and exposes an interface for requests to that instance.
 	     * @constructor
-	     * @param {object} [config] The server configuration.
-	     * @param {boolean} [config.secure] Use https, defaults false.
-	     * @param {string} [config.hostname] The hostname of the [Horizon](https://www.stellar.org/developers/horizon/learn/index.html) server, defaults to "localhost".
-	     * @param {number} [config.port] Horizon port, defaults to 3000.
+	     * @param {string} serverURL Horizon Server URL (ex. `https://horizon-testnet.stellar.org`). The old method (config object parameter) is **deprecated**.
 	     */
 
 	    function Server() {
-	        var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+	        var serverURL = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
 	        _classCallCheck(this, Server);
 
-	        this.protocol = config.secure ? "https" : "http";
-	        this.hostname = config.hostname || "localhost";
-	        this.port = config.port || 3000;
-	        this.serverURL = URI({ protocol: this.protocol,
-	            hostname: this.hostname,
-	            port: this.port });
+	        if ((0, _lodash.isString)(serverURL)) {
+	            this.serverURL = URI(serverURL);
+	        } else {
+	            // We leave the old method for compatibility reasons.
+	            // This will be removed in the next major release.
+	            this.protocol = serverURL.secure ? "https" : "http";
+	            this.hostname = serverURL.hostname || "localhost";
+	            this.port = serverURL.port || 3000;
+	            this.serverURL = URI({ protocol: this.protocol,
+	                hostname: this.hostname,
+	                port: this.port });
+	        }
 	    }
 
 	    /**
@@ -62254,36 +62259,42 @@ var StellarSdk =
 
 	var _toml2 = _interopRequireDefault(_toml);
 
+	var _lodash = __webpack_require__(69);
+
 	var FederationServer = (function () {
 	  /**
 	   * FederationServer handles a network connection to a
 	   * [federation server](https://www.stellar.org/developers/learn/concepts/federation.html)
 	   * instance and exposes an interface for requests to that instance.
 	   * @constructor
-	   * @param {object} [config] The server configuration.
-	   * @param {boolean} [config.secure] Use https, defaults false.
-	   * @param {string} [config.hostname] The hostname of the [federation server](https://www.stellar.org/developers/learn/concepts/federation.html), defaults to "localhost".
-	   * @param {number} [config.port] Server port, defaults to 80.
-	   * @param {string} [config.path] The path to federation endpoint, defaults to "/federation".
-	   * @param {string} [config.domain] Domain this federation server represents. Optional, if exist username passed to {@link FederationServer#federation} method does not need to contain a domain.
+	   * @param {string} serverURL The federation server URL (ex. `https://acme.com/federation`). The old method (config object parameter) is **deprecated**.
+	   * @param {string} domain Domain this server represents
 	   */
 
-	  function FederationServer() {
-	    var config = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
+	  function FederationServer(serverURL, domain) {
 	    _classCallCheck(this, FederationServer);
 
-	    this.protocol = config.secure ? "https" : "http";
-	    this.hostname = config.hostname || "localhost";
-	    this.port = config.port || 80;
-	    this.path = config.path || '/federation';
-	    this.domain = config.domain;
-	    this.serverURL = (0, _URIjs2['default'])({
-	      protocol: this.protocol,
-	      hostname: this.hostname,
-	      port: this.port,
-	      path: this.path
-	    });
+	    if ((0, _lodash.isString)(serverURL)) {
+	      this.serverURL = (0, _URIjs2['default'])(serverURL);
+	      this.domain = domain;
+	    } else {
+	      // We leave the old method for compatibility reasons.
+	      // This will be removed in the next major release.
+	      if (!serverURL) {
+	        serverURL = {};
+	      }
+	      this.protocol = serverURL.secure ? "https" : "http";
+	      this.hostname = serverURL.hostname || "localhost";
+	      this.port = serverURL.port || 80;
+	      this.path = serverURL.path || '/federation';
+	      this.domain = serverURL.domain;
+	      this.serverURL = (0, _URIjs2['default'])({
+	        protocol: this.protocol,
+	        hostname: this.hostname,
+	        port: this.port,
+	        path: this.path
+	      });
+	    }
 	  }
 
 	  /**
@@ -62405,11 +62416,7 @@ var StellarSdk =
 	        if (!tomlObject.FEDERATION_SERVER) {
 	          return _bluebird2['default'].reject(new Error('stellar.toml does not contain FEDERATION_SERVER field'));
 	        }
-
-	        var config = _URIjs2['default'].parse(tomlObject.FEDERATION_SERVER);
-	        config.domain = domain;
-	        config.secure = config.protocol == 'https';
-	        return new FederationServer(config);
+	        return new FederationServer(tomlObject.FEDERATION_SERVER, domain);
 	      });
 	    }
 	  }]);
