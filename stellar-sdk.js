@@ -62261,6 +62261,8 @@ var StellarSdk =
 
 	var _lodash = __webpack_require__(69);
 
+	var _stellarBase = __webpack_require__(79);
+
 	var FederationServer = (function () {
 	  /**
 	   * FederationServer handles a network connection to a
@@ -62275,6 +62277,7 @@ var StellarSdk =
 	    _classCallCheck(this, FederationServer);
 
 	    if ((0, _lodash.isString)(serverURL)) {
+	      // TODO `domain` regexp
 	      this.serverURL = (0, _URIjs2['default'])(serverURL);
 	      this.domain = domain;
 	    } else {
@@ -62298,27 +62301,42 @@ var StellarSdk =
 	  }
 
 	  /**
-	   * This methods splits Stellar address (ex. `bob*stellar.org`) and then tries to find information about federation
-	   * server in `stellar.toml` file for a given domain. It returns a `Promise` which resolves if federation server exists
-	   * and user has been found and rejects in all other cases.
+	   * This method is a helper method for handling user inputs that contain `destination` value.
+	   * It accepts two types of values:
+	   *
+	   * * For Stellar address (ex. `bob*stellar.org`) it splits Stellar address and then tries to find information about
+	   * federation server in `stellar.toml` file for a given domain. It returns a `Promise` which resolves if federation
+	   * server exists and user has been found and rejects in all other cases.
+	   * * For Account ID (ex. `GB5XVAABEQMY63WTHDQ5RXADGYF345VWMNPTN2GFUDZT57D57ZQTJ7PS`) it returns a `Promise` which
+	   * resolves if Account ID is valid and rejects in all other cases. Please note that this method does not check
+	   * if the account actually exists in a ledger.
+	   *
+	   * Example:
 	   * ```js
 	   * StellarSdk.FederationServer.forAddress('bob*stellar.org')
 	   *  .then(federationRecord => {
 	   *    // {
-	   *    //   stellar_address: 'bob*stellar.org',
-	   *    //   account_id: 'GB5XVAABEQMY63WTHDQ5RXADGYF345VWMNPTN2GFUDZT57D57ZQTJ7PS'
+	   *    //   account_id: 'GB5XVAABEQMY63WTHDQ5RXADGYF345VWMNPTN2GFUDZT57D57ZQTJ7PS',
+	   *    //   memo_type: 'id',
+	   *    //   memo: 100
 	   *    // }
 	   *  });
 	   * ```
-	   * This function is here for convenience and is using `createForDomain` and non-static `forAddress` internally.
+	   * It returns a `Promise` that will resolve to a JSON object with following fields:
+	   * * `account_id` - Account ID of the destination,
+	   * * `memo_type` (optional) - Memo type that needs to be attached to a transaction,
+	   * * `memo` (optional) - Memo value that needs to be attached to a transaction.
+	   *
+	   * The Promise will reject in case of any errors.
+	   *
 	   * @see <a href="https://www.stellar.org/developers/learn/concepts/federation.html" target="_blank">Federation doc</a>
 	   * @see <a href="https://www.stellar.org/developers/learn/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
-	   * @param {string} address Stellar Address (ex. `bob*stellar.org`)
+	   * @param {string} value Stellar Address (ex. `bob*stellar.org`)
 	   * @returns {Promise}
 	   */
 
 	  _createClass(FederationServer, [{
-	    key: 'forAddress',
+	    key: 'resolveAddress',
 
 	    /**
 	     * Returns a Promise that resolves to federation record if the user was found for a given Stellar address.
@@ -62326,7 +62344,7 @@ var StellarSdk =
 	     * @param {string} address Stellar address (ex. `bob*stellar.org`). If `FederationServer` was instantiated with `domain` param only username (ex. `bob`) can be passed.
 	     * @returns {Promise}
 	     */
-	    value: function forAddress(address) {
+	    value: function resolveAddress(address) {
 	      if (address.indexOf('*') < 0) {
 	        if (!this.domain) {
 	          return _bluebird2['default'].reject(new Error('Unknown domain. Make sure `address` contains a domain (ex. `bob*stellar.org`) or pass `domain` parameter when instantiating the server object.'));
@@ -62344,8 +62362,8 @@ var StellarSdk =
 	     * @returns {Promise}
 	     */
 	  }, {
-	    key: 'forAccountId',
-	    value: function forAccountId(accountId) {
+	    key: 'resolveAccountId',
+	    value: function resolveAccountId(accountId) {
 	      var url = this.serverURL.query({ type: 'id', q: accountId });
 	      return this._sendRequest(url);
 	    }
@@ -62357,8 +62375,8 @@ var StellarSdk =
 	     * @returns {Promise}
 	     */
 	  }, {
-	    key: 'forTransactionId',
-	    value: function forTransactionId(transactionId) {
+	    key: 'resolveTransactionId',
+	    value: function resolveTransactionId(transactionId) {
 	      var url = this.serverURL.query({ type: 'txid', q: transactionId });
 	      return this._sendRequest(url);
 	    }
@@ -62376,20 +62394,31 @@ var StellarSdk =
 	      });
 	    }
 	  }], [{
-	    key: 'forAddress',
-	    value: function forAddress(address) {
-	      var addressParts = address.split('*');
-	      if (addressParts.length != 2) {
-	        return _bluebird2['default'].reject(new Error('Invalid Stellar address'));
+	    key: 'resolve',
+	    value: function resolve(value) {
+	      // Check if `value` is in account ID format
+	      if (value.indexOf('*') < 0) {
+	        if (!_stellarBase.Account.isValidAccountId(value)) {
+	          return _bluebird2['default'].reject(new Error('Invalid Account ID'));
+	        } else {
+	          return _bluebird2['default'].resolve({ account_id: value });
+	        }
+	      } else {
+	        var addressParts = value.split('*');
+
+	        var _addressParts = _slicedToArray(addressParts, 2);
+
+	        var domain = _addressParts[1];
+
+	        if (addressParts.length != 2 || !domain) {
+	          return _bluebird2['default'].reject(new Error('Invalid Stellar address'));
+	        }
+	        return FederationServer.createForDomain(domain).then(function (federationServer) {
+	          return federationServer.resolveAddress(value);
+	        }).then(function (response) {
+	          return (0, _lodash.pick)(response, ['account_id', 'memo_type', 'memo']);
+	        });
 	      }
-
-	      var _addressParts = _slicedToArray(addressParts, 2);
-
-	      var domain = _addressParts[1];
-
-	      return FederationServer.createForDomain(domain).then(function (federationServer) {
-	        return federationServer.forAddress(address);
-	      });
 	    }
 
 	    /**
