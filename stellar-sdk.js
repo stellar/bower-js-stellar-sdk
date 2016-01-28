@@ -58455,7 +58455,9 @@ var StellarSdk =
 	            * @param {Asset} opts.selling - What you're selling.
 	            * @param {Asset} opts.buying - What you're buying.
 	            * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
-	            * @param {number|string|BigNumber} opts.price - The exchange rate ratio (selling / buying).
+	            * @param {number|string|BigNumber|Object} opts.price - The exchange rate ratio (selling / buying)
+	            * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
+	            * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
 	            * @param {number|string} [opts.offerId ]- If `0`, will create a new offer (default). Otherwise, edits an exisiting offer.
 	            * @param {string} [opts.source] - The source account (defaults to transaction source).
 	            * @throws {Error} Throws `Error` when the best rational approximation of `price` cannot be found.
@@ -58501,7 +58503,9 @@ var StellarSdk =
 	            * @param {Asset} opts.selling - What you're selling.
 	            * @param {Asset} opts.buying - What you're buying.
 	            * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
-	            * @param {number|string|BigNumber} opts.price - The exchange rate ratio (selling / buying)
+	            * @param {number|string|BigNumber|Object} opts.price - The exchange rate ratio (selling / buying)
+	            * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
+	            * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
 	            * @param {string} [opts.source] - The source account (defaults to transaction source).
 	            * @throws {Error} Throws `Error` when the best rational approximation of `price` cannot be found.
 	            * @returns {xdr.CreatePassiveOfferOp}
@@ -58770,15 +58774,23 @@ var StellarSdk =
 	             */
 
 	            value: function _toXDRPrice(price) {
-	                price = new BigNumber(price);
-	                if (price.lte(0)) {
+	                var xdrObject = undefined;
+	                if (price.n && price.d) {
+	                    xdrObject = new xdr.Price(price);
+	                } else {
+	                    price = new BigNumber(price);
+	                    var approx = best_r(price);
+	                    xdrObject = new xdr.Price({
+	                        n: parseInt(approx[0]),
+	                        d: parseInt(approx[1])
+	                    });
+	                }
+
+	                if (xdrObject.n() < 0 || xdrObject.d() < 0) {
 	                    throw new Error("price must be positive");
 	                }
-	                var approx = best_r(price);
-	                return new xdr.Price({
-	                    n: parseInt(approx[0]),
-	                    d: parseInt(approx[1])
-	                });
+
+	                return xdrObject;
 	            }
 	        }
 	    });
