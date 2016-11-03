@@ -61292,7 +61292,7 @@ var StellarSdk =
 	            if (allowHttp) {
 	                protocol = 'http';
 	            }
-	            return _axios2['default'].get(protocol + '://www.' + domain + '/.well-known/stellar.toml').then(function (response) {
+	            return _axios2['default'].get(protocol + '://' + domain + '/.well-known/stellar.toml').then(function (response) {
 	                try {
 	                    var tomlObject = _toml2['default'].parse(response.data);
 	                    return _bluebird2['default'].resolve(tomlObject);
