@@ -589,9 +589,9 @@ var StellarSdk =
 	"use strict";
 
 	module.exports = __webpack_require__(1);
-	module.exports.axios = __webpack_require__(126);
-	module.exports.bluebird = __webpack_require__(185);
-	module.exports.StellarBase = __webpack_require__(188);
+	module.exports.axios = __webpack_require__(135);
+	module.exports.bluebird = __webpack_require__(203);
+	module.exports.StellarBase = __webpack_require__(205);
 
 	/*globals _*/
 	_.noConflict();
@@ -627,7 +627,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _server = __webpack_require__(111);
+	var _server = __webpack_require__(119);
 
 	Object.defineProperty(exports, "Server", {
 	  enumerable: true,
@@ -636,7 +636,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _federation_server = __webpack_require__(419);
+	var _federation_server = __webpack_require__(462);
 
 	Object.defineProperty(exports, "FederationServer", {
 	  enumerable: true,
@@ -645,7 +645,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _stellar_toml_resolver = __webpack_require__(436);
+	var _stellar_toml_resolver = __webpack_require__(491);
 
 	Object.defineProperty(exports, "StellarTomlResolver", {
 	  enumerable: true,
@@ -656,7 +656,7 @@ var StellarSdk =
 
 	// expose classes and functions from stellar-base
 
-	var _stellarBase = __webpack_require__(188);
+	var _stellarBase = __webpack_require__(205);
 
 	_defaults(exports, _interopExportWildcard(_stellarBase, _defaults));
 
@@ -2162,6 +2162,9 @@ var StellarSdk =
 
 	var baseClone = __webpack_require__(8);
 
+	/** Used to compose bitmasks for cloning. */
+	var CLONE_SYMBOLS_FLAG = 4;
+
 	/**
 	 * Creates a shallow clone of `value`.
 	 *
@@ -2189,7 +2192,7 @@ var StellarSdk =
 	 * // => true
 	 */
 	function clone(value) {
-	  return baseClone(value, false, true);
+	  return baseClone(value, CLONE_SYMBOLS_FLAG);
 	}
 
 	module.exports = clone;
@@ -2203,18 +2206,26 @@ var StellarSdk =
 	    arrayEach = __webpack_require__(53),
 	    assignValue = __webpack_require__(54),
 	    baseAssign = __webpack_require__(57),
-	    cloneBuffer = __webpack_require__(80),
-	    copyArray = __webpack_require__(81),
-	    copySymbols = __webpack_require__(82),
-	    getAllKeys = __webpack_require__(85),
-	    getTag = __webpack_require__(88),
-	    initCloneArray = __webpack_require__(93),
-	    initCloneByTag = __webpack_require__(94),
-	    initCloneObject = __webpack_require__(108),
+	    baseAssignIn = __webpack_require__(80),
+	    cloneBuffer = __webpack_require__(84),
+	    copyArray = __webpack_require__(85),
+	    copySymbols = __webpack_require__(86),
+	    copySymbolsIn = __webpack_require__(90),
+	    getAllKeys = __webpack_require__(94),
+	    getAllKeysIn = __webpack_require__(96),
+	    getTag = __webpack_require__(97),
+	    initCloneArray = __webpack_require__(102),
+	    initCloneByTag = __webpack_require__(103),
+	    initCloneObject = __webpack_require__(117),
 	    isArray = __webpack_require__(65),
 	    isBuffer = __webpack_require__(66),
 	    isObject = __webpack_require__(33),
 	    keys = __webpack_require__(59);
+
+	/** Used to compose bitmasks for cloning. */
+	var CLONE_DEEP_FLAG = 1,
+	    CLONE_FLAT_FLAG = 2,
+	    CLONE_SYMBOLS_FLAG = 4;
 
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]',
@@ -2267,16 +2278,22 @@ var StellarSdk =
 	 *
 	 * @private
 	 * @param {*} value The value to clone.
-	 * @param {boolean} [isDeep] Specify a deep clone.
-	 * @param {boolean} [isFull] Specify a clone including symbols.
+	 * @param {boolean} bitmask The bitmask flags.
+	 *  1 - Deep clone
+	 *  2 - Flatten inherited properties
+	 *  4 - Clone symbols
 	 * @param {Function} [customizer] The function to customize cloning.
 	 * @param {string} [key] The key of `value`.
 	 * @param {Object} [object] The parent object of `value`.
 	 * @param {Object} [stack] Tracks traversed objects and their clone counterparts.
 	 * @returns {*} Returns the cloned value.
 	 */
-	function baseClone(value, isDeep, isFull, customizer, key, object, stack) {
-	  var result;
+	function baseClone(value, bitmask, customizer, key, object, stack) {
+	  var result,
+	      isDeep = bitmask & CLONE_DEEP_FLAG,
+	      isFlat = bitmask & CLONE_FLAT_FLAG,
+	      isFull = bitmask & CLONE_SYMBOLS_FLAG;
+
 	  if (customizer) {
 	    result = object ? customizer(value, key, object, stack) : customizer(value);
 	  }
@@ -2300,9 +2317,11 @@ var StellarSdk =
 	      return cloneBuffer(value, isDeep);
 	    }
 	    if (tag == objectTag || tag == argsTag || (isFunc && !object)) {
-	      result = initCloneObject(isFunc ? {} : value);
+	      result = (isFlat || isFunc) ? {} : initCloneObject(value);
 	      if (!isDeep) {
-	        return copySymbols(value, baseAssign(result, value));
+	        return isFlat
+	          ? copySymbolsIn(value, baseAssignIn(result, value))
+	          : copySymbols(value, baseAssign(result, value));
 	      }
 	    } else {
 	      if (!cloneableTags[tag]) {
@@ -2319,14 +2338,18 @@ var StellarSdk =
 	  }
 	  stack.set(value, result);
 
-	  var props = isArr ? undefined : (isFull ? getAllKeys : keys)(value);
+	  var keysFunc = isFull
+	    ? (isFlat ? getAllKeysIn : getAllKeys)
+	    : (isFlat ? keysIn : keys);
+
+	  var props = isArr ? undefined : keysFunc(value);
 	  arrayEach(props || value, function(subValue, key) {
 	    if (props) {
 	      key = subValue;
 	      subValue = value[key];
 	    }
 	    // Recursively populate clone (susceptible to call stack limits).
-	    assignValue(result, key, baseClone(subValue, isDeep, isFull, customizer, key, value, stack));
+	    assignValue(result, key, baseClone(subValue, bitmask, customizer, key, value, stack));
 	  });
 	  return result;
 	}
@@ -2897,8 +2920,7 @@ var StellarSdk =
 	  if (value == null) {
 	    return value === undefined ? undefinedTag : nullTag;
 	  }
-	  value = Object(value);
-	  return (symToStringTag && symToStringTag in value)
+	  return (symToStringTag && symToStringTag in Object(value))
 	    ? getRawTag(value)
 	    : objectToString(value);
 	}
@@ -3368,7 +3390,7 @@ var StellarSdk =
 	 */
 	function hashHas(key) {
 	  var data = this.__data__;
-	  return nativeCreate ? data[key] !== undefined : hasOwnProperty.call(data, key);
+	  return nativeCreate ? (data[key] !== undefined) : hasOwnProperty.call(data, key);
 	}
 
 	module.exports = hashHas;
@@ -4274,7 +4296,7 @@ var StellarSdk =
 	/** Used to access faster Node.js helpers. */
 	var nodeUtil = (function() {
 	  try {
-	    return freeProcess && freeProcess.binding('util');
+	    return freeProcess && freeProcess.binding && freeProcess.binding('util');
 	  } catch (e) {}
 	}());
 
@@ -4418,6 +4440,132 @@ var StellarSdk =
 /* 80 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var copyObject = __webpack_require__(58),
+	    keysIn = __webpack_require__(81);
+
+	/**
+	 * The base implementation of `_.assignIn` without support for multiple sources
+	 * or `customizer` functions.
+	 *
+	 * @private
+	 * @param {Object} object The destination object.
+	 * @param {Object} source The source object.
+	 * @returns {Object} Returns `object`.
+	 */
+	function baseAssignIn(object, source) {
+	  return object && copyObject(source, keysIn(source), object);
+	}
+
+	module.exports = baseAssignIn;
+
+
+/***/ },
+/* 81 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayLikeKeys = __webpack_require__(60),
+	    baseKeysIn = __webpack_require__(82),
+	    isArrayLike = __webpack_require__(79);
+
+	/**
+	 * Creates an array of the own and inherited enumerable property names of `object`.
+	 *
+	 * **Note:** Non-object values are coerced to objects.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 3.0.0
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 * @example
+	 *
+	 * function Foo() {
+	 *   this.a = 1;
+	 *   this.b = 2;
+	 * }
+	 *
+	 * Foo.prototype.c = 3;
+	 *
+	 * _.keysIn(new Foo);
+	 * // => ['a', 'b', 'c'] (iteration order is not guaranteed)
+	 */
+	function keysIn(object) {
+	  return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
+	}
+
+	module.exports = keysIn;
+
+
+/***/ },
+/* 82 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isObject = __webpack_require__(33),
+	    isPrototype = __webpack_require__(76),
+	    nativeKeysIn = __webpack_require__(83);
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+
+	/**
+	 * The base implementation of `_.keysIn` which doesn't treat sparse arrays as dense.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 */
+	function baseKeysIn(object) {
+	  if (!isObject(object)) {
+	    return nativeKeysIn(object);
+	  }
+	  var isProto = isPrototype(object),
+	      result = [];
+
+	  for (var key in object) {
+	    if (!(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
+	      result.push(key);
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = baseKeysIn;
+
+
+/***/ },
+/* 83 */
+/***/ function(module, exports) {
+
+	/**
+	 * This function is like
+	 * [`Object.keys`](http://ecma-international.org/ecma-262/7.0/#sec-object.keys)
+	 * except that it includes inherited enumerable properties.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names.
+	 */
+	function nativeKeysIn(object) {
+	  var result = [];
+	  if (object != null) {
+	    for (var key in Object(object)) {
+	      result.push(key);
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = nativeKeysIn;
+
+
+/***/ },
+/* 84 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/* WEBPACK VAR INJECTION */(function(module) {var root = __webpack_require__(29);
 
 	/** Detect free variable `exports`. */
@@ -4457,7 +4605,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module)))
 
 /***/ },
-/* 81 */
+/* 85 */
 /***/ function(module, exports) {
 
 	/**
@@ -4483,14 +4631,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 82 */
+/* 86 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var copyObject = __webpack_require__(58),
-	    getSymbols = __webpack_require__(83);
+	    getSymbols = __webpack_require__(87);
 
 	/**
-	 * Copies own symbol properties of `source` to `object`.
+	 * Copies own symbols of `source` to `object`.
 	 *
 	 * @private
 	 * @param {Object} source The object to copy symbols from.
@@ -4505,29 +4653,74 @@ var StellarSdk =
 
 
 /***/ },
-/* 83 */
+/* 87 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var overArg = __webpack_require__(78),
-	    stubArray = __webpack_require__(84);
+	var arrayFilter = __webpack_require__(88),
+	    stubArray = __webpack_require__(89);
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/** Built-in value references. */
+	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeGetSymbols = Object.getOwnPropertySymbols;
 
 	/**
-	 * Creates an array of the own enumerable symbol properties of `object`.
+	 * Creates an array of the own enumerable symbols of `object`.
 	 *
 	 * @private
 	 * @param {Object} object The object to query.
 	 * @returns {Array} Returns the array of symbols.
 	 */
-	var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
+	var getSymbols = !nativeGetSymbols ? stubArray : function(object) {
+	  if (object == null) {
+	    return [];
+	  }
+	  object = Object(object);
+	  return arrayFilter(nativeGetSymbols(object), function(symbol) {
+	    return propertyIsEnumerable.call(object, symbol);
+	  });
+	};
 
 	module.exports = getSymbols;
 
 
 /***/ },
-/* 84 */
+/* 88 */
+/***/ function(module, exports) {
+
+	/**
+	 * A specialized version of `_.filter` for arrays without support for
+	 * iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Array} [array] The array to iterate over.
+	 * @param {Function} predicate The function invoked per iteration.
+	 * @returns {Array} Returns the new filtered array.
+	 */
+	function arrayFilter(array, predicate) {
+	  var index = -1,
+	      length = array == null ? 0 : array.length,
+	      resIndex = 0,
+	      result = [];
+
+	  while (++index < length) {
+	    var value = array[index];
+	    if (predicate(value, index, array)) {
+	      result[resIndex++] = value;
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = arrayFilter;
+
+
+/***/ },
+/* 89 */
 /***/ function(module, exports) {
 
 	/**
@@ -4556,55 +4749,60 @@ var StellarSdk =
 
 
 /***/ },
-/* 85 */
+/* 90 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGetAllKeys = __webpack_require__(86),
-	    getSymbols = __webpack_require__(83),
-	    keys = __webpack_require__(59);
+	var copyObject = __webpack_require__(58),
+	    getSymbolsIn = __webpack_require__(91);
 
 	/**
-	 * Creates an array of own enumerable property names and symbols of `object`.
+	 * Copies own and inherited symbols of `source` to `object`.
 	 *
 	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {Array} Returns the array of property names and symbols.
+	 * @param {Object} source The object to copy symbols from.
+	 * @param {Object} [object={}] The object to copy symbols to.
+	 * @returns {Object} Returns `object`.
 	 */
-	function getAllKeys(object) {
-	  return baseGetAllKeys(object, keys, getSymbols);
+	function copySymbolsIn(source, object) {
+	  return copyObject(source, getSymbolsIn(source), object);
 	}
 
-	module.exports = getAllKeys;
+	module.exports = copySymbolsIn;
 
 
 /***/ },
-/* 86 */
+/* 91 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayPush = __webpack_require__(87),
-	    isArray = __webpack_require__(65);
+	var arrayPush = __webpack_require__(92),
+	    getPrototype = __webpack_require__(93),
+	    getSymbols = __webpack_require__(87),
+	    stubArray = __webpack_require__(89);
+
+	/* Built-in method references for those with the same name as other `lodash` methods. */
+	var nativeGetSymbols = Object.getOwnPropertySymbols;
 
 	/**
-	 * The base implementation of `getAllKeys` and `getAllKeysIn` which uses
-	 * `keysFunc` and `symbolsFunc` to get the enumerable property names and
-	 * symbols of `object`.
+	 * Creates an array of the own and inherited enumerable symbols of `object`.
 	 *
 	 * @private
 	 * @param {Object} object The object to query.
-	 * @param {Function} keysFunc The function to get the keys of `object`.
-	 * @param {Function} symbolsFunc The function to get the symbols of `object`.
-	 * @returns {Array} Returns the array of property names and symbols.
+	 * @returns {Array} Returns the array of symbols.
 	 */
-	function baseGetAllKeys(object, keysFunc, symbolsFunc) {
-	  var result = keysFunc(object);
-	  return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
-	}
+	var getSymbolsIn = !nativeGetSymbols ? stubArray : function(object) {
+	  var result = [];
+	  while (object) {
+	    arrayPush(result, getSymbols(object));
+	    object = getPrototype(object);
+	  }
+	  return result;
+	};
 
-	module.exports = baseGetAllKeys;
+	module.exports = getSymbolsIn;
 
 
 /***/ },
-/* 87 */
+/* 92 */
 /***/ function(module, exports) {
 
 	/**
@@ -4630,14 +4828,97 @@ var StellarSdk =
 
 
 /***/ },
-/* 88 */
+/* 93 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var DataView = __webpack_require__(89),
+	var overArg = __webpack_require__(78);
+
+	/** Built-in value references. */
+	var getPrototype = overArg(Object.getPrototypeOf, Object);
+
+	module.exports = getPrototype;
+
+
+/***/ },
+/* 94 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseGetAllKeys = __webpack_require__(95),
+	    getSymbols = __webpack_require__(87),
+	    keys = __webpack_require__(59);
+
+	/**
+	 * Creates an array of own enumerable property names and symbols of `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names and symbols.
+	 */
+	function getAllKeys(object) {
+	  return baseGetAllKeys(object, keys, getSymbols);
+	}
+
+	module.exports = getAllKeys;
+
+
+/***/ },
+/* 95 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var arrayPush = __webpack_require__(92),
+	    isArray = __webpack_require__(65);
+
+	/**
+	 * The base implementation of `getAllKeys` and `getAllKeysIn` which uses
+	 * `keysFunc` and `symbolsFunc` to get the enumerable property names and
+	 * symbols of `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Function} keysFunc The function to get the keys of `object`.
+	 * @param {Function} symbolsFunc The function to get the symbols of `object`.
+	 * @returns {Array} Returns the array of property names and symbols.
+	 */
+	function baseGetAllKeys(object, keysFunc, symbolsFunc) {
+	  var result = keysFunc(object);
+	  return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
+	}
+
+	module.exports = baseGetAllKeys;
+
+
+/***/ },
+/* 96 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseGetAllKeys = __webpack_require__(95),
+	    getSymbolsIn = __webpack_require__(91),
+	    keysIn = __webpack_require__(81);
+
+	/**
+	 * Creates an array of own and inherited enumerable property names and
+	 * symbols of `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @returns {Array} Returns the array of property names and symbols.
+	 */
+	function getAllKeysIn(object) {
+	  return baseGetAllKeys(object, keysIn, getSymbolsIn);
+	}
+
+	module.exports = getAllKeysIn;
+
+
+/***/ },
+/* 97 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var DataView = __webpack_require__(98),
 	    Map = __webpack_require__(23),
-	    Promise = __webpack_require__(90),
-	    Set = __webpack_require__(91),
-	    WeakMap = __webpack_require__(92),
+	    Promise = __webpack_require__(99),
+	    Set = __webpack_require__(100),
+	    WeakMap = __webpack_require__(101),
 	    baseGetTag = __webpack_require__(27),
 	    toSource = __webpack_require__(36);
 
@@ -4694,7 +4975,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 89 */
+/* 98 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(24),
@@ -4707,7 +4988,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 90 */
+/* 99 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(24),
@@ -4720,7 +5001,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 91 */
+/* 100 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(24),
@@ -4733,7 +5014,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 92 */
+/* 101 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var getNative = __webpack_require__(24),
@@ -4746,7 +5027,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 93 */
+/* 102 */
 /***/ function(module, exports) {
 
 	/** Used for built-in method references. */
@@ -4778,16 +5059,16 @@ var StellarSdk =
 
 
 /***/ },
-/* 94 */
+/* 103 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneArrayBuffer = __webpack_require__(95),
-	    cloneDataView = __webpack_require__(97),
-	    cloneMap = __webpack_require__(98),
-	    cloneRegExp = __webpack_require__(102),
-	    cloneSet = __webpack_require__(103),
-	    cloneSymbol = __webpack_require__(106),
-	    cloneTypedArray = __webpack_require__(107);
+	var cloneArrayBuffer = __webpack_require__(104),
+	    cloneDataView = __webpack_require__(106),
+	    cloneMap = __webpack_require__(107),
+	    cloneRegExp = __webpack_require__(111),
+	    cloneSet = __webpack_require__(112),
+	    cloneSymbol = __webpack_require__(115),
+	    cloneTypedArray = __webpack_require__(116);
 
 	/** `Object#toString` result references. */
 	var boolTag = '[object Boolean]',
@@ -4864,10 +5145,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 95 */
+/* 104 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Uint8Array = __webpack_require__(96);
+	var Uint8Array = __webpack_require__(105);
 
 	/**
 	 * Creates a clone of `arrayBuffer`.
@@ -4886,7 +5167,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 96 */
+/* 105 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var root = __webpack_require__(29);
@@ -4898,10 +5179,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 97 */
+/* 106 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneArrayBuffer = __webpack_require__(95);
+	var cloneArrayBuffer = __webpack_require__(104);
 
 	/**
 	 * Creates a clone of `dataView`.
@@ -4920,12 +5201,15 @@ var StellarSdk =
 
 
 /***/ },
-/* 98 */
+/* 107 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addMapEntry = __webpack_require__(99),
-	    arrayReduce = __webpack_require__(100),
-	    mapToArray = __webpack_require__(101);
+	var addMapEntry = __webpack_require__(108),
+	    arrayReduce = __webpack_require__(109),
+	    mapToArray = __webpack_require__(110);
+
+	/** Used to compose bitmasks for cloning. */
+	var CLONE_DEEP_FLAG = 1;
 
 	/**
 	 * Creates a clone of `map`.
@@ -4937,7 +5221,7 @@ var StellarSdk =
 	 * @returns {Object} Returns the cloned map.
 	 */
 	function cloneMap(map, isDeep, cloneFunc) {
-	  var array = isDeep ? cloneFunc(mapToArray(map), true) : mapToArray(map);
+	  var array = isDeep ? cloneFunc(mapToArray(map), CLONE_DEEP_FLAG) : mapToArray(map);
 	  return arrayReduce(array, addMapEntry, new map.constructor);
 	}
 
@@ -4945,7 +5229,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 99 */
+/* 108 */
 /***/ function(module, exports) {
 
 	/**
@@ -4966,7 +5250,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 100 */
+/* 109 */
 /***/ function(module, exports) {
 
 	/**
@@ -4998,7 +5282,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 101 */
+/* 110 */
 /***/ function(module, exports) {
 
 	/**
@@ -5022,7 +5306,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 102 */
+/* 111 */
 /***/ function(module, exports) {
 
 	/** Used to match `RegExp` flags from their coerced string values. */
@@ -5045,12 +5329,15 @@ var StellarSdk =
 
 
 /***/ },
-/* 103 */
+/* 112 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addSetEntry = __webpack_require__(104),
-	    arrayReduce = __webpack_require__(100),
-	    setToArray = __webpack_require__(105);
+	var addSetEntry = __webpack_require__(113),
+	    arrayReduce = __webpack_require__(109),
+	    setToArray = __webpack_require__(114);
+
+	/** Used to compose bitmasks for cloning. */
+	var CLONE_DEEP_FLAG = 1;
 
 	/**
 	 * Creates a clone of `set`.
@@ -5062,7 +5349,7 @@ var StellarSdk =
 	 * @returns {Object} Returns the cloned set.
 	 */
 	function cloneSet(set, isDeep, cloneFunc) {
-	  var array = isDeep ? cloneFunc(setToArray(set), true) : setToArray(set);
+	  var array = isDeep ? cloneFunc(setToArray(set), CLONE_DEEP_FLAG) : setToArray(set);
 	  return arrayReduce(array, addSetEntry, new set.constructor);
 	}
 
@@ -5070,7 +5357,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 104 */
+/* 113 */
 /***/ function(module, exports) {
 
 	/**
@@ -5091,7 +5378,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 105 */
+/* 114 */
 /***/ function(module, exports) {
 
 	/**
@@ -5115,7 +5402,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 106 */
+/* 115 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28);
@@ -5139,10 +5426,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 107 */
+/* 116 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneArrayBuffer = __webpack_require__(95);
+	var cloneArrayBuffer = __webpack_require__(104);
 
 	/**
 	 * Creates a clone of `typedArray`.
@@ -5161,11 +5448,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 108 */
+/* 117 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseCreate = __webpack_require__(109),
-	    getPrototype = __webpack_require__(110),
+	var baseCreate = __webpack_require__(118),
+	    getPrototype = __webpack_require__(93),
 	    isPrototype = __webpack_require__(76);
 
 	/**
@@ -5185,7 +5472,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 109 */
+/* 118 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(33);
@@ -5221,19 +5508,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 110 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var overArg = __webpack_require__(78);
-
-	/** Built-in value references. */
-	var getPrototype = overArg(Object.getPrototypeOf, Object);
-
-	module.exports = getPrototype;
-
-
-/***/ },
-/* 111 */
+/* 119 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5251,40 +5526,40 @@ var StellarSdk =
 
 	var _errors = __webpack_require__(5);
 
-	var _account_call_builder = __webpack_require__(112);
+	var _account_call_builder = __webpack_require__(120);
 
-	var _account_response = __webpack_require__(187);
+	var _account_response = __webpack_require__(204);
 
 	var _config = __webpack_require__(6);
 
-	var _ledger_call_builder = __webpack_require__(409);
+	var _ledger_call_builder = __webpack_require__(452);
 
-	var _transaction_call_builder = __webpack_require__(410);
+	var _transaction_call_builder = __webpack_require__(453);
 
-	var _operation_call_builder = __webpack_require__(411);
+	var _operation_call_builder = __webpack_require__(454);
 
-	var _offer_call_builder = __webpack_require__(412);
+	var _offer_call_builder = __webpack_require__(455);
 
-	var _orderbook_call_builder = __webpack_require__(413);
+	var _orderbook_call_builder = __webpack_require__(456);
 
-	var _path_call_builder = __webpack_require__(414);
+	var _path_call_builder = __webpack_require__(457);
 
-	var _payment_call_builder = __webpack_require__(415);
+	var _payment_call_builder = __webpack_require__(458);
 
-	var _effect_call_builder = __webpack_require__(416);
+	var _effect_call_builder = __webpack_require__(459);
 
-	var _friendbot_builder = __webpack_require__(417);
+	var _friendbot_builder = __webpack_require__(460);
 
-	var _stellarBase = __webpack_require__(188);
+	var _stellarBase = __webpack_require__(205);
 
-	var _lodashIsString = __webpack_require__(418);
+	var _lodashIsString = __webpack_require__(461);
 
 	var _lodashIsString2 = _interopRequireDefault(_lodashIsString);
 
-	var axios = __webpack_require__(126);
-	var toBluebird = __webpack_require__(185).resolve;
-	var URI = __webpack_require__(122);
-	var URITemplate = __webpack_require__(122).URITemplate;
+	var axios = __webpack_require__(135);
+	var toBluebird = __webpack_require__(203).resolve;
+	var URI = __webpack_require__(130);
+	var URITemplate = __webpack_require__(130).URITemplate;
 
 	var SUBMIT_TRANSACTION_TIMEOUT = 20 * 1000;
 
@@ -5495,7 +5770,7 @@ var StellarSdk =
 	exports.Server = Server;
 
 /***/ },
-/* 112 */
+/* 120 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5512,7 +5787,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var AccountCallBuilder = (function (_CallBuilder) {
 	  _inherits(AccountCallBuilder, _CallBuilder);
@@ -5557,7 +5832,7 @@ var StellarSdk =
 	exports.AccountCallBuilder = AccountCallBuilder;
 
 /***/ },
-/* 113 */
+/* 121 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5574,16 +5849,16 @@ var StellarSdk =
 
 	var _errors = __webpack_require__(5);
 
-	var _lodashForEach = __webpack_require__(114);
+	var _lodashForEach = __webpack_require__(122);
 
 	var _lodashForEach2 = _interopRequireDefault(_lodashForEach);
 
-	var URI = __webpack_require__(122);
-	var URITemplate = __webpack_require__(122).URITemplate;
+	var URI = __webpack_require__(130);
+	var URITemplate = __webpack_require__(134);
 
-	var axios = __webpack_require__(126);
-	var EventSource = typeof window === 'undefined' ? __webpack_require__(145) : window.EventSource;
-	var toBluebird = __webpack_require__(185).resolve;
+	var axios = __webpack_require__(135);
+	var EventSource = typeof window === 'undefined' ? __webpack_require__(154) : window.EventSource;
+	var toBluebird = __webpack_require__(203).resolve;
 
 	/**
 	 * Creates a new {@link CallBuilder} pointed to server defined by serverUrl.
@@ -5714,9 +5989,9 @@ var StellarSdk =
 	      return function (opts) {
 	        var uri = undefined;
 
-	        if (link.template) {
+	        if (link.templated) {
 	          var template = URITemplate(link.href);
-	          uri = URI(template.expand(opts));
+	          uri = URI(template.expand(opts || {}));
 	        } else {
 	          uri = URI(link.href);
 	        }
@@ -5866,12 +6141,12 @@ var StellarSdk =
 	exports.CallBuilder = CallBuilder;
 
 /***/ },
-/* 114 */
+/* 122 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var arrayEach = __webpack_require__(53),
-	    baseEach = __webpack_require__(115),
-	    castFunction = __webpack_require__(120),
+	    baseEach = __webpack_require__(123),
+	    castFunction = __webpack_require__(128),
 	    isArray = __webpack_require__(65);
 
 	/**
@@ -5913,11 +6188,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 115 */
+/* 123 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseForOwn = __webpack_require__(116),
-	    createBaseEach = __webpack_require__(119);
+	var baseForOwn = __webpack_require__(124),
+	    createBaseEach = __webpack_require__(127);
 
 	/**
 	 * The base implementation of `_.forEach` without support for iteratee shorthands.
@@ -5933,10 +6208,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 116 */
+/* 124 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(117),
+	var baseFor = __webpack_require__(125),
 	    keys = __webpack_require__(59);
 
 	/**
@@ -5955,10 +6230,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 117 */
+/* 125 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createBaseFor = __webpack_require__(118);
+	var createBaseFor = __webpack_require__(126);
 
 	/**
 	 * The base implementation of `baseForOwn` which iterates over `object`
@@ -5977,7 +6252,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 118 */
+/* 126 */
 /***/ function(module, exports) {
 
 	/**
@@ -6008,7 +6283,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 119 */
+/* 127 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var isArrayLike = __webpack_require__(79);
@@ -6046,10 +6321,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 120 */
+/* 128 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var identity = __webpack_require__(121);
+	var identity = __webpack_require__(129);
 
 	/**
 	 * Casts `value` to `identity` if it's not a function.
@@ -6066,7 +6341,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 121 */
+/* 129 */
 /***/ function(module, exports) {
 
 	/**
@@ -6093,13 +6368,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 122 */
+/* 130 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/*!
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 	 * URI.js - Mutating URLs
 	 *
-	 * Version: 1.18.2
+	 * Version: 1.18.4
 	 *
 	 * Author: Rodney Rehm
 	 * Web: http://medialize.github.io/URI.js/
@@ -6111,12 +6386,12 @@ var StellarSdk =
 	(function (root, factory) {
 	  'use strict';
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
-	  if (true) {
+	  if (typeof module === 'object' && module.exports) {
 	    // Node
-	    module.exports = factory(__webpack_require__(123), __webpack_require__(124), __webpack_require__(125));
-	  } else if (typeof define === 'function' && define.amd) {
+	    module.exports = factory(__webpack_require__(131), __webpack_require__(132), __webpack_require__(133));
+	  } else if (true) {
 	    // AMD. Register as an anonymous module.
-	    define(['./punycode', './IPv6', './SecondLevelDomains'], factory);
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(131), __webpack_require__(132), __webpack_require__(133)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  } else {
 	    // Browser globals (root is window)
 	    root.URI = factory(root.punycode, root.IPv6, root.SecondLevelDomains, root);
@@ -6169,7 +6444,7 @@ var StellarSdk =
 	    return this;
 	  }
 
-	  URI.version = '1.18.2';
+	  URI.version = '1.18.4';
 
 	  var p = URI.prototype;
 	  var hasOwn = Object.prototype.hasOwnProperty;
@@ -6318,7 +6593,9 @@ var StellarSdk =
 	    // everything up to the next whitespace
 	    end: /[\s\r\n]|$/,
 	    // trim trailing punctuation captured by end RegExp
-	    trim: /[`!()\[\]{};:'".,<>?«»“”„‘’]+$/
+	    trim: /[`!()\[\]{};:'".,<>?«»“”„‘’]+$/,
+	    // balanced parens inclusion (), [], {}, <>
+	    parens: /(\([^\)]*\)|\[[^\]]*\]|\{[^}]*\}|<[^>]*>)/g,
 	  };
 	  // http://www.iana.org/assignments/uri-schemes.html
 	  // http://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers#Well-known_ports
@@ -7040,6 +7317,7 @@ var StellarSdk =
 	    var _start = options.start || URI.findUri.start;
 	    var _end = options.end || URI.findUri.end;
 	    var _trim = options.trim || URI.findUri.trim;
+	    var _parens = options.parens || URI.findUri.parens;
 	    var _attributeOpen = /[a-z0-9-]=["']?$/i;
 
 	    _start.lastIndex = 0;
@@ -7059,7 +7337,25 @@ var StellarSdk =
 	      }
 
 	      var end = start + string.slice(start).search(_end);
-	      var slice = string.slice(start, end).replace(_trim, '');
+	      var slice = string.slice(start, end);
+	      // make sure we include well balanced parens
+	      var parensEnd = -1;
+	      while (true) {
+	        var parensMatch = _parens.exec(slice);
+	        if (!parensMatch) {
+	          break;
+	        }
+
+	        var parensMatchEnd = parensMatch.index + parensMatch[0].length;
+	        parensEnd = Math.max(parensEnd, parensMatchEnd);
+	      }
+
+	      if (parensEnd > -1) {
+	        slice = slice.slice(0, parensEnd) + slice.slice(parensEnd + 1).replace(_trim, '');
+	      } else {
+	        slice = slice.replace(_trim, '');
+	      }
+
 	      if (options.ignore && options.ignore.test(slice)) {
 	        continue;
 	      }
@@ -8317,7 +8613,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 123 */
+/* 131 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.4.0 by @mathias */
@@ -8855,14 +9151,14 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ },
-/* 124 */
+/* 132 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/*!
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 	 * URI.js - Mutating URLs
 	 * IPv6 Support
 	 *
-	 * Version: 1.18.2
+	 * Version: 1.18.4
 	 *
 	 * Author: Rodney Rehm
 	 * Web: http://medialize.github.io/URI.js/
@@ -8875,12 +9171,12 @@ var StellarSdk =
 	(function (root, factory) {
 	  'use strict';
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
-	  if (true) {
+	  if (typeof module === 'object' && module.exports) {
 	    // Node
 	    module.exports = factory();
-	  } else if (typeof define === 'function' && define.amd) {
+	  } else if (true) {
 	    // AMD. Register as an anonymous module.
-	    define(factory);
+	    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  } else {
 	    // Browser globals (root is window)
 	    root.IPv6 = factory(root);
@@ -9046,14 +9342,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 125 */
+/* 133 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/*!
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 	 * URI.js - Mutating URLs
 	 * Second Level Domain (SLD) Support
 	 *
-	 * Version: 1.18.2
+	 * Version: 1.18.4
 	 *
 	 * Author: Rodney Rehm
 	 * Web: http://medialize.github.io/URI.js/
@@ -9066,12 +9362,12 @@ var StellarSdk =
 	(function (root, factory) {
 	  'use strict';
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
-	  if (true) {
+	  if (typeof module === 'object' && module.exports) {
 	    // Node
 	    module.exports = factory();
-	  } else if (typeof define === 'function' && define.amd) {
+	  } else if (true) {
 	    // AMD. Register as an anonymous module.
-	    define(factory);
+	    !(__WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.call(exports, __webpack_require__, exports, module)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  } else {
 	    // Browser globals (root is window)
 	    root.SecondLevelDomains = factory(root);
@@ -9292,25 +9588,544 @@ var StellarSdk =
 
 
 /***/ },
-/* 126 */
+/* 134 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(127);
+	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	 * URI.js - Mutating URLs
+	 * URI Template Support - http://tools.ietf.org/html/rfc6570
+	 *
+	 * Version: 1.18.4
+	 *
+	 * Author: Rodney Rehm
+	 * Web: http://medialize.github.io/URI.js/
+	 *
+	 * Licensed under
+	 *   MIT License http://www.opensource.org/licenses/mit-license
+	 *
+	 */
+	(function (root, factory) {
+	  'use strict';
+	  // https://github.com/umdjs/umd/blob/master/returnExports.js
+	  if (typeof module === 'object' && module.exports) {
+	    // Node
+	    module.exports = factory(__webpack_require__(130));
+	  } else if (true) {
+	    // AMD. Register as an anonymous module.
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(130)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	  } else {
+	    // Browser globals (root is window)
+	    root.URITemplate = factory(root.URI, root);
+	  }
+	}(this, function (URI, root) {
+	  'use strict';
+	  // FIXME: v2.0.0 renamce non-camelCase properties to uppercase
+	  /*jshint camelcase: false */
+
+	  // save current URITemplate variable, if any
+	  var _URITemplate = root && root.URITemplate;
+
+	  var hasOwn = Object.prototype.hasOwnProperty;
+	  function URITemplate(expression) {
+	    // serve from cache where possible
+	    if (URITemplate._cache[expression]) {
+	      return URITemplate._cache[expression];
+	    }
+
+	    // Allow instantiation without the 'new' keyword
+	    if (!(this instanceof URITemplate)) {
+	      return new URITemplate(expression);
+	    }
+
+	    this.expression = expression;
+	    URITemplate._cache[expression] = this;
+	    return this;
+	  }
+
+	  function Data(data) {
+	    this.data = data;
+	    this.cache = {};
+	  }
+
+	  var p = URITemplate.prototype;
+	  // list of operators and their defined options
+	  var operators = {
+	    // Simple string expansion
+	    '' : {
+	      prefix: '',
+	      separator: ',',
+	      named: false,
+	      empty_name_separator: false,
+	      encode : 'encode'
+	    },
+	    // Reserved character strings
+	    '+' : {
+	      prefix: '',
+	      separator: ',',
+	      named: false,
+	      empty_name_separator: false,
+	      encode : 'encodeReserved'
+	    },
+	    // Fragment identifiers prefixed by '#'
+	    '#' : {
+	      prefix: '#',
+	      separator: ',',
+	      named: false,
+	      empty_name_separator: false,
+	      encode : 'encodeReserved'
+	    },
+	    // Name labels or extensions prefixed by '.'
+	    '.' : {
+	      prefix: '.',
+	      separator: '.',
+	      named: false,
+	      empty_name_separator: false,
+	      encode : 'encode'
+	    },
+	    // Path segments prefixed by '/'
+	    '/' : {
+	      prefix: '/',
+	      separator: '/',
+	      named: false,
+	      empty_name_separator: false,
+	      encode : 'encode'
+	    },
+	    // Path parameter name or name=value pairs prefixed by ';'
+	    ';' : {
+	      prefix: ';',
+	      separator: ';',
+	      named: true,
+	      empty_name_separator: false,
+	      encode : 'encode'
+	    },
+	    // Query component beginning with '?' and consisting
+	    // of name=value pairs separated by '&'; an
+	    '?' : {
+	      prefix: '?',
+	      separator: '&',
+	      named: true,
+	      empty_name_separator: true,
+	      encode : 'encode'
+	    },
+	    // Continuation of query-style &name=value pairs
+	    // within a literal query component.
+	    '&' : {
+	      prefix: '&',
+	      separator: '&',
+	      named: true,
+	      empty_name_separator: true,
+	      encode : 'encode'
+	    }
+
+	    // The operator characters equals ("="), comma (","), exclamation ("!"),
+	    // at sign ("@"), and pipe ("|") are reserved for future extensions.
+	  };
+
+	  // storage for already parsed templates
+	  URITemplate._cache = {};
+	  // pattern to identify expressions [operator, variable-list] in template
+	  URITemplate.EXPRESSION_PATTERN = /\{([^a-zA-Z0-9%_]?)([^\}]+)(\}|$)/g;
+	  // pattern to identify variables [name, explode, maxlength] in variable-list
+	  URITemplate.VARIABLE_PATTERN = /^([^*:.](?:\.?[^*:.])*)((\*)|:(\d+))?$/;
+	  // pattern to verify variable name integrity
+	  URITemplate.VARIABLE_NAME_PATTERN = /[^a-zA-Z0-9%_.]/;
+	  // pattern to verify literal integrity
+	  URITemplate.LITERAL_PATTERN = /[<>{}'"`^| \\]/;
+
+	  // expand parsed expression (expression, not template!)
+	  URITemplate.expand = function(expression, data) {
+	    // container for defined options for the given operator
+	    var options = operators[expression.operator];
+	    // expansion type (include keys or not)
+	    var type = options.named ? 'Named' : 'Unnamed';
+	    // list of variables within the expression
+	    var variables = expression.variables;
+	    // result buffer for evaluating the expression
+	    var buffer = [];
+	    var d, variable, i;
+
+	    for (i = 0; (variable = variables[i]); i++) {
+	      // fetch simplified data source
+	      d = data.get(variable.name);
+	      if (!d.val.length) {
+	        if (d.type) {
+	          // empty variables (empty string)
+	          // still lead to a separator being appended!
+	          buffer.push('');
+	        }
+	        // no data, no action
+	        continue;
+	      }
+
+	      if (d.type > 1 && variable.maxlength) {
+	        // composite variable cannot specify maxlength
+	        throw new Error('Invalid expression: Prefix modifier not applicable to variable "' + variable.name + '"');
+	      }
+
+	      // expand the given variable
+	      buffer.push(URITemplate['expand' + type](
+	        d,
+	        options,
+	        variable.explode,
+	        variable.explode && options.separator || ',',
+	        variable.maxlength,
+	        variable.name
+	      ));
+	    }
+
+	    if (buffer.length) {
+	      return options.prefix + buffer.join(options.separator);
+	    } else {
+	      // prefix is not prepended for empty expressions
+	      return '';
+	    }
+	  };
+	  // expand a named variable
+	  URITemplate.expandNamed = function(d, options, explode, separator, length, name) {
+	    // variable result buffer
+	    var result = '';
+	    // peformance crap
+	    var encode = options.encode;
+	    var empty_name_separator = options.empty_name_separator;
+	    // flag noting if values are already encoded
+	    var _encode = !d[encode].length;
+	    // key for named expansion
+	    var _name = d.type === 2 ? '': URI[encode](name);
+	    var _value, i, l;
+
+	    // for each found value
+	    for (i = 0, l = d.val.length; i < l; i++) {
+	      if (length) {
+	        // maxlength must be determined before encoding can happen
+	        _value = URI[encode](d.val[i][1].substring(0, length));
+	        if (d.type === 2) {
+	          // apply maxlength to keys of objects as well
+	          _name = URI[encode](d.val[i][0].substring(0, length));
+	        }
+	      } else if (_encode) {
+	        // encode value
+	        _value = URI[encode](d.val[i][1]);
+	        if (d.type === 2) {
+	          // encode name and cache encoded value
+	          _name = URI[encode](d.val[i][0]);
+	          d[encode].push([_name, _value]);
+	        } else {
+	          // cache encoded value
+	          d[encode].push([undefined, _value]);
+	        }
+	      } else {
+	        // values are already encoded and can be pulled from cache
+	        _value = d[encode][i][1];
+	        if (d.type === 2) {
+	          _name = d[encode][i][0];
+	        }
+	      }
+
+	      if (result) {
+	        // unless we're the first value, prepend the separator
+	        result += separator;
+	      }
+
+	      if (!explode) {
+	        if (!i) {
+	          // first element, so prepend variable name
+	          result += URI[encode](name) + (empty_name_separator || _value ? '=' : '');
+	        }
+
+	        if (d.type === 2) {
+	          // without explode-modifier, keys of objects are returned comma-separated
+	          result += _name + ',';
+	        }
+
+	        result += _value;
+	      } else {
+	        // only add the = if it is either default (?&) or there actually is a value (;)
+	        result += _name + (empty_name_separator || _value ? '=' : '') + _value;
+	      }
+	    }
+
+	    return result;
+	  };
+	  // expand an unnamed variable
+	  URITemplate.expandUnnamed = function(d, options, explode, separator, length) {
+	    // variable result buffer
+	    var result = '';
+	    // performance crap
+	    var encode = options.encode;
+	    var empty_name_separator = options.empty_name_separator;
+	    // flag noting if values are already encoded
+	    var _encode = !d[encode].length;
+	    var _name, _value, i, l;
+
+	    // for each found value
+	    for (i = 0, l = d.val.length; i < l; i++) {
+	      if (length) {
+	        // maxlength must be determined before encoding can happen
+	        _value = URI[encode](d.val[i][1].substring(0, length));
+	      } else if (_encode) {
+	        // encode and cache value
+	        _value = URI[encode](d.val[i][1]);
+	        d[encode].push([
+	          d.type === 2 ? URI[encode](d.val[i][0]) : undefined,
+	          _value
+	        ]);
+	      } else {
+	        // value already encoded, pull from cache
+	        _value = d[encode][i][1];
+	      }
+
+	      if (result) {
+	        // unless we're the first value, prepend the separator
+	        result += separator;
+	      }
+
+	      if (d.type === 2) {
+	        if (length) {
+	          // maxlength also applies to keys of objects
+	          _name = URI[encode](d.val[i][0].substring(0, length));
+	        } else {
+	          // at this point the name must already be encoded
+	          _name = d[encode][i][0];
+	        }
+
+	        result += _name;
+	        if (explode) {
+	          // explode-modifier separates name and value by "="
+	          result += (empty_name_separator || _value ? '=' : '');
+	        } else {
+	          // no explode-modifier separates name and value by ","
+	          result += ',';
+	        }
+	      }
+
+	      result += _value;
+	    }
+
+	    return result;
+	  };
+
+	  URITemplate.noConflict = function() {
+	    if (root.URITemplate === URITemplate) {
+	      root.URITemplate = _URITemplate;
+	    }
+
+	    return URITemplate;
+	  };
+
+	  // expand template through given data map
+	  p.expand = function(data) {
+	    var result = '';
+
+	    if (!this.parts || !this.parts.length) {
+	      // lazilyy parse the template
+	      this.parse();
+	    }
+
+	    if (!(data instanceof Data)) {
+	      // make given data available through the
+	      // optimized data handling thingie
+	      data = new Data(data);
+	    }
+
+	    for (var i = 0, l = this.parts.length; i < l; i++) {
+	      /*jshint laxbreak: true */
+	      result += typeof this.parts[i] === 'string'
+	        // literal string
+	        ? this.parts[i]
+	        // expression
+	        : URITemplate.expand(this.parts[i], data);
+	      /*jshint laxbreak: false */
+	    }
+
+	    return result;
+	  };
+	  // parse template into action tokens
+	  p.parse = function() {
+	    // performance crap
+	    var expression = this.expression;
+	    var ePattern = URITemplate.EXPRESSION_PATTERN;
+	    var vPattern = URITemplate.VARIABLE_PATTERN;
+	    var nPattern = URITemplate.VARIABLE_NAME_PATTERN;
+	    var lPattern = URITemplate.LITERAL_PATTERN;
+	    // token result buffer
+	    var parts = [];
+	      // position within source template
+	    var pos = 0;
+	    var variables, eMatch, vMatch;
+
+	    var checkLiteral = function(literal) {
+	      if (literal.match(lPattern)) {
+	        throw new Error('Invalid Literal "' + literal + '"');
+	      }
+	      return literal;
+	    };
+
+	    // RegExp is shared accross all templates,
+	    // which requires a manual reset
+	    ePattern.lastIndex = 0;
+	    // I don't like while(foo = bar()) loops,
+	    // to make things simpler I go while(true) and break when required
+	    while (true) {
+	      eMatch = ePattern.exec(expression);
+	      if (eMatch === null) {
+	        // push trailing literal
+	        parts.push(checkLiteral(expression.substring(pos)));
+	        break;
+	      } else {
+	        // push leading literal
+	        parts.push(checkLiteral(expression.substring(pos, eMatch.index)));
+	        pos = eMatch.index + eMatch[0].length;
+	      }
+
+	      if (!operators[eMatch[1]]) {
+	        throw new Error('Unknown Operator "' + eMatch[1]  + '" in "' + eMatch[0] + '"');
+	      } else if (!eMatch[3]) {
+	        throw new Error('Unclosed Expression "' + eMatch[0]  + '"');
+	      }
+
+	      // parse variable-list
+	      variables = eMatch[2].split(',');
+	      for (var i = 0, l = variables.length; i < l; i++) {
+	        vMatch = variables[i].match(vPattern);
+	        if (vMatch === null) {
+	          throw new Error('Invalid Variable "' + variables[i] + '" in "' + eMatch[0] + '"');
+	        } else if (vMatch[1].match(nPattern)) {
+	          throw new Error('Invalid Variable Name "' + vMatch[1] + '" in "' + eMatch[0] + '"');
+	        }
+
+	        variables[i] = {
+	          name: vMatch[1],
+	          explode: !!vMatch[3],
+	          maxlength: vMatch[4] && parseInt(vMatch[4], 10)
+	        };
+	      }
+
+	      if (!variables.length) {
+	        throw new Error('Expression Missing Variable(s) "' + eMatch[0] + '"');
+	      }
+
+	      parts.push({
+	        expression: eMatch[0],
+	        operator: eMatch[1],
+	        variables: variables
+	      });
+	    }
+
+	    if (!parts.length) {
+	      // template doesn't contain any expressions
+	      // so it is a simple literal string
+	      // this probably should fire a warning or something?
+	      parts.push(checkLiteral(expression));
+	    }
+
+	    this.parts = parts;
+	    return this;
+	  };
+
+	  // simplify data structures
+	  Data.prototype.get = function(key) {
+	    // performance crap
+	    var data = this.data;
+	    // cache for processed data-point
+	    var d = {
+	      // type of data 0: undefined/null, 1: string, 2: object, 3: array
+	      type: 0,
+	      // original values (except undefined/null)
+	      val: [],
+	      // cache for encoded values (only for non-maxlength expansion)
+	      encode: [],
+	      encodeReserved: []
+	    };
+	    var i, l, value;
+
+	    if (this.cache[key] !== undefined) {
+	      // we've already processed this key
+	      return this.cache[key];
+	    }
+
+	    this.cache[key] = d;
+
+	    if (String(Object.prototype.toString.call(data)) === '[object Function]') {
+	      // data itself is a callback (global callback)
+	      value = data(key);
+	    } else if (String(Object.prototype.toString.call(data[key])) === '[object Function]') {
+	      // data is a map of callbacks (local callback)
+	      value = data[key](key);
+	    } else {
+	      // data is a map of data
+	      value = data[key];
+	    }
+
+	    // generalize input into [ [name1, value1], [name2, value2], … ]
+	    // so expansion has to deal with a single data structure only
+	    if (value === undefined || value === null) {
+	      // undefined and null values are to be ignored completely
+	      return d;
+	    } else if (String(Object.prototype.toString.call(value)) === '[object Array]') {
+	      for (i = 0, l = value.length; i < l; i++) {
+	        if (value[i] !== undefined && value[i] !== null) {
+	          // arrays don't have names
+	          d.val.push([undefined, String(value[i])]);
+	        }
+	      }
+
+	      if (d.val.length) {
+	        // only treat non-empty arrays as arrays
+	        d.type = 3; // array
+	      }
+	    } else if (String(Object.prototype.toString.call(value)) === '[object Object]') {
+	      for (i in value) {
+	        if (hasOwn.call(value, i) && value[i] !== undefined && value[i] !== null) {
+	          // objects have keys, remember them for named expansion
+	          d.val.push([i, String(value[i])]);
+	        }
+	      }
+
+	      if (d.val.length) {
+	        // only treat non-empty objects as objects
+	        d.type = 2; // object
+	      }
+	    } else {
+	      d.type = 1; // primitive string (could've been string, number, boolean and objects with a toString())
+	      // arrays don't have names
+	      d.val.push([undefined, String(value)]);
+	    }
+
+	    return d;
+	  };
+
+	  // hook into URI for fluid access
+	  URI.expand = function(expression, data) {
+	    var template = new URITemplate(expression);
+	    var expansion = template.expand(data);
+
+	    return new URI(expansion);
+	  };
+
+	  return URITemplate;
+	}));
+
 
 /***/ },
-/* 127 */
+/* 135 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(136);
+
+/***/ },
+/* 136 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(128);
-	var utils = __webpack_require__(129);
-	var dispatchRequest = __webpack_require__(131);
-	var InterceptorManager = __webpack_require__(140);
-	var isAbsoluteURL = __webpack_require__(141);
-	var combineURLs = __webpack_require__(142);
-	var bind = __webpack_require__(143);
-	var transformData = __webpack_require__(135);
+	var defaults = __webpack_require__(137);
+	var utils = __webpack_require__(138);
+	var dispatchRequest = __webpack_require__(140);
+	var InterceptorManager = __webpack_require__(149);
+	var isAbsoluteURL = __webpack_require__(150);
+	var combineURLs = __webpack_require__(151);
+	var bind = __webpack_require__(152);
+	var transformData = __webpack_require__(144);
 
 	function Axios(defaultConfig) {
 	  this.defaults = utils.merge({}, defaultConfig);
@@ -9399,7 +10214,7 @@ var StellarSdk =
 	axios.all = function all(promises) {
 	  return Promise.all(promises);
 	};
-	axios.spread = __webpack_require__(144);
+	axios.spread = __webpack_require__(153);
 
 	// Provide aliases for supported request methods
 	utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
@@ -9427,13 +10242,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 128 */
+/* 137 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
-	var normalizeHeaderName = __webpack_require__(130);
+	var utils = __webpack_require__(138);
+	var normalizeHeaderName = __webpack_require__(139);
 
 	var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 	var DEFAULT_CONTENT_TYPE = {
@@ -9505,7 +10320,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 129 */
+/* 138 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -9788,12 +10603,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 130 */
+/* 139 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	module.exports = function normalizeHeaderName(headers, normalizedName) {
 	  utils.forEach(headers, function processHeader(value, name) {
@@ -9806,7 +10621,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 131 */
+/* 140 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -9828,10 +10643,10 @@ var StellarSdk =
 	        adapter = config.adapter;
 	      } else if (typeof XMLHttpRequest !== 'undefined') {
 	        // For browsers use XHR adapter
-	        adapter = __webpack_require__(132);
+	        adapter = __webpack_require__(141);
 	      } else if (typeof process !== 'undefined') {
 	        // For node use HTTP adapter
-	        adapter = __webpack_require__(132);
+	        adapter = __webpack_require__(141);
 	      }
 
 	      if (typeof adapter === 'function') {
@@ -9847,18 +10662,18 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 132 */
+/* 141 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
-	var utils = __webpack_require__(129);
-	var buildURL = __webpack_require__(133);
-	var parseHeaders = __webpack_require__(134);
-	var transformData = __webpack_require__(135);
-	var isURLSameOrigin = __webpack_require__(136);
-	var btoa = (typeof window !== 'undefined' && window.btoa) || __webpack_require__(137);
-	var settle = __webpack_require__(138);
+	var utils = __webpack_require__(138);
+	var buildURL = __webpack_require__(142);
+	var parseHeaders = __webpack_require__(143);
+	var transformData = __webpack_require__(144);
+	var isURLSameOrigin = __webpack_require__(145);
+	var btoa = (typeof window !== 'undefined' && window.btoa) || __webpack_require__(146);
+	var settle = __webpack_require__(147);
 
 	module.exports = function xhrAdapter(resolve, reject, config) {
 	  var requestData = config.data;
@@ -9955,7 +10770,7 @@ var StellarSdk =
 	  // This is only done if running in a standard browser environment.
 	  // Specifically not if we're in a web worker, or react-native.
 	  if (utils.isStandardBrowserEnv()) {
-	    var cookies = __webpack_require__(139);
+	    var cookies = __webpack_require__(148);
 
 	    // Add xsrf header
 	    var xsrfValue = config.withCredentials || isURLSameOrigin(config.url) ?
@@ -10016,12 +10831,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 133 */
+/* 142 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	function encode(val) {
 	  return encodeURIComponent(val).
@@ -10090,12 +10905,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 134 */
+/* 143 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	/**
 	 * Parse headers into an object
@@ -10133,12 +10948,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 135 */
+/* 144 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	/**
 	 * Transform the data for a request or a response
@@ -10159,12 +10974,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 136 */
+/* 145 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	module.exports = (
 	  utils.isStandardBrowserEnv() ?
@@ -10233,7 +11048,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 137 */
+/* 146 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -10275,7 +11090,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 138 */
+/* 147 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -10299,12 +11114,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 139 */
+/* 148 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	module.exports = (
 	  utils.isStandardBrowserEnv() ?
@@ -10358,12 +11173,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 140 */
+/* 149 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(129);
+	var utils = __webpack_require__(138);
 
 	function InterceptorManager() {
 	  this.handlers = [];
@@ -10416,7 +11231,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 141 */
+/* 150 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -10436,7 +11251,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 142 */
+/* 151 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -10454,7 +11269,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 143 */
+/* 152 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -10471,7 +11286,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 144 */
+/* 153 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -10504,15 +11319,15 @@ var StellarSdk =
 
 
 /***/ },
-/* 145 */
+/* 154 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {var original = __webpack_require__(146)
-	  , parse = __webpack_require__(151).parse
-	  , events = __webpack_require__(156)
-	  , https = __webpack_require__(157)
-	  , http = __webpack_require__(158)
-	  , util = __webpack_require__(181);
+	/* WEBPACK VAR INJECTION */(function(process) {var original = __webpack_require__(155)
+	  , parse = __webpack_require__(160).parse
+	  , events = __webpack_require__(166)
+	  , https = __webpack_require__(167)
+	  , http = __webpack_require__(168)
+	  , util = __webpack_require__(200);
 
 	function isPlainObject(obj) {
 	  return Object.getPrototypeOf(obj) === Object.prototype;
@@ -10833,12 +11648,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 146 */
+/* 155 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var parse = __webpack_require__(147);
+	var parse = __webpack_require__(156);
 
 	/**
 	 * Transform an URL to a valid origin value.
@@ -10885,14 +11700,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 147 */
+/* 156 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var required = __webpack_require__(148)
-	  , lolcation = __webpack_require__(149)
-	  , qs = __webpack_require__(150)
+	var required = __webpack_require__(157)
+	  , lolcation = __webpack_require__(158)
+	  , qs = __webpack_require__(159)
 	  , relativere = /^\/(?!\/)/;
 
 	/**
@@ -11119,7 +11934,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 148 */
+/* 157 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -11163,7 +11978,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 149 */
+/* 158 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
@@ -11193,7 +12008,7 @@ var StellarSdk =
 	 */
 	module.exports = function lolcation(loc) {
 	  loc = loc || global.location || {};
-	  URL = URL || __webpack_require__(147);
+	  URL = URL || __webpack_require__(156);
 
 	  var finaldestination = {}
 	    , type = typeof loc
@@ -11215,7 +12030,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 150 */
+/* 159 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -11282,7 +12097,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 151 */
+/* 160 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -11306,7 +12121,10 @@ var StellarSdk =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var punycode = __webpack_require__(152);
+	'use strict';
+
+	var punycode = __webpack_require__(161);
+	var util = __webpack_require__(162);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -11337,6 +12155,9 @@ var StellarSdk =
 	var protocolPattern = /^([a-z0-9.+-]+:)/i,
 	    portPattern = /:[0-9]*$/,
 
+	    // Special case for a simple path URL
+	    simplePathPattern = /^(\/\/?(?!\/)[^\?\s]*)(\?[^\s]*)?$/,
+
 	    // RFC 2396: characters reserved for delimiting URLs.
 	    // We actually just auto-escape these.
 	    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
@@ -11353,8 +12174,8 @@ var StellarSdk =
 	    nonHostChars = ['%', '/', '?', ';', '#'].concat(autoEscape),
 	    hostEndingChars = ['/', '?', '#'],
 	    hostnameMaxLen = 255,
-	    hostnamePartPattern = /^[a-z0-9A-Z_-]{0,63}$/,
-	    hostnamePartStart = /^([a-z0-9A-Z_-]{0,63})(.*)$/,
+	    hostnamePartPattern = /^[+a-z0-9A-Z_-]{0,63}$/,
+	    hostnamePartStart = /^([+a-z0-9A-Z_-]{0,63})(.*)$/,
 	    // protocols that can allow "unsafe" and "unwise" chars.
 	    unsafeProtocol = {
 	      'javascript': true,
@@ -11378,10 +12199,10 @@ var StellarSdk =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(153);
+	    querystring = __webpack_require__(163);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
-	  if (url && isObject(url) && url instanceof Url) return url;
+	  if (url && util.isObject(url) && url instanceof Url) return url;
 
 	  var u = new Url;
 	  u.parse(url, parseQueryString, slashesDenoteHost);
@@ -11389,15 +12210,48 @@ var StellarSdk =
 	}
 
 	Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
-	  if (!isString(url)) {
+	  if (!util.isString(url)) {
 	    throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
 	  }
+
+	  // Copy chrome, IE, opera backslash-handling behavior.
+	  // Back slashes before the query string get converted to forward slashes
+	  // See: https://code.google.com/p/chromium/issues/detail?id=25916
+	  var queryIndex = url.indexOf('?'),
+	      splitter =
+	          (queryIndex !== -1 && queryIndex < url.indexOf('#')) ? '?' : '#',
+	      uSplit = url.split(splitter),
+	      slashRegex = /\\/g;
+	  uSplit[0] = uSplit[0].replace(slashRegex, '/');
+	  url = uSplit.join(splitter);
 
 	  var rest = url;
 
 	  // trim before proceeding.
 	  // This is to support parse stuff like "  http://foo.com  \n"
 	  rest = rest.trim();
+
+	  if (!slashesDenoteHost && url.split('#').length === 1) {
+	    // Try fast path regexp
+	    var simplePath = simplePathPattern.exec(rest);
+	    if (simplePath) {
+	      this.path = rest;
+	      this.href = rest;
+	      this.pathname = simplePath[1];
+	      if (simplePath[2]) {
+	        this.search = simplePath[2];
+	        if (parseQueryString) {
+	          this.query = querystring.parse(this.search.substr(1));
+	        } else {
+	          this.query = this.search.substr(1);
+	        }
+	      } else if (parseQueryString) {
+	        this.search = '';
+	        this.query = {};
+	      }
+	      return this;
+	    }
+	  }
 
 	  var proto = protocolPattern.exec(rest);
 	  if (proto) {
@@ -11536,18 +12390,11 @@ var StellarSdk =
 	    }
 
 	    if (!ipv6Hostname) {
-	      // IDNA Support: Returns a puny coded representation of "domain".
-	      // It only converts the part of the domain name that
-	      // has non ASCII characters. I.e. it dosent matter if
-	      // you call it with a domain that already is in ASCII.
-	      var domainArray = this.hostname.split('.');
-	      var newOut = [];
-	      for (var i = 0; i < domainArray.length; ++i) {
-	        var s = domainArray[i];
-	        newOut.push(s.match(/[^A-Za-z0-9_-]/) ?
-	            'xn--' + punycode.encode(s) : s);
-	      }
-	      this.hostname = newOut.join('.');
+	      // IDNA Support: Returns a punycoded representation of "domain".
+	      // It only converts parts of the domain name that
+	      // have non-ASCII characters, i.e. it doesn't matter if
+	      // you call it with a domain that already is ASCII-only.
+	      this.hostname = punycode.toASCII(this.hostname);
 	    }
 
 	    var p = this.port ? ':' + this.port : '';
@@ -11574,6 +12421,8 @@ var StellarSdk =
 	    // need to be.
 	    for (var i = 0, l = autoEscape.length; i < l; i++) {
 	      var ae = autoEscape[i];
+	      if (rest.indexOf(ae) === -1)
+	        continue;
 	      var esc = encodeURIComponent(ae);
 	      if (esc === ae) {
 	        esc = escape(ae);
@@ -11627,7 +12476,7 @@ var StellarSdk =
 	  // If it's an obj, this is a no-op.
 	  // this way, you can call url_format() on strings
 	  // to clean up potentially wonky urls.
-	  if (isString(obj)) obj = urlParse(obj);
+	  if (util.isString(obj)) obj = urlParse(obj);
 	  if (!(obj instanceof Url)) return Url.prototype.format.call(obj);
 	  return obj.format();
 	}
@@ -11658,7 +12507,7 @@ var StellarSdk =
 	  }
 
 	  if (this.query &&
-	      isObject(this.query) &&
+	      util.isObject(this.query) &&
 	      Object.keys(this.query).length) {
 	    query = querystring.stringify(this.query);
 	  }
@@ -11702,16 +12551,18 @@ var StellarSdk =
 	}
 
 	Url.prototype.resolveObject = function(relative) {
-	  if (isString(relative)) {
+	  if (util.isString(relative)) {
 	    var rel = new Url();
 	    rel.parse(relative, false, true);
 	    relative = rel;
 	  }
 
 	  var result = new Url();
-	  Object.keys(this).forEach(function(k) {
-	    result[k] = this[k];
-	  }, this);
+	  var tkeys = Object.keys(this);
+	  for (var tk = 0; tk < tkeys.length; tk++) {
+	    var tkey = tkeys[tk];
+	    result[tkey] = this[tkey];
+	  }
 
 	  // hash is always overridden, no matter what.
 	  // even href="" will remove it.
@@ -11726,10 +12577,12 @@ var StellarSdk =
 	  // hrefs like //foo/bar always cut to the protocol.
 	  if (relative.slashes && !relative.protocol) {
 	    // take everything except the protocol from relative
-	    Object.keys(relative).forEach(function(k) {
-	      if (k !== 'protocol')
-	        result[k] = relative[k];
-	    });
+	    var rkeys = Object.keys(relative);
+	    for (var rk = 0; rk < rkeys.length; rk++) {
+	      var rkey = rkeys[rk];
+	      if (rkey !== 'protocol')
+	        result[rkey] = relative[rkey];
+	    }
 
 	    //urlParse appends trailing / to urls like http://www.example.com
 	    if (slashedProtocol[result.protocol] &&
@@ -11751,9 +12604,11 @@ var StellarSdk =
 	    // because that's known to be hostless.
 	    // anything else is assumed to be absolute.
 	    if (!slashedProtocol[relative.protocol]) {
-	      Object.keys(relative).forEach(function(k) {
+	      var keys = Object.keys(relative);
+	      for (var v = 0; v < keys.length; v++) {
+	        var k = keys[v];
 	        result[k] = relative[k];
-	      });
+	      }
 	      result.href = result.format();
 	      return result;
 	    }
@@ -11842,14 +12697,14 @@ var StellarSdk =
 	    srcPath = srcPath.concat(relPath);
 	    result.search = relative.search;
 	    result.query = relative.query;
-	  } else if (!isNullOrUndefined(relative.search)) {
+	  } else if (!util.isNullOrUndefined(relative.search)) {
 	    // just pull out the search.
 	    // like href='?foo'.
 	    // Put this after the other two cases because it simplifies the booleans
 	    if (psychotic) {
 	      result.hostname = result.host = srcPath.shift();
 	      //occationaly the auth can get stuck only in host
-	      //this especialy happens in cases like
+	      //this especially happens in cases like
 	      //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
 	      var authInHost = result.host && result.host.indexOf('@') > 0 ?
 	                       result.host.split('@') : false;
@@ -11861,7 +12716,7 @@ var StellarSdk =
 	    result.search = relative.search;
 	    result.query = relative.query;
 	    //to support http.request
-	    if (!isNull(result.pathname) || !isNull(result.search)) {
+	    if (!util.isNull(result.pathname) || !util.isNull(result.search)) {
 	      result.path = (result.pathname ? result.pathname : '') +
 	                    (result.search ? result.search : '');
 	    }
@@ -11888,15 +12743,15 @@ var StellarSdk =
 	  // then it must NOT get a trailing slash.
 	  var last = srcPath.slice(-1)[0];
 	  var hasTrailingSlash = (
-	      (result.host || relative.host) && (last === '.' || last === '..') ||
-	      last === '');
+	      (result.host || relative.host || srcPath.length > 1) &&
+	      (last === '.' || last === '..') || last === '');
 
 	  // strip single dots, resolve double dots to parent dir
 	  // if the path tries to go above the root, `up` ends up > 0
 	  var up = 0;
 	  for (var i = srcPath.length; i >= 0; i--) {
 	    last = srcPath[i];
-	    if (last == '.') {
+	    if (last === '.') {
 	      srcPath.splice(i, 1);
 	    } else if (last === '..') {
 	      srcPath.splice(i, 1);
@@ -11931,7 +12786,7 @@ var StellarSdk =
 	    result.hostname = result.host = isAbsolute ? '' :
 	                                    srcPath.length ? srcPath.shift() : '';
 	    //occationaly the auth can get stuck only in host
-	    //this especialy happens in cases like
+	    //this especially happens in cases like
 	    //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
 	    var authInHost = result.host && result.host.indexOf('@') > 0 ?
 	                     result.host.split('@') : false;
@@ -11955,7 +12810,7 @@ var StellarSdk =
 	  }
 
 	  //to support request.http
-	  if (!isNull(result.pathname) || !isNull(result.search)) {
+	  if (!util.isNull(result.pathname) || !util.isNull(result.search)) {
 	    result.path = (result.pathname ? result.pathname : '') +
 	                  (result.search ? result.search : '');
 	  }
@@ -11978,24 +12833,9 @@ var StellarSdk =
 	  if (host) this.hostname = host;
 	};
 
-	function isString(arg) {
-	  return typeof arg === "string";
-	}
-
-	function isObject(arg) {
-	  return typeof arg === 'object' && arg !== null;
-	}
-
-	function isNull(arg) {
-	  return arg === null;
-	}
-	function isNullOrUndefined(arg) {
-	  return  arg == null;
-	}
-
 
 /***/ },
-/* 152 */
+/* 161 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -12530,17 +13370,39 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ },
-/* 153 */
+/* 162 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	module.exports = {
+	  isString: function(arg) {
+	    return typeof(arg) === 'string';
+	  },
+	  isObject: function(arg) {
+	    return typeof(arg) === 'object' && arg !== null;
+	  },
+	  isNull: function(arg) {
+	    return arg === null;
+	  },
+	  isNullOrUndefined: function(arg) {
+	    return arg == null;
+	  }
+	};
+
+
+/***/ },
+/* 163 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(154);
-	exports.encode = exports.stringify = __webpack_require__(155);
+	exports.decode = exports.parse = __webpack_require__(164);
+	exports.encode = exports.stringify = __webpack_require__(165);
 
 
 /***/ },
-/* 154 */
+/* 164 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -12626,7 +13488,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 155 */
+/* 165 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -12696,7 +13558,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 156 */
+/* 166 */
 /***/ function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -13004,10 +13866,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 157 */
+/* 167 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var http = __webpack_require__(158);
+	var http = __webpack_require__(168);
 
 	var https = module.exports;
 
@@ -13018,1526 +13880,402 @@ var StellarSdk =
 	https.request = function (params, cb) {
 	    if (!params) params = {};
 	    params.scheme = 'https';
+	    params.protocol = 'https:';
 	    return http.request.call(this, params, cb);
 	}
 
 
 /***/ },
-/* 158 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var http = module.exports;
-	var EventEmitter = __webpack_require__(156).EventEmitter;
-	var Request = __webpack_require__(159);
-	var url = __webpack_require__(151)
+	/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(169)
+	var extend = __webpack_require__(198)
+	var statusCodes = __webpack_require__(199)
+	var url = __webpack_require__(160)
 
-	http.request = function (params, cb) {
-	    if (typeof params === 'string') {
-	        params = url.parse(params)
-	    }
-	    if (!params) params = {};
-	    if (!params.host && !params.port) {
-	        params.port = parseInt(window.location.port, 10);
-	    }
-	    if (!params.host && params.hostname) {
-	        params.host = params.hostname;
-	    }
+	var http = exports
 
-	    if (!params.protocol) {
-	        if (params.scheme) {
-	            params.protocol = params.scheme + ':';
-	        } else {
-	            params.protocol = window.location.protocol;
-	        }
-	    }
+	http.request = function (opts, cb) {
+		if (typeof opts === 'string')
+			opts = url.parse(opts)
+		else
+			opts = extend(opts)
 
-	    if (!params.host) {
-	        params.host = window.location.hostname || window.location.host;
-	    }
-	    if (/:/.test(params.host)) {
-	        if (!params.port) {
-	            params.port = params.host.split(':')[1];
-	        }
-	        params.host = params.host.split(':')[0];
-	    }
-	    if (!params.port) params.port = params.protocol == 'https:' ? 443 : 80;
-	    
-	    var req = new Request(new xhrHttp, params);
-	    if (cb) req.on('response', cb);
-	    return req;
-	};
+		// Normally, the page is loaded from http or https, so not specifying a protocol
+		// will result in a (valid) protocol-relative url. However, this won't work if
+		// the protocol is something else, like 'file:'
+		var defaultProtocol = global.location.protocol.search(/^https?:$/) === -1 ? 'http:' : ''
 
-	http.get = function (params, cb) {
-	    params.method = 'GET';
-	    var req = http.request(params, cb);
-	    req.end();
-	    return req;
-	};
+		var protocol = opts.protocol || defaultProtocol
+		var host = opts.hostname || opts.host
+		var port = opts.port
+		var path = opts.path || '/'
 
-	http.Agent = function () {};
-	http.Agent.defaultMaxSockets = 4;
+		// Necessary for IPv6 addresses
+		if (host && host.indexOf(':') !== -1)
+			host = '[' + host + ']'
 
-	var xhrHttp = (function () {
-	    if (typeof window === 'undefined') {
-	        throw new Error('no window object present');
-	    }
-	    else if (window.XMLHttpRequest) {
-	        return window.XMLHttpRequest;
-	    }
-	    else if (window.ActiveXObject) {
-	        var axs = [
-	            'Msxml2.XMLHTTP.6.0',
-	            'Msxml2.XMLHTTP.3.0',
-	            'Microsoft.XMLHTTP'
-	        ];
-	        for (var i = 0; i < axs.length; i++) {
-	            try {
-	                var ax = new(window.ActiveXObject)(axs[i]);
-	                return function () {
-	                    if (ax) {
-	                        var ax_ = ax;
-	                        ax = null;
-	                        return ax_;
-	                    }
-	                    else {
-	                        return new(window.ActiveXObject)(axs[i]);
-	                    }
-	                };
-	            }
-	            catch (e) {}
-	        }
-	        throw new Error('ajax not supported in this browser')
-	    }
-	    else {
-	        throw new Error('ajax not supported in this browser');
-	    }
-	})();
+		// This may be a relative url. The browser should always be able to interpret it correctly.
+		opts.url = (host ? (protocol + '//' + host) : '') + (port ? ':' + port : '') + path
+		opts.method = (opts.method || 'GET').toUpperCase()
+		opts.headers = opts.headers || {}
 
-	http.STATUS_CODES = {
-	    100 : 'Continue',
-	    101 : 'Switching Protocols',
-	    102 : 'Processing',                 // RFC 2518, obsoleted by RFC 4918
-	    200 : 'OK',
-	    201 : 'Created',
-	    202 : 'Accepted',
-	    203 : 'Non-Authoritative Information',
-	    204 : 'No Content',
-	    205 : 'Reset Content',
-	    206 : 'Partial Content',
-	    207 : 'Multi-Status',               // RFC 4918
-	    300 : 'Multiple Choices',
-	    301 : 'Moved Permanently',
-	    302 : 'Moved Temporarily',
-	    303 : 'See Other',
-	    304 : 'Not Modified',
-	    305 : 'Use Proxy',
-	    307 : 'Temporary Redirect',
-	    400 : 'Bad Request',
-	    401 : 'Unauthorized',
-	    402 : 'Payment Required',
-	    403 : 'Forbidden',
-	    404 : 'Not Found',
-	    405 : 'Method Not Allowed',
-	    406 : 'Not Acceptable',
-	    407 : 'Proxy Authentication Required',
-	    408 : 'Request Time-out',
-	    409 : 'Conflict',
-	    410 : 'Gone',
-	    411 : 'Length Required',
-	    412 : 'Precondition Failed',
-	    413 : 'Request Entity Too Large',
-	    414 : 'Request-URI Too Large',
-	    415 : 'Unsupported Media Type',
-	    416 : 'Requested Range Not Satisfiable',
-	    417 : 'Expectation Failed',
-	    418 : 'I\'m a teapot',              // RFC 2324
-	    422 : 'Unprocessable Entity',       // RFC 4918
-	    423 : 'Locked',                     // RFC 4918
-	    424 : 'Failed Dependency',          // RFC 4918
-	    425 : 'Unordered Collection',       // RFC 4918
-	    426 : 'Upgrade Required',           // RFC 2817
-	    428 : 'Precondition Required',      // RFC 6585
-	    429 : 'Too Many Requests',          // RFC 6585
-	    431 : 'Request Header Fields Too Large',// RFC 6585
-	    500 : 'Internal Server Error',
-	    501 : 'Not Implemented',
-	    502 : 'Bad Gateway',
-	    503 : 'Service Unavailable',
-	    504 : 'Gateway Time-out',
-	    505 : 'HTTP Version Not Supported',
-	    506 : 'Variant Also Negotiates',    // RFC 2295
-	    507 : 'Insufficient Storage',       // RFC 4918
-	    509 : 'Bandwidth Limit Exceeded',
-	    510 : 'Not Extended',               // RFC 2774
-	    511 : 'Network Authentication Required' // RFC 6585
-	};
+		// Also valid opts.auth, opts.mode
+
+		var req = new ClientRequest(opts)
+		if (cb)
+			req.on('response', cb)
+		return req
+	}
+
+	http.get = function get (opts, cb) {
+		var req = http.request(opts, cb)
+		req.end()
+		return req
+	}
+
+	http.Agent = function () {}
+	http.Agent.defaultMaxSockets = 4
+
+	http.STATUS_CODES = statusCodes
+
+	http.METHODS = [
+		'CHECKOUT',
+		'CONNECT',
+		'COPY',
+		'DELETE',
+		'GET',
+		'HEAD',
+		'LOCK',
+		'M-SEARCH',
+		'MERGE',
+		'MKACTIVITY',
+		'MKCOL',
+		'MOVE',
+		'NOTIFY',
+		'OPTIONS',
+		'PATCH',
+		'POST',
+		'PROPFIND',
+		'PROPPATCH',
+		'PURGE',
+		'PUT',
+		'REPORT',
+		'SEARCH',
+		'SUBSCRIBE',
+		'TRACE',
+		'UNLOCK',
+		'UNSUBSCRIBE'
+	]
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 159 */
+/* 169 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stream = __webpack_require__(160);
-	var Response = __webpack_require__(180);
-	var Base64 = __webpack_require__(184);
-	var inherits = __webpack_require__(161);
+	/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(174)
+	var inherits = __webpack_require__(175)
+	var response = __webpack_require__(176)
+	var stream = __webpack_require__(177)
+	var toArrayBuffer = __webpack_require__(197)
 
-	var Request = module.exports = function (xhr, params) {
-	    var self = this;
-	    self.writable = true;
-	    self.xhr = xhr;
-	    self.body = [];
-	    
-	    self.uri = (params.protocol || 'http:') + '//'
-	        + params.host
-	        + (params.port ? ':' + params.port : '')
-	        + (params.path || '/')
-	    ;
-	    
-	    if (typeof params.withCredentials === 'undefined') {
-	        params.withCredentials = true;
-	    }
+	var IncomingMessage = response.IncomingMessage
+	var rStates = response.readyStates
 
-	    try { xhr.withCredentials = params.withCredentials }
-	    catch (e) {}
-	    
-	    if (params.responseType) try { xhr.responseType = params.responseType }
-	    catch (e) {}
-	    
-	    xhr.open(
-	        params.method || 'GET',
-	        self.uri,
-	        true
-	    );
+	function decideMode (preferBinary, useFetch) {
+		if (capability.fetch && useFetch) {
+			return 'fetch'
+		} else if (capability.mozchunkedarraybuffer) {
+			return 'moz-chunked-arraybuffer'
+		} else if (capability.msstream) {
+			return 'ms-stream'
+		} else if (capability.arraybuffer && preferBinary) {
+			return 'arraybuffer'
+		} else if (capability.vbArray && preferBinary) {
+			return 'text:vbarray'
+		} else {
+			return 'text'
+		}
+	}
 
-	    xhr.onerror = function(event) {
-	        self.emit('error', new Error('Network error'));
-	    };
+	var ClientRequest = module.exports = function (opts) {
+		var self = this
+		stream.Writable.call(self)
 
-	    self._headers = {};
-	    
-	    if (params.headers) {
-	        var keys = objectKeys(params.headers);
-	        for (var i = 0; i < keys.length; i++) {
-	            var key = keys[i];
-	            if (!self.isSafeRequestHeader(key)) continue;
-	            var value = params.headers[key];
-	            self.setHeader(key, value);
-	        }
-	    }
-	    
-	    if (params.auth) {
-	        //basic auth
-	        this.setHeader('Authorization', 'Basic ' + Base64.btoa(params.auth));
-	    }
+		self._opts = opts
+		self._body = []
+		self._headers = {}
+		if (opts.auth)
+			self.setHeader('Authorization', 'Basic ' + new Buffer(opts.auth).toString('base64'))
+		Object.keys(opts.headers).forEach(function (name) {
+			self.setHeader(name, opts.headers[name])
+		})
 
-	    var res = new Response;
-	    res.on('close', function () {
-	        self.emit('close');
-	    });
-	    
-	    res.on('ready', function () {
-	        self.emit('response', res);
-	    });
+		var preferBinary
+		var useFetch = true
+		if (opts.mode === 'disable-fetch' || 'timeout' in opts) {
+			// If the use of XHR should be preferred and includes preserving the 'content-type' header.
+			// Force XHR to be used since the Fetch API does not yet support timeouts.
+			useFetch = false
+			preferBinary = true
+		} else if (opts.mode === 'prefer-streaming') {
+			// If streaming is a high priority but binary compatibility and
+			// the accuracy of the 'content-type' header aren't
+			preferBinary = false
+		} else if (opts.mode === 'allow-wrong-content-type') {
+			// If streaming is more important than preserving the 'content-type' header
+			preferBinary = !capability.overrideMimeType
+		} else if (!opts.mode || opts.mode === 'default' || opts.mode === 'prefer-fast') {
+			// Use binary if text streaming may corrupt data or the content-type header, or for speed
+			preferBinary = true
+		} else {
+			throw new Error('Invalid value for opts.mode')
+		}
+		self._mode = decideMode(preferBinary, useFetch)
 
-	    res.on('error', function (err) {
-	        self.emit('error', err);
-	    });
-	    
-	    xhr.onreadystatechange = function () {
-	        // Fix for IE9 bug
-	        // SCRIPT575: Could not complete the operation due to error c00c023f
-	        // It happens when a request is aborted, calling the success callback anyway with readyState === 4
-	        if (xhr.__aborted) return;
-	        res.handle(xhr);
-	    };
-	};
+		self.on('finish', function () {
+			self._onFinish()
+		})
+	}
 
-	inherits(Request, Stream);
+	inherits(ClientRequest, stream.Writable)
 
-	Request.prototype.setHeader = function (key, value) {
-	    this._headers[key.toLowerCase()] = value
-	};
+	ClientRequest.prototype.setHeader = function (name, value) {
+		var self = this
+		var lowerName = name.toLowerCase()
+		// This check is not necessary, but it prevents warnings from browsers about setting unsafe
+		// headers. To be honest I'm not entirely sure hiding these warnings is a good thing, but
+		// http-browserify did it, so I will too.
+		if (unsafeHeaders.indexOf(lowerName) !== -1)
+			return
 
-	Request.prototype.getHeader = function (key) {
-	    return this._headers[key.toLowerCase()]
-	};
+		self._headers[lowerName] = {
+			name: name,
+			value: value
+		}
+	}
 
-	Request.prototype.removeHeader = function (key) {
-	    delete this._headers[key.toLowerCase()]
-	};
+	ClientRequest.prototype.getHeader = function (name) {
+		var self = this
+		return self._headers[name.toLowerCase()].value
+	}
 
-	Request.prototype.write = function (s) {
-	    this.body.push(s);
-	};
+	ClientRequest.prototype.removeHeader = function (name) {
+		var self = this
+		delete self._headers[name.toLowerCase()]
+	}
 
-	Request.prototype.destroy = function (s) {
-	    this.xhr.__aborted = true;
-	    this.xhr.abort();
-	    this.emit('close');
-	};
+	ClientRequest.prototype._onFinish = function () {
+		var self = this
 
-	Request.prototype.end = function (s) {
-	    if (s !== undefined) this.body.push(s);
+		if (self._destroyed)
+			return
+		var opts = self._opts
 
-	    var keys = objectKeys(this._headers);
-	    for (var i = 0; i < keys.length; i++) {
-	        var key = keys[i];
-	        var value = this._headers[key];
-	        if (isArray(value)) {
-	            for (var j = 0; j < value.length; j++) {
-	                this.xhr.setRequestHeader(key, value[j]);
-	            }
-	        }
-	        else this.xhr.setRequestHeader(key, value)
-	    }
+		var headersObj = self._headers
+		var body = null
+		if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH' || opts.method === 'MERGE') {
+			if (capability.blobConstructor) {
+				body = new global.Blob(self._body.map(function (buffer) {
+					return toArrayBuffer(buffer)
+				}), {
+					type: (headersObj['content-type'] || {}).value || ''
+				})
+			} else {
+				// get utf8 string
+				body = Buffer.concat(self._body).toString()
+			}
+		}
 
-	    if (this.body.length === 0) {
-	        this.xhr.send('');
-	    }
-	    else if (typeof this.body[0] === 'string') {
-	        this.xhr.send(this.body.join(''));
-	    }
-	    else if (isArray(this.body[0])) {
-	        var body = [];
-	        for (var i = 0; i < this.body.length; i++) {
-	            body.push.apply(body, this.body[i]);
-	        }
-	        this.xhr.send(body);
-	    }
-	    else if (/Array/.test(Object.prototype.toString.call(this.body[0]))) {
-	        var len = 0;
-	        for (var i = 0; i < this.body.length; i++) {
-	            len += this.body[i].length;
-	        }
-	        var body = new(this.body[0].constructor)(len);
-	        var k = 0;
-	        
-	        for (var i = 0; i < this.body.length; i++) {
-	            var b = this.body[i];
-	            for (var j = 0; j < b.length; j++) {
-	                body[k++] = b[j];
-	            }
-	        }
-	        this.xhr.send(body);
-	    }
-	    else if (isXHR2Compatible(this.body[0])) {
-	        this.xhr.send(this.body[0]);
-	    }
-	    else {
-	        var body = '';
-	        for (var i = 0; i < this.body.length; i++) {
-	            body += this.body[i].toString();
-	        }
-	        this.xhr.send(body);
-	    }
-	};
+		if (self._mode === 'fetch') {
+			var headers = Object.keys(headersObj).map(function (name) {
+				return [headersObj[name].name, headersObj[name].value]
+			})
 
-	// Taken from http://dxr.mozilla.org/mozilla/mozilla-central/content/base/src/nsXMLHttpRequest.cpp.html
-	Request.unsafeHeaders = [
-	    "accept-charset",
-	    "accept-encoding",
-	    "access-control-request-headers",
-	    "access-control-request-method",
-	    "connection",
-	    "content-length",
-	    "cookie",
-	    "cookie2",
-	    "content-transfer-encoding",
-	    "date",
-	    "expect",
-	    "host",
-	    "keep-alive",
-	    "origin",
-	    "referer",
-	    "te",
-	    "trailer",
-	    "transfer-encoding",
-	    "upgrade",
-	    "user-agent",
-	    "via"
-	];
+			global.fetch(self._opts.url, {
+				method: self._opts.method,
+				headers: headers,
+				body: body || undefined,
+				mode: 'cors',
+				credentials: opts.withCredentials ? 'include' : 'same-origin'
+			}).then(function (response) {
+				self._fetchResponse = response
+				self._connect()
+			}, function (reason) {
+				self.emit('error', reason)
+			})
+		} else {
+			var xhr = self._xhr = new global.XMLHttpRequest()
+			try {
+				xhr.open(self._opts.method, self._opts.url, true)
+			} catch (err) {
+				process.nextTick(function () {
+					self.emit('error', err)
+				})
+				return
+			}
 
-	Request.prototype.isSafeRequestHeader = function (headerName) {
-	    if (!headerName) return false;
-	    return indexOf(Request.unsafeHeaders, headerName.toLowerCase()) === -1;
-	};
+			// Can't set responseType on really old browsers
+			if ('responseType' in xhr)
+				xhr.responseType = self._mode.split(':')[0]
 
-	var objectKeys = Object.keys || function (obj) {
-	    var keys = [];
-	    for (var key in obj) keys.push(key);
-	    return keys;
-	};
+			if ('withCredentials' in xhr)
+				xhr.withCredentials = !!opts.withCredentials
 
-	var isArray = Array.isArray || function (xs) {
-	    return Object.prototype.toString.call(xs) === '[object Array]';
-	};
+			if (self._mode === 'text' && 'overrideMimeType' in xhr)
+				xhr.overrideMimeType('text/plain; charset=x-user-defined')
 
-	var indexOf = function (xs, x) {
-	    if (xs.indexOf) return xs.indexOf(x);
-	    for (var i = 0; i < xs.length; i++) {
-	        if (xs[i] === x) return i;
-	    }
-	    return -1;
-	};
+			if ('timeout' in opts) {
+				xhr.timeout = opts.timeout
+				xhr.ontimeout = function () {
+					self.emit('timeout')
+				}
+			}
 
-	var isXHR2Compatible = function (obj) {
-	    if (typeof Blob !== 'undefined' && obj instanceof Blob) return true;
-	    if (typeof ArrayBuffer !== 'undefined' && obj instanceof ArrayBuffer) return true;
-	    if (typeof FormData !== 'undefined' && obj instanceof FormData) return true;
-	};
+			Object.keys(headersObj).forEach(function (name) {
+				xhr.setRequestHeader(headersObj[name].name, headersObj[name].value)
+			})
 
+			self._response = null
+			xhr.onreadystatechange = function () {
+				switch (xhr.readyState) {
+					case rStates.LOADING:
+					case rStates.DONE:
+						self._onXHRProgress()
+						break
+				}
+			}
+			// Necessary for streaming in Firefox, since xhr.response is ONLY defined
+			// in onprogress, not in onreadystatechange with xhr.readyState = 3
+			if (self._mode === 'moz-chunked-arraybuffer') {
+				xhr.onprogress = function () {
+					self._onXHRProgress()
+				}
+			}
+
+			xhr.onerror = function () {
+				if (self._destroyed)
+					return
+				self.emit('error', new Error('XHR error'))
+			}
+
+			try {
+				xhr.send(body)
+			} catch (err) {
+				process.nextTick(function () {
+					self.emit('error', err)
+				})
+				return
+			}
+		}
+	}
+
+	/**
+	 * Checks if xhr.status is readable and non-zero, indicating no error.
+	 * Even though the spec says it should be available in readyState 3,
+	 * accessing it throws an exception in IE8
+	 */
+	function statusValid (xhr) {
+		try {
+			var status = xhr.status
+			return (status !== null && status !== 0)
+		} catch (e) {
+			return false
+		}
+	}
+
+	ClientRequest.prototype._onXHRProgress = function () {
+		var self = this
+
+		if (!statusValid(self._xhr) || self._destroyed)
+			return
+
+		if (!self._response)
+			self._connect()
+
+		self._response._onXHRProgress()
+	}
+
+	ClientRequest.prototype._connect = function () {
+		var self = this
+
+		if (self._destroyed)
+			return
+
+		self._response = new IncomingMessage(self._xhr, self._fetchResponse, self._mode)
+		self._response.on('error', function(err) {
+			self.emit('error', err)
+		})
+
+		self.emit('response', self._response)
+	}
+
+	ClientRequest.prototype._write = function (chunk, encoding, cb) {
+		var self = this
+
+		self._body.push(chunk)
+		cb()
+	}
+
+	ClientRequest.prototype.abort = ClientRequest.prototype.destroy = function () {
+		var self = this
+		self._destroyed = true
+		if (self._response)
+			self._response._destroyed = true
+		if (self._xhr)
+			self._xhr.abort()
+		// Currently, there isn't a way to truly abort a fetch.
+		// If you like bikeshedding, see https://github.com/whatwg/fetch/issues/27
+	}
+
+	ClientRequest.prototype.end = function (data, encoding, cb) {
+		var self = this
+		if (typeof data === 'function') {
+			cb = data
+			data = undefined
+		}
+
+		stream.Writable.prototype.end.call(self, data, encoding, cb)
+	}
+
+	ClientRequest.prototype.flushHeaders = function () {}
+	ClientRequest.prototype.setTimeout = function () {}
+	ClientRequest.prototype.setNoDelay = function () {}
+	ClientRequest.prototype.setSocketKeepAlive = function () {}
+
+	// Taken from http://www.w3.org/TR/XMLHttpRequest/#the-setrequestheader%28%29-method
+	var unsafeHeaders = [
+		'accept-charset',
+		'accept-encoding',
+		'access-control-request-headers',
+		'access-control-request-method',
+		'connection',
+		'content-length',
+		'cookie',
+		'cookie2',
+		'date',
+		'dnt',
+		'expect',
+		'host',
+		'keep-alive',
+		'origin',
+		'referer',
+		'te',
+		'trailer',
+		'transfer-encoding',
+		'upgrade',
+		'user-agent',
+		'via'
+	]
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ },
-/* 160 */
+/* 170 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	module.exports = Stream;
-
-	var EE = __webpack_require__(156).EventEmitter;
-	var inherits = __webpack_require__(161);
-
-	inherits(Stream, EE);
-	Stream.Readable = __webpack_require__(162);
-	Stream.Writable = __webpack_require__(176);
-	Stream.Duplex = __webpack_require__(177);
-	Stream.Transform = __webpack_require__(178);
-	Stream.PassThrough = __webpack_require__(179);
-
-	// Backwards-compat with node 0.4.x
-	Stream.Stream = Stream;
-
-
-
-	// old-style streams.  Note that the pipe method (the only relevant
-	// part of this class) is overridden in the Readable class.
-
-	function Stream() {
-	  EE.call(this);
-	}
-
-	Stream.prototype.pipe = function(dest, options) {
-	  var source = this;
-
-	  function ondata(chunk) {
-	    if (dest.writable) {
-	      if (false === dest.write(chunk) && source.pause) {
-	        source.pause();
-	      }
-	    }
-	  }
-
-	  source.on('data', ondata);
-
-	  function ondrain() {
-	    if (source.readable && source.resume) {
-	      source.resume();
-	    }
-	  }
-
-	  dest.on('drain', ondrain);
-
-	  // If the 'end' option is not supplied, dest.end() will be called when
-	  // source gets the 'end' or 'close' events.  Only dest.end() once.
-	  if (!dest._isStdio && (!options || options.end !== false)) {
-	    source.on('end', onend);
-	    source.on('close', onclose);
-	  }
-
-	  var didOnEnd = false;
-	  function onend() {
-	    if (didOnEnd) return;
-	    didOnEnd = true;
-
-	    dest.end();
-	  }
-
-
-	  function onclose() {
-	    if (didOnEnd) return;
-	    didOnEnd = true;
-
-	    if (typeof dest.destroy === 'function') dest.destroy();
-	  }
-
-	  // don't leave dangling pipes when there are errors.
-	  function onerror(er) {
-	    cleanup();
-	    if (EE.listenerCount(this, 'error') === 0) {
-	      throw er; // Unhandled stream error in pipe.
-	    }
-	  }
-
-	  source.on('error', onerror);
-	  dest.on('error', onerror);
-
-	  // remove all the event listeners that were added.
-	  function cleanup() {
-	    source.removeListener('data', ondata);
-	    dest.removeListener('drain', ondrain);
-
-	    source.removeListener('end', onend);
-	    source.removeListener('close', onclose);
-
-	    source.removeListener('error', onerror);
-	    dest.removeListener('error', onerror);
-
-	    source.removeListener('end', cleanup);
-	    source.removeListener('close', cleanup);
-
-	    dest.removeListener('close', cleanup);
-	  }
-
-	  source.on('end', cleanup);
-	  source.on('close', cleanup);
-
-	  dest.on('close', cleanup);
-
-	  dest.emit('pipe', source);
-
-	  // Allow for unix-like usage: A.pipe(B).pipe(C)
-	  return dest;
-	};
-
-
-/***/ },
-/* 161 */
-/***/ function(module, exports) {
-
-	if (typeof Object.create === 'function') {
-	  // implementation from standard node.js 'util' module
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    ctor.prototype = Object.create(superCtor.prototype, {
-	      constructor: {
-	        value: ctor,
-	        enumerable: false,
-	        writable: true,
-	        configurable: true
-	      }
-	    });
-	  };
-	} else {
-	  // old school shim for old browsers
-	  module.exports = function inherits(ctor, superCtor) {
-	    ctor.super_ = superCtor
-	    var TempCtor = function () {}
-	    TempCtor.prototype = superCtor.prototype
-	    ctor.prototype = new TempCtor()
-	    ctor.prototype.constructor = ctor
-	  }
-	}
-
-
-/***/ },
-/* 162 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {exports = module.exports = __webpack_require__(163);
-	exports.Stream = __webpack_require__(160);
-	exports.Readable = exports;
-	exports.Writable = __webpack_require__(172);
-	exports.Duplex = __webpack_require__(171);
-	exports.Transform = __webpack_require__(174);
-	exports.PassThrough = __webpack_require__(175);
-	if (!process.browser && process.env.READABLE_STREAM === 'disable') {
-	  module.exports = __webpack_require__(160);
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ },
-/* 163 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	module.exports = Readable;
-
-	/*<replacement>*/
-	var isArray = __webpack_require__(164);
-	/*</replacement>*/
-
-
-	/*<replacement>*/
-	var Buffer = __webpack_require__(165).Buffer;
-	/*</replacement>*/
-
-	Readable.ReadableState = ReadableState;
-
-	var EE = __webpack_require__(156).EventEmitter;
-
-	/*<replacement>*/
-	if (!EE.listenerCount) EE.listenerCount = function(emitter, type) {
-	  return emitter.listeners(type).length;
-	};
-	/*</replacement>*/
-
-	var Stream = __webpack_require__(160);
-
-	/*<replacement>*/
-	var util = __webpack_require__(169);
-	util.inherits = __webpack_require__(161);
-	/*</replacement>*/
-
-	var StringDecoder;
-
-
-	/*<replacement>*/
-	var debug = __webpack_require__(170);
-	if (debug && debug.debuglog) {
-	  debug = debug.debuglog('stream');
-	} else {
-	  debug = function () {};
-	}
-	/*</replacement>*/
-
-
-	util.inherits(Readable, Stream);
-
-	function ReadableState(options, stream) {
-	  var Duplex = __webpack_require__(171);
-
-	  options = options || {};
-
-	  // the point at which it stops calling _read() to fill the buffer
-	  // Note: 0 is a valid value, means "don't call _read preemptively ever"
-	  var hwm = options.highWaterMark;
-	  var defaultHwm = options.objectMode ? 16 : 16 * 1024;
-	  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
-
-	  // cast to ints.
-	  this.highWaterMark = ~~this.highWaterMark;
-
-	  this.buffer = [];
-	  this.length = 0;
-	  this.pipes = null;
-	  this.pipesCount = 0;
-	  this.flowing = null;
-	  this.ended = false;
-	  this.endEmitted = false;
-	  this.reading = false;
-
-	  // a flag to be able to tell if the onwrite cb is called immediately,
-	  // or on a later tick.  We set this to true at first, because any
-	  // actions that shouldn't happen until "later" should generally also
-	  // not happen before the first write call.
-	  this.sync = true;
-
-	  // whenever we return null, then we set a flag to say
-	  // that we're awaiting a 'readable' event emission.
-	  this.needReadable = false;
-	  this.emittedReadable = false;
-	  this.readableListening = false;
-
-
-	  // object stream flag. Used to make read(n) ignore n and to
-	  // make all the buffer merging and length checks go away
-	  this.objectMode = !!options.objectMode;
-
-	  if (stream instanceof Duplex)
-	    this.objectMode = this.objectMode || !!options.readableObjectMode;
-
-	  // Crypto is kind of old and crusty.  Historically, its default string
-	  // encoding is 'binary' so we have to make this configurable.
-	  // Everything else in the universe uses 'utf8', though.
-	  this.defaultEncoding = options.defaultEncoding || 'utf8';
-
-	  // when piping, we only care about 'readable' events that happen
-	  // after read()ing all the bytes and not getting any pushback.
-	  this.ranOut = false;
-
-	  // the number of writers that are awaiting a drain event in .pipe()s
-	  this.awaitDrain = 0;
-
-	  // if true, a maybeReadMore has been scheduled
-	  this.readingMore = false;
-
-	  this.decoder = null;
-	  this.encoding = null;
-	  if (options.encoding) {
-	    if (!StringDecoder)
-	      StringDecoder = __webpack_require__(173).StringDecoder;
-	    this.decoder = new StringDecoder(options.encoding);
-	    this.encoding = options.encoding;
-	  }
-	}
-
-	function Readable(options) {
-	  var Duplex = __webpack_require__(171);
-
-	  if (!(this instanceof Readable))
-	    return new Readable(options);
-
-	  this._readableState = new ReadableState(options, this);
-
-	  // legacy
-	  this.readable = true;
-
-	  Stream.call(this);
-	}
-
-	// Manually shove something into the read() buffer.
-	// This returns true if the highWaterMark has not been hit yet,
-	// similar to how Writable.write() returns true if you should
-	// write() some more.
-	Readable.prototype.push = function(chunk, encoding) {
-	  var state = this._readableState;
-
-	  if (util.isString(chunk) && !state.objectMode) {
-	    encoding = encoding || state.defaultEncoding;
-	    if (encoding !== state.encoding) {
-	      chunk = new Buffer(chunk, encoding);
-	      encoding = '';
-	    }
-	  }
-
-	  return readableAddChunk(this, state, chunk, encoding, false);
-	};
-
-	// Unshift should *always* be something directly out of read()
-	Readable.prototype.unshift = function(chunk) {
-	  var state = this._readableState;
-	  return readableAddChunk(this, state, chunk, '', true);
-	};
-
-	function readableAddChunk(stream, state, chunk, encoding, addToFront) {
-	  var er = chunkInvalid(state, chunk);
-	  if (er) {
-	    stream.emit('error', er);
-	  } else if (util.isNullOrUndefined(chunk)) {
-	    state.reading = false;
-	    if (!state.ended)
-	      onEofChunk(stream, state);
-	  } else if (state.objectMode || chunk && chunk.length > 0) {
-	    if (state.ended && !addToFront) {
-	      var e = new Error('stream.push() after EOF');
-	      stream.emit('error', e);
-	    } else if (state.endEmitted && addToFront) {
-	      var e = new Error('stream.unshift() after end event');
-	      stream.emit('error', e);
-	    } else {
-	      if (state.decoder && !addToFront && !encoding)
-	        chunk = state.decoder.write(chunk);
-
-	      if (!addToFront)
-	        state.reading = false;
-
-	      // if we want the data now, just emit it.
-	      if (state.flowing && state.length === 0 && !state.sync) {
-	        stream.emit('data', chunk);
-	        stream.read(0);
-	      } else {
-	        // update the buffer info.
-	        state.length += state.objectMode ? 1 : chunk.length;
-	        if (addToFront)
-	          state.buffer.unshift(chunk);
-	        else
-	          state.buffer.push(chunk);
-
-	        if (state.needReadable)
-	          emitReadable(stream);
-	      }
-
-	      maybeReadMore(stream, state);
-	    }
-	  } else if (!addToFront) {
-	    state.reading = false;
-	  }
-
-	  return needMoreData(state);
-	}
-
-
-
-	// if it's past the high water mark, we can push in some more.
-	// Also, if we have no data yet, we can stand some
-	// more bytes.  This is to work around cases where hwm=0,
-	// such as the repl.  Also, if the push() triggered a
-	// readable event, and the user called read(largeNumber) such that
-	// needReadable was set, then we ought to push more, so that another
-	// 'readable' event will be triggered.
-	function needMoreData(state) {
-	  return !state.ended &&
-	         (state.needReadable ||
-	          state.length < state.highWaterMark ||
-	          state.length === 0);
-	}
-
-	// backwards compatibility.
-	Readable.prototype.setEncoding = function(enc) {
-	  if (!StringDecoder)
-	    StringDecoder = __webpack_require__(173).StringDecoder;
-	  this._readableState.decoder = new StringDecoder(enc);
-	  this._readableState.encoding = enc;
-	  return this;
-	};
-
-	// Don't raise the hwm > 128MB
-	var MAX_HWM = 0x800000;
-	function roundUpToNextPowerOf2(n) {
-	  if (n >= MAX_HWM) {
-	    n = MAX_HWM;
-	  } else {
-	    // Get the next highest power of 2
-	    n--;
-	    for (var p = 1; p < 32; p <<= 1) n |= n >> p;
-	    n++;
-	  }
-	  return n;
-	}
-
-	function howMuchToRead(n, state) {
-	  if (state.length === 0 && state.ended)
-	    return 0;
-
-	  if (state.objectMode)
-	    return n === 0 ? 0 : 1;
-
-	  if (isNaN(n) || util.isNull(n)) {
-	    // only flow one buffer at a time
-	    if (state.flowing && state.buffer.length)
-	      return state.buffer[0].length;
-	    else
-	      return state.length;
-	  }
-
-	  if (n <= 0)
-	    return 0;
-
-	  // If we're asking for more than the target buffer level,
-	  // then raise the water mark.  Bump up to the next highest
-	  // power of 2, to prevent increasing it excessively in tiny
-	  // amounts.
-	  if (n > state.highWaterMark)
-	    state.highWaterMark = roundUpToNextPowerOf2(n);
-
-	  // don't have that much.  return null, unless we've ended.
-	  if (n > state.length) {
-	    if (!state.ended) {
-	      state.needReadable = true;
-	      return 0;
-	    } else
-	      return state.length;
-	  }
-
-	  return n;
-	}
-
-	// you can override either this method, or the async _read(n) below.
-	Readable.prototype.read = function(n) {
-	  debug('read', n);
-	  var state = this._readableState;
-	  var nOrig = n;
-
-	  if (!util.isNumber(n) || n > 0)
-	    state.emittedReadable = false;
-
-	  // if we're doing read(0) to trigger a readable event, but we
-	  // already have a bunch of data in the buffer, then just trigger
-	  // the 'readable' event and move on.
-	  if (n === 0 &&
-	      state.needReadable &&
-	      (state.length >= state.highWaterMark || state.ended)) {
-	    debug('read: emitReadable', state.length, state.ended);
-	    if (state.length === 0 && state.ended)
-	      endReadable(this);
-	    else
-	      emitReadable(this);
-	    return null;
-	  }
-
-	  n = howMuchToRead(n, state);
-
-	  // if we've ended, and we're now clear, then finish it up.
-	  if (n === 0 && state.ended) {
-	    if (state.length === 0)
-	      endReadable(this);
-	    return null;
-	  }
-
-	  // All the actual chunk generation logic needs to be
-	  // *below* the call to _read.  The reason is that in certain
-	  // synthetic stream cases, such as passthrough streams, _read
-	  // may be a completely synchronous operation which may change
-	  // the state of the read buffer, providing enough data when
-	  // before there was *not* enough.
-	  //
-	  // So, the steps are:
-	  // 1. Figure out what the state of things will be after we do
-	  // a read from the buffer.
-	  //
-	  // 2. If that resulting state will trigger a _read, then call _read.
-	  // Note that this may be asynchronous, or synchronous.  Yes, it is
-	  // deeply ugly to write APIs this way, but that still doesn't mean
-	  // that the Readable class should behave improperly, as streams are
-	  // designed to be sync/async agnostic.
-	  // Take note if the _read call is sync or async (ie, if the read call
-	  // has returned yet), so that we know whether or not it's safe to emit
-	  // 'readable' etc.
-	  //
-	  // 3. Actually pull the requested chunks out of the buffer and return.
-
-	  // if we need a readable event, then we need to do some reading.
-	  var doRead = state.needReadable;
-	  debug('need readable', doRead);
-
-	  // if we currently have less than the highWaterMark, then also read some
-	  if (state.length === 0 || state.length - n < state.highWaterMark) {
-	    doRead = true;
-	    debug('length less than watermark', doRead);
-	  }
-
-	  // however, if we've ended, then there's no point, and if we're already
-	  // reading, then it's unnecessary.
-	  if (state.ended || state.reading) {
-	    doRead = false;
-	    debug('reading or ended', doRead);
-	  }
-
-	  if (doRead) {
-	    debug('do read');
-	    state.reading = true;
-	    state.sync = true;
-	    // if the length is currently zero, then we *need* a readable event.
-	    if (state.length === 0)
-	      state.needReadable = true;
-	    // call internal read method
-	    this._read(state.highWaterMark);
-	    state.sync = false;
-	  }
-
-	  // If _read pushed data synchronously, then `reading` will be false,
-	  // and we need to re-evaluate how much data we can return to the user.
-	  if (doRead && !state.reading)
-	    n = howMuchToRead(nOrig, state);
-
-	  var ret;
-	  if (n > 0)
-	    ret = fromList(n, state);
-	  else
-	    ret = null;
-
-	  if (util.isNull(ret)) {
-	    state.needReadable = true;
-	    n = 0;
-	  }
-
-	  state.length -= n;
-
-	  // If we have nothing in the buffer, then we want to know
-	  // as soon as we *do* get something into the buffer.
-	  if (state.length === 0 && !state.ended)
-	    state.needReadable = true;
-
-	  // If we tried to read() past the EOF, then emit end on the next tick.
-	  if (nOrig !== n && state.ended && state.length === 0)
-	    endReadable(this);
-
-	  if (!util.isNull(ret))
-	    this.emit('data', ret);
-
-	  return ret;
-	};
-
-	function chunkInvalid(state, chunk) {
-	  var er = null;
-	  if (!util.isBuffer(chunk) &&
-	      !util.isString(chunk) &&
-	      !util.isNullOrUndefined(chunk) &&
-	      !state.objectMode) {
-	    er = new TypeError('Invalid non-string/buffer chunk');
-	  }
-	  return er;
-	}
-
-
-	function onEofChunk(stream, state) {
-	  if (state.decoder && !state.ended) {
-	    var chunk = state.decoder.end();
-	    if (chunk && chunk.length) {
-	      state.buffer.push(chunk);
-	      state.length += state.objectMode ? 1 : chunk.length;
-	    }
-	  }
-	  state.ended = true;
-
-	  // emit 'readable' now to make sure it gets picked up.
-	  emitReadable(stream);
-	}
-
-	// Don't emit readable right away in sync mode, because this can trigger
-	// another read() call => stack overflow.  This way, it might trigger
-	// a nextTick recursion warning, but that's not so bad.
-	function emitReadable(stream) {
-	  var state = stream._readableState;
-	  state.needReadable = false;
-	  if (!state.emittedReadable) {
-	    debug('emitReadable', state.flowing);
-	    state.emittedReadable = true;
-	    if (state.sync)
-	      process.nextTick(function() {
-	        emitReadable_(stream);
-	      });
-	    else
-	      emitReadable_(stream);
-	  }
-	}
-
-	function emitReadable_(stream) {
-	  debug('emit readable');
-	  stream.emit('readable');
-	  flow(stream);
-	}
-
-
-	// at this point, the user has presumably seen the 'readable' event,
-	// and called read() to consume some data.  that may have triggered
-	// in turn another _read(n) call, in which case reading = true if
-	// it's in progress.
-	// However, if we're not ended, or reading, and the length < hwm,
-	// then go ahead and try to read some more preemptively.
-	function maybeReadMore(stream, state) {
-	  if (!state.readingMore) {
-	    state.readingMore = true;
-	    process.nextTick(function() {
-	      maybeReadMore_(stream, state);
-	    });
-	  }
-	}
-
-	function maybeReadMore_(stream, state) {
-	  var len = state.length;
-	  while (!state.reading && !state.flowing && !state.ended &&
-	         state.length < state.highWaterMark) {
-	    debug('maybeReadMore read 0');
-	    stream.read(0);
-	    if (len === state.length)
-	      // didn't get any data, stop spinning.
-	      break;
-	    else
-	      len = state.length;
-	  }
-	  state.readingMore = false;
-	}
-
-	// abstract method.  to be overridden in specific implementation classes.
-	// call cb(er, data) where data is <= n in length.
-	// for virtual (non-string, non-buffer) streams, "length" is somewhat
-	// arbitrary, and perhaps not very meaningful.
-	Readable.prototype._read = function(n) {
-	  this.emit('error', new Error('not implemented'));
-	};
-
-	Readable.prototype.pipe = function(dest, pipeOpts) {
-	  var src = this;
-	  var state = this._readableState;
-
-	  switch (state.pipesCount) {
-	    case 0:
-	      state.pipes = dest;
-	      break;
-	    case 1:
-	      state.pipes = [state.pipes, dest];
-	      break;
-	    default:
-	      state.pipes.push(dest);
-	      break;
-	  }
-	  state.pipesCount += 1;
-	  debug('pipe count=%d opts=%j', state.pipesCount, pipeOpts);
-
-	  var doEnd = (!pipeOpts || pipeOpts.end !== false) &&
-	              dest !== process.stdout &&
-	              dest !== process.stderr;
-
-	  var endFn = doEnd ? onend : cleanup;
-	  if (state.endEmitted)
-	    process.nextTick(endFn);
-	  else
-	    src.once('end', endFn);
-
-	  dest.on('unpipe', onunpipe);
-	  function onunpipe(readable) {
-	    debug('onunpipe');
-	    if (readable === src) {
-	      cleanup();
-	    }
-	  }
-
-	  function onend() {
-	    debug('onend');
-	    dest.end();
-	  }
-
-	  // when the dest drains, it reduces the awaitDrain counter
-	  // on the source.  This would be more elegant with a .once()
-	  // handler in flow(), but adding and removing repeatedly is
-	  // too slow.
-	  var ondrain = pipeOnDrain(src);
-	  dest.on('drain', ondrain);
-
-	  function cleanup() {
-	    debug('cleanup');
-	    // cleanup event handlers once the pipe is broken
-	    dest.removeListener('close', onclose);
-	    dest.removeListener('finish', onfinish);
-	    dest.removeListener('drain', ondrain);
-	    dest.removeListener('error', onerror);
-	    dest.removeListener('unpipe', onunpipe);
-	    src.removeListener('end', onend);
-	    src.removeListener('end', cleanup);
-	    src.removeListener('data', ondata);
-
-	    // if the reader is waiting for a drain event from this
-	    // specific writer, then it would cause it to never start
-	    // flowing again.
-	    // So, if this is awaiting a drain, then we just call it now.
-	    // If we don't know, then assume that we are waiting for one.
-	    if (state.awaitDrain &&
-	        (!dest._writableState || dest._writableState.needDrain))
-	      ondrain();
-	  }
-
-	  src.on('data', ondata);
-	  function ondata(chunk) {
-	    debug('ondata');
-	    var ret = dest.write(chunk);
-	    if (false === ret) {
-	      debug('false write response, pause',
-	            src._readableState.awaitDrain);
-	      src._readableState.awaitDrain++;
-	      src.pause();
-	    }
-	  }
-
-	  // if the dest has an error, then stop piping into it.
-	  // however, don't suppress the throwing behavior for this.
-	  function onerror(er) {
-	    debug('onerror', er);
-	    unpipe();
-	    dest.removeListener('error', onerror);
-	    if (EE.listenerCount(dest, 'error') === 0)
-	      dest.emit('error', er);
-	  }
-	  // This is a brutally ugly hack to make sure that our error handler
-	  // is attached before any userland ones.  NEVER DO THIS.
-	  if (!dest._events || !dest._events.error)
-	    dest.on('error', onerror);
-	  else if (isArray(dest._events.error))
-	    dest._events.error.unshift(onerror);
-	  else
-	    dest._events.error = [onerror, dest._events.error];
-
-
-
-	  // Both close and finish should trigger unpipe, but only once.
-	  function onclose() {
-	    dest.removeListener('finish', onfinish);
-	    unpipe();
-	  }
-	  dest.once('close', onclose);
-	  function onfinish() {
-	    debug('onfinish');
-	    dest.removeListener('close', onclose);
-	    unpipe();
-	  }
-	  dest.once('finish', onfinish);
-
-	  function unpipe() {
-	    debug('unpipe');
-	    src.unpipe(dest);
-	  }
-
-	  // tell the dest that it's being piped to
-	  dest.emit('pipe', src);
-
-	  // start the flow if it hasn't been started already.
-	  if (!state.flowing) {
-	    debug('pipe resume');
-	    src.resume();
-	  }
-
-	  return dest;
-	};
-
-	function pipeOnDrain(src) {
-	  return function() {
-	    var state = src._readableState;
-	    debug('pipeOnDrain', state.awaitDrain);
-	    if (state.awaitDrain)
-	      state.awaitDrain--;
-	    if (state.awaitDrain === 0 && EE.listenerCount(src, 'data')) {
-	      state.flowing = true;
-	      flow(src);
-	    }
-	  };
-	}
-
-
-	Readable.prototype.unpipe = function(dest) {
-	  var state = this._readableState;
-
-	  // if we're not piping anywhere, then do nothing.
-	  if (state.pipesCount === 0)
-	    return this;
-
-	  // just one destination.  most common case.
-	  if (state.pipesCount === 1) {
-	    // passed in one, but it's not the right one.
-	    if (dest && dest !== state.pipes)
-	      return this;
-
-	    if (!dest)
-	      dest = state.pipes;
-
-	    // got a match.
-	    state.pipes = null;
-	    state.pipesCount = 0;
-	    state.flowing = false;
-	    if (dest)
-	      dest.emit('unpipe', this);
-	    return this;
-	  }
-
-	  // slow case. multiple pipe destinations.
-
-	  if (!dest) {
-	    // remove all.
-	    var dests = state.pipes;
-	    var len = state.pipesCount;
-	    state.pipes = null;
-	    state.pipesCount = 0;
-	    state.flowing = false;
-
-	    for (var i = 0; i < len; i++)
-	      dests[i].emit('unpipe', this);
-	    return this;
-	  }
-
-	  // try to find the right one.
-	  var i = indexOf(state.pipes, dest);
-	  if (i === -1)
-	    return this;
-
-	  state.pipes.splice(i, 1);
-	  state.pipesCount -= 1;
-	  if (state.pipesCount === 1)
-	    state.pipes = state.pipes[0];
-
-	  dest.emit('unpipe', this);
-
-	  return this;
-	};
-
-	// set up data events if they are asked for
-	// Ensure readable listeners eventually get something
-	Readable.prototype.on = function(ev, fn) {
-	  var res = Stream.prototype.on.call(this, ev, fn);
-
-	  // If listening to data, and it has not explicitly been paused,
-	  // then call resume to start the flow of data on the next tick.
-	  if (ev === 'data' && false !== this._readableState.flowing) {
-	    this.resume();
-	  }
-
-	  if (ev === 'readable' && this.readable) {
-	    var state = this._readableState;
-	    if (!state.readableListening) {
-	      state.readableListening = true;
-	      state.emittedReadable = false;
-	      state.needReadable = true;
-	      if (!state.reading) {
-	        var self = this;
-	        process.nextTick(function() {
-	          debug('readable nexttick read 0');
-	          self.read(0);
-	        });
-	      } else if (state.length) {
-	        emitReadable(this, state);
-	      }
-	    }
-	  }
-
-	  return res;
-	};
-	Readable.prototype.addListener = Readable.prototype.on;
-
-	// pause() and resume() are remnants of the legacy readable stream API
-	// If the user uses them, then switch into old mode.
-	Readable.prototype.resume = function() {
-	  var state = this._readableState;
-	  if (!state.flowing) {
-	    debug('resume');
-	    state.flowing = true;
-	    if (!state.reading) {
-	      debug('resume read 0');
-	      this.read(0);
-	    }
-	    resume(this, state);
-	  }
-	  return this;
-	};
-
-	function resume(stream, state) {
-	  if (!state.resumeScheduled) {
-	    state.resumeScheduled = true;
-	    process.nextTick(function() {
-	      resume_(stream, state);
-	    });
-	  }
-	}
-
-	function resume_(stream, state) {
-	  state.resumeScheduled = false;
-	  stream.emit('resume');
-	  flow(stream);
-	  if (state.flowing && !state.reading)
-	    stream.read(0);
-	}
-
-	Readable.prototype.pause = function() {
-	  debug('call pause flowing=%j', this._readableState.flowing);
-	  if (false !== this._readableState.flowing) {
-	    debug('pause');
-	    this._readableState.flowing = false;
-	    this.emit('pause');
-	  }
-	  return this;
-	};
-
-	function flow(stream) {
-	  var state = stream._readableState;
-	  debug('flow', state.flowing);
-	  if (state.flowing) {
-	    do {
-	      var chunk = stream.read();
-	    } while (null !== chunk && state.flowing);
-	  }
-	}
-
-	// wrap an old-style stream as the async data source.
-	// This is *not* part of the readable stream interface.
-	// It is an ugly unfortunate mess of history.
-	Readable.prototype.wrap = function(stream) {
-	  var state = this._readableState;
-	  var paused = false;
-
-	  var self = this;
-	  stream.on('end', function() {
-	    debug('wrapped end');
-	    if (state.decoder && !state.ended) {
-	      var chunk = state.decoder.end();
-	      if (chunk && chunk.length)
-	        self.push(chunk);
-	    }
-
-	    self.push(null);
-	  });
-
-	  stream.on('data', function(chunk) {
-	    debug('wrapped data');
-	    if (state.decoder)
-	      chunk = state.decoder.write(chunk);
-	    if (!chunk || !state.objectMode && !chunk.length)
-	      return;
-
-	    var ret = self.push(chunk);
-	    if (!ret) {
-	      paused = true;
-	      stream.pause();
-	    }
-	  });
-
-	  // proxy all the other methods.
-	  // important when wrapping filters and duplexes.
-	  for (var i in stream) {
-	    if (util.isFunction(stream[i]) && util.isUndefined(this[i])) {
-	      this[i] = function(method) { return function() {
-	        return stream[method].apply(stream, arguments);
-	      }}(i);
-	    }
-	  }
-
-	  // proxy certain important events.
-	  var events = ['error', 'close', 'destroy', 'pause', 'resume'];
-	  forEach(events, function(ev) {
-	    stream.on(ev, self.emit.bind(self, ev));
-	  });
-
-	  // when we try to consume some more bytes, simply unpause the
-	  // underlying stream.
-	  self._read = function(n) {
-	    debug('wrapped _read', n);
-	    if (paused) {
-	      paused = false;
-	      stream.resume();
-	    }
-	  };
-
-	  return self;
-	};
-
-
-
-	// exposed for testing purposes only.
-	Readable._fromList = fromList;
-
-	// Pluck off n bytes from an array of buffers.
-	// Length is the combined lengths of all the buffers in the list.
-	function fromList(n, state) {
-	  var list = state.buffer;
-	  var length = state.length;
-	  var stringMode = !!state.decoder;
-	  var objectMode = !!state.objectMode;
-	  var ret;
-
-	  // nothing in the list, definitely empty.
-	  if (list.length === 0)
-	    return null;
-
-	  if (length === 0)
-	    ret = null;
-	  else if (objectMode)
-	    ret = list.shift();
-	  else if (!n || n >= length) {
-	    // read it all, truncate the array.
-	    if (stringMode)
-	      ret = list.join('');
-	    else
-	      ret = Buffer.concat(list, length);
-	    list.length = 0;
-	  } else {
-	    // read just some of it.
-	    if (n < list[0].length) {
-	      // just take a part of the first list item.
-	      // slice is the same for buffers and strings.
-	      var buf = list[0];
-	      ret = buf.slice(0, n);
-	      list[0] = buf.slice(n);
-	    } else if (n === list[0].length) {
-	      // first list is a perfect match
-	      ret = list.shift();
-	    } else {
-	      // complex case.
-	      // we have enough to cover it, but it spans past the first buffer.
-	      if (stringMode)
-	        ret = '';
-	      else
-	        ret = new Buffer(n);
-
-	      var c = 0;
-	      for (var i = 0, l = list.length; i < l && c < n; i++) {
-	        var buf = list[0];
-	        var cpy = Math.min(n - c, buf.length);
-
-	        if (stringMode)
-	          ret += buf.slice(0, cpy);
-	        else
-	          buf.copy(ret, c, 0, cpy);
-
-	        if (cpy < buf.length)
-	          list[0] = buf.slice(cpy);
-	        else
-	          list.shift();
-
-	        c += cpy;
-	      }
-	    }
-	  }
-
-	  return ret;
-	}
-
-	function endReadable(stream) {
-	  var state = stream._readableState;
-
-	  // If we get here before consuming all the bytes, then that is a
-	  // bug in node.  Should never happen.
-	  if (state.length > 0)
-	    throw new Error('endReadable called on non-empty stream');
-
-	  if (!state.endEmitted) {
-	    state.ended = true;
-	    process.nextTick(function() {
-	      // Check that we didn't get one last unshift.
-	      if (!state.endEmitted && state.length === 0) {
-	        state.endEmitted = true;
-	        stream.readable = false;
-	        stream.emit('end');
-	      }
-	    });
-	  }
-	}
-
-	function forEach (xs, f) {
-	  for (var i = 0, l = xs.length; i < l; i++) {
-	    f(xs[i], i);
-	  }
-	}
-
-	function indexOf (xs, x) {
-	  for (var i = 0, l = xs.length; i < l; i++) {
-	    if (xs[i] === x) return i;
-	  }
-	  return -1;
-	}
-
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
-/***/ },
-/* 164 */
-/***/ function(module, exports) {
-
-	module.exports = Array.isArray || function (arr) {
-	  return Object.prototype.toString.call(arr) == '[object Array]';
-	};
-
-
-/***/ },
-/* 165 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(Buffer, global) {/*!
+	/* WEBPACK VAR INJECTION */(function(global) {/*!
 	 * The buffer module from node.js, for the browser.
 	 *
 	 * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
@@ -14547,9 +14285,9 @@ var StellarSdk =
 
 	'use strict'
 
-	var base64 = __webpack_require__(166)
-	var ieee754 = __webpack_require__(167)
-	var isArray = __webpack_require__(168)
+	var base64 = __webpack_require__(171)
+	var ieee754 = __webpack_require__(172)
+	var isArray = __webpack_require__(173)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -16327,10 +16065,10 @@ var StellarSdk =
 	  return val !== val // eslint-disable-line no-self-compare
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 166 */
+/* 171 */
 /***/ function(module, exports) {
 
 	'use strict'
@@ -16450,7 +16188,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 167 */
+/* 172 */
 /***/ function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -16540,7 +16278,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 168 */
+/* 173 */
 /***/ function(module, exports) {
 
 	var toString = {}.toString;
@@ -16551,7 +16289,1326 @@ var StellarSdk =
 
 
 /***/ },
-/* 169 */
+/* 174 */
+/***/ function(module, exports) {
+
+	/* WEBPACK VAR INJECTION */(function(global) {exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
+
+	exports.blobConstructor = false
+	try {
+		new Blob([new ArrayBuffer(1)])
+		exports.blobConstructor = true
+	} catch (e) {}
+
+	// The xhr request to example.com may violate some restrictive CSP configurations,
+	// so if we're running in a browser that supports `fetch`, avoid calling getXHR()
+	// and assume support for certain features below.
+	var xhr
+	function getXHR () {
+		// Cache the xhr value
+		if (xhr !== undefined) return xhr
+
+		if (global.XMLHttpRequest) {
+			xhr = new global.XMLHttpRequest()
+			// If XDomainRequest is available (ie only, where xhr might not work
+			// cross domain), use the page location. Otherwise use example.com
+			// Note: this doesn't actually make an http request.
+			try {
+				xhr.open('GET', global.XDomainRequest ? '/' : 'https://example.com')
+			} catch(e) {
+				xhr = null
+			}
+		} else {
+			// Service workers don't have XHR
+			xhr = null
+		}
+		return xhr
+	}
+
+	function checkTypeSupport (type) {
+		var xhr = getXHR()
+		if (!xhr) return false
+		try {
+			xhr.responseType = type
+			return xhr.responseType === type
+		} catch (e) {}
+		return false
+	}
+
+	// For some strange reason, Safari 7.0 reports typeof global.ArrayBuffer === 'object'.
+	// Safari 7.1 appears to have fixed this bug.
+	var haveArrayBuffer = typeof global.ArrayBuffer !== 'undefined'
+	var haveSlice = haveArrayBuffer && isFunction(global.ArrayBuffer.prototype.slice)
+
+	// If fetch is supported, then arraybuffer will be supported too. Skip calling
+	// checkTypeSupport(), since that calls getXHR().
+	exports.arraybuffer = exports.fetch || (haveArrayBuffer && checkTypeSupport('arraybuffer'))
+
+	// These next two tests unavoidably show warnings in Chrome. Since fetch will always
+	// be used if it's available, just return false for these to avoid the warnings.
+	exports.msstream = !exports.fetch && haveSlice && checkTypeSupport('ms-stream')
+	exports.mozchunkedarraybuffer = !exports.fetch && haveArrayBuffer &&
+		checkTypeSupport('moz-chunked-arraybuffer')
+
+	// If fetch is supported, then overrideMimeType will be supported too. Skip calling
+	// getXHR().
+	exports.overrideMimeType = exports.fetch || (getXHR() ? isFunction(getXHR().overrideMimeType) : false)
+
+	exports.vbArray = isFunction(global.VBArray)
+
+	function isFunction (value) {
+		return typeof value === 'function'
+	}
+
+	xhr = null // Help gc
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 175 */
+/***/ function(module, exports) {
+
+	if (typeof Object.create === 'function') {
+	  // implementation from standard node.js 'util' module
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    ctor.prototype = Object.create(superCtor.prototype, {
+	      constructor: {
+	        value: ctor,
+	        enumerable: false,
+	        writable: true,
+	        configurable: true
+	      }
+	    });
+	  };
+	} else {
+	  // old school shim for old browsers
+	  module.exports = function inherits(ctor, superCtor) {
+	    ctor.super_ = superCtor
+	    var TempCtor = function () {}
+	    TempCtor.prototype = superCtor.prototype
+	    ctor.prototype = new TempCtor()
+	    ctor.prototype.constructor = ctor
+	  }
+	}
+
+
+/***/ },
+/* 176 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(174)
+	var inherits = __webpack_require__(175)
+	var stream = __webpack_require__(177)
+
+	var rStates = exports.readyStates = {
+		UNSENT: 0,
+		OPENED: 1,
+		HEADERS_RECEIVED: 2,
+		LOADING: 3,
+		DONE: 4
+	}
+
+	var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
+		var self = this
+		stream.Readable.call(self)
+
+		self._mode = mode
+		self.headers = {}
+		self.rawHeaders = []
+		self.trailers = {}
+		self.rawTrailers = []
+
+		// Fake the 'close' event, but only once 'end' fires
+		self.on('end', function () {
+			// The nextTick is necessary to prevent the 'request' module from causing an infinite loop
+			process.nextTick(function () {
+				self.emit('close')
+			})
+		})
+
+		if (mode === 'fetch') {
+			self._fetchResponse = response
+
+			self.url = response.url
+			self.statusCode = response.status
+			self.statusMessage = response.statusText
+			
+			response.headers.forEach(function(header, key){
+				self.headers[key.toLowerCase()] = header
+				self.rawHeaders.push(key, header)
+			})
+
+
+			// TODO: this doesn't respect backpressure. Once WritableStream is available, this can be fixed
+			var reader = response.body.getReader()
+			function read () {
+				reader.read().then(function (result) {
+					if (self._destroyed)
+						return
+					if (result.done) {
+						self.push(null)
+						return
+					}
+					self.push(new Buffer(result.value))
+					read()
+				}).catch(function(err) {
+					self.emit('error', err)
+				})
+			}
+			read()
+
+		} else {
+			self._xhr = xhr
+			self._pos = 0
+
+			self.url = xhr.responseURL
+			self.statusCode = xhr.status
+			self.statusMessage = xhr.statusText
+			var headers = xhr.getAllResponseHeaders().split(/\r?\n/)
+			headers.forEach(function (header) {
+				var matches = header.match(/^([^:]+):\s*(.*)/)
+				if (matches) {
+					var key = matches[1].toLowerCase()
+					if (key === 'set-cookie') {
+						if (self.headers[key] === undefined) {
+							self.headers[key] = []
+						}
+						self.headers[key].push(matches[2])
+					} else if (self.headers[key] !== undefined) {
+						self.headers[key] += ', ' + matches[2]
+					} else {
+						self.headers[key] = matches[2]
+					}
+					self.rawHeaders.push(matches[1], matches[2])
+				}
+			})
+
+			self._charset = 'x-user-defined'
+			if (!capability.overrideMimeType) {
+				var mimeType = self.rawHeaders['mime-type']
+				if (mimeType) {
+					var charsetMatch = mimeType.match(/;\s*charset=([^;])(;|$)/)
+					if (charsetMatch) {
+						self._charset = charsetMatch[1].toLowerCase()
+					}
+				}
+				if (!self._charset)
+					self._charset = 'utf-8' // best guess
+			}
+		}
+	}
+
+	inherits(IncomingMessage, stream.Readable)
+
+	IncomingMessage.prototype._read = function () {}
+
+	IncomingMessage.prototype._onXHRProgress = function () {
+		var self = this
+
+		var xhr = self._xhr
+
+		var response = null
+		switch (self._mode) {
+			case 'text:vbarray': // For IE9
+				if (xhr.readyState !== rStates.DONE)
+					break
+				try {
+					// This fails in IE8
+					response = new global.VBArray(xhr.responseBody).toArray()
+				} catch (e) {}
+				if (response !== null) {
+					self.push(new Buffer(response))
+					break
+				}
+				// Falls through in IE8	
+			case 'text':
+				try { // This will fail when readyState = 3 in IE9. Switch mode and wait for readyState = 4
+					response = xhr.responseText
+				} catch (e) {
+					self._mode = 'text:vbarray'
+					break
+				}
+				if (response.length > self._pos) {
+					var newData = response.substr(self._pos)
+					if (self._charset === 'x-user-defined') {
+						var buffer = new Buffer(newData.length)
+						for (var i = 0; i < newData.length; i++)
+							buffer[i] = newData.charCodeAt(i) & 0xff
+
+						self.push(buffer)
+					} else {
+						self.push(newData, self._charset)
+					}
+					self._pos = response.length
+				}
+				break
+			case 'arraybuffer':
+				if (xhr.readyState !== rStates.DONE || !xhr.response)
+					break
+				response = xhr.response
+				self.push(new Buffer(new Uint8Array(response)))
+				break
+			case 'moz-chunked-arraybuffer': // take whole
+				response = xhr.response
+				if (xhr.readyState !== rStates.LOADING || !response)
+					break
+				self.push(new Buffer(new Uint8Array(response)))
+				break
+			case 'ms-stream':
+				response = xhr.response
+				if (xhr.readyState !== rStates.LOADING)
+					break
+				var reader = new global.MSStreamReader()
+				reader.onprogress = function () {
+					if (reader.result.byteLength > self._pos) {
+						self.push(new Buffer(new Uint8Array(reader.result.slice(self._pos))))
+						self._pos = reader.result.byteLength
+					}
+				}
+				reader.onload = function () {
+					self.push(null)
+				}
+				// reader.onerror = ??? // TODO: this
+				reader.readAsArrayBuffer(response)
+				break
+		}
+
+		// The ms-stream case handles end separately in reader.onload()
+		if (self._xhr.readyState === rStates.DONE && self._mode !== 'ms-stream') {
+			self.push(null)
+		}
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(170).Buffer, (function() { return this; }())))
+
+/***/ },
+/* 177 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {var Stream = (function (){
+	  try {
+	    return __webpack_require__(178); // hack to fix a circular dependency issue when used with browserify
+	  } catch(_){}
+	}());
+	exports = module.exports = __webpack_require__(188);
+	exports.Stream = Stream || exports;
+	exports.Readable = exports;
+	exports.Writable = __webpack_require__(180);
+	exports.Duplex = __webpack_require__(187);
+	exports.Transform = __webpack_require__(194);
+	exports.PassThrough = __webpack_require__(196);
+
+	if (!process.browser && process.env.READABLE_STREAM === 'disable' && Stream) {
+	  module.exports = Stream;
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 178 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+	module.exports = Stream;
+
+	var EE = __webpack_require__(166).EventEmitter;
+	var inherits = __webpack_require__(175);
+
+	inherits(Stream, EE);
+	Stream.Readable = __webpack_require__(177);
+	Stream.Writable = __webpack_require__(179);
+	Stream.Duplex = __webpack_require__(192);
+	Stream.Transform = __webpack_require__(193);
+	Stream.PassThrough = __webpack_require__(195);
+
+	// Backwards-compat with node 0.4.x
+	Stream.Stream = Stream;
+
+
+
+	// old-style streams.  Note that the pipe method (the only relevant
+	// part of this class) is overridden in the Readable class.
+
+	function Stream() {
+	  EE.call(this);
+	}
+
+	Stream.prototype.pipe = function(dest, options) {
+	  var source = this;
+
+	  function ondata(chunk) {
+	    if (dest.writable) {
+	      if (false === dest.write(chunk) && source.pause) {
+	        source.pause();
+	      }
+	    }
+	  }
+
+	  source.on('data', ondata);
+
+	  function ondrain() {
+	    if (source.readable && source.resume) {
+	      source.resume();
+	    }
+	  }
+
+	  dest.on('drain', ondrain);
+
+	  // If the 'end' option is not supplied, dest.end() will be called when
+	  // source gets the 'end' or 'close' events.  Only dest.end() once.
+	  if (!dest._isStdio && (!options || options.end !== false)) {
+	    source.on('end', onend);
+	    source.on('close', onclose);
+	  }
+
+	  var didOnEnd = false;
+	  function onend() {
+	    if (didOnEnd) return;
+	    didOnEnd = true;
+
+	    dest.end();
+	  }
+
+
+	  function onclose() {
+	    if (didOnEnd) return;
+	    didOnEnd = true;
+
+	    if (typeof dest.destroy === 'function') dest.destroy();
+	  }
+
+	  // don't leave dangling pipes when there are errors.
+	  function onerror(er) {
+	    cleanup();
+	    if (EE.listenerCount(this, 'error') === 0) {
+	      throw er; // Unhandled stream error in pipe.
+	    }
+	  }
+
+	  source.on('error', onerror);
+	  dest.on('error', onerror);
+
+	  // remove all the event listeners that were added.
+	  function cleanup() {
+	    source.removeListener('data', ondata);
+	    dest.removeListener('drain', ondrain);
+
+	    source.removeListener('end', onend);
+	    source.removeListener('close', onclose);
+
+	    source.removeListener('error', onerror);
+	    dest.removeListener('error', onerror);
+
+	    source.removeListener('end', cleanup);
+	    source.removeListener('close', cleanup);
+
+	    dest.removeListener('close', cleanup);
+	  }
+
+	  source.on('end', cleanup);
+	  source.on('close', cleanup);
+
+	  dest.on('close', cleanup);
+
+	  dest.emit('pipe', source);
+
+	  // Allow for unix-like usage: A.pipe(B).pipe(C)
+	  return dest;
+	};
+
+
+/***/ },
+/* 179 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(180)
+
+
+/***/ },
+/* 180 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process, setImmediate) {// A bit simpler than readable streams.
+	// Implement an async ._write(chunk, encoding, cb), and it'll handle all
+	// the drain event emission and buffering.
+
+	'use strict';
+
+	module.exports = Writable;
+
+	/*<replacement>*/
+	var processNextTick = __webpack_require__(183);
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var Duplex;
+	/*</replacement>*/
+
+	Writable.WritableState = WritableState;
+
+	/*<replacement>*/
+	var util = __webpack_require__(184);
+	util.inherits = __webpack_require__(175);
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var internalUtil = {
+	  deprecate: __webpack_require__(185)
+	};
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var Stream;
+	(function () {
+	  try {
+	    Stream = __webpack_require__(178);
+	  } catch (_) {} finally {
+	    if (!Stream) Stream = __webpack_require__(166).EventEmitter;
+	  }
+	})();
+	/*</replacement>*/
+
+	var Buffer = __webpack_require__(170).Buffer;
+	/*<replacement>*/
+	var bufferShim = __webpack_require__(186);
+	/*</replacement>*/
+
+	util.inherits(Writable, Stream);
+
+	function nop() {}
+
+	function WriteReq(chunk, encoding, cb) {
+	  this.chunk = chunk;
+	  this.encoding = encoding;
+	  this.callback = cb;
+	  this.next = null;
+	}
+
+	function WritableState(options, stream) {
+	  Duplex = Duplex || __webpack_require__(187);
+
+	  options = options || {};
+
+	  // object stream flag to indicate whether or not this stream
+	  // contains buffers or objects.
+	  this.objectMode = !!options.objectMode;
+
+	  if (stream instanceof Duplex) this.objectMode = this.objectMode || !!options.writableObjectMode;
+
+	  // the point at which write() starts returning false
+	  // Note: 0 is a valid value, means that we always return false if
+	  // the entire buffer is not flushed immediately on write()
+	  var hwm = options.highWaterMark;
+	  var defaultHwm = this.objectMode ? 16 : 16 * 1024;
+	  this.highWaterMark = hwm || hwm === 0 ? hwm : defaultHwm;
+
+	  // cast to ints.
+	  this.highWaterMark = ~ ~this.highWaterMark;
+
+	  // drain event flag.
+	  this.needDrain = false;
+	  // at the start of calling end()
+	  this.ending = false;
+	  // when end() has been called, and returned
+	  this.ended = false;
+	  // when 'finish' is emitted
+	  this.finished = false;
+
+	  // should we decode strings into buffers before passing to _write?
+	  // this is here so that some node-core streams can optimize string
+	  // handling at a lower level.
+	  var noDecode = options.decodeStrings === false;
+	  this.decodeStrings = !noDecode;
+
+	  // Crypto is kind of old and crusty.  Historically, its default string
+	  // encoding is 'binary' so we have to make this configurable.
+	  // Everything else in the universe uses 'utf8', though.
+	  this.defaultEncoding = options.defaultEncoding || 'utf8';
+
+	  // not an actual buffer we keep track of, but a measurement
+	  // of how much we're waiting to get pushed to some underlying
+	  // socket or file.
+	  this.length = 0;
+
+	  // a flag to see when we're in the middle of a write.
+	  this.writing = false;
+
+	  // when true all writes will be buffered until .uncork() call
+	  this.corked = 0;
+
+	  // a flag to be able to tell if the onwrite cb is called immediately,
+	  // or on a later tick.  We set this to true at first, because any
+	  // actions that shouldn't happen until "later" should generally also
+	  // not happen before the first write call.
+	  this.sync = true;
+
+	  // a flag to know if we're processing previously buffered items, which
+	  // may call the _write() callback in the same tick, so that we don't
+	  // end up in an overlapped onwrite situation.
+	  this.bufferProcessing = false;
+
+	  // the callback that's passed to _write(chunk,cb)
+	  this.onwrite = function (er) {
+	    onwrite(stream, er);
+	  };
+
+	  // the callback that the user supplies to write(chunk,encoding,cb)
+	  this.writecb = null;
+
+	  // the amount that is being written when _write is called.
+	  this.writelen = 0;
+
+	  this.bufferedRequest = null;
+	  this.lastBufferedRequest = null;
+
+	  // number of pending user-supplied write callbacks
+	  // this must be 0 before 'finish' can be emitted
+	  this.pendingcb = 0;
+
+	  // emit prefinish if the only thing we're waiting for is _write cbs
+	  // This is relevant for synchronous Transform streams
+	  this.prefinished = false;
+
+	  // True if the error was already emitted and should not be thrown again
+	  this.errorEmitted = false;
+
+	  // count buffered requests
+	  this.bufferedRequestCount = 0;
+
+	  // allocate the first CorkedRequest, there is always
+	  // one allocated and free to use, and we maintain at most two
+	  this.corkedRequestsFree = new CorkedRequest(this);
+	}
+
+	WritableState.prototype.getBuffer = function getBuffer() {
+	  var current = this.bufferedRequest;
+	  var out = [];
+	  while (current) {
+	    out.push(current);
+	    current = current.next;
+	  }
+	  return out;
+	};
+
+	(function () {
+	  try {
+	    Object.defineProperty(WritableState.prototype, 'buffer', {
+	      get: internalUtil.deprecate(function () {
+	        return this.getBuffer();
+	      }, '_writableState.buffer is deprecated. Use _writableState.getBuffer ' + 'instead.')
+	    });
+	  } catch (_) {}
+	})();
+
+	// Test _writableState for inheritance to account for Duplex streams,
+	// whose prototype chain only points to Readable.
+	var realHasInstance;
+	if (typeof Symbol === 'function' && Symbol.hasInstance && typeof Function.prototype[Symbol.hasInstance] === 'function') {
+	  realHasInstance = Function.prototype[Symbol.hasInstance];
+	  Object.defineProperty(Writable, Symbol.hasInstance, {
+	    value: function (object) {
+	      if (realHasInstance.call(this, object)) return true;
+
+	      return object && object._writableState instanceof WritableState;
+	    }
+	  });
+	} else {
+	  realHasInstance = function (object) {
+	    return object instanceof this;
+	  };
+	}
+
+	function Writable(options) {
+	  Duplex = Duplex || __webpack_require__(187);
+
+	  // Writable ctor is applied to Duplexes, too.
+	  // `realHasInstance` is necessary because using plain `instanceof`
+	  // would return false, as no `_writableState` property is attached.
+
+	  // Trying to use the custom `instanceof` for Writable here will also break the
+	  // Node.js LazyTransform implementation, which has a non-trivial getter for
+	  // `_writableState` that would lead to infinite recursion.
+	  if (!realHasInstance.call(Writable, this) && !(this instanceof Duplex)) {
+	    return new Writable(options);
+	  }
+
+	  this._writableState = new WritableState(options, this);
+
+	  // legacy.
+	  this.writable = true;
+
+	  if (options) {
+	    if (typeof options.write === 'function') this._write = options.write;
+
+	    if (typeof options.writev === 'function') this._writev = options.writev;
+	  }
+
+	  Stream.call(this);
+	}
+
+	// Otherwise people can pipe Writable streams, which is just wrong.
+	Writable.prototype.pipe = function () {
+	  this.emit('error', new Error('Cannot pipe, not readable'));
+	};
+
+	function writeAfterEnd(stream, cb) {
+	  var er = new Error('write after end');
+	  // TODO: defer error events consistently everywhere, not just the cb
+	  stream.emit('error', er);
+	  processNextTick(cb, er);
+	}
+
+	// If we get something that is not a buffer, string, null, or undefined,
+	// and we're not in objectMode, then that's an error.
+	// Otherwise stream chunks are all considered to be of length=1, and the
+	// watermarks determine how many objects to keep in the buffer, rather than
+	// how many bytes or characters.
+	function validChunk(stream, state, chunk, cb) {
+	  var valid = true;
+	  var er = false;
+	  // Always throw error if a null is written
+	  // if we are not in object mode then throw
+	  // if it is not a buffer, string, or undefined.
+	  if (chunk === null) {
+	    er = new TypeError('May not write null values to stream');
+	  } else if (!Buffer.isBuffer(chunk) && typeof chunk !== 'string' && chunk !== undefined && !state.objectMode) {
+	    er = new TypeError('Invalid non-string/buffer chunk');
+	  }
+	  if (er) {
+	    stream.emit('error', er);
+	    processNextTick(cb, er);
+	    valid = false;
+	  }
+	  return valid;
+	}
+
+	Writable.prototype.write = function (chunk, encoding, cb) {
+	  var state = this._writableState;
+	  var ret = false;
+
+	  if (typeof encoding === 'function') {
+	    cb = encoding;
+	    encoding = null;
+	  }
+
+	  if (Buffer.isBuffer(chunk)) encoding = 'buffer';else if (!encoding) encoding = state.defaultEncoding;
+
+	  if (typeof cb !== 'function') cb = nop;
+
+	  if (state.ended) writeAfterEnd(this, cb);else if (validChunk(this, state, chunk, cb)) {
+	    state.pendingcb++;
+	    ret = writeOrBuffer(this, state, chunk, encoding, cb);
+	  }
+
+	  return ret;
+	};
+
+	Writable.prototype.cork = function () {
+	  var state = this._writableState;
+
+	  state.corked++;
+	};
+
+	Writable.prototype.uncork = function () {
+	  var state = this._writableState;
+
+	  if (state.corked) {
+	    state.corked--;
+
+	    if (!state.writing && !state.corked && !state.finished && !state.bufferProcessing && state.bufferedRequest) clearBuffer(this, state);
+	  }
+	};
+
+	Writable.prototype.setDefaultEncoding = function setDefaultEncoding(encoding) {
+	  // node::ParseEncoding() requires lower case.
+	  if (typeof encoding === 'string') encoding = encoding.toLowerCase();
+	  if (!(['hex', 'utf8', 'utf-8', 'ascii', 'binary', 'base64', 'ucs2', 'ucs-2', 'utf16le', 'utf-16le', 'raw'].indexOf((encoding + '').toLowerCase()) > -1)) throw new TypeError('Unknown encoding: ' + encoding);
+	  this._writableState.defaultEncoding = encoding;
+	  return this;
+	};
+
+	function decodeChunk(state, chunk, encoding) {
+	  if (!state.objectMode && state.decodeStrings !== false && typeof chunk === 'string') {
+	    chunk = bufferShim.from(chunk, encoding);
+	  }
+	  return chunk;
+	}
+
+	// if we're already writing something, then just put this
+	// in the queue, and wait our turn.  Otherwise, call _write
+	// If we return false, then we need a drain event, so set that flag.
+	function writeOrBuffer(stream, state, chunk, encoding, cb) {
+	  chunk = decodeChunk(state, chunk, encoding);
+
+	  if (Buffer.isBuffer(chunk)) encoding = 'buffer';
+	  var len = state.objectMode ? 1 : chunk.length;
+
+	  state.length += len;
+
+	  var ret = state.length < state.highWaterMark;
+	  // we must ensure that previous needDrain will not be reset to false.
+	  if (!ret) state.needDrain = true;
+
+	  if (state.writing || state.corked) {
+	    var last = state.lastBufferedRequest;
+	    state.lastBufferedRequest = new WriteReq(chunk, encoding, cb);
+	    if (last) {
+	      last.next = state.lastBufferedRequest;
+	    } else {
+	      state.bufferedRequest = state.lastBufferedRequest;
+	    }
+	    state.bufferedRequestCount += 1;
+	  } else {
+	    doWrite(stream, state, false, len, chunk, encoding, cb);
+	  }
+
+	  return ret;
+	}
+
+	function doWrite(stream, state, writev, len, chunk, encoding, cb) {
+	  state.writelen = len;
+	  state.writecb = cb;
+	  state.writing = true;
+	  state.sync = true;
+	  if (writev) stream._writev(chunk, state.onwrite);else stream._write(chunk, encoding, state.onwrite);
+	  state.sync = false;
+	}
+
+	function onwriteError(stream, state, sync, er, cb) {
+	  --state.pendingcb;
+	  if (sync) processNextTick(cb, er);else cb(er);
+
+	  stream._writableState.errorEmitted = true;
+	  stream.emit('error', er);
+	}
+
+	function onwriteStateUpdate(state) {
+	  state.writing = false;
+	  state.writecb = null;
+	  state.length -= state.writelen;
+	  state.writelen = 0;
+	}
+
+	function onwrite(stream, er) {
+	  var state = stream._writableState;
+	  var sync = state.sync;
+	  var cb = state.writecb;
+
+	  onwriteStateUpdate(state);
+
+	  if (er) onwriteError(stream, state, sync, er, cb);else {
+	    // Check if we're actually ready to finish, but don't emit yet
+	    var finished = needFinish(state);
+
+	    if (!finished && !state.corked && !state.bufferProcessing && state.bufferedRequest) {
+	      clearBuffer(stream, state);
+	    }
+
+	    if (sync) {
+	      /*<replacement>*/
+	      asyncWrite(afterWrite, stream, state, finished, cb);
+	      /*</replacement>*/
+	    } else {
+	        afterWrite(stream, state, finished, cb);
+	      }
+	  }
+	}
+
+	function afterWrite(stream, state, finished, cb) {
+	  if (!finished) onwriteDrain(stream, state);
+	  state.pendingcb--;
+	  cb();
+	  finishMaybe(stream, state);
+	}
+
+	// Must force callback to be called on nextTick, so that we don't
+	// emit 'drain' before the write() consumer gets the 'false' return
+	// value, and has a chance to attach a 'drain' listener.
+	function onwriteDrain(stream, state) {
+	  if (state.length === 0 && state.needDrain) {
+	    state.needDrain = false;
+	    stream.emit('drain');
+	  }
+	}
+
+	// if there's something in the buffer waiting, then process it
+	function clearBuffer(stream, state) {
+	  state.bufferProcessing = true;
+	  var entry = state.bufferedRequest;
+
+	  if (stream._writev && entry && entry.next) {
+	    // Fast case, write everything using _writev()
+	    var l = state.bufferedRequestCount;
+	    var buffer = new Array(l);
+	    var holder = state.corkedRequestsFree;
+	    holder.entry = entry;
+
+	    var count = 0;
+	    while (entry) {
+	      buffer[count] = entry;
+	      entry = entry.next;
+	      count += 1;
+	    }
+
+	    doWrite(stream, state, true, state.length, buffer, '', holder.finish);
+
+	    // doWrite is almost always async, defer these to save a bit of time
+	    // as the hot path ends with doWrite
+	    state.pendingcb++;
+	    state.lastBufferedRequest = null;
+	    if (holder.next) {
+	      state.corkedRequestsFree = holder.next;
+	      holder.next = null;
+	    } else {
+	      state.corkedRequestsFree = new CorkedRequest(state);
+	    }
+	  } else {
+	    // Slow case, write chunks one-by-one
+	    while (entry) {
+	      var chunk = entry.chunk;
+	      var encoding = entry.encoding;
+	      var cb = entry.callback;
+	      var len = state.objectMode ? 1 : chunk.length;
+
+	      doWrite(stream, state, false, len, chunk, encoding, cb);
+	      entry = entry.next;
+	      // if we didn't call the onwrite immediately, then
+	      // it means that we need to wait until it does.
+	      // also, that means that the chunk and cb are currently
+	      // being processed, so move the buffer counter past them.
+	      if (state.writing) {
+	        break;
+	      }
+	    }
+
+	    if (entry === null) state.lastBufferedRequest = null;
+	  }
+
+	  state.bufferedRequestCount = 0;
+	  state.bufferedRequest = entry;
+	  state.bufferProcessing = false;
+	}
+
+	Writable.prototype._write = function (chunk, encoding, cb) {
+	  cb(new Error('_write() is not implemented'));
+	};
+
+	Writable.prototype._writev = null;
+
+	Writable.prototype.end = function (chunk, encoding, cb) {
+	  var state = this._writableState;
+
+	  if (typeof chunk === 'function') {
+	    cb = chunk;
+	    chunk = null;
+	    encoding = null;
+	  } else if (typeof encoding === 'function') {
+	    cb = encoding;
+	    encoding = null;
+	  }
+
+	  if (chunk !== null && chunk !== undefined) this.write(chunk, encoding);
+
+	  // .end() fully uncorks
+	  if (state.corked) {
+	    state.corked = 1;
+	    this.uncork();
+	  }
+
+	  // ignore unnecessary end() calls.
+	  if (!state.ending && !state.finished) endWritable(this, state, cb);
+	};
+
+	function needFinish(state) {
+	  return state.ending && state.length === 0 && state.bufferedRequest === null && !state.finished && !state.writing;
+	}
+
+	function prefinish(stream, state) {
+	  if (!state.prefinished) {
+	    state.prefinished = true;
+	    stream.emit('prefinish');
+	  }
+	}
+
+	function finishMaybe(stream, state) {
+	  var need = needFinish(state);
+	  if (need) {
+	    if (state.pendingcb === 0) {
+	      prefinish(stream, state);
+	      state.finished = true;
+	      stream.emit('finish');
+	    } else {
+	      prefinish(stream, state);
+	    }
+	  }
+	  return need;
+	}
+
+	function endWritable(stream, state, cb) {
+	  state.ending = true;
+	  finishMaybe(stream, state);
+	  if (cb) {
+	    if (state.finished) processNextTick(cb);else stream.once('finish', cb);
+	  }
+	  state.ended = true;
+	  stream.writable = false;
+	}
+
+	// It seems a linked list but it is not
+	// there will be only 2 of these for each stream
+	function CorkedRequest(state) {
+	  var _this = this;
+
+	  this.next = null;
+	  this.entry = null;
+
+	  this.finish = function (err) {
+	    var entry = _this.entry;
+	    _this.entry = null;
+	    while (entry) {
+	      var cb = entry.callback;
+	      state.pendingcb--;
+	      cb(err);
+	      entry = entry.next;
+	    }
+	    if (state.corkedRequestsFree) {
+	      state.corkedRequestsFree.next = _this;
+	    } else {
+	      state.corkedRequestsFree = _this;
+	    }
+	  };
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(181).setImmediate))
+
+/***/ },
+/* 181 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var apply = Function.prototype.apply;
+
+	// DOM APIs, for completeness
+
+	exports.setTimeout = function() {
+	  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+	};
+	exports.setInterval = function() {
+	  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+	};
+	exports.clearTimeout =
+	exports.clearInterval = function(timeout) {
+	  if (timeout) {
+	    timeout.close();
+	  }
+	};
+
+	function Timeout(id, clearFn) {
+	  this._id = id;
+	  this._clearFn = clearFn;
+	}
+	Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+	Timeout.prototype.close = function() {
+	  this._clearFn.call(window, this._id);
+	};
+
+	// Does not start the time, just sets up the members needed.
+	exports.enroll = function(item, msecs) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = msecs;
+	};
+
+	exports.unenroll = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+	  item._idleTimeout = -1;
+	};
+
+	exports._unrefActive = exports.active = function(item) {
+	  clearTimeout(item._idleTimeoutId);
+
+	  var msecs = item._idleTimeout;
+	  if (msecs >= 0) {
+	    item._idleTimeoutId = setTimeout(function onTimeout() {
+	      if (item._onTimeout)
+	        item._onTimeout();
+	    }, msecs);
+	  }
+	};
+
+	// setimmediate attaches itself to the global object
+	__webpack_require__(182);
+	exports.setImmediate = setImmediate;
+	exports.clearImmediate = clearImmediate;
+
+
+/***/ },
+/* 182 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
+	    "use strict";
+
+	    if (global.setImmediate) {
+	        return;
+	    }
+
+	    var nextHandle = 1; // Spec says greater than zero
+	    var tasksByHandle = {};
+	    var currentlyRunningATask = false;
+	    var doc = global.document;
+	    var registerImmediate;
+
+	    function setImmediate(callback) {
+	      // Callback can either be a function or a string
+	      if (typeof callback !== "function") {
+	        callback = new Function("" + callback);
+	      }
+	      // Copy function arguments
+	      var args = new Array(arguments.length - 1);
+	      for (var i = 0; i < args.length; i++) {
+	          args[i] = arguments[i + 1];
+	      }
+	      // Store and register the task
+	      var task = { callback: callback, args: args };
+	      tasksByHandle[nextHandle] = task;
+	      registerImmediate(nextHandle);
+	      return nextHandle++;
+	    }
+
+	    function clearImmediate(handle) {
+	        delete tasksByHandle[handle];
+	    }
+
+	    function run(task) {
+	        var callback = task.callback;
+	        var args = task.args;
+	        switch (args.length) {
+	        case 0:
+	            callback();
+	            break;
+	        case 1:
+	            callback(args[0]);
+	            break;
+	        case 2:
+	            callback(args[0], args[1]);
+	            break;
+	        case 3:
+	            callback(args[0], args[1], args[2]);
+	            break;
+	        default:
+	            callback.apply(undefined, args);
+	            break;
+	        }
+	    }
+
+	    function runIfPresent(handle) {
+	        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+	        // So if we're currently running a task, we'll need to delay this invocation.
+	        if (currentlyRunningATask) {
+	            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+	            // "too much recursion" error.
+	            setTimeout(runIfPresent, 0, handle);
+	        } else {
+	            var task = tasksByHandle[handle];
+	            if (task) {
+	                currentlyRunningATask = true;
+	                try {
+	                    run(task);
+	                } finally {
+	                    clearImmediate(handle);
+	                    currentlyRunningATask = false;
+	                }
+	            }
+	        }
+	    }
+
+	    function installNextTickImplementation() {
+	        registerImmediate = function(handle) {
+	            process.nextTick(function () { runIfPresent(handle); });
+	        };
+	    }
+
+	    function canUsePostMessage() {
+	        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+	        // where `global.postMessage` means something completely different and can't be used for this purpose.
+	        if (global.postMessage && !global.importScripts) {
+	            var postMessageIsAsynchronous = true;
+	            var oldOnMessage = global.onmessage;
+	            global.onmessage = function() {
+	                postMessageIsAsynchronous = false;
+	            };
+	            global.postMessage("", "*");
+	            global.onmessage = oldOnMessage;
+	            return postMessageIsAsynchronous;
+	        }
+	    }
+
+	    function installPostMessageImplementation() {
+	        // Installs an event handler on `global` for the `message` event: see
+	        // * https://developer.mozilla.org/en/DOM/window.postMessage
+	        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+	        var messagePrefix = "setImmediate$" + Math.random() + "$";
+	        var onGlobalMessage = function(event) {
+	            if (event.source === global &&
+	                typeof event.data === "string" &&
+	                event.data.indexOf(messagePrefix) === 0) {
+	                runIfPresent(+event.data.slice(messagePrefix.length));
+	            }
+	        };
+
+	        if (global.addEventListener) {
+	            global.addEventListener("message", onGlobalMessage, false);
+	        } else {
+	            global.attachEvent("onmessage", onGlobalMessage);
+	        }
+
+	        registerImmediate = function(handle) {
+	            global.postMessage(messagePrefix + handle, "*");
+	        };
+	    }
+
+	    function installMessageChannelImplementation() {
+	        var channel = new MessageChannel();
+	        channel.port1.onmessage = function(event) {
+	            var handle = event.data;
+	            runIfPresent(handle);
+	        };
+
+	        registerImmediate = function(handle) {
+	            channel.port2.postMessage(handle);
+	        };
+	    }
+
+	    function installReadyStateChangeImplementation() {
+	        var html = doc.documentElement;
+	        registerImmediate = function(handle) {
+	            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+	            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+	            var script = doc.createElement("script");
+	            script.onreadystatechange = function () {
+	                runIfPresent(handle);
+	                script.onreadystatechange = null;
+	                html.removeChild(script);
+	                script = null;
+	            };
+	            html.appendChild(script);
+	        };
+	    }
+
+	    function installSetTimeoutImplementation() {
+	        registerImmediate = function(handle) {
+	            setTimeout(runIfPresent, 0, handle);
+	        };
+	    }
+
+	    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+	    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+	    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+	    // Don't get fooled by e.g. browserify environments.
+	    if ({}.toString.call(global.process) === "[object process]") {
+	        // For Node.js before 0.9
+	        installNextTickImplementation();
+
+	    } else if (canUsePostMessage()) {
+	        // For non-IE10 modern browsers
+	        installPostMessageImplementation();
+
+	    } else if (global.MessageChannel) {
+	        // For web workers, where supported
+	        installMessageChannelImplementation();
+
+	    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+	        // For IE 6–8
+	        installReadyStateChangeImplementation();
+
+	    } else {
+	        // For older browsers
+	        installSetTimeoutImplementation();
+	    }
+
+	    attachTo.setImmediate = setImmediate;
+	    attachTo.clearImmediate = clearImmediate;
+	}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
+
+/***/ },
+/* 183 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
+
+	if (!process.version ||
+	    process.version.indexOf('v0.') === 0 ||
+	    process.version.indexOf('v1.') === 0 && process.version.indexOf('v1.8.') !== 0) {
+	  module.exports = nextTick;
+	} else {
+	  module.exports = process.nextTick;
+	}
+
+	function nextTick(fn, arg1, arg2, arg3) {
+	  if (typeof fn !== 'function') {
+	    throw new TypeError('"callback" argument must be a function');
+	  }
+	  var len = arguments.length;
+	  var args, i;
+	  switch (len) {
+	  case 0:
+	  case 1:
+	    return process.nextTick(fn);
+	  case 2:
+	    return process.nextTick(function afterTickOne() {
+	      fn.call(null, arg1);
+	    });
+	  case 3:
+	    return process.nextTick(function afterTickTwo() {
+	      fn.call(null, arg1, arg2);
+	    });
+	  case 4:
+	    return process.nextTick(function afterTickThree() {
+	      fn.call(null, arg1, arg2, arg3);
+	    });
+	  default:
+	    args = new Array(len - 1);
+	    i = 0;
+	    while (i < args.length) {
+	      args[i++] = arguments[i];
+	    }
+	    return process.nextTick(function afterTick() {
+	      fn.apply(null, args);
+	    });
+	  }
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
+
+/***/ },
+/* 184 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// Copyright Joyent, Inc. and other Node contributors.
@@ -16662,86 +17719,252 @@ var StellarSdk =
 	  return Object.prototype.toString.call(o);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 170 */
+/* 185 */
 /***/ function(module, exports) {
 
-	/* (ignored) */
+	/* WEBPACK VAR INJECTION */(function(global) {
+	/**
+	 * Module exports.
+	 */
+
+	module.exports = deprecate;
+
+	/**
+	 * Mark that a method should not be used.
+	 * Returns a modified function which warns once by default.
+	 *
+	 * If `localStorage.noDeprecation = true` is set, then it is a no-op.
+	 *
+	 * If `localStorage.throwDeprecation = true` is set, then deprecated functions
+	 * will throw an Error when invoked.
+	 *
+	 * If `localStorage.traceDeprecation = true` is set, then deprecated functions
+	 * will invoke `console.trace()` instead of `console.error()`.
+	 *
+	 * @param {Function} fn - the function to deprecate
+	 * @param {String} msg - the string to print to the console when `fn` is invoked
+	 * @returns {Function} a new "deprecated" version of `fn`
+	 * @api public
+	 */
+
+	function deprecate (fn, msg) {
+	  if (config('noDeprecation')) {
+	    return fn;
+	  }
+
+	  var warned = false;
+	  function deprecated() {
+	    if (!warned) {
+	      if (config('throwDeprecation')) {
+	        throw new Error(msg);
+	      } else if (config('traceDeprecation')) {
+	        console.trace(msg);
+	      } else {
+	        console.warn(msg);
+	      }
+	      warned = true;
+	    }
+	    return fn.apply(this, arguments);
+	  }
+
+	  return deprecated;
+	}
+
+	/**
+	 * Checks `localStorage` for boolean values for the given `name`.
+	 *
+	 * @param {String} name
+	 * @returns {Boolean}
+	 * @api private
+	 */
+
+	function config (name) {
+	  // accessing global.localStorage can trigger a DOMException in sandboxed iframes
+	  try {
+	    if (!global.localStorage) return false;
+	  } catch (_) {
+	    return false;
+	  }
+	  var val = global.localStorage[name];
+	  if (null == val) return false;
+	  return String(val).toLowerCase() === 'true';
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 171 */
+/* 186 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
+
+	var buffer = __webpack_require__(170);
+	var Buffer = buffer.Buffer;
+	var SlowBuffer = buffer.SlowBuffer;
+	var MAX_LEN = buffer.kMaxLength || 2147483647;
+	exports.alloc = function alloc(size, fill, encoding) {
+	  if (typeof Buffer.alloc === 'function') {
+	    return Buffer.alloc(size, fill, encoding);
+	  }
+	  if (typeof encoding === 'number') {
+	    throw new TypeError('encoding must not be number');
+	  }
+	  if (typeof size !== 'number') {
+	    throw new TypeError('size must be a number');
+	  }
+	  if (size > MAX_LEN) {
+	    throw new RangeError('size is too large');
+	  }
+	  var enc = encoding;
+	  var _fill = fill;
+	  if (_fill === undefined) {
+	    enc = undefined;
+	    _fill = 0;
+	  }
+	  var buf = new Buffer(size);
+	  if (typeof _fill === 'string') {
+	    var fillBuf = new Buffer(_fill, enc);
+	    var flen = fillBuf.length;
+	    var i = -1;
+	    while (++i < size) {
+	      buf[i] = fillBuf[i % flen];
+	    }
+	  } else {
+	    buf.fill(_fill);
+	  }
+	  return buf;
+	}
+	exports.allocUnsafe = function allocUnsafe(size) {
+	  if (typeof Buffer.allocUnsafe === 'function') {
+	    return Buffer.allocUnsafe(size);
+	  }
+	  if (typeof size !== 'number') {
+	    throw new TypeError('size must be a number');
+	  }
+	  if (size > MAX_LEN) {
+	    throw new RangeError('size is too large');
+	  }
+	  return new Buffer(size);
+	}
+	exports.from = function from(value, encodingOrOffset, length) {
+	  if (typeof Buffer.from === 'function' && (!global.Uint8Array || Uint8Array.from !== Buffer.from)) {
+	    return Buffer.from(value, encodingOrOffset, length);
+	  }
+	  if (typeof value === 'number') {
+	    throw new TypeError('"value" argument must not be a number');
+	  }
+	  if (typeof value === 'string') {
+	    return new Buffer(value, encodingOrOffset);
+	  }
+	  if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
+	    var offset = encodingOrOffset;
+	    if (arguments.length === 1) {
+	      return new Buffer(value);
+	    }
+	    if (typeof offset === 'undefined') {
+	      offset = 0;
+	    }
+	    var len = length;
+	    if (typeof len === 'undefined') {
+	      len = value.byteLength - offset;
+	    }
+	    if (offset >= value.byteLength) {
+	      throw new RangeError('\'offset\' is out of bounds');
+	    }
+	    if (len > value.byteLength - offset) {
+	      throw new RangeError('\'length\' is out of bounds');
+	    }
+	    return new Buffer(value.slice(offset, offset + len));
+	  }
+	  if (Buffer.isBuffer(value)) {
+	    var out = new Buffer(value.length);
+	    value.copy(out, 0, 0, value.length);
+	    return out;
+	  }
+	  if (value) {
+	    if (Array.isArray(value) || (typeof ArrayBuffer !== 'undefined' && value.buffer instanceof ArrayBuffer) || 'length' in value) {
+	      return new Buffer(value);
+	    }
+	    if (value.type === 'Buffer' && Array.isArray(value.data)) {
+	      return new Buffer(value.data);
+	    }
+	  }
+
+	  throw new TypeError('First argument must be a string, Buffer, ' + 'ArrayBuffer, Array, or array-like object.');
+	}
+	exports.allocUnsafeSlow = function allocUnsafeSlow(size) {
+	  if (typeof Buffer.allocUnsafeSlow === 'function') {
+	    return Buffer.allocUnsafeSlow(size);
+	  }
+	  if (typeof size !== 'number') {
+	    throw new TypeError('size must be a number');
+	  }
+	  if (size >= MAX_LEN) {
+	    throw new RangeError('size is too large');
+	  }
+	  return new SlowBuffer(size);
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
+
+/***/ },
+/* 187 */
+/***/ function(module, exports, __webpack_require__) {
 
 	// a duplex stream is just a stream that is both readable and writable.
 	// Since JS doesn't have multiple prototypal inheritance, this class
 	// prototypally inherits from Readable, and then parasitically from
 	// Writable.
 
+	'use strict';
+
+	/*<replacement>*/
+
+	var objectKeys = Object.keys || function (obj) {
+	  var keys = [];
+	  for (var key in obj) {
+	    keys.push(key);
+	  }return keys;
+	};
+	/*</replacement>*/
+
 	module.exports = Duplex;
 
 	/*<replacement>*/
-	var objectKeys = Object.keys || function (obj) {
-	  var keys = [];
-	  for (var key in obj) keys.push(key);
-	  return keys;
-	}
+	var processNextTick = __webpack_require__(183);
 	/*</replacement>*/
-
 
 	/*<replacement>*/
-	var util = __webpack_require__(169);
-	util.inherits = __webpack_require__(161);
+	var util = __webpack_require__(184);
+	util.inherits = __webpack_require__(175);
 	/*</replacement>*/
 
-	var Readable = __webpack_require__(163);
-	var Writable = __webpack_require__(172);
+	var Readable = __webpack_require__(188);
+	var Writable = __webpack_require__(180);
 
 	util.inherits(Duplex, Readable);
 
-	forEach(objectKeys(Writable.prototype), function(method) {
-	  if (!Duplex.prototype[method])
-	    Duplex.prototype[method] = Writable.prototype[method];
-	});
+	var keys = objectKeys(Writable.prototype);
+	for (var v = 0; v < keys.length; v++) {
+	  var method = keys[v];
+	  if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
+	}
 
 	function Duplex(options) {
-	  if (!(this instanceof Duplex))
-	    return new Duplex(options);
+	  if (!(this instanceof Duplex)) return new Duplex(options);
 
 	  Readable.call(this, options);
 	  Writable.call(this, options);
 
-	  if (options && options.readable === false)
-	    this.readable = false;
+	  if (options && options.readable === false) this.readable = false;
 
-	  if (options && options.writable === false)
-	    this.writable = false;
+	  if (options && options.writable === false) this.writable = false;
 
 	  this.allowHalfOpen = true;
-	  if (options && options.allowHalfOpen === false)
-	    this.allowHalfOpen = false;
+	  if (options && options.allowHalfOpen === false) this.allowHalfOpen = false;
 
 	  this.once('end', onend);
 	}
@@ -16750,126 +17973,134 @@ var StellarSdk =
 	function onend() {
 	  // if we allow half-open state, or if the writable side ended,
 	  // then we're ok.
-	  if (this.allowHalfOpen || this._writableState.ended)
-	    return;
+	  if (this.allowHalfOpen || this._writableState.ended) return;
 
 	  // no more data can be written.
 	  // But allow more writes to happen in this tick.
-	  process.nextTick(this.end.bind(this));
+	  processNextTick(onEndNT, this);
 	}
 
-	function forEach (xs, f) {
+	function onEndNT(self) {
+	  self.end();
+	}
+
+	function forEach(xs, f) {
 	  for (var i = 0, l = xs.length; i < l; i++) {
 	    f(xs[i], i);
 	  }
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
-
 /***/ },
-/* 172 */
+/* 188 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
-	// A bit simpler than readable streams.
-	// Implement an async ._write(chunk, cb), and it'll handle all
-	// the drain event emission and buffering.
-
-	module.exports = Writable;
+	module.exports = Readable;
 
 	/*<replacement>*/
-	var Buffer = __webpack_require__(165).Buffer;
+	var processNextTick = __webpack_require__(183);
 	/*</replacement>*/
-
-	Writable.WritableState = WritableState;
-
 
 	/*<replacement>*/
-	var util = __webpack_require__(169);
-	util.inherits = __webpack_require__(161);
+	var isArray = __webpack_require__(173);
 	/*</replacement>*/
 
-	var Stream = __webpack_require__(160);
+	/*<replacement>*/
+	var Duplex;
+	/*</replacement>*/
 
-	util.inherits(Writable, Stream);
+	Readable.ReadableState = ReadableState;
 
-	function WriteReq(chunk, encoding, cb) {
-	  this.chunk = chunk;
-	  this.encoding = encoding;
-	  this.callback = cb;
+	/*<replacement>*/
+	var EE = __webpack_require__(166).EventEmitter;
+
+	var EElistenerCount = function (emitter, type) {
+	  return emitter.listeners(type).length;
+	};
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var Stream;
+	(function () {
+	  try {
+	    Stream = __webpack_require__(178);
+	  } catch (_) {} finally {
+	    if (!Stream) Stream = __webpack_require__(166).EventEmitter;
+	  }
+	})();
+	/*</replacement>*/
+
+	var Buffer = __webpack_require__(170).Buffer;
+	/*<replacement>*/
+	var bufferShim = __webpack_require__(186);
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var util = __webpack_require__(184);
+	util.inherits = __webpack_require__(175);
+	/*</replacement>*/
+
+	/*<replacement>*/
+	var debugUtil = __webpack_require__(189);
+	var debug = void 0;
+	if (debugUtil && debugUtil.debuglog) {
+	  debug = debugUtil.debuglog('stream');
+	} else {
+	  debug = function () {};
+	}
+	/*</replacement>*/
+
+	var BufferList = __webpack_require__(190);
+	var StringDecoder;
+
+	util.inherits(Readable, Stream);
+
+	function prependListener(emitter, event, fn) {
+	  // Sadly this is not cacheable as some libraries bundle their own
+	  // event emitter implementation with them.
+	  if (typeof emitter.prependListener === 'function') {
+	    return emitter.prependListener(event, fn);
+	  } else {
+	    // This is a hack to make sure that our error handler is attached before any
+	    // userland ones.  NEVER DO THIS. This is here only because this code needs
+	    // to continue to work with older versions of Node.js that do not include
+	    // the prependListener() method. The goal is to eventually remove this hack.
+	    if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
+	  }
 	}
 
-	function WritableState(options, stream) {
-	  var Duplex = __webpack_require__(171);
+	function ReadableState(options, stream) {
+	  Duplex = Duplex || __webpack_require__(187);
 
 	  options = options || {};
 
-	  // the point at which write() starts returning false
-	  // Note: 0 is a valid value, means that we always return false if
-	  // the entire buffer is not flushed immediately on write()
-	  var hwm = options.highWaterMark;
-	  var defaultHwm = options.objectMode ? 16 : 16 * 1024;
-	  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
-
-	  // object stream flag to indicate whether or not this stream
-	  // contains buffers or objects.
+	  // object stream flag. Used to make read(n) ignore n and to
+	  // make all the buffer merging and length checks go away
 	  this.objectMode = !!options.objectMode;
 
-	  if (stream instanceof Duplex)
-	    this.objectMode = this.objectMode || !!options.writableObjectMode;
+	  if (stream instanceof Duplex) this.objectMode = this.objectMode || !!options.readableObjectMode;
+
+	  // the point at which it stops calling _read() to fill the buffer
+	  // Note: 0 is a valid value, means "don't call _read preemptively ever"
+	  var hwm = options.highWaterMark;
+	  var defaultHwm = this.objectMode ? 16 : 16 * 1024;
+	  this.highWaterMark = hwm || hwm === 0 ? hwm : defaultHwm;
 
 	  // cast to ints.
-	  this.highWaterMark = ~~this.highWaterMark;
+	  this.highWaterMark = ~ ~this.highWaterMark;
 
-	  this.needDrain = false;
-	  // at the start of calling end()
-	  this.ending = false;
-	  // when end() has been called, and returned
-	  this.ended = false;
-	  // when 'finish' is emitted
-	  this.finished = false;
-
-	  // should we decode strings into buffers before passing to _write?
-	  // this is here so that some node-core streams can optimize string
-	  // handling at a lower level.
-	  var noDecode = options.decodeStrings === false;
-	  this.decodeStrings = !noDecode;
-
-	  // Crypto is kind of old and crusty.  Historically, its default string
-	  // encoding is 'binary' so we have to make this configurable.
-	  // Everything else in the universe uses 'utf8', though.
-	  this.defaultEncoding = options.defaultEncoding || 'utf8';
-
-	  // not an actual buffer we keep track of, but a measurement
-	  // of how much we're waiting to get pushed to some underlying
-	  // socket or file.
+	  // A linked list is used to store data chunks instead of an array because the
+	  // linked list can remove elements from the beginning faster than
+	  // array.shift()
+	  this.buffer = new BufferList();
 	  this.length = 0;
-
-	  // a flag to see when we're in the middle of a write.
-	  this.writing = false;
-
-	  // when true all writes will be buffered until .uncork() call
-	  this.corked = 0;
+	  this.pipes = null;
+	  this.pipesCount = 0;
+	  this.flowing = null;
+	  this.ended = false;
+	  this.endEmitted = false;
+	  this.reading = false;
 
 	  // a flag to be able to tell if the onwrite cb is called immediately,
 	  // or on a later tick.  We set this to true at first, because any
@@ -16877,381 +18108,912 @@ var StellarSdk =
 	  // not happen before the first write call.
 	  this.sync = true;
 
-	  // a flag to know if we're processing previously buffered items, which
-	  // may call the _write() callback in the same tick, so that we don't
-	  // end up in an overlapped onwrite situation.
-	  this.bufferProcessing = false;
+	  // whenever we return null, then we set a flag to say
+	  // that we're awaiting a 'readable' event emission.
+	  this.needReadable = false;
+	  this.emittedReadable = false;
+	  this.readableListening = false;
+	  this.resumeScheduled = false;
 
-	  // the callback that's passed to _write(chunk,cb)
-	  this.onwrite = function(er) {
-	    onwrite(stream, er);
-	  };
+	  // Crypto is kind of old and crusty.  Historically, its default string
+	  // encoding is 'binary' so we have to make this configurable.
+	  // Everything else in the universe uses 'utf8', though.
+	  this.defaultEncoding = options.defaultEncoding || 'utf8';
 
-	  // the callback that the user supplies to write(chunk,encoding,cb)
-	  this.writecb = null;
+	  // when piping, we only care about 'readable' events that happen
+	  // after read()ing all the bytes and not getting any pushback.
+	  this.ranOut = false;
 
-	  // the amount that is being written when _write is called.
-	  this.writelen = 0;
+	  // the number of writers that are awaiting a drain event in .pipe()s
+	  this.awaitDrain = 0;
 
-	  this.buffer = [];
+	  // if true, a maybeReadMore has been scheduled
+	  this.readingMore = false;
 
-	  // number of pending user-supplied write callbacks
-	  // this must be 0 before 'finish' can be emitted
-	  this.pendingcb = 0;
-
-	  // emit prefinish if the only thing we're waiting for is _write cbs
-	  // This is relevant for synchronous Transform streams
-	  this.prefinished = false;
-
-	  // True if the error was already emitted and should not be thrown again
-	  this.errorEmitted = false;
+	  this.decoder = null;
+	  this.encoding = null;
+	  if (options.encoding) {
+	    if (!StringDecoder) StringDecoder = __webpack_require__(191).StringDecoder;
+	    this.decoder = new StringDecoder(options.encoding);
+	    this.encoding = options.encoding;
+	  }
 	}
 
-	function Writable(options) {
-	  var Duplex = __webpack_require__(171);
+	function Readable(options) {
+	  Duplex = Duplex || __webpack_require__(187);
 
-	  // Writable ctor is applied to Duplexes, though they're not
-	  // instanceof Writable, they're instanceof Readable.
-	  if (!(this instanceof Writable) && !(this instanceof Duplex))
-	    return new Writable(options);
+	  if (!(this instanceof Readable)) return new Readable(options);
 
-	  this._writableState = new WritableState(options, this);
+	  this._readableState = new ReadableState(options, this);
 
-	  // legacy.
-	  this.writable = true;
+	  // legacy
+	  this.readable = true;
+
+	  if (options && typeof options.read === 'function') this._read = options.read;
 
 	  Stream.call(this);
 	}
 
-	// Otherwise people can pipe Writable streams, which is just wrong.
-	Writable.prototype.pipe = function() {
-	  this.emit('error', new Error('Cannot pipe. Not readable.'));
+	// Manually shove something into the read() buffer.
+	// This returns true if the highWaterMark has not been hit yet,
+	// similar to how Writable.write() returns true if you should
+	// write() some more.
+	Readable.prototype.push = function (chunk, encoding) {
+	  var state = this._readableState;
+
+	  if (!state.objectMode && typeof chunk === 'string') {
+	    encoding = encoding || state.defaultEncoding;
+	    if (encoding !== state.encoding) {
+	      chunk = bufferShim.from(chunk, encoding);
+	      encoding = '';
+	    }
+	  }
+
+	  return readableAddChunk(this, state, chunk, encoding, false);
 	};
 
+	// Unshift should *always* be something directly out of read()
+	Readable.prototype.unshift = function (chunk) {
+	  var state = this._readableState;
+	  return readableAddChunk(this, state, chunk, '', true);
+	};
 
-	function writeAfterEnd(stream, state, cb) {
-	  var er = new Error('write after end');
-	  // TODO: defer error events consistently everywhere, not just the cb
-	  stream.emit('error', er);
-	  process.nextTick(function() {
-	    cb(er);
-	  });
-	}
+	Readable.prototype.isPaused = function () {
+	  return this._readableState.flowing === false;
+	};
 
-	// If we get something that is not a buffer, string, null, or undefined,
-	// and we're not in objectMode, then that's an error.
-	// Otherwise stream chunks are all considered to be of length=1, and the
-	// watermarks determine how many objects to keep in the buffer, rather than
-	// how many bytes or characters.
-	function validChunk(stream, state, chunk, cb) {
-	  var valid = true;
-	  if (!util.isBuffer(chunk) &&
-	      !util.isString(chunk) &&
-	      !util.isNullOrUndefined(chunk) &&
-	      !state.objectMode) {
-	    var er = new TypeError('Invalid non-string/buffer chunk');
+	function readableAddChunk(stream, state, chunk, encoding, addToFront) {
+	  var er = chunkInvalid(state, chunk);
+	  if (er) {
 	    stream.emit('error', er);
-	    process.nextTick(function() {
-	      cb(er);
-	    });
-	    valid = false;
-	  }
-	  return valid;
-	}
-
-	Writable.prototype.write = function(chunk, encoding, cb) {
-	  var state = this._writableState;
-	  var ret = false;
-
-	  if (util.isFunction(encoding)) {
-	    cb = encoding;
-	    encoding = null;
-	  }
-
-	  if (util.isBuffer(chunk))
-	    encoding = 'buffer';
-	  else if (!encoding)
-	    encoding = state.defaultEncoding;
-
-	  if (!util.isFunction(cb))
-	    cb = function() {};
-
-	  if (state.ended)
-	    writeAfterEnd(this, state, cb);
-	  else if (validChunk(this, state, chunk, cb)) {
-	    state.pendingcb++;
-	    ret = writeOrBuffer(this, state, chunk, encoding, cb);
-	  }
-
-	  return ret;
-	};
-
-	Writable.prototype.cork = function() {
-	  var state = this._writableState;
-
-	  state.corked++;
-	};
-
-	Writable.prototype.uncork = function() {
-	  var state = this._writableState;
-
-	  if (state.corked) {
-	    state.corked--;
-
-	    if (!state.writing &&
-	        !state.corked &&
-	        !state.finished &&
-	        !state.bufferProcessing &&
-	        state.buffer.length)
-	      clearBuffer(this, state);
-	  }
-	};
-
-	function decodeChunk(state, chunk, encoding) {
-	  if (!state.objectMode &&
-	      state.decodeStrings !== false &&
-	      util.isString(chunk)) {
-	    chunk = new Buffer(chunk, encoding);
-	  }
-	  return chunk;
-	}
-
-	// if we're already writing something, then just put this
-	// in the queue, and wait our turn.  Otherwise, call _write
-	// If we return false, then we need a drain event, so set that flag.
-	function writeOrBuffer(stream, state, chunk, encoding, cb) {
-	  chunk = decodeChunk(state, chunk, encoding);
-	  if (util.isBuffer(chunk))
-	    encoding = 'buffer';
-	  var len = state.objectMode ? 1 : chunk.length;
-
-	  state.length += len;
-
-	  var ret = state.length < state.highWaterMark;
-	  // we must ensure that previous needDrain will not be reset to false.
-	  if (!ret)
-	    state.needDrain = true;
-
-	  if (state.writing || state.corked)
-	    state.buffer.push(new WriteReq(chunk, encoding, cb));
-	  else
-	    doWrite(stream, state, false, len, chunk, encoding, cb);
-
-	  return ret;
-	}
-
-	function doWrite(stream, state, writev, len, chunk, encoding, cb) {
-	  state.writelen = len;
-	  state.writecb = cb;
-	  state.writing = true;
-	  state.sync = true;
-	  if (writev)
-	    stream._writev(chunk, state.onwrite);
-	  else
-	    stream._write(chunk, encoding, state.onwrite);
-	  state.sync = false;
-	}
-
-	function onwriteError(stream, state, sync, er, cb) {
-	  if (sync)
-	    process.nextTick(function() {
-	      state.pendingcb--;
-	      cb(er);
-	    });
-	  else {
-	    state.pendingcb--;
-	    cb(er);
-	  }
-
-	  stream._writableState.errorEmitted = true;
-	  stream.emit('error', er);
-	}
-
-	function onwriteStateUpdate(state) {
-	  state.writing = false;
-	  state.writecb = null;
-	  state.length -= state.writelen;
-	  state.writelen = 0;
-	}
-
-	function onwrite(stream, er) {
-	  var state = stream._writableState;
-	  var sync = state.sync;
-	  var cb = state.writecb;
-
-	  onwriteStateUpdate(state);
-
-	  if (er)
-	    onwriteError(stream, state, sync, er, cb);
-	  else {
-	    // Check if we're actually ready to finish, but don't emit yet
-	    var finished = needFinish(stream, state);
-
-	    if (!finished &&
-	        !state.corked &&
-	        !state.bufferProcessing &&
-	        state.buffer.length) {
-	      clearBuffer(stream, state);
-	    }
-
-	    if (sync) {
-	      process.nextTick(function() {
-	        afterWrite(stream, state, finished, cb);
-	      });
+	  } else if (chunk === null) {
+	    state.reading = false;
+	    onEofChunk(stream, state);
+	  } else if (state.objectMode || chunk && chunk.length > 0) {
+	    if (state.ended && !addToFront) {
+	      var e = new Error('stream.push() after EOF');
+	      stream.emit('error', e);
+	    } else if (state.endEmitted && addToFront) {
+	      var _e = new Error('stream.unshift() after end event');
+	      stream.emit('error', _e);
 	    } else {
-	      afterWrite(stream, state, finished, cb);
-	    }
-	  }
-	}
-
-	function afterWrite(stream, state, finished, cb) {
-	  if (!finished)
-	    onwriteDrain(stream, state);
-	  state.pendingcb--;
-	  cb();
-	  finishMaybe(stream, state);
-	}
-
-	// Must force callback to be called on nextTick, so that we don't
-	// emit 'drain' before the write() consumer gets the 'false' return
-	// value, and has a chance to attach a 'drain' listener.
-	function onwriteDrain(stream, state) {
-	  if (state.length === 0 && state.needDrain) {
-	    state.needDrain = false;
-	    stream.emit('drain');
-	  }
-	}
-
-
-	// if there's something in the buffer waiting, then process it
-	function clearBuffer(stream, state) {
-	  state.bufferProcessing = true;
-
-	  if (stream._writev && state.buffer.length > 1) {
-	    // Fast case, write everything using _writev()
-	    var cbs = [];
-	    for (var c = 0; c < state.buffer.length; c++)
-	      cbs.push(state.buffer[c].callback);
-
-	    // count the one we are adding, as well.
-	    // TODO(isaacs) clean this up
-	    state.pendingcb++;
-	    doWrite(stream, state, true, state.length, state.buffer, '', function(err) {
-	      for (var i = 0; i < cbs.length; i++) {
-	        state.pendingcb--;
-	        cbs[i](err);
+	      var skipAdd;
+	      if (state.decoder && !addToFront && !encoding) {
+	        chunk = state.decoder.write(chunk);
+	        skipAdd = !state.objectMode && chunk.length === 0;
 	      }
-	    });
 
-	    // Clear buffer
-	    state.buffer = [];
+	      if (!addToFront) state.reading = false;
+
+	      // Don't add to the buffer if we've decoded to an empty string chunk and
+	      // we're not in object mode
+	      if (!skipAdd) {
+	        // if we want the data now, just emit it.
+	        if (state.flowing && state.length === 0 && !state.sync) {
+	          stream.emit('data', chunk);
+	          stream.read(0);
+	        } else {
+	          // update the buffer info.
+	          state.length += state.objectMode ? 1 : chunk.length;
+	          if (addToFront) state.buffer.unshift(chunk);else state.buffer.push(chunk);
+
+	          if (state.needReadable) emitReadable(stream);
+	        }
+	      }
+
+	      maybeReadMore(stream, state);
+	    }
+	  } else if (!addToFront) {
+	    state.reading = false;
+	  }
+
+	  return needMoreData(state);
+	}
+
+	// if it's past the high water mark, we can push in some more.
+	// Also, if we have no data yet, we can stand some
+	// more bytes.  This is to work around cases where hwm=0,
+	// such as the repl.  Also, if the push() triggered a
+	// readable event, and the user called read(largeNumber) such that
+	// needReadable was set, then we ought to push more, so that another
+	// 'readable' event will be triggered.
+	function needMoreData(state) {
+	  return !state.ended && (state.needReadable || state.length < state.highWaterMark || state.length === 0);
+	}
+
+	// backwards compatibility.
+	Readable.prototype.setEncoding = function (enc) {
+	  if (!StringDecoder) StringDecoder = __webpack_require__(191).StringDecoder;
+	  this._readableState.decoder = new StringDecoder(enc);
+	  this._readableState.encoding = enc;
+	  return this;
+	};
+
+	// Don't raise the hwm > 8MB
+	var MAX_HWM = 0x800000;
+	function computeNewHighWaterMark(n) {
+	  if (n >= MAX_HWM) {
+	    n = MAX_HWM;
 	  } else {
-	    // Slow case, write chunks one-by-one
-	    for (var c = 0; c < state.buffer.length; c++) {
-	      var entry = state.buffer[c];
-	      var chunk = entry.chunk;
-	      var encoding = entry.encoding;
-	      var cb = entry.callback;
-	      var len = state.objectMode ? 1 : chunk.length;
+	    // Get the next highest power of 2 to prevent increasing hwm excessively in
+	    // tiny amounts
+	    n--;
+	    n |= n >>> 1;
+	    n |= n >>> 2;
+	    n |= n >>> 4;
+	    n |= n >>> 8;
+	    n |= n >>> 16;
+	    n++;
+	  }
+	  return n;
+	}
 
-	      doWrite(stream, state, false, len, chunk, encoding, cb);
+	// This function is designed to be inlinable, so please take care when making
+	// changes to the function body.
+	function howMuchToRead(n, state) {
+	  if (n <= 0 || state.length === 0 && state.ended) return 0;
+	  if (state.objectMode) return 1;
+	  if (n !== n) {
+	    // Only flow one buffer at a time
+	    if (state.flowing && state.length) return state.buffer.head.data.length;else return state.length;
+	  }
+	  // If we're asking for more than the current hwm, then raise the hwm.
+	  if (n > state.highWaterMark) state.highWaterMark = computeNewHighWaterMark(n);
+	  if (n <= state.length) return n;
+	  // Don't have enough
+	  if (!state.ended) {
+	    state.needReadable = true;
+	    return 0;
+	  }
+	  return state.length;
+	}
 
-	      // if we didn't call the onwrite immediately, then
-	      // it means that we need to wait until it does.
-	      // also, that means that the chunk and cb are currently
-	      // being processed, so move the buffer counter past them.
-	      if (state.writing) {
-	        c++;
-	        break;
-	      }
+	// you can override either this method, or the async _read(n) below.
+	Readable.prototype.read = function (n) {
+	  debug('read', n);
+	  n = parseInt(n, 10);
+	  var state = this._readableState;
+	  var nOrig = n;
+
+	  if (n !== 0) state.emittedReadable = false;
+
+	  // if we're doing read(0) to trigger a readable event, but we
+	  // already have a bunch of data in the buffer, then just trigger
+	  // the 'readable' event and move on.
+	  if (n === 0 && state.needReadable && (state.length >= state.highWaterMark || state.ended)) {
+	    debug('read: emitReadable', state.length, state.ended);
+	    if (state.length === 0 && state.ended) endReadable(this);else emitReadable(this);
+	    return null;
+	  }
+
+	  n = howMuchToRead(n, state);
+
+	  // if we've ended, and we're now clear, then finish it up.
+	  if (n === 0 && state.ended) {
+	    if (state.length === 0) endReadable(this);
+	    return null;
+	  }
+
+	  // All the actual chunk generation logic needs to be
+	  // *below* the call to _read.  The reason is that in certain
+	  // synthetic stream cases, such as passthrough streams, _read
+	  // may be a completely synchronous operation which may change
+	  // the state of the read buffer, providing enough data when
+	  // before there was *not* enough.
+	  //
+	  // So, the steps are:
+	  // 1. Figure out what the state of things will be after we do
+	  // a read from the buffer.
+	  //
+	  // 2. If that resulting state will trigger a _read, then call _read.
+	  // Note that this may be asynchronous, or synchronous.  Yes, it is
+	  // deeply ugly to write APIs this way, but that still doesn't mean
+	  // that the Readable class should behave improperly, as streams are
+	  // designed to be sync/async agnostic.
+	  // Take note if the _read call is sync or async (ie, if the read call
+	  // has returned yet), so that we know whether or not it's safe to emit
+	  // 'readable' etc.
+	  //
+	  // 3. Actually pull the requested chunks out of the buffer and return.
+
+	  // if we need a readable event, then we need to do some reading.
+	  var doRead = state.needReadable;
+	  debug('need readable', doRead);
+
+	  // if we currently have less than the highWaterMark, then also read some
+	  if (state.length === 0 || state.length - n < state.highWaterMark) {
+	    doRead = true;
+	    debug('length less than watermark', doRead);
+	  }
+
+	  // however, if we've ended, then there's no point, and if we're already
+	  // reading, then it's unnecessary.
+	  if (state.ended || state.reading) {
+	    doRead = false;
+	    debug('reading or ended', doRead);
+	  } else if (doRead) {
+	    debug('do read');
+	    state.reading = true;
+	    state.sync = true;
+	    // if the length is currently zero, then we *need* a readable event.
+	    if (state.length === 0) state.needReadable = true;
+	    // call internal read method
+	    this._read(state.highWaterMark);
+	    state.sync = false;
+	    // If _read pushed data synchronously, then `reading` will be false,
+	    // and we need to re-evaluate how much data we can return to the user.
+	    if (!state.reading) n = howMuchToRead(nOrig, state);
+	  }
+
+	  var ret;
+	  if (n > 0) ret = fromList(n, state);else ret = null;
+
+	  if (ret === null) {
+	    state.needReadable = true;
+	    n = 0;
+	  } else {
+	    state.length -= n;
+	  }
+
+	  if (state.length === 0) {
+	    // If we have nothing in the buffer, then we want to know
+	    // as soon as we *do* get something into the buffer.
+	    if (!state.ended) state.needReadable = true;
+
+	    // If we tried to read() past the EOF, then emit end on the next tick.
+	    if (nOrig !== n && state.ended) endReadable(this);
+	  }
+
+	  if (ret !== null) this.emit('data', ret);
+
+	  return ret;
+	};
+
+	function chunkInvalid(state, chunk) {
+	  var er = null;
+	  if (!Buffer.isBuffer(chunk) && typeof chunk !== 'string' && chunk !== null && chunk !== undefined && !state.objectMode) {
+	    er = new TypeError('Invalid non-string/buffer chunk');
+	  }
+	  return er;
+	}
+
+	function onEofChunk(stream, state) {
+	  if (state.ended) return;
+	  if (state.decoder) {
+	    var chunk = state.decoder.end();
+	    if (chunk && chunk.length) {
+	      state.buffer.push(chunk);
+	      state.length += state.objectMode ? 1 : chunk.length;
 	    }
-
-	    if (c < state.buffer.length)
-	      state.buffer = state.buffer.slice(c);
-	    else
-	      state.buffer.length = 0;
-	  }
-
-	  state.bufferProcessing = false;
-	}
-
-	Writable.prototype._write = function(chunk, encoding, cb) {
-	  cb(new Error('not implemented'));
-
-	};
-
-	Writable.prototype._writev = null;
-
-	Writable.prototype.end = function(chunk, encoding, cb) {
-	  var state = this._writableState;
-
-	  if (util.isFunction(chunk)) {
-	    cb = chunk;
-	    chunk = null;
-	    encoding = null;
-	  } else if (util.isFunction(encoding)) {
-	    cb = encoding;
-	    encoding = null;
-	  }
-
-	  if (!util.isNullOrUndefined(chunk))
-	    this.write(chunk, encoding);
-
-	  // .end() fully uncorks
-	  if (state.corked) {
-	    state.corked = 1;
-	    this.uncork();
-	  }
-
-	  // ignore unnecessary end() calls.
-	  if (!state.ending && !state.finished)
-	    endWritable(this, state, cb);
-	};
-
-
-	function needFinish(stream, state) {
-	  return (state.ending &&
-	          state.length === 0 &&
-	          !state.finished &&
-	          !state.writing);
-	}
-
-	function prefinish(stream, state) {
-	  if (!state.prefinished) {
-	    state.prefinished = true;
-	    stream.emit('prefinish');
-	  }
-	}
-
-	function finishMaybe(stream, state) {
-	  var need = needFinish(stream, state);
-	  if (need) {
-	    if (state.pendingcb === 0) {
-	      prefinish(stream, state);
-	      state.finished = true;
-	      stream.emit('finish');
-	    } else
-	      prefinish(stream, state);
-	  }
-	  return need;
-	}
-
-	function endWritable(stream, state, cb) {
-	  state.ending = true;
-	  finishMaybe(stream, state);
-	  if (cb) {
-	    if (state.finished)
-	      process.nextTick(cb);
-	    else
-	      stream.once('finish', cb);
 	  }
 	  state.ended = true;
+
+	  // emit 'readable' now to make sure it gets picked up.
+	  emitReadable(stream);
 	}
 
+	// Don't emit readable right away in sync mode, because this can trigger
+	// another read() call => stack overflow.  This way, it might trigger
+	// a nextTick recursion warning, but that's not so bad.
+	function emitReadable(stream) {
+	  var state = stream._readableState;
+	  state.needReadable = false;
+	  if (!state.emittedReadable) {
+	    debug('emitReadable', state.flowing);
+	    state.emittedReadable = true;
+	    if (state.sync) processNextTick(emitReadable_, stream);else emitReadable_(stream);
+	  }
+	}
+
+	function emitReadable_(stream) {
+	  debug('emit readable');
+	  stream.emit('readable');
+	  flow(stream);
+	}
+
+	// at this point, the user has presumably seen the 'readable' event,
+	// and called read() to consume some data.  that may have triggered
+	// in turn another _read(n) call, in which case reading = true if
+	// it's in progress.
+	// However, if we're not ended, or reading, and the length < hwm,
+	// then go ahead and try to read some more preemptively.
+	function maybeReadMore(stream, state) {
+	  if (!state.readingMore) {
+	    state.readingMore = true;
+	    processNextTick(maybeReadMore_, stream, state);
+	  }
+	}
+
+	function maybeReadMore_(stream, state) {
+	  var len = state.length;
+	  while (!state.reading && !state.flowing && !state.ended && state.length < state.highWaterMark) {
+	    debug('maybeReadMore read 0');
+	    stream.read(0);
+	    if (len === state.length)
+	      // didn't get any data, stop spinning.
+	      break;else len = state.length;
+	  }
+	  state.readingMore = false;
+	}
+
+	// abstract method.  to be overridden in specific implementation classes.
+	// call cb(er, data) where data is <= n in length.
+	// for virtual (non-string, non-buffer) streams, "length" is somewhat
+	// arbitrary, and perhaps not very meaningful.
+	Readable.prototype._read = function (n) {
+	  this.emit('error', new Error('_read() is not implemented'));
+	};
+
+	Readable.prototype.pipe = function (dest, pipeOpts) {
+	  var src = this;
+	  var state = this._readableState;
+
+	  switch (state.pipesCount) {
+	    case 0:
+	      state.pipes = dest;
+	      break;
+	    case 1:
+	      state.pipes = [state.pipes, dest];
+	      break;
+	    default:
+	      state.pipes.push(dest);
+	      break;
+	  }
+	  state.pipesCount += 1;
+	  debug('pipe count=%d opts=%j', state.pipesCount, pipeOpts);
+
+	  var doEnd = (!pipeOpts || pipeOpts.end !== false) && dest !== process.stdout && dest !== process.stderr;
+
+	  var endFn = doEnd ? onend : cleanup;
+	  if (state.endEmitted) processNextTick(endFn);else src.once('end', endFn);
+
+	  dest.on('unpipe', onunpipe);
+	  function onunpipe(readable) {
+	    debug('onunpipe');
+	    if (readable === src) {
+	      cleanup();
+	    }
+	  }
+
+	  function onend() {
+	    debug('onend');
+	    dest.end();
+	  }
+
+	  // when the dest drains, it reduces the awaitDrain counter
+	  // on the source.  This would be more elegant with a .once()
+	  // handler in flow(), but adding and removing repeatedly is
+	  // too slow.
+	  var ondrain = pipeOnDrain(src);
+	  dest.on('drain', ondrain);
+
+	  var cleanedUp = false;
+	  function cleanup() {
+	    debug('cleanup');
+	    // cleanup event handlers once the pipe is broken
+	    dest.removeListener('close', onclose);
+	    dest.removeListener('finish', onfinish);
+	    dest.removeListener('drain', ondrain);
+	    dest.removeListener('error', onerror);
+	    dest.removeListener('unpipe', onunpipe);
+	    src.removeListener('end', onend);
+	    src.removeListener('end', cleanup);
+	    src.removeListener('data', ondata);
+
+	    cleanedUp = true;
+
+	    // if the reader is waiting for a drain event from this
+	    // specific writer, then it would cause it to never start
+	    // flowing again.
+	    // So, if this is awaiting a drain, then we just call it now.
+	    // If we don't know, then assume that we are waiting for one.
+	    if (state.awaitDrain && (!dest._writableState || dest._writableState.needDrain)) ondrain();
+	  }
+
+	  // If the user pushes more data while we're writing to dest then we'll end up
+	  // in ondata again. However, we only want to increase awaitDrain once because
+	  // dest will only emit one 'drain' event for the multiple writes.
+	  // => Introduce a guard on increasing awaitDrain.
+	  var increasedAwaitDrain = false;
+	  src.on('data', ondata);
+	  function ondata(chunk) {
+	    debug('ondata');
+	    increasedAwaitDrain = false;
+	    var ret = dest.write(chunk);
+	    if (false === ret && !increasedAwaitDrain) {
+	      // If the user unpiped during `dest.write()`, it is possible
+	      // to get stuck in a permanently paused state if that write
+	      // also returned false.
+	      // => Check whether `dest` is still a piping destination.
+	      if ((state.pipesCount === 1 && state.pipes === dest || state.pipesCount > 1 && indexOf(state.pipes, dest) !== -1) && !cleanedUp) {
+	        debug('false write response, pause', src._readableState.awaitDrain);
+	        src._readableState.awaitDrain++;
+	        increasedAwaitDrain = true;
+	      }
+	      src.pause();
+	    }
+	  }
+
+	  // if the dest has an error, then stop piping into it.
+	  // however, don't suppress the throwing behavior for this.
+	  function onerror(er) {
+	    debug('onerror', er);
+	    unpipe();
+	    dest.removeListener('error', onerror);
+	    if (EElistenerCount(dest, 'error') === 0) dest.emit('error', er);
+	  }
+
+	  // Make sure our error handler is attached before userland ones.
+	  prependListener(dest, 'error', onerror);
+
+	  // Both close and finish should trigger unpipe, but only once.
+	  function onclose() {
+	    dest.removeListener('finish', onfinish);
+	    unpipe();
+	  }
+	  dest.once('close', onclose);
+	  function onfinish() {
+	    debug('onfinish');
+	    dest.removeListener('close', onclose);
+	    unpipe();
+	  }
+	  dest.once('finish', onfinish);
+
+	  function unpipe() {
+	    debug('unpipe');
+	    src.unpipe(dest);
+	  }
+
+	  // tell the dest that it's being piped to
+	  dest.emit('pipe', src);
+
+	  // start the flow if it hasn't been started already.
+	  if (!state.flowing) {
+	    debug('pipe resume');
+	    src.resume();
+	  }
+
+	  return dest;
+	};
+
+	function pipeOnDrain(src) {
+	  return function () {
+	    var state = src._readableState;
+	    debug('pipeOnDrain', state.awaitDrain);
+	    if (state.awaitDrain) state.awaitDrain--;
+	    if (state.awaitDrain === 0 && EElistenerCount(src, 'data')) {
+	      state.flowing = true;
+	      flow(src);
+	    }
+	  };
+	}
+
+	Readable.prototype.unpipe = function (dest) {
+	  var state = this._readableState;
+
+	  // if we're not piping anywhere, then do nothing.
+	  if (state.pipesCount === 0) return this;
+
+	  // just one destination.  most common case.
+	  if (state.pipesCount === 1) {
+	    // passed in one, but it's not the right one.
+	    if (dest && dest !== state.pipes) return this;
+
+	    if (!dest) dest = state.pipes;
+
+	    // got a match.
+	    state.pipes = null;
+	    state.pipesCount = 0;
+	    state.flowing = false;
+	    if (dest) dest.emit('unpipe', this);
+	    return this;
+	  }
+
+	  // slow case. multiple pipe destinations.
+
+	  if (!dest) {
+	    // remove all.
+	    var dests = state.pipes;
+	    var len = state.pipesCount;
+	    state.pipes = null;
+	    state.pipesCount = 0;
+	    state.flowing = false;
+
+	    for (var i = 0; i < len; i++) {
+	      dests[i].emit('unpipe', this);
+	    }return this;
+	  }
+
+	  // try to find the right one.
+	  var index = indexOf(state.pipes, dest);
+	  if (index === -1) return this;
+
+	  state.pipes.splice(index, 1);
+	  state.pipesCount -= 1;
+	  if (state.pipesCount === 1) state.pipes = state.pipes[0];
+
+	  dest.emit('unpipe', this);
+
+	  return this;
+	};
+
+	// set up data events if they are asked for
+	// Ensure readable listeners eventually get something
+	Readable.prototype.on = function (ev, fn) {
+	  var res = Stream.prototype.on.call(this, ev, fn);
+
+	  if (ev === 'data') {
+	    // Start flowing on next tick if stream isn't explicitly paused
+	    if (this._readableState.flowing !== false) this.resume();
+	  } else if (ev === 'readable') {
+	    var state = this._readableState;
+	    if (!state.endEmitted && !state.readableListening) {
+	      state.readableListening = state.needReadable = true;
+	      state.emittedReadable = false;
+	      if (!state.reading) {
+	        processNextTick(nReadingNextTick, this);
+	      } else if (state.length) {
+	        emitReadable(this, state);
+	      }
+	    }
+	  }
+
+	  return res;
+	};
+	Readable.prototype.addListener = Readable.prototype.on;
+
+	function nReadingNextTick(self) {
+	  debug('readable nexttick read 0');
+	  self.read(0);
+	}
+
+	// pause() and resume() are remnants of the legacy readable stream API
+	// If the user uses them, then switch into old mode.
+	Readable.prototype.resume = function () {
+	  var state = this._readableState;
+	  if (!state.flowing) {
+	    debug('resume');
+	    state.flowing = true;
+	    resume(this, state);
+	  }
+	  return this;
+	};
+
+	function resume(stream, state) {
+	  if (!state.resumeScheduled) {
+	    state.resumeScheduled = true;
+	    processNextTick(resume_, stream, state);
+	  }
+	}
+
+	function resume_(stream, state) {
+	  if (!state.reading) {
+	    debug('resume read 0');
+	    stream.read(0);
+	  }
+
+	  state.resumeScheduled = false;
+	  state.awaitDrain = 0;
+	  stream.emit('resume');
+	  flow(stream);
+	  if (state.flowing && !state.reading) stream.read(0);
+	}
+
+	Readable.prototype.pause = function () {
+	  debug('call pause flowing=%j', this._readableState.flowing);
+	  if (false !== this._readableState.flowing) {
+	    debug('pause');
+	    this._readableState.flowing = false;
+	    this.emit('pause');
+	  }
+	  return this;
+	};
+
+	function flow(stream) {
+	  var state = stream._readableState;
+	  debug('flow', state.flowing);
+	  while (state.flowing && stream.read() !== null) {}
+	}
+
+	// wrap an old-style stream as the async data source.
+	// This is *not* part of the readable stream interface.
+	// It is an ugly unfortunate mess of history.
+	Readable.prototype.wrap = function (stream) {
+	  var state = this._readableState;
+	  var paused = false;
+
+	  var self = this;
+	  stream.on('end', function () {
+	    debug('wrapped end');
+	    if (state.decoder && !state.ended) {
+	      var chunk = state.decoder.end();
+	      if (chunk && chunk.length) self.push(chunk);
+	    }
+
+	    self.push(null);
+	  });
+
+	  stream.on('data', function (chunk) {
+	    debug('wrapped data');
+	    if (state.decoder) chunk = state.decoder.write(chunk);
+
+	    // don't skip over falsy values in objectMode
+	    if (state.objectMode && (chunk === null || chunk === undefined)) return;else if (!state.objectMode && (!chunk || !chunk.length)) return;
+
+	    var ret = self.push(chunk);
+	    if (!ret) {
+	      paused = true;
+	      stream.pause();
+	    }
+	  });
+
+	  // proxy all the other methods.
+	  // important when wrapping filters and duplexes.
+	  for (var i in stream) {
+	    if (this[i] === undefined && typeof stream[i] === 'function') {
+	      this[i] = function (method) {
+	        return function () {
+	          return stream[method].apply(stream, arguments);
+	        };
+	      }(i);
+	    }
+	  }
+
+	  // proxy certain important events.
+	  var events = ['error', 'close', 'destroy', 'pause', 'resume'];
+	  forEach(events, function (ev) {
+	    stream.on(ev, self.emit.bind(self, ev));
+	  });
+
+	  // when we try to consume some more bytes, simply unpause the
+	  // underlying stream.
+	  self._read = function (n) {
+	    debug('wrapped _read', n);
+	    if (paused) {
+	      paused = false;
+	      stream.resume();
+	    }
+	  };
+
+	  return self;
+	};
+
+	// exposed for testing purposes only.
+	Readable._fromList = fromList;
+
+	// Pluck off n bytes from an array of buffers.
+	// Length is the combined lengths of all the buffers in the list.
+	// This function is designed to be inlinable, so please take care when making
+	// changes to the function body.
+	function fromList(n, state) {
+	  // nothing buffered
+	  if (state.length === 0) return null;
+
+	  var ret;
+	  if (state.objectMode) ret = state.buffer.shift();else if (!n || n >= state.length) {
+	    // read it all, truncate the list
+	    if (state.decoder) ret = state.buffer.join('');else if (state.buffer.length === 1) ret = state.buffer.head.data;else ret = state.buffer.concat(state.length);
+	    state.buffer.clear();
+	  } else {
+	    // read part of list
+	    ret = fromListPartial(n, state.buffer, state.decoder);
+	  }
+
+	  return ret;
+	}
+
+	// Extracts only enough buffered data to satisfy the amount requested.
+	// This function is designed to be inlinable, so please take care when making
+	// changes to the function body.
+	function fromListPartial(n, list, hasStrings) {
+	  var ret;
+	  if (n < list.head.data.length) {
+	    // slice is the same for buffers and strings
+	    ret = list.head.data.slice(0, n);
+	    list.head.data = list.head.data.slice(n);
+	  } else if (n === list.head.data.length) {
+	    // first chunk is a perfect match
+	    ret = list.shift();
+	  } else {
+	    // result spans more than one buffer
+	    ret = hasStrings ? copyFromBufferString(n, list) : copyFromBuffer(n, list);
+	  }
+	  return ret;
+	}
+
+	// Copies a specified amount of characters from the list of buffered data
+	// chunks.
+	// This function is designed to be inlinable, so please take care when making
+	// changes to the function body.
+	function copyFromBufferString(n, list) {
+	  var p = list.head;
+	  var c = 1;
+	  var ret = p.data;
+	  n -= ret.length;
+	  while (p = p.next) {
+	    var str = p.data;
+	    var nb = n > str.length ? str.length : n;
+	    if (nb === str.length) ret += str;else ret += str.slice(0, n);
+	    n -= nb;
+	    if (n === 0) {
+	      if (nb === str.length) {
+	        ++c;
+	        if (p.next) list.head = p.next;else list.head = list.tail = null;
+	      } else {
+	        list.head = p;
+	        p.data = str.slice(nb);
+	      }
+	      break;
+	    }
+	    ++c;
+	  }
+	  list.length -= c;
+	  return ret;
+	}
+
+	// Copies a specified amount of bytes from the list of buffered data chunks.
+	// This function is designed to be inlinable, so please take care when making
+	// changes to the function body.
+	function copyFromBuffer(n, list) {
+	  var ret = bufferShim.allocUnsafe(n);
+	  var p = list.head;
+	  var c = 1;
+	  p.data.copy(ret);
+	  n -= p.data.length;
+	  while (p = p.next) {
+	    var buf = p.data;
+	    var nb = n > buf.length ? buf.length : n;
+	    buf.copy(ret, ret.length - n, 0, nb);
+	    n -= nb;
+	    if (n === 0) {
+	      if (nb === buf.length) {
+	        ++c;
+	        if (p.next) list.head = p.next;else list.head = list.tail = null;
+	      } else {
+	        list.head = p;
+	        p.data = buf.slice(nb);
+	      }
+	      break;
+	    }
+	    ++c;
+	  }
+	  list.length -= c;
+	  return ret;
+	}
+
+	function endReadable(stream) {
+	  var state = stream._readableState;
+
+	  // If we get here before consuming all the bytes, then that is a
+	  // bug in node.  Should never happen.
+	  if (state.length > 0) throw new Error('"endReadable()" called on non-empty stream');
+
+	  if (!state.endEmitted) {
+	    state.ended = true;
+	    processNextTick(endReadableNT, state, stream);
+	  }
+	}
+
+	function endReadableNT(state, stream) {
+	  // Check that we didn't get one last unshift.
+	  if (!state.endEmitted && state.length === 0) {
+	    state.endEmitted = true;
+	    stream.readable = false;
+	    stream.emit('end');
+	  }
+	}
+
+	function forEach(xs, f) {
+	  for (var i = 0, l = xs.length; i < l; i++) {
+	    f(xs[i], i);
+	  }
+	}
+
+	function indexOf(xs, x) {
+	  for (var i = 0, l = xs.length; i < l; i++) {
+	    if (xs[i] === x) return i;
+	  }
+	  return -1;
+	}
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ },
-/* 173 */
+/* 189 */
+/***/ function(module, exports) {
+
+	/* (ignored) */
+
+/***/ },
+/* 190 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Buffer = __webpack_require__(170).Buffer;
+	/*<replacement>*/
+	var bufferShim = __webpack_require__(186);
+	/*</replacement>*/
+
+	module.exports = BufferList;
+
+	function BufferList() {
+	  this.head = null;
+	  this.tail = null;
+	  this.length = 0;
+	}
+
+	BufferList.prototype.push = function (v) {
+	  var entry = { data: v, next: null };
+	  if (this.length > 0) this.tail.next = entry;else this.head = entry;
+	  this.tail = entry;
+	  ++this.length;
+	};
+
+	BufferList.prototype.unshift = function (v) {
+	  var entry = { data: v, next: this.head };
+	  if (this.length === 0) this.tail = entry;
+	  this.head = entry;
+	  ++this.length;
+	};
+
+	BufferList.prototype.shift = function () {
+	  if (this.length === 0) return;
+	  var ret = this.head.data;
+	  if (this.length === 1) this.head = this.tail = null;else this.head = this.head.next;
+	  --this.length;
+	  return ret;
+	};
+
+	BufferList.prototype.clear = function () {
+	  this.head = this.tail = null;
+	  this.length = 0;
+	};
+
+	BufferList.prototype.join = function (s) {
+	  if (this.length === 0) return '';
+	  var p = this.head;
+	  var ret = '' + p.data;
+	  while (p = p.next) {
+	    ret += s + p.data;
+	  }return ret;
+	};
+
+	BufferList.prototype.concat = function (n) {
+	  if (this.length === 0) return bufferShim.alloc(0);
+	  if (this.length === 1) return this.head.data;
+	  var ret = bufferShim.allocUnsafe(n >>> 0);
+	  var p = this.head;
+	  var i = 0;
+	  while (p) {
+	    p.data.copy(ret, i);
+	    i += p.data.length;
+	    p = p.next;
+	  }
+	  return ret;
+	};
+
+/***/ },
+/* 191 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -17275,7 +19037,7 @@ var StellarSdk =
 	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	var Buffer = __webpack_require__(165).Buffer;
+	var Buffer = __webpack_require__(170).Buffer;
 
 	var isBufferEncoding = Buffer.isEncoding
 	  || function(encoding) {
@@ -17478,30 +19240,22 @@ var StellarSdk =
 
 
 /***/ },
-/* 174 */
+/* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+	module.exports = __webpack_require__(187)
 
+
+/***/ },
+/* 193 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__(194)
+
+
+/***/ },
+/* 194 */
+/***/ function(module, exports, __webpack_require__) {
 
 	// a transform stream is a readable/writable stream where you do
 	// something with the data.  Sometimes it's called a "filter",
@@ -17545,20 +19299,21 @@ var StellarSdk =
 	// would be consumed, and then the rest would wait (un-transformed) until
 	// the results of the previous transformed chunk were consumed.
 
+	'use strict';
+
 	module.exports = Transform;
 
-	var Duplex = __webpack_require__(171);
+	var Duplex = __webpack_require__(187);
 
 	/*<replacement>*/
-	var util = __webpack_require__(169);
-	util.inherits = __webpack_require__(161);
+	var util = __webpack_require__(184);
+	util.inherits = __webpack_require__(175);
 	/*</replacement>*/
 
 	util.inherits(Transform, Duplex);
 
-
-	function TransformState(options, stream) {
-	  this.afterTransform = function(er, data) {
+	function TransformState(stream) {
+	  this.afterTransform = function (er, data) {
 	    return afterTransform(stream, er, data);
 	  };
 
@@ -17566,6 +19321,7 @@ var StellarSdk =
 	  this.transforming = false;
 	  this.writecb = null;
 	  this.writechunk = null;
+	  this.writeencoding = null;
 	}
 
 	function afterTransform(stream, er, data) {
@@ -17574,17 +19330,14 @@ var StellarSdk =
 
 	  var cb = ts.writecb;
 
-	  if (!cb)
-	    return stream.emit('error', new Error('no writecb in Transform class'));
+	  if (!cb) return stream.emit('error', new Error('no writecb in Transform class'));
 
 	  ts.writechunk = null;
 	  ts.writecb = null;
 
-	  if (!util.isNullOrUndefined(data))
-	    stream.push(data);
+	  if (data !== null && data !== undefined) stream.push(data);
 
-	  if (cb)
-	    cb(er);
+	  cb(er);
 
 	  var rs = stream._readableState;
 	  rs.reading = false;
@@ -17593,16 +19346,13 @@ var StellarSdk =
 	  }
 	}
 
-
 	function Transform(options) {
-	  if (!(this instanceof Transform))
-	    return new Transform(options);
+	  if (!(this instanceof Transform)) return new Transform(options);
 
 	  Duplex.call(this, options);
 
-	  this._transformState = new TransformState(options, this);
+	  this._transformState = new TransformState(this);
 
-	  // when the writable side finishes, then flush out anything remaining.
 	  var stream = this;
 
 	  // start out asking for a readable event once data is transformed.
@@ -17613,17 +19363,21 @@ var StellarSdk =
 	  // sync guard flag.
 	  this._readableState.sync = false;
 
-	  this.once('prefinish', function() {
-	    if (util.isFunction(this._flush))
-	      this._flush(function(er) {
-	        done(stream, er);
-	      });
-	    else
-	      done(stream);
+	  if (options) {
+	    if (typeof options.transform === 'function') this._transform = options.transform;
+
+	    if (typeof options.flush === 'function') this._flush = options.flush;
+	  }
+
+	  // When the writable side finishes, then flush out anything remaining.
+	  this.once('prefinish', function () {
+	    if (typeof this._flush === 'function') this._flush(function (er, data) {
+	      done(stream, er, data);
+	    });else done(stream);
 	  });
 	}
 
-	Transform.prototype.push = function(chunk, encoding) {
+	Transform.prototype.push = function (chunk, encoding) {
 	  this._transformState.needTransform = false;
 	  return Duplex.prototype.push.call(this, chunk, encoding);
 	};
@@ -17638,31 +19392,28 @@ var StellarSdk =
 	// Call `cb(err)` when you are done with this chunk.  If you pass
 	// an error, then that'll put the hurt on the whole operation.  If you
 	// never call cb(), then you'll never get another chunk.
-	Transform.prototype._transform = function(chunk, encoding, cb) {
-	  throw new Error('not implemented');
+	Transform.prototype._transform = function (chunk, encoding, cb) {
+	  throw new Error('_transform() is not implemented');
 	};
 
-	Transform.prototype._write = function(chunk, encoding, cb) {
+	Transform.prototype._write = function (chunk, encoding, cb) {
 	  var ts = this._transformState;
 	  ts.writecb = cb;
 	  ts.writechunk = chunk;
 	  ts.writeencoding = encoding;
 	  if (!ts.transforming) {
 	    var rs = this._readableState;
-	    if (ts.needTransform ||
-	        rs.needReadable ||
-	        rs.length < rs.highWaterMark)
-	      this._read(rs.highWaterMark);
+	    if (ts.needTransform || rs.needReadable || rs.length < rs.highWaterMark) this._read(rs.highWaterMark);
 	  }
 	};
 
 	// Doesn't matter what the args are here.
 	// _transform does all the work.
 	// That we got here means that the readable side wants more data.
-	Transform.prototype._read = function(n) {
+	Transform.prototype._read = function (n) {
 	  var ts = this._transformState;
 
-	  if (!util.isNull(ts.writechunk) && ts.writecb && !ts.transforming) {
+	  if (ts.writechunk !== null && ts.writecb && !ts.transforming) {
 	    ts.transforming = true;
 	    this._transform(ts.writechunk, ts.writeencoding, ts.afterTransform);
 	  } else {
@@ -17672,234 +19423,191 @@ var StellarSdk =
 	  }
 	};
 
+	function done(stream, er, data) {
+	  if (er) return stream.emit('error', er);
 
-	function done(stream, er) {
-	  if (er)
-	    return stream.emit('error', er);
+	  if (data !== null && data !== undefined) stream.push(data);
 
 	  // if there's nothing in the write buffer, then that means
 	  // that nothing more will ever be provided
 	  var ws = stream._writableState;
 	  var ts = stream._transformState;
 
-	  if (ws.length)
-	    throw new Error('calling transform done when ws.length != 0');
+	  if (ws.length) throw new Error('Calling transform done when ws.length != 0');
 
-	  if (ts.transforming)
-	    throw new Error('calling transform done when still transforming');
+	  if (ts.transforming) throw new Error('Calling transform done when still transforming');
 
 	  return stream.push(null);
 	}
 
-
 /***/ },
-/* 175 */
+/* 195 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
+	module.exports = __webpack_require__(196)
+
+
+/***/ },
+/* 196 */
+/***/ function(module, exports, __webpack_require__) {
 
 	// a passthrough stream.
 	// basically just the most minimal sort of Transform stream.
 	// Every written chunk gets output as-is.
 
+	'use strict';
+
 	module.exports = PassThrough;
 
-	var Transform = __webpack_require__(174);
+	var Transform = __webpack_require__(194);
 
 	/*<replacement>*/
-	var util = __webpack_require__(169);
-	util.inherits = __webpack_require__(161);
+	var util = __webpack_require__(184);
+	util.inherits = __webpack_require__(175);
 	/*</replacement>*/
 
 	util.inherits(PassThrough, Transform);
 
 	function PassThrough(options) {
-	  if (!(this instanceof PassThrough))
-	    return new PassThrough(options);
+	  if (!(this instanceof PassThrough)) return new PassThrough(options);
 
 	  Transform.call(this, options);
 	}
 
-	PassThrough.prototype._transform = function(chunk, encoding, cb) {
+	PassThrough.prototype._transform = function (chunk, encoding, cb) {
 	  cb(null, chunk);
 	};
 
-
 /***/ },
-/* 176 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(172)
+	var Buffer = __webpack_require__(170).Buffer
 
+	module.exports = function (buf) {
+		// If the buffer is backed by a Uint8Array, a faster version will work
+		if (buf instanceof Uint8Array) {
+			// If the buffer isn't a subarray, return the underlying ArrayBuffer
+			if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+				return buf.buffer
+			} else if (typeof buf.buffer.slice === 'function') {
+				// Otherwise we need to get a proper copy
+				return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+			}
+		}
 
-/***/ },
-/* 177 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(171)
-
-
-/***/ },
-/* 178 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(174)
-
-
-/***/ },
-/* 179 */
-/***/ function(module, exports, __webpack_require__) {
-
-	module.exports = __webpack_require__(175)
-
-
-/***/ },
-/* 180 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Stream = __webpack_require__(160);
-	var util = __webpack_require__(181);
-
-	var Response = module.exports = function (res) {
-	    this.offset = 0;
-	    this.readable = true;
-	};
-
-	util.inherits(Response, Stream);
-
-	var capable = {
-	    streaming : true,
-	    status2 : true
-	};
-
-	function parseHeaders (res) {
-	    var lines = res.getAllResponseHeaders().split(/\r?\n/);
-	    var headers = {};
-	    for (var i = 0; i < lines.length; i++) {
-	        var line = lines[i];
-	        if (line === '') continue;
-	        
-	        var m = line.match(/^([^:]+):\s*(.*)/);
-	        if (m) {
-	            var key = m[1].toLowerCase(), value = m[2];
-	            
-	            if (headers[key] !== undefined) {
-	            
-	                if (isArray(headers[key])) {
-	                    headers[key].push(value);
-	                }
-	                else {
-	                    headers[key] = [ headers[key], value ];
-	                }
-	            }
-	            else {
-	                headers[key] = value;
-	            }
-	        }
-	        else {
-	            headers[line] = true;
-	        }
-	    }
-	    return headers;
+		if (Buffer.isBuffer(buf)) {
+			// This is the slow version that will work with any Buffer
+			// implementation (even in old browsers)
+			var arrayCopy = new Uint8Array(buf.length)
+			var len = buf.length
+			for (var i = 0; i < len; i++) {
+				arrayCopy[i] = buf[i]
+			}
+			return arrayCopy.buffer
+		} else {
+			throw new Error('Argument must be a Buffer')
+		}
 	}
 
-	Response.prototype.getResponse = function (xhr) {
-	    var respType = String(xhr.responseType).toLowerCase();
-	    if (respType === 'blob') return xhr.responseBlob || xhr.response;
-	    if (respType === 'arraybuffer') return xhr.response;
-	    return xhr.responseText;
-	}
 
-	Response.prototype.getHeader = function (key) {
-	    return this.headers[key.toLowerCase()];
-	};
+/***/ },
+/* 198 */
+/***/ function(module, exports) {
 
-	Response.prototype.handle = function (res) {
-	    if (res.readyState === 2 && capable.status2) {
-	        try {
-	            this.statusCode = res.status;
-	            this.headers = parseHeaders(res);
-	        }
-	        catch (err) {
-	            capable.status2 = false;
-	        }
-	        
-	        if (capable.status2) {
-	            this.emit('ready');
-	        }
-	    }
-	    else if (capable.streaming && res.readyState === 3) {
-	        try {
-	            if (!this.statusCode) {
-	                this.statusCode = res.status;
-	                this.headers = parseHeaders(res);
-	                this.emit('ready');
+	module.exports = extend
+
+	var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+	function extend() {
+	    var target = {}
+
+	    for (var i = 0; i < arguments.length; i++) {
+	        var source = arguments[i]
+
+	        for (var key in source) {
+	            if (hasOwnProperty.call(source, key)) {
+	                target[key] = source[key]
 	            }
 	        }
-	        catch (err) {}
-	        
-	        try {
-	            this._emitData(res);
-	        }
-	        catch (err) {
-	            capable.streaming = false;
-	        }
 	    }
-	    else if (res.readyState === 4) {
-	        if (!this.statusCode) {
-	            this.statusCode = res.status;
-	            this.emit('ready');
-	        }
-	        this._emitData(res);
-	        
-	        if (res.error) {
-	            this.emit('error', this.getResponse(res));
-	        }
-	        else this.emit('end');
-	        
-	        this.emit('close');
-	    }
-	};
 
-	Response.prototype._emitData = function (res) {
-	    var respBody = this.getResponse(res);
-	    if (respBody.toString().match(/ArrayBuffer/)) {
-	        this.emit('data', new Uint8Array(respBody, this.offset));
-	        this.offset = respBody.byteLength;
-	        return;
-	    }
-	    if (respBody.length > this.offset) {
-	        this.emit('data', respBody.slice(this.offset));
-	        this.offset = respBody.length;
-	    }
-	};
-
-	var isArray = Array.isArray || function (xs) {
-	    return Object.prototype.toString.call(xs) === '[object Array]';
-	};
+	    return target
+	}
 
 
 /***/ },
-/* 181 */
+/* 199 */
+/***/ function(module, exports) {
+
+	module.exports = {
+	  "100": "Continue",
+	  "101": "Switching Protocols",
+	  "102": "Processing",
+	  "200": "OK",
+	  "201": "Created",
+	  "202": "Accepted",
+	  "203": "Non-Authoritative Information",
+	  "204": "No Content",
+	  "205": "Reset Content",
+	  "206": "Partial Content",
+	  "207": "Multi-Status",
+	  "208": "Already Reported",
+	  "226": "IM Used",
+	  "300": "Multiple Choices",
+	  "301": "Moved Permanently",
+	  "302": "Found",
+	  "303": "See Other",
+	  "304": "Not Modified",
+	  "305": "Use Proxy",
+	  "307": "Temporary Redirect",
+	  "308": "Permanent Redirect",
+	  "400": "Bad Request",
+	  "401": "Unauthorized",
+	  "402": "Payment Required",
+	  "403": "Forbidden",
+	  "404": "Not Found",
+	  "405": "Method Not Allowed",
+	  "406": "Not Acceptable",
+	  "407": "Proxy Authentication Required",
+	  "408": "Request Timeout",
+	  "409": "Conflict",
+	  "410": "Gone",
+	  "411": "Length Required",
+	  "412": "Precondition Failed",
+	  "413": "Payload Too Large",
+	  "414": "URI Too Long",
+	  "415": "Unsupported Media Type",
+	  "416": "Range Not Satisfiable",
+	  "417": "Expectation Failed",
+	  "418": "I'm a teapot",
+	  "421": "Misdirected Request",
+	  "422": "Unprocessable Entity",
+	  "423": "Locked",
+	  "424": "Failed Dependency",
+	  "425": "Unordered Collection",
+	  "426": "Upgrade Required",
+	  "428": "Precondition Required",
+	  "429": "Too Many Requests",
+	  "431": "Request Header Fields Too Large",
+	  "451": "Unavailable For Legal Reasons",
+	  "500": "Internal Server Error",
+	  "501": "Not Implemented",
+	  "502": "Bad Gateway",
+	  "503": "Service Unavailable",
+	  "504": "Gateway Timeout",
+	  "505": "HTTP Version Not Supported",
+	  "506": "Variant Also Negotiates",
+	  "507": "Insufficient Storage",
+	  "508": "Loop Detected",
+	  "509": "Bandwidth Limit Exceeded",
+	  "510": "Not Extended",
+	  "511": "Network Authentication Required"
+	}
+
+
+/***/ },
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -18427,7 +20135,7 @@ var StellarSdk =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(182);
+	exports.isBuffer = __webpack_require__(201);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -18471,7 +20179,7 @@ var StellarSdk =
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(183);
+	exports.inherits = __webpack_require__(202);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -18492,7 +20200,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ },
-/* 182 */
+/* 201 */
 /***/ function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -18503,7 +20211,7 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 183 */
+/* 202 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -18532,73 +20240,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 184 */
-/***/ function(module, exports, __webpack_require__) {
-
-	;(function () {
-
-	  var object =  true ? exports : this; // #8: web workers
-	  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-
-	  function InvalidCharacterError(message) {
-	    this.message = message;
-	  }
-	  InvalidCharacterError.prototype = new Error;
-	  InvalidCharacterError.prototype.name = 'InvalidCharacterError';
-
-	  // encoder
-	  // [https://gist.github.com/999166] by [https://github.com/nignag]
-	  object.btoa || (
-	  object.btoa = function (input) {
-	    for (
-	      // initialize result and counter
-	      var block, charCode, idx = 0, map = chars, output = '';
-	      // if the next input index does not exist:
-	      //   change the mapping table to "="
-	      //   check if d has no fractional digits
-	      input.charAt(idx | 0) || (map = '=', idx % 1);
-	      // "8 - idx % 1 * 8" generates the sequence 2, 4, 6, 8
-	      output += map.charAt(63 & block >> 8 - idx % 1 * 8)
-	    ) {
-	      charCode = input.charCodeAt(idx += 3/4);
-	      if (charCode > 0xFF) {
-	        throw new InvalidCharacterError("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
-	      }
-	      block = block << 8 | charCode;
-	    }
-	    return output;
-	  });
-
-	  // decoder
-	  // [https://gist.github.com/1020396] by [https://github.com/atk]
-	  object.atob || (
-	  object.atob = function (input) {
-	    input = input.replace(/=+$/, '');
-	    if (input.length % 4 == 1) {
-	      throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
-	    }
-	    for (
-	      // initialize result and counters
-	      var bc = 0, bs, buffer, idx = 0, output = '';
-	      // get next character
-	      buffer = input.charAt(idx++);
-	      // character found in table? initialize bit storage and add its ascii value;
-	      ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer,
-	        // and if not first of each 4 characters,
-	        // convert the first 8 bits to one ascii character
-	        bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
-	    ) {
-	      // try to find character in table (0-63, not found => -1)
-	      buffer = chars.indexOf(buffer);
-	    }
-	    return output;
-	  });
-
-	}());
-
-
-/***/ },
-/* 185 */
+/* 203 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
@@ -18626,7 +20268,7 @@ var StellarSdk =
 	 * 
 	 */
 	/**
-	 * bluebird build version 3.4.6
+	 * bluebird build version 3.4.7
 	 * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
 	*/
 	!function(e){if(true)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -18780,11 +20422,6 @@ var StellarSdk =
 	        }
 	    };
 	}
-
-	Async.prototype.invokeFirst = function (fn, receiver, arg) {
-	    this._normalQueue.unshift(fn, receiver, arg);
-	    this._queueTick();
-	};
 
 	Async.prototype._drainQueue = function(queue) {
 	    while (queue.length() > 0) {
@@ -19565,6 +21202,7 @@ var StellarSdk =
 	            Promise.prototype._fireEvent = defaultFireEvent;
 	        }
 	    }
+	    return Promise;
 	};
 
 	function defaultFireEvent() { return false; }
@@ -19835,7 +21473,7 @@ var StellarSdk =
 	            break;
 	        }
 	    }
-	    if (i > 0) {
+	    if (i > 0 && error.name != "SyntaxError") {
 	        stack = stack.slice(i);
 	    }
 	    return stack;
@@ -19848,7 +21486,7 @@ var StellarSdk =
 	                ? stackFramesAsArray(error) : ["    (No stack trace)"];
 	    return {
 	        message: message,
-	        stack: cleanStack(stack)
+	        stack: error.name == "SyntaxError" ? stack : cleanStack(stack)
 	    };
 	}
 
@@ -22066,7 +23704,7 @@ var StellarSdk =
 	_dereq_("./join")(
 	    Promise, PromiseArray, tryConvertToPromise, INTERNAL, async, getDomain);
 	Promise.Promise = Promise;
-	Promise.version = "3.4.6";
+	Promise.version = "3.4.7";
 	_dereq_('./map.js')(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
 	_dereq_('./call_get.js')(Promise);
 	_dereq_('./using.js')(Promise, apiRejection, tryConvertToPromise, createContext, INTERNAL, debug);
@@ -22754,23 +24392,6 @@ var StellarSdk =
 	    var i = (this._front + length) & (this._capacity - 1);
 	    this[i] = arg;
 	    this._length = length + 1;
-	};
-
-	Queue.prototype._unshiftOne = function(value) {
-	    var capacity = this._capacity;
-	    this._checkCapacity(this.length() + 1);
-	    var front = this._front;
-	    var i = (((( front - 1 ) &
-	                    ( capacity - 1) ) ^ capacity ) - capacity );
-	    this[i] = value;
-	    this._front = i;
-	    this._length = this.length() + 1;
-	};
-
-	Queue.prototype.unshift = function(fn, receiver, arg) {
-	    this._unshiftOne(arg);
-	    this._unshiftOne(receiver);
-	    this._unshiftOne(fn);
 	};
 
 	Queue.prototype.push = function (fn, receiver, arg) {
@@ -24133,8 +25754,11 @@ var StellarSdk =
 	var isNode = typeof process !== "undefined" &&
 	        classString(process).toLowerCase() === "[object process]";
 
-	function env(key, def) {
-	    return isNode ? process.env[key] : def;
+	var hasEnvVariables = typeof process !== "undefined" &&
+	    typeof process.env !== "undefined";
+
+	function env(key) {
+	    return hasEnvVariables ? process.env[key] : undefined;
 	}
 
 	function getNativePromise() {
@@ -24182,6 +25806,7 @@ var StellarSdk =
 	    hasDevTools: typeof chrome !== "undefined" && chrome &&
 	                 typeof chrome.loadTimes === "function",
 	    isNode: isNode,
+	    hasEnvVariables: hasEnvVariables,
 	    env: env,
 	    global: globalObject,
 	    getNativePromise: getNativePromise,
@@ -24199,92 +25824,10 @@ var StellarSdk =
 
 	},{"./es5":13}]},{},[4])(4)
 	});                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), (function() { return this; }()), __webpack_require__(186).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), (function() { return this; }()), __webpack_require__(181).setImmediate))
 
 /***/ },
-/* 186 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {var nextTick = __webpack_require__(3).nextTick;
-	var apply = Function.prototype.apply;
-	var slice = Array.prototype.slice;
-	var immediateIds = {};
-	var nextImmediateId = 0;
-
-	// DOM APIs, for completeness
-
-	exports.setTimeout = function() {
-	  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
-	};
-	exports.setInterval = function() {
-	  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-	};
-	exports.clearTimeout =
-	exports.clearInterval = function(timeout) { timeout.close(); };
-
-	function Timeout(id, clearFn) {
-	  this._id = id;
-	  this._clearFn = clearFn;
-	}
-	Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-	Timeout.prototype.close = function() {
-	  this._clearFn.call(window, this._id);
-	};
-
-	// Does not start the time, just sets up the members needed.
-	exports.enroll = function(item, msecs) {
-	  clearTimeout(item._idleTimeoutId);
-	  item._idleTimeout = msecs;
-	};
-
-	exports.unenroll = function(item) {
-	  clearTimeout(item._idleTimeoutId);
-	  item._idleTimeout = -1;
-	};
-
-	exports._unrefActive = exports.active = function(item) {
-	  clearTimeout(item._idleTimeoutId);
-
-	  var msecs = item._idleTimeout;
-	  if (msecs >= 0) {
-	    item._idleTimeoutId = setTimeout(function onTimeout() {
-	      if (item._onTimeout)
-	        item._onTimeout();
-	    }, msecs);
-	  }
-	};
-
-	// That's not how node.js implements it but the exposed api is the same.
-	exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
-	  var id = nextImmediateId++;
-	  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
-
-	  immediateIds[id] = true;
-
-	  nextTick(function onNextTick() {
-	    if (immediateIds[id]) {
-	      // fn.call() is faster so we optimize for the common use-case
-	      // @see http://jsperf.com/call-apply-segu
-	      if (args) {
-	        fn.apply(null, args);
-	      } else {
-	        fn.call(null);
-	      }
-	      // Prevent ids from leaking
-	      exports.clearImmediate(id);
-	    }
-	  });
-
-	  return id;
-	};
-
-	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
-	  delete immediateIds[id];
-	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(186).setImmediate, __webpack_require__(186).clearImmediate))
-
-/***/ },
-/* 187 */
+/* 204 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24299,9 +25842,9 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _stellarBase = __webpack_require__(188);
+	var _stellarBase = __webpack_require__(205);
 
-	var _lodashForIn = __webpack_require__(405);
+	var _lodashForIn = __webpack_require__(451);
 
 	var _lodashForIn2 = _interopRequireDefault(_lodashForIn);
 
@@ -24367,14 +25910,10 @@ var StellarSdk =
 	exports.AccountResponse = AccountResponse;
 
 /***/ },
-/* 188 */
+/* 205 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
-
-	var _defaults = function (obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; };
 
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
@@ -24382,2850 +25921,77 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(189));
+	var xdr = _interopRequire(__webpack_require__(206));
 
 	exports.xdr = xdr;
-	exports.hash = __webpack_require__(228).hash;
+	exports.hash = __webpack_require__(245).hash;
 
-	var _signing = __webpack_require__(238);
+	var _signing = __webpack_require__(255);
 
 	exports.sign = _signing.sign;
 	exports.verify = _signing.verify;
 	exports.FastSigning = _signing.FastSigning;
-	exports.Keypair = __webpack_require__(241).Keypair;
+	exports.Keypair = __webpack_require__(258).Keypair;
 
-	var _jsXdr = __webpack_require__(190);
+	var _jsXdr = __webpack_require__(207);
 
 	exports.UnsignedHyper = _jsXdr.UnsignedHyper;
 	exports.Hyper = _jsXdr.Hyper;
-	exports.Transaction = __webpack_require__(287).Transaction;
-	exports.TransactionBuilder = __webpack_require__(402).TransactionBuilder;
-	exports.Asset = __webpack_require__(289).Asset;
+	exports.Transaction = __webpack_require__(304).Transaction;
+	exports.TransactionBuilder = __webpack_require__(448).TransactionBuilder;
+	exports.Asset = __webpack_require__(306).Asset;
 
-	var _operation = __webpack_require__(288);
+	var _operation = __webpack_require__(305);
 
 	exports.Operation = _operation.Operation;
 	exports.AuthRequiredFlag = _operation.AuthRequiredFlag;
 	exports.AuthRevocableFlag = _operation.AuthRevocableFlag;
 	exports.AuthImmutableFlag = _operation.AuthImmutableFlag;
-	exports.Memo = __webpack_require__(404).Memo;
-	exports.Account = __webpack_require__(403).Account;
+	exports.Memo = __webpack_require__(450).Memo;
+	exports.Account = __webpack_require__(449).Account;
 
-	var _network = __webpack_require__(242);
+	var _network = __webpack_require__(259);
 
 	exports.Network = _network.Network;
 	exports.Networks = _network.Networks;
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(247)));
-
+	exports.StrKey = __webpack_require__(264).StrKey;
 	exports["default"] = module.exports;
 
 /***/ },
-/* 189 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
-	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
-
-	// Automatically generated on 2016-02-22T13:07:20+01:00
-	// DO NOT EDIT or your changes may be overwritten
-
-	/* jshint maxstatements:2147483647  */
-	/* jshint esnext:true  */
-
-	var XDR = _interopRequireWildcard(__webpack_require__(190));
-
-	var types = XDR.config(function (xdr) {
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque Value<>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Value", xdr.varOpaque());
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SCPBallot
-	  //   {
-	  //       uint32 counter; // n
-	  //       Value value;    // x
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpBallot", [["counter", xdr.lookup("Uint32")], ["value", xdr.lookup("Value")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum SCPStatementType
-	  //   {
-	  //       SCP_ST_PREPARE = 0,
-	  //       SCP_ST_CONFIRM = 1,
-	  //       SCP_ST_EXTERNALIZE = 2,
-	  //       SCP_ST_NOMINATE = 3
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ScpStatementType", {
-	    scpStPrepare: 0,
-	    scpStConfirm: 1,
-	    scpStExternalize: 2,
-	    scpStNominate: 3 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SCPNomination
-	  //   {
-	  //       Hash quorumSetHash; // D
-	  //       Value votes<>;      // X
-	  //       Value accepted<>;   // Y
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpNomination", [["quorumSetHash", xdr.lookup("Hash")], ["votes", xdr.varArray(xdr.lookup("Value"), 2147483647)], ["accepted", xdr.varArray(xdr.lookup("Value"), 2147483647)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //           {
-	  //               Hash quorumSetHash;       // D
-	  //               SCPBallot ballot;         // b
-	  //               SCPBallot* prepared;      // p
-	  //               SCPBallot* preparedPrime; // p'
-	  //               uint32 nC;                // c.n
-	  //               uint32 nH;                // h.n
-	  //           }
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpStatementPrepare", [["quorumSetHash", xdr.lookup("Hash")], ["ballot", xdr.lookup("ScpBallot")], ["prepared", xdr.option(xdr.lookup("ScpBallot"))], ["preparedPrime", xdr.option(xdr.lookup("ScpBallot"))], ["nC", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //           {
-	  //               SCPBallot ballot;   // b
-	  //               uint32 nPrepared;   // p.n
-	  //               uint32 nCommit;     // c.n
-	  //               uint32 nH;          // h.n
-	  //               Hash quorumSetHash; // D
-	  //           }
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpStatementConfirm", [["ballot", xdr.lookup("ScpBallot")], ["nPrepared", xdr.lookup("Uint32")], ["nCommit", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")], ["quorumSetHash", xdr.lookup("Hash")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //           {
-	  //               SCPBallot commit;         // c
-	  //               uint32 nH;                // h.n
-	  //               Hash commitQuorumSetHash; // D used before EXTERNALIZE
-	  //           }
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpStatementExternalize", [["commit", xdr.lookup("ScpBallot")], ["nH", xdr.lookup("Uint32")], ["commitQuorumSetHash", xdr.lookup("Hash")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (SCPStatementType type)
-	  //       {
-	  //       case SCP_ST_PREPARE:
-	  //           struct
-	  //           {
-	  //               Hash quorumSetHash;       // D
-	  //               SCPBallot ballot;         // b
-	  //               SCPBallot* prepared;      // p
-	  //               SCPBallot* preparedPrime; // p'
-	  //               uint32 nC;                // c.n
-	  //               uint32 nH;                // h.n
-	  //           } prepare;
-	  //       case SCP_ST_CONFIRM:
-	  //           struct
-	  //           {
-	  //               SCPBallot ballot;   // b
-	  //               uint32 nPrepared;   // p.n
-	  //               uint32 nCommit;     // c.n
-	  //               uint32 nH;          // h.n
-	  //               Hash quorumSetHash; // D
-	  //           } confirm;
-	  //       case SCP_ST_EXTERNALIZE:
-	  //           struct
-	  //           {
-	  //               SCPBallot commit;         // c
-	  //               uint32 nH;                // h.n
-	  //               Hash commitQuorumSetHash; // D used before EXTERNALIZE
-	  //           } externalize;
-	  //       case SCP_ST_NOMINATE:
-	  //           SCPNomination nominate;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("ScpStatementPledges", {
-	    switchOn: xdr.lookup("ScpStatementType"),
-	    switchName: "type",
-	    switches: [["scpStPrepare", "prepare"], ["scpStConfirm", "confirm"], ["scpStExternalize", "externalize"], ["scpStNominate", "nominate"]],
-	    arms: {
-	      prepare: xdr.lookup("ScpStatementPrepare"),
-	      confirm: xdr.lookup("ScpStatementConfirm"),
-	      externalize: xdr.lookup("ScpStatementExternalize"),
-	      nominate: xdr.lookup("ScpNomination") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SCPStatement
-	  //   {
-	  //       NodeID nodeID;    // v
-	  //       uint64 slotIndex; // i
-	  //  
-	  //       union switch (SCPStatementType type)
-	  //       {
-	  //       case SCP_ST_PREPARE:
-	  //           struct
-	  //           {
-	  //               Hash quorumSetHash;       // D
-	  //               SCPBallot ballot;         // b
-	  //               SCPBallot* prepared;      // p
-	  //               SCPBallot* preparedPrime; // p'
-	  //               uint32 nC;                // c.n
-	  //               uint32 nH;                // h.n
-	  //           } prepare;
-	  //       case SCP_ST_CONFIRM:
-	  //           struct
-	  //           {
-	  //               SCPBallot ballot;   // b
-	  //               uint32 nPrepared;   // p.n
-	  //               uint32 nCommit;     // c.n
-	  //               uint32 nH;          // h.n
-	  //               Hash quorumSetHash; // D
-	  //           } confirm;
-	  //       case SCP_ST_EXTERNALIZE:
-	  //           struct
-	  //           {
-	  //               SCPBallot commit;         // c
-	  //               uint32 nH;                // h.n
-	  //               Hash commitQuorumSetHash; // D used before EXTERNALIZE
-	  //           } externalize;
-	  //       case SCP_ST_NOMINATE:
-	  //           SCPNomination nominate;
-	  //       }
-	  //       pledges;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpStatement", [["nodeId", xdr.lookup("NodeId")], ["slotIndex", xdr.lookup("Uint64")], ["pledges", xdr.lookup("ScpStatementPledges")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SCPEnvelope
-	  //   {
-	  //       SCPStatement statement;
-	  //       Signature signature;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpEnvelope", [["statement", xdr.lookup("ScpStatement")], ["signature", xdr.lookup("Signature")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SCPQuorumSet
-	  //   {
-	  //       uint32 threshold;
-	  //       PublicKey validators<>;
-	  //       SCPQuorumSet innerSets<>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpQuorumSet", [["threshold", xdr.lookup("Uint32")], ["validators", xdr.varArray(xdr.lookup("PublicKey"), 2147483647)], ["innerSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef PublicKey AccountID;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("AccountId", xdr.lookup("PublicKey"));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque Thresholds[4];
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Thresholds", xdr.opaque(4));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef string string32<32>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("String32", xdr.string(32));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef string string64<64>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("String64", xdr.string(64));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef uint64 SequenceNumber;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("SequenceNumber", xdr.lookup("Uint64"));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque DataValue<64>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("DataValue", xdr.varOpaque(64));
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum AssetType
-	  //   {
-	  //       ASSET_TYPE_NATIVE = 0,
-	  //       ASSET_TYPE_CREDIT_ALPHANUM4 = 1,
-	  //       ASSET_TYPE_CREDIT_ALPHANUM12 = 2
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("AssetType", {
-	    assetTypeNative: 0,
-	    assetTypeCreditAlphanum4: 1,
-	    assetTypeCreditAlphanum12: 2 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           opaque assetCode[4]; // 1 to 4 characters
-	  //           AccountID issuer;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("AssetAlphaNum4", [["assetCode", xdr.opaque(4)], ["issuer", xdr.lookup("AccountId")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           opaque assetCode[12]; // 5 to 12 characters
-	  //           AccountID issuer;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("AssetAlphaNum12", [["assetCode", xdr.opaque(12)], ["issuer", xdr.lookup("AccountId")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union Asset switch (AssetType type)
-	  //   {
-	  //   case ASSET_TYPE_NATIVE: // Not credit
-	  //       void;
-	  //  
-	  //   case ASSET_TYPE_CREDIT_ALPHANUM4:
-	  //       struct
-	  //       {
-	  //           opaque assetCode[4]; // 1 to 4 characters
-	  //           AccountID issuer;
-	  //       } alphaNum4;
-	  //  
-	  //   case ASSET_TYPE_CREDIT_ALPHANUM12:
-	  //       struct
-	  //       {
-	  //           opaque assetCode[12]; // 5 to 12 characters
-	  //           AccountID issuer;
-	  //       } alphaNum12;
-	  //  
-	  //       // add other asset types here in the future
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("Asset", {
-	    switchOn: xdr.lookup("AssetType"),
-	    switchName: "type",
-	    switches: [["assetTypeNative", xdr["void"]()], ["assetTypeCreditAlphanum4", "alphaNum4"], ["assetTypeCreditAlphanum12", "alphaNum12"]],
-	    arms: {
-	      alphaNum4: xdr.lookup("AssetAlphaNum4"),
-	      alphaNum12: xdr.lookup("AssetAlphaNum12") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Price
-	  //   {
-	  //       int32 n; // numerator
-	  //       int32 d; // denominator
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Price", [["n", xdr.lookup("Int32")], ["d", xdr.lookup("Int32")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum ThresholdIndexes
-	  //   {
-	  //       THRESHOLD_MASTER_WEIGHT = 0,
-	  //       THRESHOLD_LOW = 1,
-	  //       THRESHOLD_MED = 2,
-	  //       THRESHOLD_HIGH = 3
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ThresholdIndices", {
-	    thresholdMasterWeight: 0,
-	    thresholdLow: 1,
-	    thresholdMed: 2,
-	    thresholdHigh: 3 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum LedgerEntryType
-	  //   {
-	  //       ACCOUNT = 0,
-	  //       TRUSTLINE = 1,
-	  //       OFFER = 2,
-	  //       DATA = 3
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("LedgerEntryType", {
-	    account: 0,
-	    trustline: 1,
-	    offer: 2,
-	    datum: 3 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Signer
-	  //   {
-	  //       AccountID pubKey;
-	  //       uint32 weight; // really only need 1byte
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Signer", [["pubKey", xdr.lookup("AccountId")], ["weight", xdr.lookup("Uint32")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum AccountFlags
-	  //   { // masks for each flag
-	  //  
-	  //       // Flags set on issuer accounts
-	  //       // TrustLines are created with authorized set to "false" requiring
-	  //       // the issuer to set it for each TrustLine
-	  //       AUTH_REQUIRED_FLAG = 0x1,
-	  //       // If set, the authorized flag in TrustLines can be cleared
-	  //       // otherwise, authorization cannot be revoked
-	  //       AUTH_REVOCABLE_FLAG = 0x2,
-	  //       // Once set, causes all AUTH_* flags to be read-only
-	  //       AUTH_IMMUTABLE_FLAG = 0x4
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("AccountFlags", {
-	    authRequiredFlag: 1,
-	    authRevocableFlag: 2,
-	    authImmutableFlag: 4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("AccountEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct AccountEntry
-	  //   {
-	  //       AccountID accountID;      // master public key for this account
-	  //       int64 balance;            // in stroops
-	  //       SequenceNumber seqNum;    // last sequence number used for this account
-	  //       uint32 numSubEntries;     // number of sub-entries this account has
-	  //                                 // drives the reserve
-	  //       AccountID* inflationDest; // Account to vote for during inflation
-	  //       uint32 flags;             // see AccountFlags
-	  //  
-	  //       string32 homeDomain; // can be used for reverse federation and memo lookup
-	  //  
-	  //       // fields used for signatures
-	  //       // thresholds stores unsigned bytes: [weight of master|low|medium|high]
-	  //       Thresholds thresholds;
-	  //  
-	  //       Signer signers<20>; // possible signers for this account
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("AccountEntry", [["accountId", xdr.lookup("AccountId")], ["balance", xdr.lookup("Int64")], ["seqNum", xdr.lookup("SequenceNumber")], ["numSubEntries", xdr.lookup("Uint32")], ["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["flags", xdr.lookup("Uint32")], ["homeDomain", xdr.lookup("String32")], ["thresholds", xdr.lookup("Thresholds")], ["signers", xdr.varArray(xdr.lookup("Signer"), 20)], ["ext", xdr.lookup("AccountEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum TrustLineFlags
-	  //   {
-	  //       // issuer has authorized account to perform transactions with its credit
-	  //       AUTHORIZED_FLAG = 1
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("TrustLineFlags", {
-	    authorizedFlag: 1 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("TrustLineEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TrustLineEntry
-	  //   {
-	  //       AccountID accountID; // account this trustline belongs to
-	  //       Asset asset;         // type of asset (with issuer)
-	  //       int64 balance;       // how much of this asset the user has.
-	  //                            // Asset defines the unit for this;
-	  //  
-	  //       int64 limit;  // balance cannot be above this
-	  //       uint32 flags; // see TrustLineFlags
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TrustLineEntry", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["balance", xdr.lookup("Int64")], ["limit", xdr.lookup("Int64")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("TrustLineEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum OfferEntryFlags
-	  //   {
-	  //       // issuer has authorized account to perform transactions with its credit
-	  //       PASSIVE_FLAG = 1
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("OfferEntryFlags", {
-	    passiveFlag: 1 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("OfferEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct OfferEntry
-	  //   {
-	  //       AccountID sellerID;
-	  //       uint64 offerID;
-	  //       Asset selling; // A
-	  //       Asset buying;  // B
-	  //       int64 amount;  // amount of A
-	  //  
-	  //       /* price for this offer:
-	  //           price of A in terms of B
-	  //           price=AmountB/AmountA=priceNumerator/priceDenominator
-	  //           price is after fees
-	  //       */
-	  //       Price price;
-	  //       uint32 flags; // see OfferEntryFlags
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("OfferEntry", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("OfferEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("DataEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct DataEntry
-	  //   {
-	  //       AccountID accountID; // account this data belongs to
-	  //       string64 dataName;
-	  //       DataValue dataValue;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("DataEntry", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")], ["dataValue", xdr.lookup("DataValue")], ["ext", xdr.lookup("DataEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (LedgerEntryType type)
-	  //       {
-	  //       case ACCOUNT:
-	  //           AccountEntry account;
-	  //       case TRUSTLINE:
-	  //           TrustLineEntry trustLine;
-	  //       case OFFER:
-	  //           OfferEntry offer;
-	  //       case DATA:
-	  //           DataEntry data;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerEntryData", {
-	    switchOn: xdr.lookup("LedgerEntryType"),
-	    switchName: "type",
-	    switches: [["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]],
-	    arms: {
-	      account: xdr.lookup("AccountEntry"),
-	      trustLine: xdr.lookup("TrustLineEntry"),
-	      offer: xdr.lookup("OfferEntry"),
-	      data: xdr.lookup("DataEntry") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct LedgerEntry
-	  //   {
-	  //       uint32 lastModifiedLedgerSeq; // ledger the LedgerEntry was last changed
-	  //  
-	  //       union switch (LedgerEntryType type)
-	  //       {
-	  //       case ACCOUNT:
-	  //           AccountEntry account;
-	  //       case TRUSTLINE:
-	  //           TrustLineEntry trustLine;
-	  //       case OFFER:
-	  //           OfferEntry offer;
-	  //       case DATA:
-	  //           DataEntry data;
-	  //       }
-	  //       data;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerEntry", [["lastModifiedLedgerSeq", xdr.lookup("Uint32")], ["data", xdr.lookup("LedgerEntryData")], ["ext", xdr.lookup("LedgerEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum EnvelopeType
-	  //   {
-	  //       ENVELOPE_TYPE_SCP = 1,
-	  //       ENVELOPE_TYPE_TX = 2,
-	  //       ENVELOPE_TYPE_AUTH = 3
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("EnvelopeType", {
-	    envelopeTypeScp: 1,
-	    envelopeTypeTx: 2,
-	    envelopeTypeAuth: 3 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque UpgradeType<128>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("UpgradeType", xdr.varOpaque(128));
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("StellarValueExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct StellarValue
-	  //   {
-	  //       Hash txSetHash;   // transaction set to apply to previous ledger
-	  //       uint64 closeTime; // network close time
-	  //  
-	  //       // upgrades to apply to the previous ledger (usually empty)
-	  //       // this is a vector of encoded 'LedgerUpgrade' so that nodes can drop
-	  //       // unknown steps during consensus if needed.
-	  //       // see notes below on 'LedgerUpgrade' for more detail
-	  //       // max size is dictated by number of upgrade types (+ room for future)
-	  //       UpgradeType upgrades<6>;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("StellarValue", [["txSetHash", xdr.lookup("Hash")], ["closeTime", xdr.lookup("Uint64")], ["upgrades", xdr.varArray(xdr.lookup("UpgradeType"), 6)], ["ext", xdr.lookup("StellarValueExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerHeaderExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct LedgerHeader
-	  //   {
-	  //       uint32 ledgerVersion;    // the protocol version of the ledger
-	  //       Hash previousLedgerHash; // hash of the previous ledger header
-	  //       StellarValue scpValue;   // what consensus agreed to
-	  //       Hash txSetResultHash;    // the TransactionResultSet that led to this ledger
-	  //       Hash bucketListHash;     // hash of the ledger state
-	  //  
-	  //       uint32 ledgerSeq; // sequence number of this ledger
-	  //  
-	  //       int64 totalCoins; // total number of stroops in existence.
-	  //                         // 10,000,000 stroops in 1 XLM
-	  //  
-	  //       int64 feePool;       // fees burned since last inflation run
-	  //       uint32 inflationSeq; // inflation sequence number
-	  //  
-	  //       uint64 idPool; // last used global ID, used for generating objects
-	  //  
-	  //       uint32 baseFee;     // base fee per operation in stroops
-	  //       uint32 baseReserve; // account base reserve in stroops
-	  //  
-	  //       uint32 maxTxSetSize; // maximum size a transaction set can be
-	  //  
-	  //       Hash skipList[4]; // hashes of ledgers in the past. allows you to jump back
-	  //                         // in time without walking the chain back ledger by ledger
-	  //                         // each slot contains the oldest ledger that is mod of
-	  //                         // either 50  5000  50000 or 500000 depending on index
-	  //                         // skipList[0] mod(50), skipList[1] mod(5000), etc
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerHeader", [["ledgerVersion", xdr.lookup("Uint32")], ["previousLedgerHash", xdr.lookup("Hash")], ["scpValue", xdr.lookup("StellarValue")], ["txSetResultHash", xdr.lookup("Hash")], ["bucketListHash", xdr.lookup("Hash")], ["ledgerSeq", xdr.lookup("Uint32")], ["totalCoins", xdr.lookup("Int64")], ["feePool", xdr.lookup("Int64")], ["inflationSeq", xdr.lookup("Uint32")], ["idPool", xdr.lookup("Uint64")], ["baseFee", xdr.lookup("Uint32")], ["baseReserve", xdr.lookup("Uint32")], ["maxTxSetSize", xdr.lookup("Uint32")], ["skipList", xdr.array(xdr.lookup("Hash"), 4)], ["ext", xdr.lookup("LedgerHeaderExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum LedgerUpgradeType
-	  //   {
-	  //       LEDGER_UPGRADE_VERSION = 1,
-	  //       LEDGER_UPGRADE_BASE_FEE = 2,
-	  //       LEDGER_UPGRADE_MAX_TX_SET_SIZE = 3
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("LedgerUpgradeType", {
-	    ledgerUpgradeVersion: 1,
-	    ledgerUpgradeBaseFee: 2,
-	    ledgerUpgradeMaxTxSetSize: 3 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union LedgerUpgrade switch (LedgerUpgradeType type)
-	  //   {
-	  //   case LEDGER_UPGRADE_VERSION:
-	  //       uint32 newLedgerVersion; // update ledgerVersion
-	  //   case LEDGER_UPGRADE_BASE_FEE:
-	  //       uint32 newBaseFee; // update baseFee
-	  //   case LEDGER_UPGRADE_MAX_TX_SET_SIZE:
-	  //       uint32 newMaxTxSetSize; // update maxTxSetSize
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerUpgrade", {
-	    switchOn: xdr.lookup("LedgerUpgradeType"),
-	    switchName: "type",
-	    switches: [["ledgerUpgradeVersion", "newLedgerVersion"], ["ledgerUpgradeBaseFee", "newBaseFee"], ["ledgerUpgradeMaxTxSetSize", "newMaxTxSetSize"]],
-	    arms: {
-	      newLedgerVersion: xdr.lookup("Uint32"),
-	      newBaseFee: xdr.lookup("Uint32"),
-	      newMaxTxSetSize: xdr.lookup("Uint32") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           AccountID accountID;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerKeyAccount", [["accountId", xdr.lookup("AccountId")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           AccountID accountID;
-	  //           Asset asset;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerKeyTrustLine", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           AccountID sellerID;
-	  //           uint64 offerID;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerKeyOffer", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           AccountID accountID;
-	  //           string64 dataName;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerKeyData", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union LedgerKey switch (LedgerEntryType type)
-	  //   {
-	  //   case ACCOUNT:
-	  //       struct
-	  //       {
-	  //           AccountID accountID;
-	  //       } account;
-	  //  
-	  //   case TRUSTLINE:
-	  //       struct
-	  //       {
-	  //           AccountID accountID;
-	  //           Asset asset;
-	  //       } trustLine;
-	  //  
-	  //   case OFFER:
-	  //       struct
-	  //       {
-	  //           AccountID sellerID;
-	  //           uint64 offerID;
-	  //       } offer;
-	  //  
-	  //   case DATA:
-	  //       struct
-	  //       {
-	  //           AccountID accountID;
-	  //           string64 dataName;
-	  //       } data;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerKey", {
-	    switchOn: xdr.lookup("LedgerEntryType"),
-	    switchName: "type",
-	    switches: [["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]],
-	    arms: {
-	      account: xdr.lookup("LedgerKeyAccount"),
-	      trustLine: xdr.lookup("LedgerKeyTrustLine"),
-	      offer: xdr.lookup("LedgerKeyOffer"),
-	      data: xdr.lookup("LedgerKeyData") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum BucketEntryType
-	  //   {
-	  //       LIVEENTRY = 0,
-	  //       DEADENTRY = 1
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("BucketEntryType", {
-	    liveentry: 0,
-	    deadentry: 1 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union BucketEntry switch (BucketEntryType type)
-	  //   {
-	  //   case LIVEENTRY:
-	  //       LedgerEntry liveEntry;
-	  //  
-	  //   case DEADENTRY:
-	  //       LedgerKey deadEntry;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("BucketEntry", {
-	    switchOn: xdr.lookup("BucketEntryType"),
-	    switchName: "type",
-	    switches: [["liveentry", "liveEntry"], ["deadentry", "deadEntry"]],
-	    arms: {
-	      liveEntry: xdr.lookup("LedgerEntry"),
-	      deadEntry: xdr.lookup("LedgerKey") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   const MAX_TX_PER_LEDGER = 5000;
-	  //
-	  // ===========================================================================
-	  xdr["const"]("MAX_TX_PER_LEDGER", 5000);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionSet
-	  //   {
-	  //       Hash previousLedgerHash;
-	  //       TransactionEnvelope txs<MAX_TX_PER_LEDGER>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionSet", [["previousLedgerHash", xdr.lookup("Hash")], ["txes", xdr.varArray(xdr.lookup("TransactionEnvelope"), xdr.lookup("MAX_TX_PER_LEDGER"))]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionResultPair
-	  //   {
-	  //       Hash transactionHash;
-	  //       TransactionResult result; // result for the transaction
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionResultPair", [["transactionHash", xdr.lookup("Hash")], ["result", xdr.lookup("TransactionResult")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionResultSet
-	  //   {
-	  //       TransactionResultPair results<MAX_TX_PER_LEDGER>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionResultSet", [["results", xdr.varArray(xdr.lookup("TransactionResultPair"), xdr.lookup("MAX_TX_PER_LEDGER"))]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("TransactionHistoryEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionHistoryEntry
-	  //   {
-	  //       uint32 ledgerSeq;
-	  //       TransactionSet txSet;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionHistoryEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txSet", xdr.lookup("TransactionSet")], ["ext", xdr.lookup("TransactionHistoryEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("TransactionHistoryResultEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionHistoryResultEntry
-	  //   {
-	  //       uint32 ledgerSeq;
-	  //       TransactionResultSet txResultSet;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionHistoryResultEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txResultSet", xdr.lookup("TransactionResultSet")], ["ext", xdr.lookup("TransactionHistoryResultEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerHeaderHistoryEntryExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct LedgerHeaderHistoryEntry
-	  //   {
-	  //       Hash hash;
-	  //       LedgerHeader header;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerHeaderHistoryEntry", [["hash", xdr.lookup("Hash")], ["header", xdr.lookup("LedgerHeader")], ["ext", xdr.lookup("LedgerHeaderHistoryEntryExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct LedgerSCPMessages
-	  //   {
-	  //       uint32 ledgerSeq;
-	  //       SCPEnvelope messages<>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("LedgerScpMessages", [["ledgerSeq", xdr.lookup("Uint32")], ["messages", xdr.varArray(xdr.lookup("ScpEnvelope"), 2147483647)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SCPHistoryEntryV0
-	  //   {
-	  //       SCPQuorumSet quorumSets<>; // additional quorum sets used by ledgerMessages
-	  //       LedgerSCPMessages ledgerMessages;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ScpHistoryEntryV0", [["quorumSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)], ["ledgerMessages", xdr.lookup("LedgerScpMessages")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union SCPHistoryEntry switch (int v)
-	  //   {
-	  //   case 0:
-	  //       SCPHistoryEntryV0 v0;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("ScpHistoryEntry", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, "v0"]],
-	    arms: {
-	      v0: xdr.lookup("ScpHistoryEntryV0") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum LedgerEntryChangeType
-	  //   {
-	  //       LEDGER_ENTRY_CREATED = 0, // entry was added to the ledger
-	  //       LEDGER_ENTRY_UPDATED = 1, // entry was modified in the ledger
-	  //       LEDGER_ENTRY_REMOVED = 2, // entry was removed from the ledger
-	  //       LEDGER_ENTRY_STATE = 3    // value of the entry
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("LedgerEntryChangeType", {
-	    ledgerEntryCreated: 0,
-	    ledgerEntryUpdated: 1,
-	    ledgerEntryRemoved: 2,
-	    ledgerEntryState: 3 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union LedgerEntryChange switch (LedgerEntryChangeType type)
-	  //   {
-	  //   case LEDGER_ENTRY_CREATED:
-	  //       LedgerEntry created;
-	  //   case LEDGER_ENTRY_UPDATED:
-	  //       LedgerEntry updated;
-	  //   case LEDGER_ENTRY_REMOVED:
-	  //       LedgerKey removed;
-	  //   case LEDGER_ENTRY_STATE:
-	  //       LedgerEntry state;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("LedgerEntryChange", {
-	    switchOn: xdr.lookup("LedgerEntryChangeType"),
-	    switchName: "type",
-	    switches: [["ledgerEntryCreated", "created"], ["ledgerEntryUpdated", "updated"], ["ledgerEntryRemoved", "removed"], ["ledgerEntryState", "state"]],
-	    arms: {
-	      created: xdr.lookup("LedgerEntry"),
-	      updated: xdr.lookup("LedgerEntry"),
-	      removed: xdr.lookup("LedgerKey"),
-	      state: xdr.lookup("LedgerEntry") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef LedgerEntryChange LedgerEntryChanges<>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("LedgerEntryChanges", xdr.varArray(xdr.lookup("LedgerEntryChange"), 2147483647));
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct OperationMeta
-	  //   {
-	  //       LedgerEntryChanges changes;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("OperationMeta", [["changes", xdr.lookup("LedgerEntryChanges")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union TransactionMeta switch (int v)
-	  //   {
-	  //   case 0:
-	  //       OperationMeta operations<>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("TransactionMeta", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, "operations"]],
-	    arms: {
-	      operations: xdr.varArray(xdr.lookup("OperationMeta"), 2147483647) } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum ErrorCode
-	  //   {
-	  //       ERR_MISC = 0, // Unspecific error
-	  //       ERR_DATA = 1, // Malformed data
-	  //       ERR_CONF = 2, // Misconfiguration error
-	  //       ERR_AUTH = 3, // Authentication failure
-	  //       ERR_LOAD = 4  // System overloaded
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ErrorCode", {
-	    errMisc: 0,
-	    errDatum: 1,
-	    errConf: 2,
-	    errAuth: 3,
-	    errLoad: 4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Error
-	  //   {
-	  //       ErrorCode code;
-	  //       string msg<100>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Error", [["code", xdr.lookup("ErrorCode")], ["msg", xdr.string(100)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct AuthCert
-	  //   {
-	  //       Curve25519Public pubkey;
-	  //       uint64 expiration;
-	  //       Signature sig;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("AuthCert", [["pubkey", xdr.lookup("Curve25519Public")], ["expiration", xdr.lookup("Uint64")], ["sig", xdr.lookup("Signature")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Hello
-	  //   {
-	  //       uint32 ledgerVersion;
-	  //       uint32 overlayVersion;
-	  //       uint32 overlayMinVersion;
-	  //       Hash networkID;
-	  //       string versionStr<100>;
-	  //       int listeningPort;
-	  //       NodeID peerID;
-	  //       AuthCert cert;
-	  //       uint256 nonce;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Hello", [["ledgerVersion", xdr.lookup("Uint32")], ["overlayVersion", xdr.lookup("Uint32")], ["overlayMinVersion", xdr.lookup("Uint32")], ["networkId", xdr.lookup("Hash")], ["versionStr", xdr.string(100)], ["listeningPort", xdr.int()], ["peerId", xdr.lookup("NodeId")], ["cert", xdr.lookup("AuthCert")], ["nonce", xdr.lookup("Uint256")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Auth
-	  //   {
-	  //       // Empty message, just to confirm
-	  //       // establishment of MAC keys.
-	  //       int unused;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Auth", [["unused", xdr.int()]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum IPAddrType
-	  //   {
-	  //       IPv4 = 0,
-	  //       IPv6 = 1
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("IpAddrType", {
-	    iPv4: 0,
-	    iPv6: 1 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (IPAddrType type)
-	  //       {
-	  //       case IPv4:
-	  //           opaque ipv4[4];
-	  //       case IPv6:
-	  //           opaque ipv6[16];
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("PeerAddressIp", {
-	    switchOn: xdr.lookup("IpAddrType"),
-	    switchName: "type",
-	    switches: [["iPv4", "ipv4"], ["iPv6", "ipv6"]],
-	    arms: {
-	      ipv4: xdr.opaque(4),
-	      ipv6: xdr.opaque(16) } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct PeerAddress
-	  //   {
-	  //       union switch (IPAddrType type)
-	  //       {
-	  //       case IPv4:
-	  //           opaque ipv4[4];
-	  //       case IPv6:
-	  //           opaque ipv6[16];
-	  //       }
-	  //       ip;
-	  //       uint32 port;
-	  //       uint32 numFailures;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("PeerAddress", [["ip", xdr.lookup("PeerAddressIp")], ["port", xdr.lookup("Uint32")], ["numFailures", xdr.lookup("Uint32")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum MessageType
-	  //   {
-	  //       ERROR_MSG = 0,
-	  //       AUTH = 2,
-	  //       DONT_HAVE = 3,
-	  //  
-	  //       GET_PEERS = 4, // gets a list of peers this guy knows about
-	  //       PEERS = 5,
-	  //  
-	  //       GET_TX_SET = 6, // gets a particular txset by hash
-	  //       TX_SET = 7,
-	  //  
-	  //       TRANSACTION = 8, // pass on a tx you have heard about
-	  //  
-	  //       // SCP
-	  //       GET_SCP_QUORUMSET = 9,
-	  //       SCP_QUORUMSET = 10,
-	  //       SCP_MESSAGE = 11,
-	  //       GET_SCP_STATE = 12,
-	  //  
-	  //       // new messages
-	  //       HELLO = 13
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("MessageType", {
-	    errorMsg: 0,
-	    auth: 2,
-	    dontHave: 3,
-	    getPeer: 4,
-	    peer: 5,
-	    getTxSet: 6,
-	    txSet: 7,
-	    transaction: 8,
-	    getScpQuorumset: 9,
-	    scpQuorumset: 10,
-	    scpMessage: 11,
-	    getScpState: 12,
-	    hello: 13 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct DontHave
-	  //   {
-	  //       MessageType type;
-	  //       uint256 reqHash;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("DontHave", [["type", xdr.lookup("MessageType")], ["reqHash", xdr.lookup("Uint256")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union StellarMessage switch (MessageType type)
-	  //   {
-	  //   case ERROR_MSG:
-	  //       Error error;
-	  //   case HELLO:
-	  //       Hello hello;
-	  //   case AUTH:
-	  //       Auth auth;
-	  //   case DONT_HAVE:
-	  //       DontHave dontHave;
-	  //   case GET_PEERS:
-	  //       void;
-	  //   case PEERS:
-	  //       PeerAddress peers<>;
-	  //  
-	  //   case GET_TX_SET:
-	  //       uint256 txSetHash;
-	  //   case TX_SET:
-	  //       TransactionSet txSet;
-	  //  
-	  //   case TRANSACTION:
-	  //       TransactionEnvelope transaction;
-	  //  
-	  //   // SCP
-	  //   case GET_SCP_QUORUMSET:
-	  //       uint256 qSetHash;
-	  //   case SCP_QUORUMSET:
-	  //       SCPQuorumSet qSet;
-	  //   case SCP_MESSAGE:
-	  //       SCPEnvelope envelope;
-	  //   case GET_SCP_STATE:
-	  //       uint32 getSCPLedgerSeq; // ledger seq requested ; if 0, requests the latest
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("StellarMessage", {
-	    switchOn: xdr.lookup("MessageType"),
-	    switchName: "type",
-	    switches: [["errorMsg", "error"], ["hello", "hello"], ["auth", "auth"], ["dontHave", "dontHave"], ["getPeer", xdr["void"]()], ["peer", "peers"], ["getTxSet", "txSetHash"], ["txSet", "txSet"], ["transaction", "transaction"], ["getScpQuorumset", "qSetHash"], ["scpQuorumset", "qSet"], ["scpMessage", "envelope"], ["getScpState", "getScpLedgerSeq"]],
-	    arms: {
-	      error: xdr.lookup("Error"),
-	      hello: xdr.lookup("Hello"),
-	      auth: xdr.lookup("Auth"),
-	      dontHave: xdr.lookup("DontHave"),
-	      peers: xdr.varArray(xdr.lookup("PeerAddress"), 2147483647),
-	      txSetHash: xdr.lookup("Uint256"),
-	      txSet: xdr.lookup("TransactionSet"),
-	      transaction: xdr.lookup("TransactionEnvelope"),
-	      qSetHash: xdr.lookup("Uint256"),
-	      qSet: xdr.lookup("ScpQuorumSet"),
-	      envelope: xdr.lookup("ScpEnvelope"),
-	      getScpLedgerSeq: xdr.lookup("Uint32") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //   {
-	  //      uint64 sequence;
-	  //      StellarMessage message;
-	  //      HmacSha256Mac mac;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("AuthenticatedMessageV0", [["sequence", xdr.lookup("Uint64")], ["message", xdr.lookup("StellarMessage")], ["mac", xdr.lookup("HmacSha256Mac")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union AuthenticatedMessage switch (uint32 v)
-	  //   {
-	  //   case 0:
-	  //       struct
-	  //   {
-	  //      uint64 sequence;
-	  //      StellarMessage message;
-	  //      HmacSha256Mac mac;
-	  //       } v0;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("AuthenticatedMessage", {
-	    switchOn: xdr.lookup("Uint32"),
-	    switchName: "v",
-	    switches: [[0, "v0"]],
-	    arms: {
-	      v0: xdr.lookup("AuthenticatedMessageV0") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct DecoratedSignature
-	  //   {
-	  //       SignatureHint hint;  // last 4 bytes of the public key, used as a hint
-	  //       Signature signature; // actual signature
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("DecoratedSignature", [["hint", xdr.lookup("SignatureHint")], ["signature", xdr.lookup("Signature")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum OperationType
-	  //   {
-	  //       CREATE_ACCOUNT = 0,
-	  //       PAYMENT = 1,
-	  //       PATH_PAYMENT = 2,
-	  //       MANAGE_OFFER = 3,
-	  //       CREATE_PASSIVE_OFFER = 4,
-	  //       SET_OPTIONS = 5,
-	  //       CHANGE_TRUST = 6,
-	  //       ALLOW_TRUST = 7,
-	  //       ACCOUNT_MERGE = 8,
-	  //       INFLATION = 9,
-	  //       MANAGE_DATA = 10
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("OperationType", {
-	    createAccount: 0,
-	    payment: 1,
-	    pathPayment: 2,
-	    manageOffer: 3,
-	    createPassiveOffer: 4,
-	    setOption: 5,
-	    changeTrust: 6,
-	    allowTrust: 7,
-	    accountMerge: 8,
-	    inflation: 9,
-	    manageDatum: 10 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct CreateAccountOp
-	  //   {
-	  //       AccountID destination; // account to create
-	  //       int64 startingBalance; // amount they end up with
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("CreateAccountOp", [["destination", xdr.lookup("AccountId")], ["startingBalance", xdr.lookup("Int64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct PaymentOp
-	  //   {
-	  //       AccountID destination; // recipient of the payment
-	  //       Asset asset;           // what they end up with
-	  //       int64 amount;          // amount they end up with
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("PaymentOp", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct PathPaymentOp
-	  //   {
-	  //       Asset sendAsset; // asset we pay with
-	  //       int64 sendMax;   // the maximum amount of sendAsset to
-	  //                        // send (excluding fees).
-	  //                        // The operation will fail if can't be met
-	  //  
-	  //       AccountID destination; // recipient of the payment
-	  //       Asset destAsset;       // what they end up with
-	  //       int64 destAmount;      // amount they end up with
-	  //  
-	  //       Asset path<5>; // additional hops it must go through to get there
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("PathPaymentOp", [["sendAsset", xdr.lookup("Asset")], ["sendMax", xdr.lookup("Int64")], ["destination", xdr.lookup("AccountId")], ["destAsset", xdr.lookup("Asset")], ["destAmount", xdr.lookup("Int64")], ["path", xdr.varArray(xdr.lookup("Asset"), 5)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct ManageOfferOp
-	  //   {
-	  //       Asset selling;
-	  //       Asset buying;
-	  //       int64 amount; // amount being sold. if set to 0, delete the offer
-	  //       Price price;  // price of thing being sold in terms of what you are buying
-	  //  
-	  //       // 0=create a new offer, otherwise edit an existing offer
-	  //       uint64 offerID;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ManageOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["offerId", xdr.lookup("Uint64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct CreatePassiveOfferOp
-	  //   {
-	  //       Asset selling; // A
-	  //       Asset buying;  // B
-	  //       int64 amount;  // amount taker gets. if set to 0, delete the offer
-	  //       Price price;   // cost of A in terms of B
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("CreatePassiveOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SetOptionsOp
-	  //   {
-	  //       AccountID* inflationDest; // sets the inflation destination
-	  //  
-	  //       uint32* clearFlags; // which flags to clear
-	  //       uint32* setFlags;   // which flags to set
-	  //  
-	  //       // account threshold manipulation
-	  //       uint32* masterWeight; // weight of the master account
-	  //       uint32* lowThreshold;
-	  //       uint32* medThreshold;
-	  //       uint32* highThreshold;
-	  //  
-	  //       string32* homeDomain; // sets the home domain
-	  //  
-	  //       // Add, update or remove a signer for the account
-	  //       // signer is deleted if the weight is 0
-	  //       Signer* signer;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("SetOptionsOp", [["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["clearFlags", xdr.option(xdr.lookup("Uint32"))], ["setFlags", xdr.option(xdr.lookup("Uint32"))], ["masterWeight", xdr.option(xdr.lookup("Uint32"))], ["lowThreshold", xdr.option(xdr.lookup("Uint32"))], ["medThreshold", xdr.option(xdr.lookup("Uint32"))], ["highThreshold", xdr.option(xdr.lookup("Uint32"))], ["homeDomain", xdr.option(xdr.lookup("String32"))], ["signer", xdr.option(xdr.lookup("Signer"))]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct ChangeTrustOp
-	  //   {
-	  //       Asset line;
-	  //  
-	  //       // if limit is set to 0, deletes the trust line
-	  //       int64 limit;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ChangeTrustOp", [["line", xdr.lookup("Asset")], ["limit", xdr.lookup("Int64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (AssetType type)
-	  //       {
-	  //       // ASSET_TYPE_NATIVE is not allowed
-	  //       case ASSET_TYPE_CREDIT_ALPHANUM4:
-	  //           opaque assetCode4[4];
-	  //  
-	  //       case ASSET_TYPE_CREDIT_ALPHANUM12:
-	  //           opaque assetCode12[12];
-	  //  
-	  //           // add other asset types here in the future
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("AllowTrustOpAsset", {
-	    switchOn: xdr.lookup("AssetType"),
-	    switchName: "type",
-	    switches: [["assetTypeCreditAlphanum4", "assetCode4"], ["assetTypeCreditAlphanum12", "assetCode12"]],
-	    arms: {
-	      assetCode4: xdr.opaque(4),
-	      assetCode12: xdr.opaque(12) } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct AllowTrustOp
-	  //   {
-	  //       AccountID trustor;
-	  //       union switch (AssetType type)
-	  //       {
-	  //       // ASSET_TYPE_NATIVE is not allowed
-	  //       case ASSET_TYPE_CREDIT_ALPHANUM4:
-	  //           opaque assetCode4[4];
-	  //  
-	  //       case ASSET_TYPE_CREDIT_ALPHANUM12:
-	  //           opaque assetCode12[12];
-	  //  
-	  //           // add other asset types here in the future
-	  //       }
-	  //       asset;
-	  //  
-	  //       bool authorize;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("AllowTrustOp", [["trustor", xdr.lookup("AccountId")], ["asset", xdr.lookup("AllowTrustOpAsset")], ["authorize", xdr.bool()]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct ManageDataOp
-	  //   {
-	  //       string64 dataName;
-	  //       DataValue* dataValue;   // set to null to clear
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ManageDataOp", [["dataName", xdr.lookup("String64")], ["dataValue", xdr.option(xdr.lookup("DataValue"))]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (OperationType type)
-	  //       {
-	  //       case CREATE_ACCOUNT:
-	  //           CreateAccountOp createAccountOp;
-	  //       case PAYMENT:
-	  //           PaymentOp paymentOp;
-	  //       case PATH_PAYMENT:
-	  //           PathPaymentOp pathPaymentOp;
-	  //       case MANAGE_OFFER:
-	  //           ManageOfferOp manageOfferOp;
-	  //       case CREATE_PASSIVE_OFFER:
-	  //           CreatePassiveOfferOp createPassiveOfferOp;
-	  //       case SET_OPTIONS:
-	  //           SetOptionsOp setOptionsOp;
-	  //       case CHANGE_TRUST:
-	  //           ChangeTrustOp changeTrustOp;
-	  //       case ALLOW_TRUST:
-	  //           AllowTrustOp allowTrustOp;
-	  //       case ACCOUNT_MERGE:
-	  //           AccountID destination;
-	  //       case INFLATION:
-	  //           void;
-	  //       case MANAGE_DATA:
-	  //           ManageDataOp manageDataOp;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("OperationBody", {
-	    switchOn: xdr.lookup("OperationType"),
-	    switchName: "type",
-	    switches: [["createAccount", "createAccountOp"], ["payment", "paymentOp"], ["pathPayment", "pathPaymentOp"], ["manageOffer", "manageOfferOp"], ["createPassiveOffer", "createPassiveOfferOp"], ["setOption", "setOptionsOp"], ["changeTrust", "changeTrustOp"], ["allowTrust", "allowTrustOp"], ["accountMerge", "destination"], ["inflation", xdr["void"]()], ["manageDatum", "manageDataOp"]],
-	    arms: {
-	      createAccountOp: xdr.lookup("CreateAccountOp"),
-	      paymentOp: xdr.lookup("PaymentOp"),
-	      pathPaymentOp: xdr.lookup("PathPaymentOp"),
-	      manageOfferOp: xdr.lookup("ManageOfferOp"),
-	      createPassiveOfferOp: xdr.lookup("CreatePassiveOfferOp"),
-	      setOptionsOp: xdr.lookup("SetOptionsOp"),
-	      changeTrustOp: xdr.lookup("ChangeTrustOp"),
-	      allowTrustOp: xdr.lookup("AllowTrustOp"),
-	      destination: xdr.lookup("AccountId"),
-	      manageDataOp: xdr.lookup("ManageDataOp") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Operation
-	  //   {
-	  //       // sourceAccount is the account used to run the operation
-	  //       // if not set, the runtime defaults to "sourceAccount" specified at
-	  //       // the transaction level
-	  //       AccountID* sourceAccount;
-	  //  
-	  //       union switch (OperationType type)
-	  //       {
-	  //       case CREATE_ACCOUNT:
-	  //           CreateAccountOp createAccountOp;
-	  //       case PAYMENT:
-	  //           PaymentOp paymentOp;
-	  //       case PATH_PAYMENT:
-	  //           PathPaymentOp pathPaymentOp;
-	  //       case MANAGE_OFFER:
-	  //           ManageOfferOp manageOfferOp;
-	  //       case CREATE_PASSIVE_OFFER:
-	  //           CreatePassiveOfferOp createPassiveOfferOp;
-	  //       case SET_OPTIONS:
-	  //           SetOptionsOp setOptionsOp;
-	  //       case CHANGE_TRUST:
-	  //           ChangeTrustOp changeTrustOp;
-	  //       case ALLOW_TRUST:
-	  //           AllowTrustOp allowTrustOp;
-	  //       case ACCOUNT_MERGE:
-	  //           AccountID destination;
-	  //       case INFLATION:
-	  //           void;
-	  //       case MANAGE_DATA:
-	  //           ManageDataOp manageDataOp;
-	  //       }
-	  //       body;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Operation", [["sourceAccount", xdr.option(xdr.lookup("AccountId"))], ["body", xdr.lookup("OperationBody")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum MemoType
-	  //   {
-	  //       MEMO_NONE = 0,
-	  //       MEMO_TEXT = 1,
-	  //       MEMO_ID = 2,
-	  //       MEMO_HASH = 3,
-	  //       MEMO_RETURN = 4
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("MemoType", {
-	    memoNone: 0,
-	    memoText: 1,
-	    memoId: 2,
-	    memoHash: 3,
-	    memoReturn: 4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union Memo switch (MemoType type)
-	  //   {
-	  //   case MEMO_NONE:
-	  //       void;
-	  //   case MEMO_TEXT:
-	  //       string text<28>;
-	  //   case MEMO_ID:
-	  //       uint64 id;
-	  //   case MEMO_HASH:
-	  //       Hash hash; // the hash of what to pull from the content server
-	  //   case MEMO_RETURN:
-	  //       Hash retHash; // the hash of the tx you are rejecting
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("Memo", {
-	    switchOn: xdr.lookup("MemoType"),
-	    switchName: "type",
-	    switches: [["memoNone", xdr["void"]()], ["memoText", "text"], ["memoId", "id"], ["memoHash", "hash"], ["memoReturn", "retHash"]],
-	    arms: {
-	      text: xdr.string(28),
-	      id: xdr.lookup("Uint64"),
-	      hash: xdr.lookup("Hash"),
-	      retHash: xdr.lookup("Hash") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TimeBounds
-	  //   {
-	  //       uint64 minTime;
-	  //       uint64 maxTime;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TimeBounds", [["minTime", xdr.lookup("Uint64")], ["maxTime", xdr.lookup("Uint64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("TransactionExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Transaction
-	  //   {
-	  //       // account used to run the transaction
-	  //       AccountID sourceAccount;
-	  //  
-	  //       // the fee the sourceAccount will pay
-	  //       uint32 fee;
-	  //  
-	  //       // sequence number to consume in the account
-	  //       SequenceNumber seqNum;
-	  //  
-	  //       // validity range (inclusive) for the last ledger close time
-	  //       TimeBounds* timeBounds;
-	  //  
-	  //       Memo memo;
-	  //  
-	  //       Operation operations<100>;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Transaction", [["sourceAccount", xdr.lookup("AccountId")], ["fee", xdr.lookup("Uint32")], ["seqNum", xdr.lookup("SequenceNumber")], ["timeBounds", xdr.option(xdr.lookup("TimeBounds"))], ["memo", xdr.lookup("Memo")], ["operations", xdr.varArray(xdr.lookup("Operation"), 100)], ["ext", xdr.lookup("TransactionExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionEnvelope
-	  //   {
-	  //       Transaction tx;
-	  //       DecoratedSignature signatures<20>;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionEnvelope", [["tx", xdr.lookup("Transaction")], ["signatures", xdr.varArray(xdr.lookup("DecoratedSignature"), 20)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct ClaimOfferAtom
-	  //   {
-	  //       // emitted to identify the offer
-	  //       AccountID sellerID; // Account that owns the offer
-	  //       uint64 offerID;
-	  //  
-	  //       // amount and asset taken from the owner
-	  //       Asset assetSold;
-	  //       int64 amountSold;
-	  //  
-	  //       // amount and asset sent to the owner
-	  //       Asset assetBought;
-	  //       int64 amountBought;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ClaimOfferAtom", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["assetSold", xdr.lookup("Asset")], ["amountSold", xdr.lookup("Int64")], ["assetBought", xdr.lookup("Asset")], ["amountBought", xdr.lookup("Int64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum CreateAccountResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       CREATE_ACCOUNT_SUCCESS = 0, // account was created
-	  //  
-	  //       // codes considered as "failure" for the operation
-	  //       CREATE_ACCOUNT_MALFORMED = -1,   // invalid destination
-	  //       CREATE_ACCOUNT_UNDERFUNDED = -2, // not enough funds in source account
-	  //       CREATE_ACCOUNT_LOW_RESERVE =
-	  //           -3, // would create an account below the min reserve
-	  //       CREATE_ACCOUNT_ALREADY_EXIST = -4 // account already exists
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("CreateAccountResultCode", {
-	    createAccountSuccess: 0,
-	    createAccountMalformed: -1,
-	    createAccountUnderfunded: -2,
-	    createAccountLowReserve: -3,
-	    createAccountAlreadyExist: -4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union CreateAccountResult switch (CreateAccountResultCode code)
-	  //   {
-	  //   case CREATE_ACCOUNT_SUCCESS:
-	  //       void;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("CreateAccountResult", {
-	    switchOn: xdr.lookup("CreateAccountResultCode"),
-	    switchName: "code",
-	    switches: [["createAccountSuccess", xdr["void"]()]],
-	    arms: {},
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum PaymentResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       PAYMENT_SUCCESS = 0, // payment successfuly completed
-	  //  
-	  //       // codes considered as "failure" for the operation
-	  //       PAYMENT_MALFORMED = -1,          // bad input
-	  //       PAYMENT_UNDERFUNDED = -2,        // not enough funds in source account
-	  //       PAYMENT_SRC_NO_TRUST = -3,       // no trust line on source account
-	  //       PAYMENT_SRC_NOT_AUTHORIZED = -4, // source not authorized to transfer
-	  //       PAYMENT_NO_DESTINATION = -5,     // destination account does not exist
-	  //       PAYMENT_NO_TRUST = -6,       // destination missing a trust line for asset
-	  //       PAYMENT_NOT_AUTHORIZED = -7, // destination not authorized to hold asset
-	  //       PAYMENT_LINE_FULL = -8,      // destination would go above their limit
-	  //       PAYMENT_NO_ISSUER = -9       // missing issuer on asset
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("PaymentResultCode", {
-	    paymentSuccess: 0,
-	    paymentMalformed: -1,
-	    paymentUnderfunded: -2,
-	    paymentSrcNoTrust: -3,
-	    paymentSrcNotAuthorized: -4,
-	    paymentNoDestination: -5,
-	    paymentNoTrust: -6,
-	    paymentNotAuthorized: -7,
-	    paymentLineFull: -8,
-	    paymentNoIssuer: -9 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union PaymentResult switch (PaymentResultCode code)
-	  //   {
-	  //   case PAYMENT_SUCCESS:
-	  //       void;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("PaymentResult", {
-	    switchOn: xdr.lookup("PaymentResultCode"),
-	    switchName: "code",
-	    switches: [["paymentSuccess", xdr["void"]()]],
-	    arms: {},
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum PathPaymentResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       PATH_PAYMENT_SUCCESS = 0, // success
-	  //  
-	  //       // codes considered as "failure" for the operation
-	  //       PATH_PAYMENT_MALFORMED = -1,          // bad input
-	  //       PATH_PAYMENT_UNDERFUNDED = -2,        // not enough funds in source account
-	  //       PATH_PAYMENT_SRC_NO_TRUST = -3,       // no trust line on source account
-	  //       PATH_PAYMENT_SRC_NOT_AUTHORIZED = -4, // source not authorized to transfer
-	  //       PATH_PAYMENT_NO_DESTINATION = -5,     // destination account does not exist
-	  //       PATH_PAYMENT_NO_TRUST = -6,           // dest missing a trust line for asset
-	  //       PATH_PAYMENT_NOT_AUTHORIZED = -7,     // dest not authorized to hold asset
-	  //       PATH_PAYMENT_LINE_FULL = -8,          // dest would go above their limit
-	  //       PATH_PAYMENT_NO_ISSUER = -9,          // missing issuer on one asset
-	  //       PATH_PAYMENT_TOO_FEW_OFFERS = -10,    // not enough offers to satisfy path
-	  //       PATH_PAYMENT_OFFER_CROSS_SELF = -11,  // would cross one of its own offers
-	  //       PATH_PAYMENT_OVER_SENDMAX = -12       // could not satisfy sendmax
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("PathPaymentResultCode", {
-	    pathPaymentSuccess: 0,
-	    pathPaymentMalformed: -1,
-	    pathPaymentUnderfunded: -2,
-	    pathPaymentSrcNoTrust: -3,
-	    pathPaymentSrcNotAuthorized: -4,
-	    pathPaymentNoDestination: -5,
-	    pathPaymentNoTrust: -6,
-	    pathPaymentNotAuthorized: -7,
-	    pathPaymentLineFull: -8,
-	    pathPaymentNoIssuer: -9,
-	    pathPaymentTooFewOffer: -10,
-	    pathPaymentOfferCrossSelf: -11,
-	    pathPaymentOverSendmax: -12 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct SimplePaymentResult
-	  //   {
-	  //       AccountID destination;
-	  //       Asset asset;
-	  //       int64 amount;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("SimplePaymentResult", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct
-	  //       {
-	  //           ClaimOfferAtom offers<>;
-	  //           SimplePaymentResult last;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.struct("PathPaymentResultSuccess", [["offers", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["last", xdr.lookup("SimplePaymentResult")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union PathPaymentResult switch (PathPaymentResultCode code)
-	  //   {
-	  //   case PATH_PAYMENT_SUCCESS:
-	  //       struct
-	  //       {
-	  //           ClaimOfferAtom offers<>;
-	  //           SimplePaymentResult last;
-	  //       } success;
-	  //   case PATH_PAYMENT_NO_ISSUER:
-	  //       Asset noIssuer; // the asset that caused the error
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("PathPaymentResult", {
-	    switchOn: xdr.lookup("PathPaymentResultCode"),
-	    switchName: "code",
-	    switches: [["pathPaymentSuccess", "success"], ["pathPaymentNoIssuer", "noIssuer"]],
-	    arms: {
-	      success: xdr.lookup("PathPaymentResultSuccess"),
-	      noIssuer: xdr.lookup("Asset") },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum ManageOfferResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       MANAGE_OFFER_SUCCESS = 0,
-	  //  
-	  //       // codes considered as "failure" for the operation
-	  //       MANAGE_OFFER_MALFORMED = -1,     // generated offer would be invalid
-	  //       MANAGE_OFFER_SELL_NO_TRUST = -2, // no trust line for what we're selling
-	  //       MANAGE_OFFER_BUY_NO_TRUST = -3,  // no trust line for what we're buying
-	  //       MANAGE_OFFER_SELL_NOT_AUTHORIZED = -4, // not authorized to sell
-	  //       MANAGE_OFFER_BUY_NOT_AUTHORIZED = -5,  // not authorized to buy
-	  //       MANAGE_OFFER_LINE_FULL = -6,      // can't receive more of what it's buying
-	  //       MANAGE_OFFER_UNDERFUNDED = -7,    // doesn't hold what it's trying to sell
-	  //       MANAGE_OFFER_CROSS_SELF = -8,     // would cross an offer from the same user
-	  //       MANAGE_OFFER_SELL_NO_ISSUER = -9, // no issuer for what we're selling
-	  //       MANAGE_OFFER_BUY_NO_ISSUER = -10, // no issuer for what we're buying
-	  //  
-	  //       // update errors
-	  //       MANAGE_OFFER_NOT_FOUND = -11, // offerID does not match an existing offer
-	  //  
-	  //       MANAGE_OFFER_LOW_RESERVE = -12 // not enough funds to create a new Offer
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ManageOfferResultCode", {
-	    manageOfferSuccess: 0,
-	    manageOfferMalformed: -1,
-	    manageOfferSellNoTrust: -2,
-	    manageOfferBuyNoTrust: -3,
-	    manageOfferSellNotAuthorized: -4,
-	    manageOfferBuyNotAuthorized: -5,
-	    manageOfferLineFull: -6,
-	    manageOfferUnderfunded: -7,
-	    manageOfferCrossSelf: -8,
-	    manageOfferSellNoIssuer: -9,
-	    manageOfferBuyNoIssuer: -10,
-	    manageOfferNotFound: -11,
-	    manageOfferLowReserve: -12 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum ManageOfferEffect
-	  //   {
-	  //       MANAGE_OFFER_CREATED = 0,
-	  //       MANAGE_OFFER_UPDATED = 1,
-	  //       MANAGE_OFFER_DELETED = 2
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ManageOfferEffect", {
-	    manageOfferCreated: 0,
-	    manageOfferUpdated: 1,
-	    manageOfferDeleted: 2 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (ManageOfferEffect effect)
-	  //       {
-	  //       case MANAGE_OFFER_CREATED:
-	  //       case MANAGE_OFFER_UPDATED:
-	  //           OfferEntry offer;
-	  //       default:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("ManageOfferSuccessResultOffer", {
-	    switchOn: xdr.lookup("ManageOfferEffect"),
-	    switchName: "effect",
-	    switches: [["manageOfferCreated", "offer"], ["manageOfferUpdated", "offer"]],
-	    arms: {
-	      offer: xdr.lookup("OfferEntry") },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct ManageOfferSuccessResult
-	  //   {
-	  //       // offers that got claimed while creating this offer
-	  //       ClaimOfferAtom offersClaimed<>;
-	  //  
-	  //       union switch (ManageOfferEffect effect)
-	  //       {
-	  //       case MANAGE_OFFER_CREATED:
-	  //       case MANAGE_OFFER_UPDATED:
-	  //           OfferEntry offer;
-	  //       default:
-	  //           void;
-	  //       }
-	  //       offer;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("ManageOfferSuccessResult", [["offersClaimed", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["offer", xdr.lookup("ManageOfferSuccessResultOffer")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union ManageOfferResult switch (ManageOfferResultCode code)
-	  //   {
-	  //   case MANAGE_OFFER_SUCCESS:
-	  //       ManageOfferSuccessResult success;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("ManageOfferResult", {
-	    switchOn: xdr.lookup("ManageOfferResultCode"),
-	    switchName: "code",
-	    switches: [["manageOfferSuccess", "success"]],
-	    arms: {
-	      success: xdr.lookup("ManageOfferSuccessResult") },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum SetOptionsResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       SET_OPTIONS_SUCCESS = 0,
-	  //       // codes considered as "failure" for the operation
-	  //       SET_OPTIONS_LOW_RESERVE = -1,      // not enough funds to add a signer
-	  //       SET_OPTIONS_TOO_MANY_SIGNERS = -2, // max number of signers already reached
-	  //       SET_OPTIONS_BAD_FLAGS = -3,        // invalid combination of clear/set flags
-	  //       SET_OPTIONS_INVALID_INFLATION = -4,      // inflation account does not exist
-	  //       SET_OPTIONS_CANT_CHANGE = -5,            // can no longer change this option
-	  //       SET_OPTIONS_UNKNOWN_FLAG = -6,           // can't set an unknown flag
-	  //       SET_OPTIONS_THRESHOLD_OUT_OF_RANGE = -7, // bad value for weight/threshold
-	  //       SET_OPTIONS_BAD_SIGNER = -8,             // signer cannot be masterkey
-	  //       SET_OPTIONS_INVALID_HOME_DOMAIN = -9     // malformed home domain
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("SetOptionsResultCode", {
-	    setOptionsSuccess: 0,
-	    setOptionsLowReserve: -1,
-	    setOptionsTooManySigner: -2,
-	    setOptionsBadFlag: -3,
-	    setOptionsInvalidInflation: -4,
-	    setOptionsCantChange: -5,
-	    setOptionsUnknownFlag: -6,
-	    setOptionsThresholdOutOfRange: -7,
-	    setOptionsBadSigner: -8,
-	    setOptionsInvalidHomeDomain: -9 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union SetOptionsResult switch (SetOptionsResultCode code)
-	  //   {
-	  //   case SET_OPTIONS_SUCCESS:
-	  //       void;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("SetOptionsResult", {
-	    switchOn: xdr.lookup("SetOptionsResultCode"),
-	    switchName: "code",
-	    switches: [["setOptionsSuccess", xdr["void"]()]],
-	    arms: {},
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum ChangeTrustResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       CHANGE_TRUST_SUCCESS = 0,
-	  //       // codes considered as "failure" for the operation
-	  //       CHANGE_TRUST_MALFORMED = -1,     // bad input
-	  //       CHANGE_TRUST_NO_ISSUER = -2,     // could not find issuer
-	  //       CHANGE_TRUST_INVALID_LIMIT = -3, // cannot drop limit below balance
-	  //                                        // cannot create with a limit of 0
-	  //       CHANGE_TRUST_LOW_RESERVE = -4 // not enough funds to create a new trust line
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ChangeTrustResultCode", {
-	    changeTrustSuccess: 0,
-	    changeTrustMalformed: -1,
-	    changeTrustNoIssuer: -2,
-	    changeTrustInvalidLimit: -3,
-	    changeTrustLowReserve: -4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union ChangeTrustResult switch (ChangeTrustResultCode code)
-	  //   {
-	  //   case CHANGE_TRUST_SUCCESS:
-	  //       void;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("ChangeTrustResult", {
-	    switchOn: xdr.lookup("ChangeTrustResultCode"),
-	    switchName: "code",
-	    switches: [["changeTrustSuccess", xdr["void"]()]],
-	    arms: {},
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum AllowTrustResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       ALLOW_TRUST_SUCCESS = 0,
-	  //       // codes considered as "failure" for the operation
-	  //       ALLOW_TRUST_MALFORMED = -1,     // asset is not ASSET_TYPE_ALPHANUM
-	  //       ALLOW_TRUST_NO_TRUST_LINE = -2, // trustor does not have a trustline
-	  //                                       // source account does not require trust
-	  //       ALLOW_TRUST_TRUST_NOT_REQUIRED = -3,
-	  //       ALLOW_TRUST_CANT_REVOKE = -4 // source account can't revoke trust
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("AllowTrustResultCode", {
-	    allowTrustSuccess: 0,
-	    allowTrustMalformed: -1,
-	    allowTrustNoTrustLine: -2,
-	    allowTrustTrustNotRequired: -3,
-	    allowTrustCantRevoke: -4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union AllowTrustResult switch (AllowTrustResultCode code)
-	  //   {
-	  //   case ALLOW_TRUST_SUCCESS:
-	  //       void;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("AllowTrustResult", {
-	    switchOn: xdr.lookup("AllowTrustResultCode"),
-	    switchName: "code",
-	    switches: [["allowTrustSuccess", xdr["void"]()]],
-	    arms: {},
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum AccountMergeResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       ACCOUNT_MERGE_SUCCESS = 0,
-	  //       // codes considered as "failure" for the operation
-	  //       ACCOUNT_MERGE_MALFORMED = -1,      // can't merge onto itself
-	  //       ACCOUNT_MERGE_NO_ACCOUNT = -2,     // destination does not exist
-	  //       ACCOUNT_MERGE_IMMUTABLE_SET = -3,  // source account has AUTH_IMMUTABLE set
-	  //       ACCOUNT_MERGE_HAS_SUB_ENTRIES = -4 // account has trust lines/offers
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("AccountMergeResultCode", {
-	    accountMergeSuccess: 0,
-	    accountMergeMalformed: -1,
-	    accountMergeNoAccount: -2,
-	    accountMergeImmutableSet: -3,
-	    accountMergeHasSubEntry: -4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union AccountMergeResult switch (AccountMergeResultCode code)
-	  //   {
-	  //   case ACCOUNT_MERGE_SUCCESS:
-	  //       int64 sourceAccountBalance; // how much got transfered from source account
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("AccountMergeResult", {
-	    switchOn: xdr.lookup("AccountMergeResultCode"),
-	    switchName: "code",
-	    switches: [["accountMergeSuccess", "sourceAccountBalance"]],
-	    arms: {
-	      sourceAccountBalance: xdr.lookup("Int64") },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum InflationResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       INFLATION_SUCCESS = 0,
-	  //       // codes considered as "failure" for the operation
-	  //       INFLATION_NOT_TIME = -1
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("InflationResultCode", {
-	    inflationSuccess: 0,
-	    inflationNotTime: -1 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct InflationPayout // or use PaymentResultAtom to limit types?
-	  //   {
-	  //       AccountID destination;
-	  //       int64 amount;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("InflationPayout", [["destination", xdr.lookup("AccountId")], ["amount", xdr.lookup("Int64")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   union InflationResult switch (InflationResultCode code)
-	  //   {
-	  //   case INFLATION_SUCCESS:
-	  //       InflationPayout payouts<>;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("InflationResult", {
-	    switchOn: xdr.lookup("InflationResultCode"),
-	    switchName: "code",
-	    switches: [["inflationSuccess", "payouts"]],
-	    arms: {
-	      payouts: xdr.varArray(xdr.lookup("InflationPayout"), 2147483647) },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum ManageDataResultCode
-	  //   {
-	  //       // codes considered as "success" for the operation
-	  //       MANAGE_DATA_SUCCESS = 0,
-	  //       // codes considered as "failure" for the operation
-	  //       MANAGE_DATA_NOT_SUPPORTED_YET = -1, // The network hasn't moved to this protocol change yet
-	  //       MANAGE_DATA_NAME_NOT_FOUND = -2,    // Trying to remove a Data Entry that isn't there
-	  //       MANAGE_DATA_LOW_RESERVE = -3,       // not enough funds to create a new Data Entry
-	  //       MANAGE_DATA_INVALID_NAME = -4       // Name not a valid string
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("ManageDataResultCode", {
-	    manageDataSuccess: 0,
-	    manageDataNotSupportedYet: -1,
-	    manageDataNameNotFound: -2,
-	    manageDataLowReserve: -3,
-	    manageDataInvalidName: -4 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union ManageDataResult switch (ManageDataResultCode code)
-	  //   {
-	  //   case MANAGE_DATA_SUCCESS:
-	  //       void;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("ManageDataResult", {
-	    switchOn: xdr.lookup("ManageDataResultCode"),
-	    switchName: "code",
-	    switches: [["manageDataSuccess", xdr["void"]()]],
-	    arms: {},
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum OperationResultCode
-	  //   {
-	  //       opINNER = 0, // inner object result is valid
-	  //  
-	  //       opBAD_AUTH = -1,  // too few valid signatures / wrong network
-	  //       opNO_ACCOUNT = -2 // source account was not found
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("OperationResultCode", {
-	    opInner: 0,
-	    opBadAuth: -1,
-	    opNoAccount: -2 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (OperationType type)
-	  //       {
-	  //       case CREATE_ACCOUNT:
-	  //           CreateAccountResult createAccountResult;
-	  //       case PAYMENT:
-	  //           PaymentResult paymentResult;
-	  //       case PATH_PAYMENT:
-	  //           PathPaymentResult pathPaymentResult;
-	  //       case MANAGE_OFFER:
-	  //           ManageOfferResult manageOfferResult;
-	  //       case CREATE_PASSIVE_OFFER:
-	  //           ManageOfferResult createPassiveOfferResult;
-	  //       case SET_OPTIONS:
-	  //           SetOptionsResult setOptionsResult;
-	  //       case CHANGE_TRUST:
-	  //           ChangeTrustResult changeTrustResult;
-	  //       case ALLOW_TRUST:
-	  //           AllowTrustResult allowTrustResult;
-	  //       case ACCOUNT_MERGE:
-	  //           AccountMergeResult accountMergeResult;
-	  //       case INFLATION:
-	  //           InflationResult inflationResult;
-	  //       case MANAGE_DATA:
-	  //           ManageDataResult manageDataResult;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("OperationResultTr", {
-	    switchOn: xdr.lookup("OperationType"),
-	    switchName: "type",
-	    switches: [["createAccount", "createAccountResult"], ["payment", "paymentResult"], ["pathPayment", "pathPaymentResult"], ["manageOffer", "manageOfferResult"], ["createPassiveOffer", "createPassiveOfferResult"], ["setOption", "setOptionsResult"], ["changeTrust", "changeTrustResult"], ["allowTrust", "allowTrustResult"], ["accountMerge", "accountMergeResult"], ["inflation", "inflationResult"], ["manageDatum", "manageDataResult"]],
-	    arms: {
-	      createAccountResult: xdr.lookup("CreateAccountResult"),
-	      paymentResult: xdr.lookup("PaymentResult"),
-	      pathPaymentResult: xdr.lookup("PathPaymentResult"),
-	      manageOfferResult: xdr.lookup("ManageOfferResult"),
-	      createPassiveOfferResult: xdr.lookup("ManageOfferResult"),
-	      setOptionsResult: xdr.lookup("SetOptionsResult"),
-	      changeTrustResult: xdr.lookup("ChangeTrustResult"),
-	      allowTrustResult: xdr.lookup("AllowTrustResult"),
-	      accountMergeResult: xdr.lookup("AccountMergeResult"),
-	      inflationResult: xdr.lookup("InflationResult"),
-	      manageDataResult: xdr.lookup("ManageDataResult") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union OperationResult switch (OperationResultCode code)
-	  //   {
-	  //   case opINNER:
-	  //       union switch (OperationType type)
-	  //       {
-	  //       case CREATE_ACCOUNT:
-	  //           CreateAccountResult createAccountResult;
-	  //       case PAYMENT:
-	  //           PaymentResult paymentResult;
-	  //       case PATH_PAYMENT:
-	  //           PathPaymentResult pathPaymentResult;
-	  //       case MANAGE_OFFER:
-	  //           ManageOfferResult manageOfferResult;
-	  //       case CREATE_PASSIVE_OFFER:
-	  //           ManageOfferResult createPassiveOfferResult;
-	  //       case SET_OPTIONS:
-	  //           SetOptionsResult setOptionsResult;
-	  //       case CHANGE_TRUST:
-	  //           ChangeTrustResult changeTrustResult;
-	  //       case ALLOW_TRUST:
-	  //           AllowTrustResult allowTrustResult;
-	  //       case ACCOUNT_MERGE:
-	  //           AccountMergeResult accountMergeResult;
-	  //       case INFLATION:
-	  //           InflationResult inflationResult;
-	  //       case MANAGE_DATA:
-	  //           ManageDataResult manageDataResult;
-	  //       }
-	  //       tr;
-	  //   default:
-	  //       void;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("OperationResult", {
-	    switchOn: xdr.lookup("OperationResultCode"),
-	    switchName: "code",
-	    switches: [["opInner", "tr"]],
-	    arms: {
-	      tr: xdr.lookup("OperationResultTr") },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum TransactionResultCode
-	  //   {
-	  //       txSUCCESS = 0, // all operations succeeded
-	  //  
-	  //       txFAILED = -1, // one of the operations failed (none were applied)
-	  //  
-	  //       txTOO_EARLY = -2,         // ledger closeTime before minTime
-	  //       txTOO_LATE = -3,          // ledger closeTime after maxTime
-	  //       txMISSING_OPERATION = -4, // no operation was specified
-	  //       txBAD_SEQ = -5,           // sequence number does not match source account
-	  //  
-	  //       txBAD_AUTH = -6,             // too few valid signatures / wrong network
-	  //       txINSUFFICIENT_BALANCE = -7, // fee would bring account below reserve
-	  //       txNO_ACCOUNT = -8,           // source account not found
-	  //       txINSUFFICIENT_FEE = -9,     // fee is too small
-	  //       txBAD_AUTH_EXTRA = -10,      // unused signatures attached to transaction
-	  //       txINTERNAL_ERROR = -11       // an unknown error occured
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("TransactionResultCode", {
-	    txSuccess: 0,
-	    txFailed: -1,
-	    txTooEarly: -2,
-	    txTooLate: -3,
-	    txMissingOperation: -4,
-	    txBadSeq: -5,
-	    txBadAuth: -6,
-	    txInsufficientBalance: -7,
-	    txNoAccount: -8,
-	    txInsufficientFee: -9,
-	    txBadAuthExtra: -10,
-	    txInternalError: -11 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (TransactionResultCode code)
-	  //       {
-	  //       case txSUCCESS:
-	  //       case txFAILED:
-	  //           OperationResult results<>;
-	  //       default:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("TransactionResultResult", {
-	    switchOn: xdr.lookup("TransactionResultCode"),
-	    switchName: "code",
-	    switches: [["txSuccess", "results"], ["txFailed", "results"]],
-	    arms: {
-	      results: xdr.varArray(xdr.lookup("OperationResult"), 2147483647) },
-	    defaultArm: xdr["void"]() });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //
-	  // ===========================================================================
-	  xdr.union("TransactionResultExt", {
-	    switchOn: xdr.int(),
-	    switchName: "v",
-	    switches: [[0, xdr["void"]()]],
-	    arms: {} });
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct TransactionResult
-	  //   {
-	  //       int64 feeCharged; // actual fee charged for the transaction
-	  //  
-	  //       union switch (TransactionResultCode code)
-	  //       {
-	  //       case txSUCCESS:
-	  //       case txFAILED:
-	  //           OperationResult results<>;
-	  //       default:
-	  //           void;
-	  //       }
-	  //       result;
-	  //  
-	  //       // reserved for future use
-	  //       union switch (int v)
-	  //       {
-	  //       case 0:
-	  //           void;
-	  //       }
-	  //       ext;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("TransactionResult", [["feeCharged", xdr.lookup("Int64")], ["result", xdr.lookup("TransactionResultResult")], ["ext", xdr.lookup("TransactionResultExt")]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque Hash[32];
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Hash", xdr.opaque(32));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque uint256[32];
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Uint256", xdr.opaque(32));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef unsigned int uint32;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Uint32", xdr.uint());
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef int int32;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Int32", xdr.int());
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef unsigned hyper uint64;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Uint64", xdr.uhyper());
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef hyper int64;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Int64", xdr.hyper());
-
-	  // === xdr source ============================================================
-	  //
-	  //   enum CryptoKeyType
-	  //   {
-	  //       KEY_TYPE_ED25519 = 0
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr["enum"]("CryptoKeyType", {
-	    keyTypeEd25519: 0 });
-
-	  // === xdr source ============================================================
-	  //
-	  //   union PublicKey switch (CryptoKeyType type)
-	  //   {
-	  //   case KEY_TYPE_ED25519:
-	  //       uint256 ed25519;
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.union("PublicKey", {
-	    switchOn: xdr.lookup("CryptoKeyType"),
-	    switchName: "type",
-	    switches: [["keyTypeEd25519", "ed25519"]],
-	    arms: {
-	      ed25519: xdr.lookup("Uint256") } });
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque Signature<64>;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("Signature", xdr.varOpaque(64));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef opaque SignatureHint[4];
-	  //
-	  // ===========================================================================
-	  xdr.typedef("SignatureHint", xdr.opaque(4));
-
-	  // === xdr source ============================================================
-	  //
-	  //   typedef PublicKey NodeID;
-	  //
-	  // ===========================================================================
-	  xdr.typedef("NodeId", xdr.lookup("PublicKey"));
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Curve25519Secret
-	  //   {
-	  //           opaque key[32];
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Curve25519Secret", [["key", xdr.opaque(32)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct Curve25519Public
-	  //   {
-	  //           opaque key[32];
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("Curve25519Public", [["key", xdr.opaque(32)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct HmacSha256Key
-	  //   {
-	  //           opaque key[32];
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("HmacSha256Key", [["key", xdr.opaque(32)]]);
-
-	  // === xdr source ============================================================
-	  //
-	  //   struct HmacSha256Mac
-	  //   {
-	  //           opaque mac[32];
-	  //   };
-	  //
-	  // ===========================================================================
-	  xdr.struct("HmacSha256Mac", [["mac", xdr.opaque(32)]]);
-	});
-	module.exports = types;
+	"use strict";var _interopRequireWildcard=function(obj){return obj && obj.__esModule?obj:{"default":obj};};var XDR=_interopRequireWildcard(__webpack_require__(207));var types=XDR.config(function(xdr){xdr.typedef("Value", xdr.varOpaque());xdr.struct("ScpBallot", [["counter", xdr.lookup("Uint32")], ["value", xdr.lookup("Value")]]);xdr["enum"]("ScpStatementType", {scpStPrepare:0, scpStConfirm:1, scpStExternalize:2, scpStNominate:3});xdr.struct("ScpNomination", [["quorumSetHash", xdr.lookup("Hash")], ["votes", xdr.varArray(xdr.lookup("Value"), 2147483647)], ["accepted", xdr.varArray(xdr.lookup("Value"), 2147483647)]]);xdr.struct("ScpStatementPrepare", [["quorumSetHash", xdr.lookup("Hash")], ["ballot", xdr.lookup("ScpBallot")], ["prepared", xdr.option(xdr.lookup("ScpBallot"))], ["preparedPrime", xdr.option(xdr.lookup("ScpBallot"))], ["nC", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")]]);xdr.struct("ScpStatementConfirm", [["ballot", xdr.lookup("ScpBallot")], ["nPrepared", xdr.lookup("Uint32")], ["nCommit", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")], ["quorumSetHash", xdr.lookup("Hash")]]);xdr.struct("ScpStatementExternalize", [["commit", xdr.lookup("ScpBallot")], ["nH", xdr.lookup("Uint32")], ["commitQuorumSetHash", xdr.lookup("Hash")]]);xdr.union("ScpStatementPledges", {switchOn:xdr.lookup("ScpStatementType"), switchName:"type", switches:[["scpStPrepare", "prepare"], ["scpStConfirm", "confirm"], ["scpStExternalize", "externalize"], ["scpStNominate", "nominate"]], arms:{prepare:xdr.lookup("ScpStatementPrepare"), confirm:xdr.lookup("ScpStatementConfirm"), externalize:xdr.lookup("ScpStatementExternalize"), nominate:xdr.lookup("ScpNomination")}});xdr.struct("ScpStatement", [["nodeId", xdr.lookup("NodeId")], ["slotIndex", xdr.lookup("Uint64")], ["pledges", xdr.lookup("ScpStatementPledges")]]);xdr.struct("ScpEnvelope", [["statement", xdr.lookup("ScpStatement")], ["signature", xdr.lookup("Signature")]]);xdr.struct("ScpQuorumSet", [["threshold", xdr.lookup("Uint32")], ["validators", xdr.varArray(xdr.lookup("PublicKey"), 2147483647)], ["innerSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)]]);xdr.typedef("AccountId", xdr.lookup("PublicKey"));xdr.typedef("Thresholds", xdr.opaque(4));xdr.typedef("String32", xdr.string(32));xdr.typedef("String64", xdr.string(64));xdr.typedef("SequenceNumber", xdr.lookup("Uint64"));xdr.typedef("DataValue", xdr.varOpaque(64));xdr["enum"]("AssetType", {assetTypeNative:0, assetTypeCreditAlphanum4:1, assetTypeCreditAlphanum12:2});xdr.struct("AssetAlphaNum4", [["assetCode", xdr.opaque(4)], ["issuer", xdr.lookup("AccountId")]]);xdr.struct("AssetAlphaNum12", [["assetCode", xdr.opaque(12)], ["issuer", xdr.lookup("AccountId")]]);xdr.union("Asset", {switchOn:xdr.lookup("AssetType"), switchName:"type", switches:[["assetTypeNative", xdr["void"]()], ["assetTypeCreditAlphanum4", "alphaNum4"], ["assetTypeCreditAlphanum12", "alphaNum12"]], arms:{alphaNum4:xdr.lookup("AssetAlphaNum4"), alphaNum12:xdr.lookup("AssetAlphaNum12")}});xdr.struct("Price", [["n", xdr.lookup("Int32")], ["d", xdr.lookup("Int32")]]);xdr["enum"]("ThresholdIndices", {thresholdMasterWeight:0, thresholdLow:1, thresholdMed:2, thresholdHigh:3});xdr["enum"]("LedgerEntryType", {account:0, trustline:1, offer:2, datum:3});xdr.struct("Signer", [["key", xdr.lookup("SignerKey")], ["weight", xdr.lookup("Uint32")]]);xdr["enum"]("AccountFlags", {authRequiredFlag:1, authRevocableFlag:2, authImmutableFlag:4});xdr.union("AccountEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("AccountEntry", [["accountId", xdr.lookup("AccountId")], ["balance", xdr.lookup("Int64")], ["seqNum", xdr.lookup("SequenceNumber")], ["numSubEntries", xdr.lookup("Uint32")], ["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["flags", xdr.lookup("Uint32")], ["homeDomain", xdr.lookup("String32")], ["thresholds", xdr.lookup("Thresholds")], ["signers", xdr.varArray(xdr.lookup("Signer"), 20)], ["ext", xdr.lookup("AccountEntryExt")]]);xdr["enum"]("TrustLineFlags", {authorizedFlag:1});xdr.union("TrustLineEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TrustLineEntry", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["balance", xdr.lookup("Int64")], ["limit", xdr.lookup("Int64")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("TrustLineEntryExt")]]);xdr["enum"]("OfferEntryFlags", {passiveFlag:1});xdr.union("OfferEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("OfferEntry", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("OfferEntryExt")]]);xdr.union("DataEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("DataEntry", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")], ["dataValue", xdr.lookup("DataValue")], ["ext", xdr.lookup("DataEntryExt")]]);xdr.union("LedgerEntryData", {switchOn:xdr.lookup("LedgerEntryType"), switchName:"type", switches:[["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]], arms:{account:xdr.lookup("AccountEntry"), trustLine:xdr.lookup("TrustLineEntry"), offer:xdr.lookup("OfferEntry"), data:xdr.lookup("DataEntry")}});xdr.union("LedgerEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerEntry", [["lastModifiedLedgerSeq", xdr.lookup("Uint32")], ["data", xdr.lookup("LedgerEntryData")], ["ext", xdr.lookup("LedgerEntryExt")]]);xdr["enum"]("EnvelopeType", {envelopeTypeScp:1, envelopeTypeTx:2, envelopeTypeAuth:3});xdr.typedef("UpgradeType", xdr.varOpaque(128));xdr.union("StellarValueExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("StellarValue", [["txSetHash", xdr.lookup("Hash")], ["closeTime", xdr.lookup("Uint64")], ["upgrades", xdr.varArray(xdr.lookup("UpgradeType"), 6)], ["ext", xdr.lookup("StellarValueExt")]]);xdr.union("LedgerHeaderExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerHeader", [["ledgerVersion", xdr.lookup("Uint32")], ["previousLedgerHash", xdr.lookup("Hash")], ["scpValue", xdr.lookup("StellarValue")], ["txSetResultHash", xdr.lookup("Hash")], ["bucketListHash", xdr.lookup("Hash")], ["ledgerSeq", xdr.lookup("Uint32")], ["totalCoins", xdr.lookup("Int64")], ["feePool", xdr.lookup("Int64")], ["inflationSeq", xdr.lookup("Uint32")], ["idPool", xdr.lookup("Uint64")], ["baseFee", xdr.lookup("Uint32")], ["baseReserve", xdr.lookup("Uint32")], ["maxTxSetSize", xdr.lookup("Uint32")], ["skipList", xdr.array(xdr.lookup("Hash"), 4)], ["ext", xdr.lookup("LedgerHeaderExt")]]);xdr["enum"]("LedgerUpgradeType", {ledgerUpgradeVersion:1, ledgerUpgradeBaseFee:2, ledgerUpgradeMaxTxSetSize:3});xdr.union("LedgerUpgrade", {switchOn:xdr.lookup("LedgerUpgradeType"), switchName:"type", switches:[["ledgerUpgradeVersion", "newLedgerVersion"], ["ledgerUpgradeBaseFee", "newBaseFee"], ["ledgerUpgradeMaxTxSetSize", "newMaxTxSetSize"]], arms:{newLedgerVersion:xdr.lookup("Uint32"), newBaseFee:xdr.lookup("Uint32"), newMaxTxSetSize:xdr.lookup("Uint32")}});xdr.struct("LedgerKeyAccount", [["accountId", xdr.lookup("AccountId")]]);xdr.struct("LedgerKeyTrustLine", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")]]);xdr.struct("LedgerKeyOffer", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")]]);xdr.struct("LedgerKeyData", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")]]);xdr.union("LedgerKey", {switchOn:xdr.lookup("LedgerEntryType"), switchName:"type", switches:[["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]], arms:{account:xdr.lookup("LedgerKeyAccount"), trustLine:xdr.lookup("LedgerKeyTrustLine"), offer:xdr.lookup("LedgerKeyOffer"), data:xdr.lookup("LedgerKeyData")}});xdr["enum"]("BucketEntryType", {liveentry:0, deadentry:1});xdr.union("BucketEntry", {switchOn:xdr.lookup("BucketEntryType"), switchName:"type", switches:[["liveentry", "liveEntry"], ["deadentry", "deadEntry"]], arms:{liveEntry:xdr.lookup("LedgerEntry"), deadEntry:xdr.lookup("LedgerKey")}});xdr.struct("TransactionSet", [["previousLedgerHash", xdr.lookup("Hash")], ["txes", xdr.varArray(xdr.lookup("TransactionEnvelope"), 2147483647)]]);xdr.struct("TransactionResultPair", [["transactionHash", xdr.lookup("Hash")], ["result", xdr.lookup("TransactionResult")]]);xdr.struct("TransactionResultSet", [["results", xdr.varArray(xdr.lookup("TransactionResultPair"), 2147483647)]]);xdr.union("TransactionHistoryEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionHistoryEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txSet", xdr.lookup("TransactionSet")], ["ext", xdr.lookup("TransactionHistoryEntryExt")]]);xdr.union("TransactionHistoryResultEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionHistoryResultEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txResultSet", xdr.lookup("TransactionResultSet")], ["ext", xdr.lookup("TransactionHistoryResultEntryExt")]]);xdr.union("LedgerHeaderHistoryEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerHeaderHistoryEntry", [["hash", xdr.lookup("Hash")], ["header", xdr.lookup("LedgerHeader")], ["ext", xdr.lookup("LedgerHeaderHistoryEntryExt")]]);xdr.struct("LedgerScpMessages", [["ledgerSeq", xdr.lookup("Uint32")], ["messages", xdr.varArray(xdr.lookup("ScpEnvelope"), 2147483647)]]);xdr.struct("ScpHistoryEntryV0", [["quorumSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)], ["ledgerMessages", xdr.lookup("LedgerScpMessages")]]);xdr.union("ScpHistoryEntry", {switchOn:xdr.int(), switchName:"v", switches:[[0, "v0"]], arms:{v0:xdr.lookup("ScpHistoryEntryV0")}});xdr["enum"]("LedgerEntryChangeType", {ledgerEntryCreated:0, ledgerEntryUpdated:1, ledgerEntryRemoved:2, ledgerEntryState:3});xdr.union("LedgerEntryChange", {switchOn:xdr.lookup("LedgerEntryChangeType"), switchName:"type", switches:[["ledgerEntryCreated", "created"], ["ledgerEntryUpdated", "updated"], ["ledgerEntryRemoved", "removed"], ["ledgerEntryState", "state"]], arms:{created:xdr.lookup("LedgerEntry"), updated:xdr.lookup("LedgerEntry"), removed:xdr.lookup("LedgerKey"), state:xdr.lookup("LedgerEntry")}});xdr.typedef("LedgerEntryChanges", xdr.varArray(xdr.lookup("LedgerEntryChange"), 2147483647));xdr.struct("OperationMeta", [["changes", xdr.lookup("LedgerEntryChanges")]]);xdr.union("TransactionMeta", {switchOn:xdr.int(), switchName:"v", switches:[[0, "operations"]], arms:{operations:xdr.varArray(xdr.lookup("OperationMeta"), 2147483647)}});xdr["enum"]("ErrorCode", {errMisc:0, errDatum:1, errConf:2, errAuth:3, errLoad:4});xdr.struct("Error", [["code", xdr.lookup("ErrorCode")], ["msg", xdr.string(100)]]);xdr.struct("AuthCert", [["pubkey", xdr.lookup("Curve25519Public")], ["expiration", xdr.lookup("Uint64")], ["sig", xdr.lookup("Signature")]]);xdr.struct("Hello", [["ledgerVersion", xdr.lookup("Uint32")], ["overlayVersion", xdr.lookup("Uint32")], ["overlayMinVersion", xdr.lookup("Uint32")], ["networkId", xdr.lookup("Hash")], ["versionStr", xdr.string(100)], ["listeningPort", xdr.int()], ["peerId", xdr.lookup("NodeId")], ["cert", xdr.lookup("AuthCert")], ["nonce", xdr.lookup("Uint256")]]);xdr.struct("Auth", [["unused", xdr.int()]]);xdr["enum"]("IpAddrType", {iPv4:0, iPv6:1});xdr.union("PeerAddressIp", {switchOn:xdr.lookup("IpAddrType"), switchName:"type", switches:[["iPv4", "ipv4"], ["iPv6", "ipv6"]], arms:{ipv4:xdr.opaque(4), ipv6:xdr.opaque(16)}});xdr.struct("PeerAddress", [["ip", xdr.lookup("PeerAddressIp")], ["port", xdr.lookup("Uint32")], ["numFailures", xdr.lookup("Uint32")]]);xdr["enum"]("MessageType", {errorMsg:0, auth:2, dontHave:3, getPeer:4, peer:5, getTxSet:6, txSet:7, transaction:8, getScpQuorumset:9, scpQuorumset:10, scpMessage:11, getScpState:12, hello:13});xdr.struct("DontHave", [["type", xdr.lookup("MessageType")], ["reqHash", xdr.lookup("Uint256")]]);xdr.union("StellarMessage", {switchOn:xdr.lookup("MessageType"), switchName:"type", switches:[["errorMsg", "error"], ["hello", "hello"], ["auth", "auth"], ["dontHave", "dontHave"], ["getPeer", xdr["void"]()], ["peer", "peers"], ["getTxSet", "txSetHash"], ["txSet", "txSet"], ["transaction", "transaction"], ["getScpQuorumset", "qSetHash"], ["scpQuorumset", "qSet"], ["scpMessage", "envelope"], ["getScpState", "getScpLedgerSeq"]], arms:{error:xdr.lookup("Error"), hello:xdr.lookup("Hello"), auth:xdr.lookup("Auth"), dontHave:xdr.lookup("DontHave"), peers:xdr.varArray(xdr.lookup("PeerAddress"), 2147483647), txSetHash:xdr.lookup("Uint256"), txSet:xdr.lookup("TransactionSet"), transaction:xdr.lookup("TransactionEnvelope"), qSetHash:xdr.lookup("Uint256"), qSet:xdr.lookup("ScpQuorumSet"), envelope:xdr.lookup("ScpEnvelope"), getScpLedgerSeq:xdr.lookup("Uint32")}});xdr.struct("AuthenticatedMessageV0", [["sequence", xdr.lookup("Uint64")], ["message", xdr.lookup("StellarMessage")], ["mac", xdr.lookup("HmacSha256Mac")]]);xdr.union("AuthenticatedMessage", {switchOn:xdr.lookup("Uint32"), switchName:"v", switches:[[0, "v0"]], arms:{v0:xdr.lookup("AuthenticatedMessageV0")}});xdr.struct("DecoratedSignature", [["hint", xdr.lookup("SignatureHint")], ["signature", xdr.lookup("Signature")]]);xdr["enum"]("OperationType", {createAccount:0, payment:1, pathPayment:2, manageOffer:3, createPassiveOffer:4, setOption:5, changeTrust:6, allowTrust:7, accountMerge:8, inflation:9, manageDatum:10});xdr.struct("CreateAccountOp", [["destination", xdr.lookup("AccountId")], ["startingBalance", xdr.lookup("Int64")]]);xdr.struct("PaymentOp", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);xdr.struct("PathPaymentOp", [["sendAsset", xdr.lookup("Asset")], ["sendMax", xdr.lookup("Int64")], ["destination", xdr.lookup("AccountId")], ["destAsset", xdr.lookup("Asset")], ["destAmount", xdr.lookup("Int64")], ["path", xdr.varArray(xdr.lookup("Asset"), 5)]]);xdr.struct("ManageOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["offerId", xdr.lookup("Uint64")]]);xdr.struct("CreatePassiveOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")]]);xdr.struct("SetOptionsOp", [["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["clearFlags", xdr.option(xdr.lookup("Uint32"))], ["setFlags", xdr.option(xdr.lookup("Uint32"))], ["masterWeight", xdr.option(xdr.lookup("Uint32"))], ["lowThreshold", xdr.option(xdr.lookup("Uint32"))], ["medThreshold", xdr.option(xdr.lookup("Uint32"))], ["highThreshold", xdr.option(xdr.lookup("Uint32"))], ["homeDomain", xdr.option(xdr.lookup("String32"))], ["signer", xdr.option(xdr.lookup("Signer"))]]);xdr.struct("ChangeTrustOp", [["line", xdr.lookup("Asset")], ["limit", xdr.lookup("Int64")]]);xdr.union("AllowTrustOpAsset", {switchOn:xdr.lookup("AssetType"), switchName:"type", switches:[["assetTypeCreditAlphanum4", "assetCode4"], ["assetTypeCreditAlphanum12", "assetCode12"]], arms:{assetCode4:xdr.opaque(4), assetCode12:xdr.opaque(12)}});xdr.struct("AllowTrustOp", [["trustor", xdr.lookup("AccountId")], ["asset", xdr.lookup("AllowTrustOpAsset")], ["authorize", xdr.bool()]]);xdr.struct("ManageDataOp", [["dataName", xdr.lookup("String64")], ["dataValue", xdr.option(xdr.lookup("DataValue"))]]);xdr.union("OperationBody", {switchOn:xdr.lookup("OperationType"), switchName:"type", switches:[["createAccount", "createAccountOp"], ["payment", "paymentOp"], ["pathPayment", "pathPaymentOp"], ["manageOffer", "manageOfferOp"], ["createPassiveOffer", "createPassiveOfferOp"], ["setOption", "setOptionsOp"], ["changeTrust", "changeTrustOp"], ["allowTrust", "allowTrustOp"], ["accountMerge", "destination"], ["inflation", xdr["void"]()], ["manageDatum", "manageDataOp"]], arms:{createAccountOp:xdr.lookup("CreateAccountOp"), paymentOp:xdr.lookup("PaymentOp"), pathPaymentOp:xdr.lookup("PathPaymentOp"), manageOfferOp:xdr.lookup("ManageOfferOp"), createPassiveOfferOp:xdr.lookup("CreatePassiveOfferOp"), setOptionsOp:xdr.lookup("SetOptionsOp"), changeTrustOp:xdr.lookup("ChangeTrustOp"), allowTrustOp:xdr.lookup("AllowTrustOp"), destination:xdr.lookup("AccountId"), manageDataOp:xdr.lookup("ManageDataOp")}});xdr.struct("Operation", [["sourceAccount", xdr.option(xdr.lookup("AccountId"))], ["body", xdr.lookup("OperationBody")]]);xdr["enum"]("MemoType", {memoNone:0, memoText:1, memoId:2, memoHash:3, memoReturn:4});xdr.union("Memo", {switchOn:xdr.lookup("MemoType"), switchName:"type", switches:[["memoNone", xdr["void"]()], ["memoText", "text"], ["memoId", "id"], ["memoHash", "hash"], ["memoReturn", "retHash"]], arms:{text:xdr.string(28), id:xdr.lookup("Uint64"), hash:xdr.lookup("Hash"), retHash:xdr.lookup("Hash")}});xdr.struct("TimeBounds", [["minTime", xdr.lookup("Uint64")], ["maxTime", xdr.lookup("Uint64")]]);xdr.union("TransactionExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("Transaction", [["sourceAccount", xdr.lookup("AccountId")], ["fee", xdr.lookup("Uint32")], ["seqNum", xdr.lookup("SequenceNumber")], ["timeBounds", xdr.option(xdr.lookup("TimeBounds"))], ["memo", xdr.lookup("Memo")], ["operations", xdr.varArray(xdr.lookup("Operation"), 100)], ["ext", xdr.lookup("TransactionExt")]]);xdr.union("TransactionSignaturePayloadTaggedTransaction", {switchOn:xdr.lookup("EnvelopeType"), switchName:"type", switches:[["envelopeTypeTx", "tx"]], arms:{tx:xdr.lookup("Transaction")}});xdr.struct("TransactionSignaturePayload", [["networkId", xdr.lookup("Hash")], ["taggedTransaction", xdr.lookup("TransactionSignaturePayloadTaggedTransaction")]]);xdr.struct("TransactionEnvelope", [["tx", xdr.lookup("Transaction")], ["signatures", xdr.varArray(xdr.lookup("DecoratedSignature"), 20)]]);xdr.struct("ClaimOfferAtom", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["assetSold", xdr.lookup("Asset")], ["amountSold", xdr.lookup("Int64")], ["assetBought", xdr.lookup("Asset")], ["amountBought", xdr.lookup("Int64")]]);xdr["enum"]("CreateAccountResultCode", {createAccountSuccess:0, createAccountMalformed:-1, createAccountUnderfunded:-2, createAccountLowReserve:-3, createAccountAlreadyExist:-4});xdr.union("CreateAccountResult", {switchOn:xdr.lookup("CreateAccountResultCode"), switchName:"code", switches:[["createAccountSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("PaymentResultCode", {paymentSuccess:0, paymentMalformed:-1, paymentUnderfunded:-2, paymentSrcNoTrust:-3, paymentSrcNotAuthorized:-4, paymentNoDestination:-5, paymentNoTrust:-6, paymentNotAuthorized:-7, paymentLineFull:-8, paymentNoIssuer:-9});xdr.union("PaymentResult", {switchOn:xdr.lookup("PaymentResultCode"), switchName:"code", switches:[["paymentSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("PathPaymentResultCode", {pathPaymentSuccess:0, pathPaymentMalformed:-1, pathPaymentUnderfunded:-2, pathPaymentSrcNoTrust:-3, pathPaymentSrcNotAuthorized:-4, pathPaymentNoDestination:-5, pathPaymentNoTrust:-6, pathPaymentNotAuthorized:-7, pathPaymentLineFull:-8, pathPaymentNoIssuer:-9, pathPaymentTooFewOffer:-10, pathPaymentOfferCrossSelf:-11, pathPaymentOverSendmax:-12});xdr.struct("SimplePaymentResult", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);xdr.struct("PathPaymentResultSuccess", [["offers", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["last", xdr.lookup("SimplePaymentResult")]]);xdr.union("PathPaymentResult", {switchOn:xdr.lookup("PathPaymentResultCode"), switchName:"code", switches:[["pathPaymentSuccess", "success"], ["pathPaymentNoIssuer", "noIssuer"]], arms:{success:xdr.lookup("PathPaymentResultSuccess"), noIssuer:xdr.lookup("Asset")}, defaultArm:xdr["void"]()});xdr["enum"]("ManageOfferResultCode", {manageOfferSuccess:0, manageOfferMalformed:-1, manageOfferSellNoTrust:-2, manageOfferBuyNoTrust:-3, manageOfferSellNotAuthorized:-4, manageOfferBuyNotAuthorized:-5, manageOfferLineFull:-6, manageOfferUnderfunded:-7, manageOfferCrossSelf:-8, manageOfferSellNoIssuer:-9, manageOfferBuyNoIssuer:-10, manageOfferNotFound:-11, manageOfferLowReserve:-12});xdr["enum"]("ManageOfferEffect", {manageOfferCreated:0, manageOfferUpdated:1, manageOfferDeleted:2});xdr.union("ManageOfferSuccessResultOffer", {switchOn:xdr.lookup("ManageOfferEffect"), switchName:"effect", switches:[["manageOfferCreated", "offer"], ["manageOfferUpdated", "offer"]], arms:{offer:xdr.lookup("OfferEntry")}, defaultArm:xdr["void"]()});xdr.struct("ManageOfferSuccessResult", [["offersClaimed", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["offer", xdr.lookup("ManageOfferSuccessResultOffer")]]);xdr.union("ManageOfferResult", {switchOn:xdr.lookup("ManageOfferResultCode"), switchName:"code", switches:[["manageOfferSuccess", "success"]], arms:{success:xdr.lookup("ManageOfferSuccessResult")}, defaultArm:xdr["void"]()});xdr["enum"]("SetOptionsResultCode", {setOptionsSuccess:0, setOptionsLowReserve:-1, setOptionsTooManySigner:-2, setOptionsBadFlag:-3, setOptionsInvalidInflation:-4, setOptionsCantChange:-5, setOptionsUnknownFlag:-6, setOptionsThresholdOutOfRange:-7, setOptionsBadSigner:-8, setOptionsInvalidHomeDomain:-9});xdr.union("SetOptionsResult", {switchOn:xdr.lookup("SetOptionsResultCode"), switchName:"code", switches:[["setOptionsSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("ChangeTrustResultCode", {changeTrustSuccess:0, changeTrustMalformed:-1, changeTrustNoIssuer:-2, changeTrustInvalidLimit:-3, changeTrustLowReserve:-4, changeTrustSelfNotAllowed:-5});xdr.union("ChangeTrustResult", {switchOn:xdr.lookup("ChangeTrustResultCode"), switchName:"code", switches:[["changeTrustSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("AllowTrustResultCode", {allowTrustSuccess:0, allowTrustMalformed:-1, allowTrustNoTrustLine:-2, allowTrustTrustNotRequired:-3, allowTrustCantRevoke:-4, allowTrustSelfNotAllowed:-5});xdr.union("AllowTrustResult", {switchOn:xdr.lookup("AllowTrustResultCode"), switchName:"code", switches:[["allowTrustSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("AccountMergeResultCode", {accountMergeSuccess:0, accountMergeMalformed:-1, accountMergeNoAccount:-2, accountMergeImmutableSet:-3, accountMergeHasSubEntry:-4});xdr.union("AccountMergeResult", {switchOn:xdr.lookup("AccountMergeResultCode"), switchName:"code", switches:[["accountMergeSuccess", "sourceAccountBalance"]], arms:{sourceAccountBalance:xdr.lookup("Int64")}, defaultArm:xdr["void"]()});xdr["enum"]("InflationResultCode", {inflationSuccess:0, inflationNotTime:-1});xdr.struct("InflationPayout", [["destination", xdr.lookup("AccountId")], ["amount", xdr.lookup("Int64")]]);xdr.union("InflationResult", {switchOn:xdr.lookup("InflationResultCode"), switchName:"code", switches:[["inflationSuccess", "payouts"]], arms:{payouts:xdr.varArray(xdr.lookup("InflationPayout"), 2147483647)}, defaultArm:xdr["void"]()});xdr["enum"]("ManageDataResultCode", {manageDataSuccess:0, manageDataNotSupportedYet:-1, manageDataNameNotFound:-2, manageDataLowReserve:-3, manageDataInvalidName:-4});xdr.union("ManageDataResult", {switchOn:xdr.lookup("ManageDataResultCode"), switchName:"code", switches:[["manageDataSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("OperationResultCode", {opInner:0, opBadAuth:-1, opNoAccount:-2});xdr.union("OperationResultTr", {switchOn:xdr.lookup("OperationType"), switchName:"type", switches:[["createAccount", "createAccountResult"], ["payment", "paymentResult"], ["pathPayment", "pathPaymentResult"], ["manageOffer", "manageOfferResult"], ["createPassiveOffer", "createPassiveOfferResult"], ["setOption", "setOptionsResult"], ["changeTrust", "changeTrustResult"], ["allowTrust", "allowTrustResult"], ["accountMerge", "accountMergeResult"], ["inflation", "inflationResult"], ["manageDatum", "manageDataResult"]], arms:{createAccountResult:xdr.lookup("CreateAccountResult"), paymentResult:xdr.lookup("PaymentResult"), pathPaymentResult:xdr.lookup("PathPaymentResult"), manageOfferResult:xdr.lookup("ManageOfferResult"), createPassiveOfferResult:xdr.lookup("ManageOfferResult"), setOptionsResult:xdr.lookup("SetOptionsResult"), changeTrustResult:xdr.lookup("ChangeTrustResult"), allowTrustResult:xdr.lookup("AllowTrustResult"), accountMergeResult:xdr.lookup("AccountMergeResult"), inflationResult:xdr.lookup("InflationResult"), manageDataResult:xdr.lookup("ManageDataResult")}});xdr.union("OperationResult", {switchOn:xdr.lookup("OperationResultCode"), switchName:"code", switches:[["opInner", "tr"]], arms:{tr:xdr.lookup("OperationResultTr")}, defaultArm:xdr["void"]()});xdr["enum"]("TransactionResultCode", {txSuccess:0, txFailed:-1, txTooEarly:-2, txTooLate:-3, txMissingOperation:-4, txBadSeq:-5, txBadAuth:-6, txInsufficientBalance:-7, txNoAccount:-8, txInsufficientFee:-9, txBadAuthExtra:-10, txInternalError:-11});xdr.union("TransactionResultResult", {switchOn:xdr.lookup("TransactionResultCode"), switchName:"code", switches:[["txSuccess", "results"], ["txFailed", "results"]], arms:{results:xdr.varArray(xdr.lookup("OperationResult"), 2147483647)}, defaultArm:xdr["void"]()});xdr.union("TransactionResultExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionResult", [["feeCharged", xdr.lookup("Int64")], ["result", xdr.lookup("TransactionResultResult")], ["ext", xdr.lookup("TransactionResultExt")]]);xdr.typedef("Hash", xdr.opaque(32));xdr.typedef("Uint256", xdr.opaque(32));xdr.typedef("Uint32", xdr.uint());xdr.typedef("Int32", xdr.int());xdr.typedef("Uint64", xdr.uhyper());xdr.typedef("Int64", xdr.hyper());xdr["enum"]("CryptoKeyType", {keyTypeEd25519:0, keyTypeHashTx:1, keyTypeHashX:2});xdr["enum"]("PublicKeyType", {publicKeyTypeEd25519:0});xdr["enum"]("SignerKeyType", {signerKeyTypeEd25519:0, signerKeyTypeHashTx:1, signerKeyTypeHashX:2});xdr.union("PublicKey", {switchOn:xdr.lookup("PublicKeyType"), switchName:"type", switches:[["publicKeyTypeEd25519", "ed25519"]], arms:{ed25519:xdr.lookup("Uint256")}});xdr.union("SignerKey", {switchOn:xdr.lookup("SignerKeyType"), switchName:"type", switches:[["signerKeyTypeEd25519", "ed25519"], ["signerKeyTypeHashTx", "hashTx"], ["signerKeyTypeHashX", "hashX"]], arms:{ed25519:xdr.lookup("Uint256"), hashTx:xdr.lookup("Uint256"), hashX:xdr.lookup("Uint256")}});xdr.typedef("Signature", xdr.varOpaque(64));xdr.typedef("SignatureHint", xdr.opaque(4));xdr.typedef("NodeId", xdr.lookup("PublicKey"));xdr.struct("Curve25519Secret", [["key", xdr.opaque(32)]]);xdr.struct("Curve25519Public", [["key", xdr.opaque(32)]]);xdr.struct("HmacSha256Key", [["key", xdr.opaque(32)]]);xdr.struct("HmacSha256Mac", [["mac", xdr.opaque(32)]]);});module.exports = types;
 
 /***/ },
-/* 190 */
+/* 207 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _defaults = __webpack_require__(191)["default"];
+	var _defaults = __webpack_require__(208)["default"];
 
-	var _interopRequireWildcard = __webpack_require__(193)["default"];
+	var _interopRequireWildcard = __webpack_require__(210)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(194)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(211)));
 
-	var _config = __webpack_require__(225);
+	var _config = __webpack_require__(242);
 
 	_defaults(exports, _interopRequireWildcard(_config));
 
 	var config = _config.config;
 
 /***/ },
-/* 191 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
 	exports["default"] = function (obj, defaults) {
 	  var keys = _core.Object.getOwnPropertyNames(defaults);
@@ -27246,7 +26012,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 192 */
+/* 209 */
 /***/ function(module, exports) {
 
 	/**
@@ -29592,7 +28358,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 193 */
+/* 210 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -29606,70 +28372,70 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 194 */
+/* 211 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _defaults = __webpack_require__(191)["default"];
+	var _defaults = __webpack_require__(208)["default"];
 
-	var _interopRequireWildcard = __webpack_require__(193)["default"];
+	var _interopRequireWildcard = __webpack_require__(210)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(195)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(205)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(209)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(210)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(211)));
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(212)));
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(213)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(214)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(215)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(216)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(217)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(218)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(219)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(220)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(221)));
-
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(222)));
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(223)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(226)));
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(227)));
 
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(228)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(229)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(230)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(231)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(232)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(233)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(234)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(235)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(236)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(237)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(238)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(239)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(240)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(244)));
+
 /***/ },
-/* 195 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(197).isNumber;
+	var isNumber = __webpack_require__(214).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Int = {
 
@@ -29707,7 +28473,7 @@ var StellarSdk =
 	includeIoMixin(Int);
 
 /***/ },
-/* 196 */
+/* 213 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -29719,7 +28485,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 197 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -42077,16 +40843,16 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ },
-/* 198 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
 	module.exports = includeIoMixin;
 
-	var Cursor = __webpack_require__(199).Cursor;
+	var Cursor = __webpack_require__(216).Cursor;
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var extend = _lodash.extend;
 	var isFunction = _lodash.isFunction;
@@ -42152,29 +40918,29 @@ var StellarSdk =
 	    extend(obj.prototype, instanceMethods);
 	  }
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 199 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var BaseCursor = _interopRequire(__webpack_require__(203));
+	var BaseCursor = _interopRequire(__webpack_require__(220));
 
-	var calculatePadding = __webpack_require__(204).calculatePadding;
+	var calculatePadding = __webpack_require__(221).calculatePadding;
 
 	var Cursor = exports.Cursor = (function (_BaseCursor) {
 	  function Cursor() {
@@ -42201,10 +40967,10 @@ var StellarSdk =
 
 	  return Cursor;
 	})(BaseCursor);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 200 */
+/* 217 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -42218,7 +40984,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 201 */
+/* 218 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -42242,7 +41008,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 202 */
+/* 219 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -42268,7 +41034,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 203 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var Cursor = function(buffer)
@@ -42490,7 +41256,7 @@ var StellarSdk =
 			parent.call(this, buffer);
 		};
 
-		__webpack_require__(181).inherits(C, parent);
+		__webpack_require__(200).inherits(C, parent);
 
 		C.extend = parent.extend;
 		C.define = parent.define;
@@ -42516,10 +41282,10 @@ var StellarSdk =
 
 	module.exports = Cursor;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 204 */
+/* 221 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -42543,30 +41309,30 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 205 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _get = __webpack_require__(206)["default"];
+	var _get = __webpack_require__(223)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Long = _interopRequire(__webpack_require__(207));
+	var Long = _interopRequire(__webpack_require__(224));
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Hyper = exports.Hyper = (function (_Long) {
 	  function Hyper(low, high) {
@@ -42626,12 +41392,12 @@ var StellarSdk =
 	Hyper.MIN_VALUE = new Hyper(Long.MIN_VALUE.low, Long.MIN_VALUE.high);
 
 /***/ },
-/* 206 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
 	exports["default"] = function get(_x, _x2, _x3) {
 	  var _again = true;
@@ -42674,7 +41440,7 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 207 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {/*
@@ -42701,7 +41467,7 @@ var StellarSdk =
 	 */
 	(function(global, factory) {
 
-	    /* AMD */ if ("function" === 'function' && __webpack_require__(208)["amd"])
+	    /* AMD */ if ("function" === 'function' && __webpack_require__(225)["amd"])
 	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	    /* CommonJS */ else if ("function" === 'function' && typeof module === "object" && module && module["exports"])
 	        module["exports"] = factory();
@@ -43760,27 +42526,27 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module)))
 
 /***/ },
-/* 208 */
+/* 225 */
 /***/ function(module, exports) {
 
 	module.exports = function() { throw new Error("define cannot be used indirect"); };
 
 
 /***/ },
-/* 209 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(197).isNumber;
+	var isNumber = __webpack_require__(214).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var UnsignedInt = {
 
@@ -43822,30 +42588,30 @@ var StellarSdk =
 	includeIoMixin(UnsignedInt);
 
 /***/ },
-/* 210 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _get = __webpack_require__(206)["default"];
+	var _get = __webpack_require__(223)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Long = _interopRequire(__webpack_require__(207));
+	var Long = _interopRequire(__webpack_require__(224));
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var UnsignedHyper = exports.UnsignedHyper = (function (_Long) {
 	  function UnsignedHyper(low, high) {
@@ -43906,20 +42672,20 @@ var StellarSdk =
 	UnsignedHyper.MIN_VALUE = new UnsignedHyper(Long.MIN_VALUE.low, Long.MIN_VALUE.high);
 
 /***/ },
-/* 211 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(197).isNumber;
+	var isNumber = __webpack_require__(214).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Float = {
 
@@ -43943,20 +42709,20 @@ var StellarSdk =
 	includeIoMixin(Float);
 
 /***/ },
-/* 212 */
+/* 229 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(197).isNumber;
+	var isNumber = __webpack_require__(214).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Double = {
 
@@ -43980,18 +42746,18 @@ var StellarSdk =
 	includeIoMixin(Double);
 
 /***/ },
-/* 213 */
+/* 230 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Quadruple = {
 	  /* jshint unused: false */
@@ -44012,22 +42778,22 @@ var StellarSdk =
 	includeIoMixin(Quadruple);
 
 /***/ },
-/* 214 */
+/* 231 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(195).Int;
+	var Int = __webpack_require__(212).Int;
 
-	var isBoolean = __webpack_require__(197).isBoolean;
+	var isBoolean = __webpack_require__(214).isBoolean;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Bool = {
 	  read: function read(io) {
@@ -44057,30 +42823,30 @@ var StellarSdk =
 	includeIoMixin(Bool);
 
 /***/ },
-/* 215 */
+/* 232 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(195).Int;
+	var Int = __webpack_require__(212).Int;
 
-	var UnsignedInt = __webpack_require__(209).UnsignedInt;
+	var UnsignedInt = __webpack_require__(226).UnsignedInt;
 
-	var calculatePadding = __webpack_require__(204).calculatePadding;
+	var calculatePadding = __webpack_require__(221).calculatePadding;
 
-	var isString = __webpack_require__(197).isString;
+	var isString = __webpack_require__(214).isString;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var String = exports.String = (function () {
 	  function String() {
@@ -44135,27 +42901,27 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(String.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 216 */
+/* 233 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var calculatePadding = __webpack_require__(204).calculatePadding;
+	var calculatePadding = __webpack_require__(221).calculatePadding;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Opaque = exports.Opaque = (function () {
 	  function Opaque(length) {
@@ -44193,31 +42959,31 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(Opaque.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 217 */
+/* 234 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(195).Int;
+	var Int = __webpack_require__(212).Int;
 
-	var UnsignedInt = __webpack_require__(209).UnsignedInt;
+	var UnsignedInt = __webpack_require__(226).UnsignedInt;
 
-	var calculatePadding = __webpack_require__(204).calculatePadding;
+	var calculatePadding = __webpack_require__(221).calculatePadding;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var VarOpaque = exports.VarOpaque = (function () {
 	  function VarOpaque() {
@@ -44262,32 +43028,32 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(VarOpaque.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 218 */
+/* 235 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var all = _lodash.all;
 	var each = _lodash.each;
 	var times = _lodash.times;
 	var isArray = _lodash.isArray;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Array = exports.Array = (function () {
 	  function Array(childType, length) {
@@ -44348,33 +43114,33 @@ var StellarSdk =
 	includeIoMixin(Array.prototype);
 
 /***/ },
-/* 219 */
+/* 236 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(195).Int;
+	var Int = __webpack_require__(212).Int;
 
-	var UnsignedInt = __webpack_require__(209).UnsignedInt;
+	var UnsignedInt = __webpack_require__(226).UnsignedInt;
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var all = _lodash.all;
 	var each = _lodash.each;
 	var times = _lodash.times;
 	var isArray = _lodash.isArray;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var VarArray = exports.VarArray = (function () {
 	  function VarArray(childType) {
@@ -44444,29 +43210,29 @@ var StellarSdk =
 	includeIoMixin(VarArray.prototype);
 
 /***/ },
-/* 220 */
+/* 237 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Bool = __webpack_require__(214).Bool;
+	var Bool = __webpack_require__(231).Bool;
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var isNull = _lodash.isNull;
 	var isUndefined = _lodash.isUndefined;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Option = exports.Option = (function () {
 	  function Option(childType) {
@@ -44514,20 +43280,20 @@ var StellarSdk =
 	includeIoMixin(Option.prototype);
 
 /***/ },
-/* 221 */
+/* 238 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isUndefined = __webpack_require__(197).isUndefined;
+	var isUndefined = __webpack_require__(214).isUndefined;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Void = {
 	  /* jshint unused: false */
@@ -44550,35 +43316,35 @@ var StellarSdk =
 	includeIoMixin(Void);
 
 /***/ },
-/* 222 */
+/* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _get = __webpack_require__(206)["default"];
+	var _get = __webpack_require__(223)["default"];
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(195).Int;
+	var Int = __webpack_require__(212).Int;
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var each = _lodash.each;
 	var vals = _lodash.values;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Enum = exports.Enum = (function () {
 	  function Enum(name, value) {
@@ -44679,39 +43445,39 @@ var StellarSdk =
 	includeIoMixin(Enum);
 
 /***/ },
-/* 223 */
+/* 240 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _get = __webpack_require__(206)["default"];
+	var _get = __webpack_require__(223)["default"];
 
-	var _slicedToArray = __webpack_require__(224)["default"];
+	var _slicedToArray = __webpack_require__(241)["default"];
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var each = _lodash.each;
 	var map = _lodash.map;
 	var isUndefined = _lodash.isUndefined;
 	var zipObject = _lodash.zipObject;
 
-	var Reference = __webpack_require__(225).Reference;
+	var Reference = __webpack_require__(242).Reference;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Struct = exports.Struct = (function () {
 	  function Struct(attributes) {
@@ -44821,12 +43587,12 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 224 */
+/* 241 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
 	exports["default"] = function (arr, i) {
 	  if (Array.isArray(arr)) {
@@ -44849,29 +43615,29 @@ var StellarSdk =
 	exports.__esModule = true;
 
 /***/ },
-/* 225 */
+/* 242 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _interopRequireWildcard = __webpack_require__(193)["default"];
+	var _interopRequireWildcard = __webpack_require__(210)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	exports.config = config;
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var XDR = _interopRequireWildcard(__webpack_require__(194));
+	var XDR = _interopRequireWildcard(__webpack_require__(211));
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var isUndefined = _lodash.isUndefined;
 	var isPlainObject = _lodash.isPlainObject;
@@ -44880,7 +43646,7 @@ var StellarSdk =
 	var map = _lodash.map;
 	var pick = _lodash.pick;
 
-	var sequencify = _interopRequire(__webpack_require__(226));
+	var sequencify = _interopRequire(__webpack_require__(243));
 
 	// types is the root
 	var types = {};
@@ -45218,7 +43984,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 226 */
+/* 243 */
 /***/ function(module, exports) {
 
 	/*jshint node:true */
@@ -45270,40 +44036,40 @@ var StellarSdk =
 
 
 /***/ },
-/* 227 */
+/* 244 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(200)["default"];
+	var _classCallCheck = __webpack_require__(217)["default"];
 
-	var _createClass = __webpack_require__(202)["default"];
+	var _createClass = __webpack_require__(219)["default"];
 
-	var _inherits = __webpack_require__(201)["default"];
+	var _inherits = __webpack_require__(218)["default"];
 
-	var _get = __webpack_require__(206)["default"];
+	var _get = __webpack_require__(223)["default"];
 
-	var _slicedToArray = __webpack_require__(224)["default"];
+	var _slicedToArray = __webpack_require__(241)["default"];
 
-	var _core = __webpack_require__(192)["default"];
+	var _core = __webpack_require__(209)["default"];
 
-	var _interopRequire = __webpack_require__(196)["default"];
+	var _interopRequire = __webpack_require__(213)["default"];
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(197);
+	var _lodash = __webpack_require__(214);
 
 	var each = _lodash.each;
 	var isUndefined = _lodash.isUndefined;
 	var isString = _lodash.isString;
 
-	var Void = __webpack_require__(221).Void;
+	var Void = __webpack_require__(238).Void;
 
-	var Reference = __webpack_require__(225).Reference;
+	var Reference = __webpack_require__(242).Reference;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(198));
+	var includeIoMixin = _interopRequire(__webpack_require__(215));
 
 	var Union = exports.Union = (function () {
 	  function Union(aSwitch, value) {
@@ -45499,7 +44265,7 @@ var StellarSdk =
 	includeIoMixin(Union);
 
 /***/ },
-/* 228 */
+/* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -45509,7 +44275,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var sha256 = __webpack_require__(229).sha256;
+	var sha256 = __webpack_require__(246).sha256;
 
 	function hash(data) {
 	  var hasher = new sha256();
@@ -45518,7 +44284,7 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 229 */
+/* 246 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function SHA (algorithm) {
@@ -45530,16 +44296,16 @@ var StellarSdk =
 	  return new Algorithm()
 	}
 
-	exports.sha = __webpack_require__(230)
-	exports.sha1 = __webpack_require__(233)
-	exports.sha224 = __webpack_require__(234)
-	exports.sha256 = __webpack_require__(235)
-	exports.sha384 = __webpack_require__(236)
-	exports.sha512 = __webpack_require__(237)
+	exports.sha = __webpack_require__(247)
+	exports.sha1 = __webpack_require__(250)
+	exports.sha224 = __webpack_require__(251)
+	exports.sha256 = __webpack_require__(252)
+	exports.sha384 = __webpack_require__(253)
+	exports.sha512 = __webpack_require__(254)
 
 
 /***/ },
-/* 230 */
+/* 247 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -45550,8 +44316,8 @@ var StellarSdk =
 	 * operation was added.
 	 */
 
-	var inherits = __webpack_require__(231)
-	var Hash = __webpack_require__(232)
+	var inherits = __webpack_require__(248)
+	var Hash = __webpack_require__(249)
 
 	var W = new Array(80)
 
@@ -45643,10 +44409,10 @@ var StellarSdk =
 	module.exports = Sha
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 231 */
+/* 248 */
 /***/ function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -45675,7 +44441,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 232 */
+/* 249 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// prototype class for hash functions
@@ -45748,10 +44514,10 @@ var StellarSdk =
 
 	module.exports = Hash
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 233 */
+/* 250 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/*
@@ -45763,8 +44529,8 @@ var StellarSdk =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(231)
-	var Hash = __webpack_require__(232)
+	var inherits = __webpack_require__(248)
+	var Hash = __webpack_require__(249)
 
 	var W = new Array(80)
 
@@ -45851,10 +44617,10 @@ var StellarSdk =
 
 	module.exports = Sha1
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 234 */
+/* 251 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -45865,9 +44631,9 @@ var StellarSdk =
 	 *
 	 */
 
-	var inherits = __webpack_require__(231)
-	var Sha256 = __webpack_require__(235)
-	var Hash = __webpack_require__(232)
+	var inherits = __webpack_require__(248)
+	var Sha256 = __webpack_require__(252)
+	var Hash = __webpack_require__(249)
 
 	var W = new Array(64)
 
@@ -45910,10 +44676,10 @@ var StellarSdk =
 
 	module.exports = Sha224
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 235 */
+/* 252 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {/**
@@ -45924,8 +44690,8 @@ var StellarSdk =
 	 *
 	 */
 
-	var inherits = __webpack_require__(231)
-	var Hash = __webpack_require__(232)
+	var inherits = __webpack_require__(248)
+	var Hash = __webpack_require__(249)
 
 	var K = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -46058,15 +44824,15 @@ var StellarSdk =
 
 	module.exports = Sha256
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 236 */
+/* 253 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(231)
-	var SHA512 = __webpack_require__(237)
-	var Hash = __webpack_require__(232)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(248)
+	var SHA512 = __webpack_require__(254)
+	var Hash = __webpack_require__(249)
 
 	var W = new Array(160)
 
@@ -46121,14 +44887,14 @@ var StellarSdk =
 
 	module.exports = Sha384
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 237 */
+/* 254 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(231)
-	var Hash = __webpack_require__(232)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var inherits = __webpack_require__(248)
+	var Hash = __webpack_require__(249)
 
 	var K = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -46394,10 +45160,10 @@ var StellarSdk =
 
 	module.exports = Sha512
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 238 */
+/* 255 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -46471,7 +45237,7 @@ var StellarSdk =
 	    (function () {
 	      // fallback to tweetnacl.js if we're in the browser or
 	      // if there was a failure installing ed25519
-	      var nacl = __webpack_require__(239);
+	      var nacl = __webpack_require__(256);
 
 	      actualMethods.sign = function (data, secretKey) {
 	        data = new Buffer(data);
@@ -46496,10 +45262,10 @@ var StellarSdk =
 
 	  return ed25519Used;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 239 */
+/* 256 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {(function(nacl) {
@@ -48908,7 +47674,7 @@ var StellarSdk =
 	    }
 	  } else if (true) {
 	    // Node.js.
-	    crypto = __webpack_require__(240);
+	    crypto = __webpack_require__(257);
 	    if (crypto) {
 	      nacl.setPRNG(function(x, n) {
 	        var i, v = crypto.randomBytes(n);
@@ -48921,16 +47687,16 @@ var StellarSdk =
 
 	})(typeof module !== 'undefined' && module.exports ? module.exports : (window.nacl = window.nacl || {}));
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 240 */
+/* 257 */
 /***/ function(module, exports) {
 
 	/* (ignored) */
 
 /***/ },
-/* 241 */
+/* 258 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48947,28 +47713,28 @@ var StellarSdk =
 	  value: true
 	});
 
-	var Network = __webpack_require__(242).Network;
+	var Network = __webpack_require__(259).Network;
 
-	var _signing = __webpack_require__(238);
+	var _signing = __webpack_require__(255);
 
 	var sign = _signing.sign;
 	var verify = _signing.verify;
 
-	var base58 = _interopRequireWildcard(__webpack_require__(243));
+	var base58 = _interopRequireWildcard(__webpack_require__(260));
 
-	var strkey = _interopRequireWildcard(__webpack_require__(247));
+	var StrKey = __webpack_require__(264).StrKey;
 
-	var xdr = _interopRequire(__webpack_require__(189));
+	var xdr = _interopRequire(__webpack_require__(206));
 
-	var nacl = __webpack_require__(239);
+	var nacl = __webpack_require__(256);
 
 	var Keypair = exports.Keypair = (function () {
 	  /**
 	   * `Keypair` represents public (and secret) keys of the account.
 	   *
 	   * Use more convenient methods to create `Keypair` object:
-	   * * `{@link Keypair.fromAccountId}`
-	   * * `{@link Keypair.fromSeed}`
+	   * * `{@link Keypair.fromPublicKey}`
+	   * * `{@link Keypair.fromSecret}`
 	   * * `{@link Keypair.random}`
 	   *
 	   * @constructor
@@ -48991,12 +47757,12 @@ var StellarSdk =
 	  _createClass(Keypair, {
 	    xdrAccountId: {
 	      value: function xdrAccountId() {
-	        return new xdr.AccountId.keyTypeEd25519(this._publicKey);
+	        return new xdr.AccountId.publicKeyTypeEd25519(this._publicKey);
 	      }
 	    },
 	    xdrPublicKey: {
 	      value: function xdrPublicKey() {
-	        return new xdr.PublicKey.keyTypeEd25519(this._publicKey);
+	        return new xdr.PublicKey.publicKeyTypeEd25519(this._publicKey);
 	      }
 	    },
 	    rawPublicKey: {
@@ -49017,37 +47783,26 @@ var StellarSdk =
 	        return a.slice(a.length - 4);
 	      }
 	    },
-	    accountId: {
+	    publicKey: {
 
 	      /**
-	       * Returns account ID associated with this `Keypair` object.
+	       * Returns public key associated with this `Keypair` object.
 	       * @returns {string}
 	       */
 
-	      value: function accountId() {
-	        return strkey.encodeCheck("accountId", this._publicKey);
+	      value: function publicKey() {
+	        return StrKey.encodeEd25519PublicKey(this._publicKey);
 	      }
 	    },
-	    seed: {
+	    secret: {
 
 	      /**
-	       * Returns seed associated with this `Keypair` object
+	       * Returns secret key associated with this `Keypair` object
 	       * @returns {string}
 	       */
 
-	      value: function seed() {
-	        return strkey.encodeCheck("seed", this._secretSeed);
-	      }
-	    },
-	    rawSeed: {
-
-	      /**
-	       * Returns raw secret key seed.
-	       * @returns {Buffer}
-	       */
-
-	      value: function rawSeed() {
-	        return this._secretSeed;
+	      value: function secret() {
+	        return StrKey.encodeEd25519SecretSeed(this._secretSeed);
 	      }
 	    },
 	    rawSecretKey: {
@@ -49130,16 +47885,16 @@ var StellarSdk =
 	      }
 	    }
 	  }, {
-	    fromSeed: {
+	    fromSecret: {
 
 	      /**
-	       * Creates a new `Keypair` instance from secret key seed.
-	       * @param {string} seed Secret key seed
+	       * Creates a new `Keypair` instance from secret key.
+	       * @param {string} secretKey Secret key
 	       * @returns {Keypair}
 	       */
 
-	      value: function fromSeed(seed) {
-	        var rawSeed = strkey.decodeCheck("seed", seed);
+	      value: function fromSecret(secretKey) {
+	        var rawSeed = StrKey.decodeEd25519SecretSeed(secretKey);
 	        return this.fromRawSeed(rawSeed);
 	      }
 	    },
@@ -49148,7 +47903,7 @@ var StellarSdk =
 	      /**
 	       * Base58 address encoding is **DEPRECATED**! Use this method only for transition to strkey encoding.
 	       * @param {string} seed Base58 secret seed
-	       * @deprecated Use {@link Keypair.fromSeed}
+	       * @deprecated Use {@link Keypair.fromSecret}
 	       * @returns {Keypair}
 	       */
 
@@ -49183,21 +47938,24 @@ var StellarSdk =
 	       */
 
 	      value: function master() {
+	        if (Network.current() === null) {
+	          throw new Error("No network selected. Use `Network.use`, `Network.usePublicNetwork` or `Network.useTestNetwork` helper methods to select network.");
+	        }
 	        return this.fromRawSeed(Network.current().networkId());
 	      }
 	    },
-	    fromAccountId: {
+	    fromPublicKey: {
 
 	      /**
-	       * Creates a new `Keypair` object from account ID.
-	       * @param {string} accountId account ID (ex. `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`)
+	       * Creates a new `Keypair` object from public key.
+	       * @param {string} publicKey public key (ex. `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`)
 	       * @returns {Keypair}
 	       */
 
-	      value: function fromAccountId(accountId) {
-	        var publicKey = strkey.decodeCheck("accountId", accountId);
+	      value: function fromPublicKey(publicKey) {
+	        publicKey = StrKey.decodeEd25519PublicKey(publicKey);
 	        if (publicKey.length !== 32) {
-	          throw new Error("Invalid Stellar accountId");
+	          throw new Error("Invalid Stellar public key");
 	        }
 	        return new this({ publicKey: publicKey });
 	      }
@@ -49213,35 +47971,15 @@ var StellarSdk =
 	        var seed = nacl.randomBytes(32);
 	        return this.fromRawSeed(seed);
 	      }
-	    },
-	    isValidPublicKey: {
-
-	      /**
-	       * Returns true if the given Stellar public key is valid.
-	       * @param {string} publicKey public key to check
-	       * @returns {boolean}
-	       */
-
-	      value: function isValidPublicKey(publicKey) {
-	        try {
-	          var decoded = strkey.decodeCheck("accountId", publicKey);
-	          if (decoded.length !== 32) {
-	            return false;
-	          }
-	        } catch (err) {
-	          return false;
-	        }
-	        return true;
-	      }
 	    }
 	  });
 
 	  return Keypair;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 242 */
+/* 259 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -49254,7 +47992,7 @@ var StellarSdk =
 		value: true
 	});
 
-	var hash = __webpack_require__(228).hash;
+	var hash = __webpack_require__(245).hash;
 
 	/**
 	 * Contains passphrases for common networks:
@@ -49268,7 +48006,7 @@ var StellarSdk =
 	};
 
 	exports.Networks = Networks;
-	var current;
+	var current = null;
 
 	var Network = exports.Network = (function () {
 		/**
@@ -49276,7 +48014,7 @@ var StellarSdk =
 	   * stellar networks.  It also provides the {@link Network.current} class method that returns the network
 	   * that will be used by this process for the purposes of generating signatures.
 	   *
-	   * The test network is the default, but you can also override the default by using the `use`,
+	   * You should select network your app will use before adding the first signature. You can use the `use`,
 	   * `usePublicNetwork` and `useTestNetwork` helper methods.
 	   *
 	  * Creates a new `Network` object.
@@ -49314,16 +48052,6 @@ var StellarSdk =
 				}
 			}
 		}, {
-			useDefault: {
-
-				/**
-	    * Use default network (right now default network is `testnet`).
-	    */
-
-				value: function useDefault() {
-					this.useTestNetwork();
-				}
-			},
 			usePublicNetwork: {
 
 				/**
@@ -49381,10 +48109,8 @@ var StellarSdk =
 		return Network;
 	})();
 
-	Network.useDefault();
-
 /***/ },
-/* 243 */
+/* 260 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -49399,15 +48125,15 @@ var StellarSdk =
 	  value: true
 	});
 
-	var bs58 = _interopRequire(__webpack_require__(244));
+	var bs58 = _interopRequire(__webpack_require__(261));
 
-	var isUndefined = _interopRequire(__webpack_require__(245));
+	var isUndefined = _interopRequire(__webpack_require__(262));
 
-	var isNull = _interopRequire(__webpack_require__(246));
+	var isNull = _interopRequire(__webpack_require__(263));
 
-	var hash = __webpack_require__(228).hash;
+	var hash = __webpack_require__(245).hash;
 
-	var nacl = __webpack_require__(239);
+	var nacl = __webpack_require__(256);
 
 	var versionBytes = {
 	  accountId: 0, // decimal 0
@@ -49500,10 +48226,10 @@ var StellarSdk =
 	  return true;
 	}
 	// decimal 33
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 244 */
+/* 261 */
 /***/ function(module, exports) {
 
 	// vendored from http://cryptocoinjs.com/modules/misc/bs58/
@@ -49602,7 +48328,7 @@ var StellarSdk =
 	};
 
 /***/ },
-/* 245 */
+/* 262 */
 /***/ function(module, exports) {
 
 	/**
@@ -49629,7 +48355,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 246 */
+/* 263 */
 /***/ function(module, exports) {
 
 	/**
@@ -49656,12 +48382,16 @@ var StellarSdk =
 
 
 /***/ },
-/* 247 */
+/* 264 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	exports.decodeCheck = decodeCheck;
 	exports.encodeCheck = encodeCheck;
@@ -49669,22 +48399,174 @@ var StellarSdk =
 	  value: true
 	});
 
-	var base32 = _interopRequire(__webpack_require__(248));
+	var base32 = _interopRequire(__webpack_require__(265));
 
-	var crc = _interopRequire(__webpack_require__(249));
+	var crc = _interopRequire(__webpack_require__(266));
 
-	var contains = _interopRequire(__webpack_require__(261));
+	var contains = _interopRequire(__webpack_require__(278));
 
-	var isUndefined = _interopRequire(__webpack_require__(245));
+	var isUndefined = _interopRequire(__webpack_require__(262));
 
-	var isNull = _interopRequire(__webpack_require__(246));
+	var isNull = _interopRequire(__webpack_require__(263));
 
-	var isString = _interopRequire(__webpack_require__(270));
+	var isString = _interopRequire(__webpack_require__(287));
 
 	var versionBytes = {
-	  accountId: 48,
-	  seed: 144
+	  ed25519PublicKey: 6 << 3, // G
+	  ed25519SecretSeed: 18 << 3, // S
+	  preAuthTx: 19 << 3, // T
+	  sha256Hash: 23 << 3 // X
 	};
+
+	/**
+	 * StrKey is a helper class that allows encoding and decoding strkey.
+	 */
+
+	var StrKey = exports.StrKey = (function () {
+	  function StrKey() {
+	    _classCallCheck(this, StrKey);
+	  }
+
+	  _createClass(StrKey, null, {
+	    encodeEd25519PublicKey: {
+	      /**
+	       * Encodes data to strkey ed25519 public key.
+	       * @param {Buffer} data data to encode
+	       * @returns {string}
+	       */
+
+	      value: function encodeEd25519PublicKey(data) {
+	        return encodeCheck("ed25519PublicKey", data);
+	      }
+	    },
+	    decodeEd25519PublicKey: {
+
+	      /**
+	       * Decodes strkey ed25519 public key to raw data.
+	       * @param {string} data data to decode
+	       * @returns {Buffer}
+	       */
+
+	      value: function decodeEd25519PublicKey(data) {
+	        return decodeCheck("ed25519PublicKey", data);
+	      }
+	    },
+	    isValidEd25519PublicKey: {
+
+	      /**
+	       * Returns true if the given Stellar public key is a valid ed25519 public key.
+	       * @param {string} publicKey public key to check
+	       * @returns {boolean}
+	       */
+
+	      value: function isValidEd25519PublicKey(publicKey) {
+	        return isValid("ed25519PublicKey", publicKey);
+	      }
+	    },
+	    encodeEd25519SecretSeed: {
+
+	      /**
+	       * Encodes data to strkey ed25519 seed.
+	       * @param {Buffer} data data to encode
+	       * @returns {string}
+	       */
+
+	      value: function encodeEd25519SecretSeed(data) {
+	        return encodeCheck("ed25519SecretSeed", data);
+	      }
+	    },
+	    decodeEd25519SecretSeed: {
+
+	      /**
+	       * Decodes strkey ed25519 seed to raw data.
+	       * @param {string} data data to decode
+	       * @returns {Buffer}
+	       */
+
+	      value: function decodeEd25519SecretSeed(data) {
+	        return decodeCheck("ed25519SecretSeed", data);
+	      }
+	    },
+	    isValidEd25519SecretSeed: {
+
+	      /**
+	       * Returns true if the given Stellar secret key is a valid ed25519 secret seed.
+	       * @param {string} seed seed to check
+	       * @returns {boolean}
+	       */
+
+	      value: function isValidEd25519SecretSeed(seed) {
+	        return isValid("ed25519SecretSeed", seed);
+	      }
+	    },
+	    encodePreAuthTx: {
+
+	      /**
+	       * Encodes data to strkey preAuthTx.
+	       * @param {Buffer} data data to encode
+	       * @returns {string}
+	       */
+
+	      value: function encodePreAuthTx(data) {
+	        return encodeCheck("preAuthTx", data);
+	      }
+	    },
+	    decodePreAuthTx: {
+
+	      /**
+	       * Decodes strkey PreAuthTx to raw data.
+	       * @param {string} data data to decode
+	       * @returns {Buffer}
+	       */
+
+	      value: function decodePreAuthTx(data) {
+	        return decodeCheck("preAuthTx", data);
+	      }
+	    },
+	    encodeSha256Hash: {
+
+	      /**
+	       * Encodes data to strkey sha256 hash.
+	       * @param {Buffer} data data to encode
+	       * @returns {string}
+	       */
+
+	      value: function encodeSha256Hash(data) {
+	        return encodeCheck("sha256Hash", data);
+	      }
+	    },
+	    decodeSha256Hash: {
+
+	      /**
+	       * Decodes strkey sha256 hash to raw data.
+	       * @param {string} data data to decode
+	       * @returns {Buffer}
+	       */
+
+	      value: function decodeSha256Hash(data) {
+	        return decodeCheck("sha256Hash", data);
+	      }
+	    }
+	  });
+
+	  return StrKey;
+	})();
+
+	function isValid(versionByteName, encoded) {
+	  if (encoded && encoded.length != 56) {
+	    return false;
+	  }
+
+	  try {
+	    var decoded = decodeCheck(versionByteName, encoded);
+	    if (decoded.length !== 32) {
+	      return false;
+	    }
+	  } catch (err) {
+	    return false;
+	  }
+	  return true;
+	}
 
 	function decodeCheck(versionByteName, encoded) {
 	  if (!isString(encoded)) {
@@ -49728,7 +48610,7 @@ var StellarSdk =
 	  var versionByte = versionBytes[versionByteName];
 
 	  if (isUndefined(versionByte)) {
-	    throw new Error("" + versionByteName + " is not a valid version byte name.  expected one of \"accountId\" or \"seed\"");
+	    throw new Error("" + versionByteName + " is not a valid version byte name.  expected one of \"ed25519PublicKey\", \"ed25519SecretSeed\", \"preAuthTx\", \"sha256Hash\"");
 	  }
 
 	  data = new Buffer(data);
@@ -49765,10 +48647,10 @@ var StellarSdk =
 
 	  return true;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 248 */
+/* 265 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -50086,33 +48968,33 @@ var StellarSdk =
 
 
 /***/ },
-/* 249 */
+/* 266 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	module.exports = {
-	  crc1: __webpack_require__(250),
-	  crc8: __webpack_require__(252),
-	  crc81wire: __webpack_require__(253),
-	  crc16: __webpack_require__(254),
-	  crc16ccitt: __webpack_require__(255),
-	  crc16modbus: __webpack_require__(256),
-	  crc16xmodem: __webpack_require__(257),
-	  crc16kermit: __webpack_require__(258),
-	  crc24: __webpack_require__(259),
-	  crc32: __webpack_require__(260)
+	  crc1: __webpack_require__(267),
+	  crc8: __webpack_require__(269),
+	  crc81wire: __webpack_require__(270),
+	  crc16: __webpack_require__(271),
+	  crc16ccitt: __webpack_require__(272),
+	  crc16modbus: __webpack_require__(273),
+	  crc16xmodem: __webpack_require__(274),
+	  crc16kermit: __webpack_require__(275),
+	  crc24: __webpack_require__(276),
+	  crc32: __webpack_require__(277)
 	};
 
 /***/ },
-/* 250 */
+/* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50134,7 +49016,7 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 251 */
+/* 268 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -50155,14 +49037,14 @@ var StellarSdk =
 	};
 
 /***/ },
-/* 252 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50187,14 +49069,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 253 */
+/* 270 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50219,14 +49101,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 254 */
+/* 271 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50251,14 +49133,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 255 */
+/* 272 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50283,14 +49165,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 256 */
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50315,14 +49197,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 257 */
+/* 274 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50351,14 +49233,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 258 */
+/* 275 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50383,14 +49265,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 259 */
+/* 276 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50415,14 +49297,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 260 */
+/* 277 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(165);
+	var _buffer = __webpack_require__(170);
 
-	var _define_crc = __webpack_require__(251);
+	var _define_crc = __webpack_require__(268);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -50447,14 +49329,14 @@ var StellarSdk =
 	});
 
 /***/ },
-/* 261 */
+/* 278 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(262),
-	    isArrayLike = __webpack_require__(264),
-	    isString = __webpack_require__(270),
-	    toInteger = __webpack_require__(273),
-	    values = __webpack_require__(275);
+	var baseIndexOf = __webpack_require__(279),
+	    isArrayLike = __webpack_require__(281),
+	    isString = __webpack_require__(287),
+	    toInteger = __webpack_require__(290),
+	    values = __webpack_require__(292);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -50504,10 +49386,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 262 */
+/* 279 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var indexOfNaN = __webpack_require__(263);
+	var indexOfNaN = __webpack_require__(280);
 
 	/**
 	 * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
@@ -50537,7 +49419,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 263 */
+/* 280 */
 /***/ function(module, exports) {
 
 	/**
@@ -50566,12 +49448,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 264 */
+/* 281 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getLength = __webpack_require__(265),
-	    isFunction = __webpack_require__(267),
-	    isLength = __webpack_require__(269);
+	var getLength = __webpack_require__(282),
+	    isFunction = __webpack_require__(284),
+	    isLength = __webpack_require__(286);
 
 	/**
 	 * Checks if `value` is array-like. A value is considered array-like if it's
@@ -50607,10 +49489,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 265 */
+/* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(266);
+	var baseProperty = __webpack_require__(283);
 
 	/**
 	 * Gets the "length" property value of `object`.
@@ -50628,7 +49510,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 266 */
+/* 283 */
 /***/ function(module, exports) {
 
 	/**
@@ -50648,10 +49530,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 267 */
+/* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isObject = __webpack_require__(268);
+	/* WEBPACK VAR INJECTION */(function(global) {var isObject = __webpack_require__(285);
 
 	/** `Object#toString` result references. */
 	var funcTag = '[object Function]',
@@ -50695,7 +49577,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 268 */
+/* 285 */
 /***/ function(module, exports) {
 
 	/**
@@ -50732,7 +49614,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 269 */
+/* 286 */
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -50770,11 +49652,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 270 */
+/* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isArray = __webpack_require__(271),
-	    isObjectLike = __webpack_require__(272);
+	/* WEBPACK VAR INJECTION */(function(global) {var isArray = __webpack_require__(288),
+	    isObjectLike = __webpack_require__(289);
 
 	/** `Object#toString` result references. */
 	var stringTag = '[object String]';
@@ -50814,7 +49696,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 271 */
+/* 288 */
 /***/ function(module, exports) {
 
 	/**
@@ -50846,7 +49728,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 272 */
+/* 289 */
 /***/ function(module, exports) {
 
 	/**
@@ -50880,10 +49762,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 273 */
+/* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toNumber = __webpack_require__(274);
+	var toNumber = __webpack_require__(291);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0,
@@ -50930,11 +49812,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 274 */
+/* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isFunction = __webpack_require__(267),
-	    isObject = __webpack_require__(268);
+	var isFunction = __webpack_require__(284),
+	    isObject = __webpack_require__(285);
 
 	/** Used as references for various `Number` constants. */
 	var NAN = 0 / 0;
@@ -50995,11 +49877,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 275 */
+/* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseValues = __webpack_require__(276),
-	    keys = __webpack_require__(278);
+	var baseValues = __webpack_require__(293),
+	    keys = __webpack_require__(295);
 
 	/**
 	 * Creates an array of the own enumerable property values of `object`.
@@ -51034,10 +49916,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 276 */
+/* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(277);
+	var arrayMap = __webpack_require__(294);
 
 	/**
 	 * The base implementation of `_.values` and `_.valuesIn` which creates an
@@ -51059,7 +49941,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 277 */
+/* 294 */
 /***/ function(module, exports) {
 
 	/**
@@ -51086,15 +49968,15 @@ var StellarSdk =
 
 
 /***/ },
-/* 278 */
+/* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHas = __webpack_require__(279),
-	    baseKeys = __webpack_require__(280),
-	    indexKeys = __webpack_require__(281),
-	    isArrayLike = __webpack_require__(264),
-	    isIndex = __webpack_require__(285),
-	    isPrototype = __webpack_require__(286);
+	var baseHas = __webpack_require__(296),
+	    baseKeys = __webpack_require__(297),
+	    indexKeys = __webpack_require__(298),
+	    isArrayLike = __webpack_require__(281),
+	    isIndex = __webpack_require__(302),
+	    isPrototype = __webpack_require__(303);
 
 	/**
 	 * Creates an array of the own enumerable property names of `object`.
@@ -51147,7 +50029,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 279 */
+/* 296 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Used for built-in method references. */
@@ -51180,7 +50062,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 280 */
+/* 297 */
 /***/ function(module, exports) {
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -51203,14 +50085,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 281 */
+/* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseTimes = __webpack_require__(282),
-	    isArguments = __webpack_require__(283),
-	    isArray = __webpack_require__(271),
-	    isLength = __webpack_require__(269),
-	    isString = __webpack_require__(270);
+	var baseTimes = __webpack_require__(299),
+	    isArguments = __webpack_require__(300),
+	    isArray = __webpack_require__(288),
+	    isLength = __webpack_require__(286),
+	    isString = __webpack_require__(287);
 
 	/**
 	 * Creates an array of index keys for `object` values of arrays,
@@ -51231,7 +50113,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 282 */
+/* 299 */
 /***/ function(module, exports) {
 
 	/**
@@ -51257,10 +50139,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 283 */
+/* 300 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isArrayLikeObject = __webpack_require__(284);
+	/* WEBPACK VAR INJECTION */(function(global) {var isArrayLikeObject = __webpack_require__(301);
 
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]';
@@ -51307,11 +50189,11 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 284 */
+/* 301 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(264),
-	    isObjectLike = __webpack_require__(272);
+	var isArrayLike = __webpack_require__(281),
+	    isObjectLike = __webpack_require__(289);
 
 	/**
 	 * This method is like `_.isArrayLike` except that it also checks if `value`
@@ -51345,7 +50227,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 285 */
+/* 302 */
 /***/ function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -51372,7 +50254,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 286 */
+/* 303 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Used for built-in method references. */
@@ -51397,7 +50279,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 287 */
+/* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -51412,20 +50294,24 @@ var StellarSdk =
 	    value: true
 	});
 
-	var _index = __webpack_require__(188);
+	var _index = __webpack_require__(205);
 
 	var xdr = _index.xdr;
 	var hash = _index.hash;
 
-	var encodeCheck = __webpack_require__(247).encodeCheck;
+	var StrKey = __webpack_require__(264).StrKey;
 
-	var Operation = __webpack_require__(288).Operation;
+	var Operation = __webpack_require__(305).Operation;
 
-	var Network = __webpack_require__(242).Network;
+	var Network = __webpack_require__(259).Network;
 
-	var map = _interopRequire(__webpack_require__(366));
+	var map = _interopRequire(__webpack_require__(383));
 
-	var each = _interopRequire(__webpack_require__(399));
+	var each = _interopRequire(__webpack_require__(416));
+
+	var isString = _interopRequire(__webpack_require__(287));
+
+	var crypto = _interopRequire(__webpack_require__(419));
 
 	var MIN_LEDGER = 0;
 	var MAX_LEDGER = 4294967295; // max uint32
@@ -51449,7 +50335,7 @@ var StellarSdk =
 	        }
 	        // since this transaction is immutable, save the tx
 	        this.tx = envelope.tx();
-	        this.source = encodeCheck("accountId", envelope.tx().sourceAccount().ed25519());
+	        this.source = StrKey.encodeEd25519PublicKey(envelope.tx().sourceAccount().ed25519());
 	        this.fee = this.tx.fee();
 	        this.memo = this.tx.memo();
 	        this.sequence = this.tx.seqNum().toString();
@@ -51496,6 +50382,29 @@ var StellarSdk =
 	                });
 	            }
 	        },
+	        signHashX: {
+
+	            /**
+	             * Add `hashX` signer preimage as signature.
+	             * @param {Buffer|String} preimage Preimage of hash used as signer
+	             * @returns {void}
+	             */
+
+	            value: function signHashX(preimage) {
+	                if (isString(preimage)) {
+	                    preimage = Buffer.from(preimage, "hex");
+	                }
+
+	                if (preimage.length > 64) {
+	                    throw new Error("preimage cannnot be longer than 64 bytes");
+	                }
+
+	                var signature = preimage;
+	                var hash = crypto.createHash("sha256").update(preimage).digest();
+	                var hint = hash.slice(hash.length - 4);
+	                this.signatures.push(new xdr.DecoratedSignature({ hint: hint, signature: signature }));
+	            }
+	        },
 	        hash: {
 
 	            /**
@@ -51530,6 +50439,10 @@ var StellarSdk =
 	             */
 
 	            value: function signatureBase() {
+	                if (Network.current() === null) {
+	                    throw new Error("No network selected. Use `Network.use`, `Network.usePublicNetwork` or `Network.useTestNetwork` helper methods to select network.");
+	                }
+
 	                return Buffer.concat([Network.current().networkId(), xdr.EnvelopeType.envelopeTypeTx().toXDR(), this.tx.toXDR()]);
 	            }
 	        },
@@ -51552,10 +50465,10 @@ var StellarSdk =
 
 	    return Transaction;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 288 */
+/* 305 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -51570,38 +50483,38 @@ var StellarSdk =
 	    value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(189));
+	var xdr = _interopRequire(__webpack_require__(206));
 
-	var Keypair = __webpack_require__(241).Keypair;
+	var Keypair = __webpack_require__(258).Keypair;
 
-	var _jsXdr = __webpack_require__(190);
+	var _jsXdr = __webpack_require__(207);
 
 	var UnsignedHyper = _jsXdr.UnsignedHyper;
 	var Hyper = _jsXdr.Hyper;
 
-	var hash = __webpack_require__(228).hash;
+	var hash = __webpack_require__(245).hash;
 
-	var encodeCheck = __webpack_require__(247).encodeCheck;
+	var StrKey = __webpack_require__(264).StrKey;
 
-	var Asset = __webpack_require__(289).Asset;
+	var Asset = __webpack_require__(306).Asset;
 
-	var BigNumber = _interopRequire(__webpack_require__(360));
+	var BigNumber = _interopRequire(__webpack_require__(377));
 
-	var best_r = __webpack_require__(361).best_r;
+	var best_r = __webpack_require__(378).best_r;
 
-	var padEnd = _interopRequire(__webpack_require__(351));
+	var padEnd = _interopRequire(__webpack_require__(368));
 
-	var trimEnd = _interopRequire(__webpack_require__(358));
+	var trimEnd = _interopRequire(__webpack_require__(375));
 
-	var isEmpty = _interopRequire(__webpack_require__(362));
+	var isEmpty = _interopRequire(__webpack_require__(379));
 
-	var isUndefined = _interopRequire(__webpack_require__(245));
+	var isUndefined = _interopRequire(__webpack_require__(262));
 
-	var isString = _interopRequire(__webpack_require__(270));
+	var isString = _interopRequire(__webpack_require__(287));
 
-	var isNumber = _interopRequire(__webpack_require__(364));
+	var isNumber = _interopRequire(__webpack_require__(381));
 
-	var isFinite = _interopRequire(__webpack_require__(365));
+	var isFinite = _interopRequire(__webpack_require__(382));
 
 	var ONE = 10000000;
 	var MAX_INT64 = "9223372036854775807";
@@ -51668,14 +50581,14 @@ var StellarSdk =
 	            */
 
 	            value: function createAccount(opts) {
-	                if (!Keypair.isValidPublicKey(opts.destination)) {
+	                if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
 	                    throw new Error("destination is invalid");
 	                }
 	                if (!this.isValidAmount(opts.startingBalance)) {
-	                    throw new TypeError("startingBalance argument must be of type String and represent a positive number");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("startingBalance"));
 	                }
 	                var attributes = {};
-	                attributes.destination = Keypair.fromAccountId(opts.destination).xdrAccountId();
+	                attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
 	                attributes.startingBalance = this._toXDRAmount(opts.startingBalance);
 	                var createAccount = new xdr.CreateAccountOp(attributes);
 
@@ -51699,18 +50612,18 @@ var StellarSdk =
 	            */
 
 	            value: function payment(opts) {
-	                if (!Keypair.isValidPublicKey(opts.destination)) {
+	                if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
 	                    throw new Error("destination is invalid");
 	                }
 	                if (!opts.asset) {
 	                    throw new Error("Must provide an asset for a payment operation");
 	                }
 	                if (!this.isValidAmount(opts.amount)) {
-	                    throw new TypeError("amount argument must be of type String and represent a positive number");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("amount"));
 	                }
 
 	                var attributes = {};
-	                attributes.destination = Keypair.fromAccountId(opts.destination).xdrAccountId();
+	                attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
 	                attributes.asset = opts.asset.toXdrObject();
 	                attributes.amount = this._toXDRAmount(opts.amount);
 	                var payment = new xdr.PaymentOp(attributes);
@@ -51744,22 +50657,22 @@ var StellarSdk =
 	                    throw new Error("Must specify a send asset");
 	                }
 	                if (!this.isValidAmount(opts.sendMax)) {
-	                    throw new TypeError("sendMax argument must be of type String and represent a positive number");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("sendMax"));
 	                }
-	                if (!Keypair.isValidPublicKey(opts.destination)) {
+	                if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
 	                    throw new Error("destination is invalid");
 	                }
 	                if (!opts.destAsset) {
 	                    throw new Error("Must provide a destAsset for a payment operation");
 	                }
 	                if (!this.isValidAmount(opts.destAmount)) {
-	                    throw new TypeError("destAmount argument must be of type String and represent a positive number");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("destAmount"));
 	                }
 
 	                var attributes = {};
 	                attributes.sendAsset = opts.sendAsset.toXdrObject();
 	                attributes.sendMax = this._toXDRAmount(opts.sendMax);
-	                attributes.destination = Keypair.fromAccountId(opts.destination).xdrAccountId();
+	                attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
 	                attributes.destAsset = opts.destAsset.toXdrObject();
 	                attributes.destAmount = this._toXDRAmount(opts.destAmount);
 
@@ -51796,7 +50709,7 @@ var StellarSdk =
 	                var attributes = {};
 	                attributes.line = opts.asset.toXdrObject();
 	                if (!isUndefined(opts.limit) && !this.isValidAmount(opts.limit, true)) {
-	                    throw new TypeError("limit argument must be of type String and represent a number");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("limit"));
 	                }
 
 	                if (opts.limit) {
@@ -51831,11 +50744,11 @@ var StellarSdk =
 	            */
 
 	            value: function allowTrust(opts) {
-	                if (!Keypair.isValidPublicKey(opts.trustor)) {
+	                if (!StrKey.isValidEd25519PublicKey(opts.trustor)) {
 	                    throw new Error("trustor is invalid");
 	                }
 	                var attributes = {};
-	                attributes.trustor = Keypair.fromAccountId(opts.trustor).xdrAccountId();
+	                attributes.trustor = Keypair.fromPublicKey(opts.trustor).xdrAccountId();
 	                if (opts.assetCode.length <= 4) {
 	                    var code = padEnd(opts.assetCode, 4, "\u0000");
 	                    attributes.asset = xdr.AllowTrustOpAsset.assetTypeCreditAlphanum4(code);
@@ -51875,8 +50788,10 @@ var StellarSdk =
 	            * @param {number|string} [opts.medThreshold] - The sum weight for the medium threshold.
 	            * @param {number|string} [opts.highThreshold] - The sum weight for the high threshold.
 	            * @param {object} [opts.signer] - Add or remove a signer from the account. The signer is
-	            *                                 deleted if the weight is 0.
-	            * @param {string} [opts.signer.pubKey] - The public key of the new signer (old `address` field name is deprecated).
+	            *                                 deleted if the weight is 0. Only one of `ed25519PublicKey`, `sha256Hash`, `preAuthTx` should be defined.
+	            * @param {string} [opts.signer.ed25519PublicKey] - The ed25519 public key of the signer.
+	            * @param {Buffer} [opts.signer.sha256Hash] - sha256 hash of preimage that will unlock funds. Preimage should be used as signature of future transaction.
+	            * @param {Buffer} [opts.signer.preAuthTx] - Hash of transaction that will unlock funds.
 	            * @param {number|string} [opts.signer.weight] - The weight of the new signer (0 to delete or 1-255)
 	            * @param {string} [opts.homeDomain] - sets the home domain used for reverse federation lookup.
 	            * @param {string} [opts.source] - The source account (defaults to transaction source).
@@ -51888,10 +50803,10 @@ var StellarSdk =
 	                var attributes = {};
 
 	                if (opts.inflationDest) {
-	                    if (!Keypair.isValidPublicKey(opts.inflationDest)) {
+	                    if (!StrKey.isValidEd25519PublicKey(opts.inflationDest)) {
 	                        throw new Error("inflationDest is invalid");
 	                    }
-	                    attributes.inflationDest = Keypair.fromAccountId(opts.inflationDest).xdrAccountId();
+	                    attributes.inflationDest = Keypair.fromPublicKey(opts.inflationDest).xdrAccountId();
 	                }
 
 	                var weightCheckFunction = function (value, name) {
@@ -51915,21 +50830,41 @@ var StellarSdk =
 	                attributes.homeDomain = opts.homeDomain;
 
 	                if (opts.signer) {
-	                    if (opts.signer.address) {
-	                        console.warn("signer.address is deprecated. Use signer.pubKey instead.");
-	                        opts.signer.pubKey = opts.signer.address;
+	                    var weight = this._checkUnsignedIntValue("signer.weight", opts.signer.weight, weightCheckFunction);
+	                    var key = undefined;
+
+	                    var setValues = 0;
+
+	                    if (opts.signer.ed25519PublicKey) {
+	                        if (!StrKey.isValidEd25519PublicKey(opts.signer.ed25519PublicKey)) {
+	                            throw new Error("signer.ed25519PublicKey is invalid.");
+	                        }
+	                        var rawKey = StrKey.decodeEd25519PublicKey(opts.signer.ed25519PublicKey);
+	                        key = new xdr.SignerKey.signerKeyTypeEd25519(rawKey);
+	                        setValues++;
 	                    }
 
-	                    if (!Keypair.isValidPublicKey(opts.signer.pubKey)) {
-	                        throw new Error("signer.pubKey is invalid");
+	                    if (opts.signer.preAuthTx) {
+	                        if (!(Buffer.isBuffer(opts.signer.preAuthTx) && opts.signer.preAuthTx.length == 32)) {
+	                            throw new Error("signer.preAuthTx must be 32 bytes Buffer.");
+	                        }
+	                        key = new xdr.SignerKey.signerKeyTypeHashTx(opts.signer.preAuthTx);
+	                        setValues++;
 	                    }
 
-	                    opts.signer.weight = this._checkUnsignedIntValue("signer.weight", opts.signer.weight, weightCheckFunction);
+	                    if (opts.signer.sha256Hash) {
+	                        if (!(Buffer.isBuffer(opts.signer.sha256Hash) && opts.signer.sha256Hash.length == 32)) {
+	                            throw new Error("signer.sha256Hash must be 32 bytes Buffer.");
+	                        }
+	                        key = new xdr.SignerKey.signerKeyTypeHashX(opts.signer.sha256Hash);
+	                        setValues++;
+	                    }
 
-	                    attributes.signer = new xdr.Signer({
-	                        pubKey: Keypair.fromAccountId(opts.signer.pubKey).xdrAccountId(),
-	                        weight: opts.signer.weight
-	                    });
+	                    if (setValues != 1) {
+	                        throw new Error("Signer object must contain exactly one of signer.ed25519PublicKey, signer.sha256Hash, signer.preAuthTx.");
+	                    }
+
+	                    attributes.signer = new xdr.Signer({ key: key, weight: weight });
 	                }
 
 	                var setOptionsOp = new xdr.SetOptionsOp(attributes);
@@ -51964,7 +50899,7 @@ var StellarSdk =
 	                attributes.selling = opts.selling.toXdrObject();
 	                attributes.buying = opts.buying.toXdrObject();
 	                if (!this.isValidAmount(opts.amount, true)) {
-	                    throw new TypeError("amount argument must be of type String and represent a positive number or zero");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("amount"));
 	                }
 	                attributes.amount = this._toXDRAmount(opts.amount);
 	                if (isUndefined(opts.price)) {
@@ -52011,7 +50946,7 @@ var StellarSdk =
 	                attributes.selling = opts.selling.toXdrObject();
 	                attributes.buying = opts.buying.toXdrObject();
 	                if (!this.isValidAmount(opts.amount)) {
-	                    throw new TypeError("amount argument must be of type String and represent a positive number");
+	                    throw new TypeError(Operation.constructAmountRequirementsError("amount"));
 	                }
 	                attributes.amount = this._toXDRAmount(opts.amount);
 	                if (isUndefined(opts.price)) {
@@ -52039,10 +50974,10 @@ var StellarSdk =
 
 	            value: function accountMerge(opts) {
 	                var opAttributes = {};
-	                if (!Keypair.isValidPublicKey(opts.destination)) {
+	                if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
 	                    throw new Error("destination is invalid");
 	                }
-	                opAttributes.body = xdr.OperationBody.accountMerge(Keypair.fromAccountId(opts.destination).xdrAccountId());
+	                opAttributes.body = xdr.OperationBody.accountMerge(Keypair.fromPublicKey(opts.destination).xdrAccountId());
 	                this.setSourceAccount(opAttributes, opts);
 
 	                return new xdr.Operation(opAttributes);
@@ -52111,10 +51046,10 @@ var StellarSdk =
 	        setSourceAccount: {
 	            value: function setSourceAccount(opAttributes, opts) {
 	                if (opts.source) {
-	                    if (!Keypair.isValidPublicKey(opts.source)) {
+	                    if (!StrKey.isValidEd25519PublicKey(opts.source)) {
 	                        throw new Error("Source address is invalid");
 	                    }
-	                    opAttributes.sourceAccount = Keypair.fromAccountId(opts.source).xdrAccountId();
+	                    opAttributes.sourceAccount = Keypair.fromPublicKey(opts.source).xdrAccountId();
 	                }
 	            }
 	        },
@@ -52129,7 +51064,7 @@ var StellarSdk =
 
 	            value: function operationToObject(operation) {
 	                function accountIdtoAddress(accountId) {
-	                    return encodeCheck("accountId", accountId.ed25519());
+	                    return StrKey.encodeEd25519PublicKey(accountId.ed25519());
 	                }
 
 	                var result = {};
@@ -52191,7 +51126,15 @@ var StellarSdk =
 
 	                        if (attrs.signer()) {
 	                            var signer = {};
-	                            signer.pubKey = accountIdtoAddress(attrs.signer().pubKey());
+	                            var arm = attrs.signer().key().arm();
+	                            if (arm == "ed25519") {
+	                                signer.ed25519PublicKey = accountIdtoAddress(attrs.signer().key());
+	                            } else if (arm == "hashTx") {
+	                                signer.preAuthTx = attrs.signer().key().hashTx();
+	                            } else if (arm == "hashX") {
+	                                signer.sha256Hash = attrs.signer().key().hashX();
+	                            }
+
 	                            signer.weight = attrs.signer().weight();
 	                            result.signer = signer;
 	                        }
@@ -52275,6 +51218,11 @@ var StellarSdk =
 	                }
 
 	                return true;
+	            }
+	        },
+	        constructAmountRequirementsError: {
+	            value: function constructAmountRequirementsError(arg) {
+	                return "" + arg + " argument must be of type String, represent a positive number and have at most 7 digits after the decimal";
 	            }
 	        },
 	        _checkUnsignedIntValue: {
@@ -52379,10 +51327,10 @@ var StellarSdk =
 
 	    return Operation;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 289 */
+/* 306 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -52397,17 +51345,17 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(189));
+	var xdr = _interopRequire(__webpack_require__(206));
 
-	var Keypair = __webpack_require__(241).Keypair;
+	var Keypair = __webpack_require__(258).Keypair;
 
-	var encodeCheck = __webpack_require__(247).encodeCheck;
+	var StrKey = __webpack_require__(264).StrKey;
 
-	var clone = _interopRequire(__webpack_require__(290));
+	var clone = _interopRequire(__webpack_require__(307));
 
-	var padEnd = _interopRequire(__webpack_require__(351));
+	var padEnd = _interopRequire(__webpack_require__(368));
 
-	var trimEnd = _interopRequire(__webpack_require__(358));
+	var trimEnd = _interopRequire(__webpack_require__(375));
 
 	var Asset = exports.Asset = (function () {
 	  /**
@@ -52425,13 +51373,13 @@ var StellarSdk =
 	  function Asset(code, issuer) {
 	    _classCallCheck(this, Asset);
 
-	    if (code.length > 12) {
-	      throw new Error("Asset code must be 12 characters at max");
+	    if (!/^[a-zA-Z0-9]{1,12}$/.test(code)) {
+	      throw new Error("Asset code is invalid (maximum alphanumeric, 12 characters at max)");
 	    }
 	    if (String(code).toLowerCase() !== "xlm" && !issuer) {
 	      throw new Error("Issuer cannot be null");
 	    }
-	    if (issuer && !Keypair.isValidPublicKey(issuer)) {
+	    if (issuer && !StrKey.isValidEd25519PublicKey(issuer)) {
 	      throw new Error("Issuer is invalid");
 	    }
 
@@ -52467,7 +51415,7 @@ var StellarSdk =
 
 	          var assetType = new xdrType({
 	            assetCode: paddedCode,
-	            issuer: Keypair.fromAccountId(this.issuer).xdrAccountId()
+	            issuer: Keypair.fromPublicKey(this.issuer).xdrAccountId()
 	          });
 
 	          return new xdr.Asset(xdrTypeString, assetType);
@@ -52573,12 +51521,12 @@ var StellarSdk =
 	            return this.native();
 	          case xdr.AssetType.assetTypeCreditAlphanum4():
 	            anum = assetXdr.alphaNum4();
-	            issuer = encodeCheck("accountId", anum.issuer().ed25519());
+	            issuer = StrKey.encodeEd25519PublicKey(anum.issuer().ed25519());
 	            code = trimEnd(anum.assetCode(), "\u0000");
 	            return new this(code, issuer);
 	          case xdr.AssetType.assetTypeCreditAlphanum12():
 	            anum = assetXdr.alphaNum12();
-	            issuer = encodeCheck("accountId", anum.issuer().ed25519());
+	            issuer = StrKey.encodeEd25519PublicKey(anum.issuer().ed25519());
 	            code = trimEnd(anum.assetCode(), "\u0000");
 	            return new this(code, issuer);
 	          default:
@@ -52592,10 +51540,10 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 290 */
+/* 307 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseClone = __webpack_require__(291);
+	var baseClone = __webpack_require__(308);
 
 	/**
 	 * Creates a shallow clone of `value`.
@@ -52629,23 +51577,23 @@ var StellarSdk =
 
 
 /***/ },
-/* 291 */
+/* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stack = __webpack_require__(292),
-	    arrayEach = __webpack_require__(321),
-	    assignValue = __webpack_require__(322),
-	    baseAssign = __webpack_require__(323),
-	    baseForOwn = __webpack_require__(326),
-	    copyArray = __webpack_require__(329),
-	    copySymbols = __webpack_require__(330),
-	    getTag = __webpack_require__(332),
-	    initCloneArray = __webpack_require__(334),
-	    initCloneByTag = __webpack_require__(335),
-	    initCloneObject = __webpack_require__(349),
-	    isArray = __webpack_require__(271),
-	    isHostObject = __webpack_require__(309),
-	    isObject = __webpack_require__(268);
+	var Stack = __webpack_require__(309),
+	    arrayEach = __webpack_require__(338),
+	    assignValue = __webpack_require__(339),
+	    baseAssign = __webpack_require__(340),
+	    baseForOwn = __webpack_require__(343),
+	    copyArray = __webpack_require__(346),
+	    copySymbols = __webpack_require__(347),
+	    getTag = __webpack_require__(349),
+	    initCloneArray = __webpack_require__(351),
+	    initCloneByTag = __webpack_require__(352),
+	    initCloneObject = __webpack_require__(366),
+	    isArray = __webpack_require__(288),
+	    isHostObject = __webpack_require__(326),
+	    isObject = __webpack_require__(285);
 
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]',
@@ -52758,14 +51706,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 292 */
+/* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var stackClear = __webpack_require__(293),
-	    stackDelete = __webpack_require__(294),
-	    stackGet = __webpack_require__(298),
-	    stackHas = __webpack_require__(300),
-	    stackSet = __webpack_require__(302);
+	var stackClear = __webpack_require__(310),
+	    stackDelete = __webpack_require__(311),
+	    stackGet = __webpack_require__(315),
+	    stackHas = __webpack_require__(317),
+	    stackSet = __webpack_require__(319);
 
 	/**
 	 * Creates a stack cache object to store key-value pairs.
@@ -52795,7 +51743,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 293 */
+/* 310 */
 /***/ function(module, exports) {
 
 	/**
@@ -52813,10 +51761,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 294 */
+/* 311 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocDelete = __webpack_require__(295);
+	var assocDelete = __webpack_require__(312);
 
 	/**
 	 * Removes `key` and its value from the stack.
@@ -52838,10 +51786,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 295 */
+/* 312 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var assocIndexOf = __webpack_require__(296);
+	/* WEBPACK VAR INJECTION */(function(global) {var assocIndexOf = __webpack_require__(313);
 
 	/** Used for built-in method references. */
 	var arrayProto = global.Array.prototype;
@@ -52876,10 +51824,10 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 296 */
+/* 313 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var eq = __webpack_require__(297);
+	var eq = __webpack_require__(314);
 
 	/**
 	 * Gets the index at which the first occurrence of `key` is found in `array`
@@ -52904,7 +51852,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 297 */
+/* 314 */
 /***/ function(module, exports) {
 
 	/**
@@ -52945,10 +51893,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 298 */
+/* 315 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocGet = __webpack_require__(299);
+	var assocGet = __webpack_require__(316);
 
 	/**
 	 * Gets the stack value for `key`.
@@ -52970,10 +51918,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 299 */
+/* 316 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(296);
+	var assocIndexOf = __webpack_require__(313);
 
 	/**
 	 * Gets the associative array value for `key`.
@@ -52992,10 +51940,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 300 */
+/* 317 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocHas = __webpack_require__(301);
+	var assocHas = __webpack_require__(318);
 
 	/**
 	 * Checks if a stack value for `key` exists.
@@ -53017,10 +51965,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 301 */
+/* 318 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(296);
+	var assocIndexOf = __webpack_require__(313);
 
 	/**
 	 * Checks if an associative array value for `key` exists.
@@ -53038,11 +51986,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 302 */
+/* 319 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var MapCache = __webpack_require__(303),
-	    assocSet = __webpack_require__(319);
+	var MapCache = __webpack_require__(320),
+	    assocSet = __webpack_require__(336);
 
 	/** Used as the size to enable large array optimizations. */
 	var LARGE_ARRAY_SIZE = 200;
@@ -53080,14 +52028,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 303 */
+/* 320 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var mapClear = __webpack_require__(304),
-	    mapDelete = __webpack_require__(311),
-	    mapGet = __webpack_require__(315),
-	    mapHas = __webpack_require__(317),
-	    mapSet = __webpack_require__(318);
+	var mapClear = __webpack_require__(321),
+	    mapDelete = __webpack_require__(328),
+	    mapGet = __webpack_require__(332),
+	    mapHas = __webpack_require__(334),
+	    mapSet = __webpack_require__(335);
 
 	/**
 	 * Creates a map cache object to store key-value pairs.
@@ -53117,11 +52065,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 304 */
+/* 321 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Hash = __webpack_require__(305),
-	    Map = __webpack_require__(310);
+	var Hash = __webpack_require__(322),
+	    Map = __webpack_require__(327);
 
 	/**
 	 * Removes all key-value entries from the map.
@@ -53138,10 +52086,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 305 */
+/* 322 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var nativeCreate = __webpack_require__(306);
+	/* WEBPACK VAR INJECTION */(function(global) {var nativeCreate = __webpack_require__(323);
 
 	/** Used for built-in method references. */
 	var objectProto = global.Object.prototype;
@@ -53162,10 +52110,10 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 306 */
+/* 323 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var getNative = __webpack_require__(307);
+	var getNative = __webpack_require__(324);
 
 	/* Built-in method references that are verified to be native. */
 	var nativeCreate = getNative(Object, 'create');
@@ -53174,10 +52122,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 307 */
+/* 324 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isNative = __webpack_require__(308);
+	var isNative = __webpack_require__(325);
 
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -53196,12 +52144,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 308 */
+/* 325 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isFunction = __webpack_require__(267),
-	    isHostObject = __webpack_require__(309),
-	    isObjectLike = __webpack_require__(272);
+	/* WEBPACK VAR INJECTION */(function(global) {var isFunction = __webpack_require__(284),
+	    isHostObject = __webpack_require__(326),
+	    isObjectLike = __webpack_require__(289);
 
 	/** Used to match `RegExp` [syntax characters](http://ecma-international.org/ecma-262/6.0/#sec-patterns). */
 	var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
@@ -53256,7 +52204,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 309 */
+/* 326 */
 /***/ function(module, exports) {
 
 	/**
@@ -53282,10 +52230,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 310 */
+/* 327 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var getNative = __webpack_require__(307);
+	/* WEBPACK VAR INJECTION */(function(global) {var getNative = __webpack_require__(324);
 
 	/* Built-in method references that are verified to be native. */
 	var Map = getNative(global, 'Map');
@@ -53295,13 +52243,13 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 311 */
+/* 328 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Map = __webpack_require__(310),
-	    assocDelete = __webpack_require__(295),
-	    hashDelete = __webpack_require__(312),
-	    isKeyable = __webpack_require__(314);
+	var Map = __webpack_require__(327),
+	    assocDelete = __webpack_require__(312),
+	    hashDelete = __webpack_require__(329),
+	    isKeyable = __webpack_require__(331);
 
 	/**
 	 * Removes `key` and its value from the map.
@@ -53324,10 +52272,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 312 */
+/* 329 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var hashHas = __webpack_require__(313);
+	var hashHas = __webpack_require__(330);
 
 	/**
 	 * Removes `key` and its value from the hash.
@@ -53345,10 +52293,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 313 */
+/* 330 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var nativeCreate = __webpack_require__(306);
+	/* WEBPACK VAR INJECTION */(function(global) {var nativeCreate = __webpack_require__(323);
 
 	/** Used for built-in method references. */
 	var objectProto = global.Object.prototype;
@@ -53373,7 +52321,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 314 */
+/* 331 */
 /***/ function(module, exports) {
 
 	/**
@@ -53393,13 +52341,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 315 */
+/* 332 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Map = __webpack_require__(310),
-	    assocGet = __webpack_require__(299),
-	    hashGet = __webpack_require__(316),
-	    isKeyable = __webpack_require__(314);
+	var Map = __webpack_require__(327),
+	    assocGet = __webpack_require__(316),
+	    hashGet = __webpack_require__(333),
+	    isKeyable = __webpack_require__(331);
 
 	/**
 	 * Gets the map value for `key`.
@@ -53422,10 +52370,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 316 */
+/* 333 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var nativeCreate = __webpack_require__(306);
+	/* WEBPACK VAR INJECTION */(function(global) {var nativeCreate = __webpack_require__(323);
 
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
@@ -53457,13 +52405,13 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 317 */
+/* 334 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Map = __webpack_require__(310),
-	    assocHas = __webpack_require__(301),
-	    hashHas = __webpack_require__(313),
-	    isKeyable = __webpack_require__(314);
+	var Map = __webpack_require__(327),
+	    assocHas = __webpack_require__(318),
+	    hashHas = __webpack_require__(330),
+	    isKeyable = __webpack_require__(331);
 
 	/**
 	 * Checks if a map value for `key` exists.
@@ -53486,13 +52434,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 318 */
+/* 335 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Map = __webpack_require__(310),
-	    assocSet = __webpack_require__(319),
-	    hashSet = __webpack_require__(320),
-	    isKeyable = __webpack_require__(314);
+	var Map = __webpack_require__(327),
+	    assocSet = __webpack_require__(336),
+	    hashSet = __webpack_require__(337),
+	    isKeyable = __webpack_require__(331);
 
 	/**
 	 * Sets the map `key` to `value`.
@@ -53520,10 +52468,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 319 */
+/* 336 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assocIndexOf = __webpack_require__(296);
+	var assocIndexOf = __webpack_require__(313);
 
 	/**
 	 * Sets the associative array `key` to `value`.
@@ -53546,10 +52494,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 320 */
+/* 337 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var nativeCreate = __webpack_require__(306);
+	var nativeCreate = __webpack_require__(323);
 
 	/** Used to stand-in for `undefined` hash values. */
 	var HASH_UNDEFINED = '__lodash_hash_undefined__';
@@ -53570,7 +52518,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 321 */
+/* 338 */
 /***/ function(module, exports) {
 
 	/**
@@ -53598,10 +52546,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 322 */
+/* 339 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var eq = __webpack_require__(297);
+	/* WEBPACK VAR INJECTION */(function(global) {var eq = __webpack_require__(314);
 
 	/** Used for built-in method references. */
 	var objectProto = global.Object.prototype;
@@ -53633,11 +52581,11 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 323 */
+/* 340 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObject = __webpack_require__(324),
-	    keys = __webpack_require__(278);
+	var copyObject = __webpack_require__(341),
+	    keys = __webpack_require__(295);
 
 	/**
 	 * The base implementation of `_.assign` without support for multiple sources
@@ -53656,10 +52604,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 324 */
+/* 341 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObjectWith = __webpack_require__(325);
+	var copyObjectWith = __webpack_require__(342);
 
 	/**
 	 * Copies properties of `source` to `object`.
@@ -53678,10 +52626,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 325 */
+/* 342 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var assignValue = __webpack_require__(322);
+	var assignValue = __webpack_require__(339);
 
 	/**
 	 * This function is like `copyObject` except that it accepts a function to
@@ -53713,11 +52661,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 326 */
+/* 343 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(327),
-	    keys = __webpack_require__(278);
+	var baseFor = __webpack_require__(344),
+	    keys = __webpack_require__(295);
 
 	/**
 	 * The base implementation of `_.forOwn` without support for iteratee shorthands.
@@ -53735,10 +52683,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 327 */
+/* 344 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createBaseFor = __webpack_require__(328);
+	var createBaseFor = __webpack_require__(345);
 
 	/**
 	 * The base implementation of `baseForIn` and `baseForOwn` which iterates
@@ -53758,7 +52706,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 328 */
+/* 345 */
 /***/ function(module, exports) {
 
 	/**
@@ -53789,7 +52737,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 329 */
+/* 346 */
 /***/ function(module, exports) {
 
 	/**
@@ -53815,11 +52763,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 330 */
+/* 347 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var copyObject = __webpack_require__(324),
-	    getSymbols = __webpack_require__(331);
+	var copyObject = __webpack_require__(341),
+	    getSymbols = __webpack_require__(348);
 
 	/**
 	 * Copies own symbol properties of `source` to `object`.
@@ -53837,7 +52785,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 331 */
+/* 348 */
 /***/ function(module, exports) {
 
 	/** Built-in value references. */
@@ -53858,11 +52806,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 332 */
+/* 349 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var Map = __webpack_require__(310),
-	    Set = __webpack_require__(333);
+	/* WEBPACK VAR INJECTION */(function(global) {var Map = __webpack_require__(327),
+	    Set = __webpack_require__(350);
 
 	/** `Object#toString` result references. */
 	var mapTag = '[object Map]',
@@ -53920,10 +52868,10 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 333 */
+/* 350 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var getNative = __webpack_require__(307);
+	/* WEBPACK VAR INJECTION */(function(global) {var getNative = __webpack_require__(324);
 
 	/* Built-in method references that are verified to be native. */
 	var Set = getNative(global, 'Set');
@@ -53933,7 +52881,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 334 */
+/* 351 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Used for built-in method references. */
@@ -53966,15 +52914,15 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 335 */
+/* 352 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneBuffer = __webpack_require__(336),
-	    cloneMap = __webpack_require__(338),
-	    cloneRegExp = __webpack_require__(342),
-	    cloneSet = __webpack_require__(343),
-	    cloneSymbol = __webpack_require__(346),
-	    cloneTypedArray = __webpack_require__(348);
+	var cloneBuffer = __webpack_require__(353),
+	    cloneMap = __webpack_require__(355),
+	    cloneRegExp = __webpack_require__(359),
+	    cloneSet = __webpack_require__(360),
+	    cloneSymbol = __webpack_require__(363),
+	    cloneTypedArray = __webpack_require__(365);
 
 	/** `Object#toString` result references. */
 	var boolTag = '[object Boolean]',
@@ -54046,10 +52994,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 336 */
+/* 353 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Uint8Array = __webpack_require__(337);
+	var Uint8Array = __webpack_require__(354);
 
 	/**
 	 * Creates a clone of `buffer`.
@@ -54071,7 +53019,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 337 */
+/* 354 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Built-in value references. */
@@ -54082,12 +53030,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 338 */
+/* 355 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addMapEntry = __webpack_require__(339),
-	    arrayReduce = __webpack_require__(340),
-	    mapToArray = __webpack_require__(341);
+	var addMapEntry = __webpack_require__(356),
+	    arrayReduce = __webpack_require__(357),
+	    mapToArray = __webpack_require__(358);
 
 	/**
 	 * Creates a clone of `map`.
@@ -54105,7 +53053,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 339 */
+/* 356 */
 /***/ function(module, exports) {
 
 	/**
@@ -54125,7 +53073,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 340 */
+/* 357 */
 /***/ function(module, exports) {
 
 	/**
@@ -54156,7 +53104,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 341 */
+/* 358 */
 /***/ function(module, exports) {
 
 	/**
@@ -54180,7 +53128,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 342 */
+/* 359 */
 /***/ function(module, exports) {
 
 	/** Used to match `RegExp` flags from their coerced string values. */
@@ -54205,12 +53153,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 343 */
+/* 360 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var addSetEntry = __webpack_require__(344),
-	    arrayReduce = __webpack_require__(340),
-	    setToArray = __webpack_require__(345);
+	var addSetEntry = __webpack_require__(361),
+	    arrayReduce = __webpack_require__(357),
+	    setToArray = __webpack_require__(362);
 
 	/**
 	 * Creates a clone of `set`.
@@ -54228,7 +53176,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 344 */
+/* 361 */
 /***/ function(module, exports) {
 
 	/**
@@ -54248,7 +53196,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 345 */
+/* 362 */
 /***/ function(module, exports) {
 
 	/**
@@ -54272,10 +53220,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 346 */
+/* 363 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(347);
+	var Symbol = __webpack_require__(364);
 
 	/** Used to convert symbols to primitives and strings. */
 	var symbolProto = Symbol ? Symbol.prototype : undefined,
@@ -54296,7 +53244,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 347 */
+/* 364 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/** Built-in value references. */
@@ -54307,10 +53255,10 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 348 */
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var cloneBuffer = __webpack_require__(336);
+	var cloneBuffer = __webpack_require__(353);
 
 	/**
 	 * Creates a clone of `typedArray`.
@@ -54331,11 +53279,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 349 */
+/* 366 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseCreate = __webpack_require__(350),
-	    isFunction = __webpack_require__(267);
+	var baseCreate = __webpack_require__(367),
+	    isFunction = __webpack_require__(284);
 
 	/**
 	 * Initializes an object clone.
@@ -54353,10 +53301,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 350 */
+/* 367 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(268);
+	var isObject = __webpack_require__(285);
 
 	/**
 	 * The base implementation of `_.create` without support for assigning
@@ -54382,11 +53330,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 351 */
+/* 368 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var createPadding = __webpack_require__(352),
-	    toString = __webpack_require__(354);
+	var createPadding = __webpack_require__(369),
+	    toString = __webpack_require__(371);
 
 	/**
 	 * Pads `string` on the right side if it's shorter than `length`. Padding
@@ -54419,13 +53367,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 352 */
+/* 369 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var repeat = __webpack_require__(353),
-	    stringSize = __webpack_require__(356),
-	    stringToArray = __webpack_require__(357),
-	    toInteger = __webpack_require__(273);
+	var repeat = __webpack_require__(370),
+	    stringSize = __webpack_require__(373),
+	    stringToArray = __webpack_require__(374),
+	    toInteger = __webpack_require__(290);
 
 	/** Used to compose unicode character classes. */
 	var rsAstralRange = '\\ud800-\\udfff',
@@ -54472,11 +53420,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 353 */
+/* 370 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toInteger = __webpack_require__(273),
-	    toString = __webpack_require__(354);
+	var toInteger = __webpack_require__(290),
+	    toString = __webpack_require__(371);
 
 	/** Used as references for various `Number` constants. */
 	var MAX_SAFE_INTEGER = 9007199254740991;
@@ -54529,11 +53477,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 354 */
+/* 371 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(347),
-	    isSymbol = __webpack_require__(355);
+	var Symbol = __webpack_require__(364),
+	    isSymbol = __webpack_require__(372);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -54581,10 +53529,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 355 */
+/* 372 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isObjectLike = __webpack_require__(272);
+	/* WEBPACK VAR INJECTION */(function(global) {var isObjectLike = __webpack_require__(289);
 
 	/** `Object#toString` result references. */
 	var symbolTag = '[object Symbol]';
@@ -54624,7 +53572,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 356 */
+/* 373 */
 /***/ function(module, exports) {
 
 	/** Used to compose unicode character classes. */
@@ -54678,7 +53626,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 357 */
+/* 374 */
 /***/ function(module, exports) {
 
 	/** Used to compose unicode character classes. */
@@ -54722,12 +53670,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 358 */
+/* 375 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var charsEndIndex = __webpack_require__(359),
-	    stringToArray = __webpack_require__(357),
-	    toString = __webpack_require__(354);
+	var charsEndIndex = __webpack_require__(376),
+	    stringToArray = __webpack_require__(374),
+	    toString = __webpack_require__(371);
 
 	/** Used to match leading and trailing whitespace. */
 	var reTrimEnd = /\s+$/;
@@ -54770,10 +53718,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 359 */
+/* 376 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(262);
+	var baseIndexOf = __webpack_require__(279);
 
 	/**
 	 * Used by `_.trim` and `_.trimEnd` to get the index of the last string symbol
@@ -54795,7 +53743,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 360 */
+/* 377 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v2.1.3 https://github.com/MikeMcl/bignumber.js/LICENCE */
@@ -57497,7 +56445,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 361 */
+/* 378 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -57518,7 +56466,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var BigNumber = _interopRequire(__webpack_require__(360));
+	var BigNumber = _interopRequire(__webpack_require__(377));
 
 	var MAX_INT = (1 << 31 >>> 0) - 1;
 	function best_r(number) {
@@ -57559,13 +56507,13 @@ var StellarSdk =
 	}
 
 /***/ },
-/* 362 */
+/* 379 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isFunction = __webpack_require__(267),
-	    isObjectLike = __webpack_require__(272),
-	    keys = __webpack_require__(278),
-	    size = __webpack_require__(363);
+	var isFunction = __webpack_require__(284),
+	    isObjectLike = __webpack_require__(289),
+	    keys = __webpack_require__(295),
+	    size = __webpack_require__(380);
 
 	/**
 	 * Checks if `value` is empty. A value is considered empty unless it's an
@@ -57604,13 +56552,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 363 */
+/* 380 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(264),
-	    isString = __webpack_require__(270),
-	    keys = __webpack_require__(278),
-	    stringSize = __webpack_require__(356);
+	var isArrayLike = __webpack_require__(281),
+	    isString = __webpack_require__(287),
+	    keys = __webpack_require__(295),
+	    stringSize = __webpack_require__(373);
 
 	/**
 	 * Gets the size of `collection` by returning its length for array-like
@@ -57647,10 +56595,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 364 */
+/* 381 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isObjectLike = __webpack_require__(272);
+	/* WEBPACK VAR INJECTION */(function(global) {var isObjectLike = __webpack_require__(289);
 
 	/** `Object#toString` result references. */
 	var numberTag = '[object Number]';
@@ -57699,7 +56647,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 365 */
+/* 382 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -57738,13 +56686,13 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 366 */
+/* 383 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(277),
-	    baseIteratee = __webpack_require__(367),
-	    baseMap = __webpack_require__(396),
-	    isArray = __webpack_require__(271);
+	var arrayMap = __webpack_require__(294),
+	    baseIteratee = __webpack_require__(384),
+	    baseMap = __webpack_require__(413),
+	    isArray = __webpack_require__(288);
 
 	/**
 	 * Creates an array of values by running each element in `collection` through
@@ -57796,14 +56744,14 @@ var StellarSdk =
 
 
 /***/ },
-/* 367 */
+/* 384 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseMatches = __webpack_require__(368),
-	    baseMatchesProperty = __webpack_require__(381),
-	    identity = __webpack_require__(393),
-	    isArray = __webpack_require__(271),
-	    property = __webpack_require__(394);
+	var baseMatches = __webpack_require__(385),
+	    baseMatchesProperty = __webpack_require__(398),
+	    identity = __webpack_require__(410),
+	    isArray = __webpack_require__(288),
+	    property = __webpack_require__(411);
 
 	/**
 	 * The base implementation of `_.iteratee`.
@@ -57832,11 +56780,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 368 */
+/* 385 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsMatch = __webpack_require__(369),
-	    getMatchData = __webpack_require__(377);
+	var baseIsMatch = __webpack_require__(386),
+	    getMatchData = __webpack_require__(394);
 
 	/**
 	 * The base implementation of `_.matches` which doesn't clone `source`.
@@ -57868,11 +56816,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 369 */
+/* 386 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Stack = __webpack_require__(292),
-	    baseIsEqual = __webpack_require__(370);
+	var Stack = __webpack_require__(309),
+	    baseIsEqual = __webpack_require__(387);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -57935,12 +56883,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 370 */
+/* 387 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsEqualDeep = __webpack_require__(371),
-	    isObject = __webpack_require__(268),
-	    isObjectLike = __webpack_require__(272);
+	var baseIsEqualDeep = __webpack_require__(388),
+	    isObject = __webpack_require__(285),
+	    isObjectLike = __webpack_require__(289);
 
 	/**
 	 * The base implementation of `_.isEqual` which supports partial comparisons
@@ -57971,17 +56919,17 @@ var StellarSdk =
 
 
 /***/ },
-/* 371 */
+/* 388 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var Stack = __webpack_require__(292),
-	    equalArrays = __webpack_require__(372),
-	    equalByTag = __webpack_require__(374),
-	    equalObjects = __webpack_require__(375),
-	    getTag = __webpack_require__(332),
-	    isArray = __webpack_require__(271),
-	    isHostObject = __webpack_require__(309),
-	    isTypedArray = __webpack_require__(376);
+	/* WEBPACK VAR INJECTION */(function(global) {var Stack = __webpack_require__(309),
+	    equalArrays = __webpack_require__(389),
+	    equalByTag = __webpack_require__(391),
+	    equalObjects = __webpack_require__(392),
+	    getTag = __webpack_require__(349),
+	    isArray = __webpack_require__(288),
+	    isHostObject = __webpack_require__(326),
+	    isTypedArray = __webpack_require__(393);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var PARTIAL_COMPARE_FLAG = 2;
@@ -58061,10 +57009,10 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 372 */
+/* 389 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arraySome = __webpack_require__(373);
+	var arraySome = __webpack_require__(390);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -58139,7 +57087,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 373 */
+/* 390 */
 /***/ function(module, exports) {
 
 	/**
@@ -58167,13 +57115,13 @@ var StellarSdk =
 
 
 /***/ },
-/* 374 */
+/* 391 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Symbol = __webpack_require__(347),
-	    Uint8Array = __webpack_require__(337),
-	    mapToArray = __webpack_require__(341),
-	    setToArray = __webpack_require__(345);
+	var Symbol = __webpack_require__(364),
+	    Uint8Array = __webpack_require__(354),
+	    mapToArray = __webpack_require__(358),
+	    setToArray = __webpack_require__(362);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -58261,11 +57209,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 375 */
+/* 392 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHas = __webpack_require__(279),
-	    keys = __webpack_require__(278);
+	var baseHas = __webpack_require__(296),
+	    keys = __webpack_require__(295);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var PARTIAL_COMPARE_FLAG = 2;
@@ -58349,11 +57297,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 376 */
+/* 393 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var isLength = __webpack_require__(269),
-	    isObjectLike = __webpack_require__(272);
+	/* WEBPACK VAR INJECTION */(function(global) {var isLength = __webpack_require__(286),
+	    isObjectLike = __webpack_require__(289);
 
 	/** `Object#toString` result references. */
 	var argsTag = '[object Arguments]',
@@ -58430,11 +57378,11 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 377 */
+/* 394 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isStrictComparable = __webpack_require__(378),
-	    toPairs = __webpack_require__(379);
+	var isStrictComparable = __webpack_require__(395),
+	    toPairs = __webpack_require__(396);
 
 	/**
 	 * Gets the property names, values, and compare flags of `object`.
@@ -58457,10 +57405,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 378 */
+/* 395 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isObject = __webpack_require__(268);
+	var isObject = __webpack_require__(285);
 
 	/**
 	 * Checks if `value` is suitable for strict equality comparisons, i.e. `===`.
@@ -58478,11 +57426,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 379 */
+/* 396 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPairs = __webpack_require__(380),
-	    keys = __webpack_require__(278);
+	var baseToPairs = __webpack_require__(397),
+	    keys = __webpack_require__(295);
 
 	/**
 	 * Creates an array of own enumerable key-value pairs for `object`.
@@ -58512,10 +57460,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 380 */
+/* 397 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(277);
+	var arrayMap = __webpack_require__(294);
 
 	/**
 	 * The base implementation of `_.toPairs` and `_.toPairsIn` which creates an array
@@ -58536,12 +57484,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 381 */
+/* 398 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseIsEqual = __webpack_require__(370),
-	    get = __webpack_require__(382),
-	    hasIn = __webpack_require__(387);
+	var baseIsEqual = __webpack_require__(387),
+	    get = __webpack_require__(399),
+	    hasIn = __webpack_require__(404);
 
 	/** Used to compose bitmasks for comparison styles. */
 	var UNORDERED_COMPARE_FLAG = 1,
@@ -58568,10 +57516,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 382 */
+/* 399 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(383);
+	var baseGet = __webpack_require__(400);
 
 	/**
 	 * Gets the value at `path` of `object`. If the resolved value is
@@ -58606,11 +57554,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 383 */
+/* 400 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPath = __webpack_require__(384),
-	    isKey = __webpack_require__(386);
+	var baseToPath = __webpack_require__(401),
+	    isKey = __webpack_require__(403);
 
 	/**
 	 * The base implementation of `_.get` without support for default values.
@@ -58636,11 +57584,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 384 */
+/* 401 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArray = __webpack_require__(271),
-	    stringToPath = __webpack_require__(385);
+	var isArray = __webpack_require__(288),
+	    stringToPath = __webpack_require__(402);
 
 	/**
 	 * The base implementation of `_.toPath` which only converts `value` to a
@@ -58658,10 +57606,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 385 */
+/* 402 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var toString = __webpack_require__(354);
+	var toString = __webpack_require__(371);
 
 	/** Used to match property names within property paths. */
 	var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]/g;
@@ -58688,10 +57636,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 386 */
+/* 403 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArray = __webpack_require__(271);
+	var isArray = __webpack_require__(288);
 
 	/** Used to match property names within property paths. */
 	var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
@@ -58718,11 +57666,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 387 */
+/* 404 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseHasIn = __webpack_require__(388),
-	    hasPath = __webpack_require__(389);
+	var baseHasIn = __webpack_require__(405),
+	    hasPath = __webpack_require__(406);
 
 	/**
 	 * Checks if `path` is a direct or inherited property of `object`.
@@ -58757,7 +57705,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 388 */
+/* 405 */
 /***/ function(module, exports) {
 
 	/**
@@ -58776,18 +57724,18 @@ var StellarSdk =
 
 
 /***/ },
-/* 389 */
+/* 406 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseToPath = __webpack_require__(384),
-	    isArguments = __webpack_require__(283),
-	    isArray = __webpack_require__(271),
-	    isIndex = __webpack_require__(285),
-	    isKey = __webpack_require__(386),
-	    isLength = __webpack_require__(269),
-	    isString = __webpack_require__(270),
-	    last = __webpack_require__(390),
-	    parent = __webpack_require__(391);
+	var baseToPath = __webpack_require__(401),
+	    isArguments = __webpack_require__(300),
+	    isArray = __webpack_require__(288),
+	    isIndex = __webpack_require__(302),
+	    isKey = __webpack_require__(403),
+	    isLength = __webpack_require__(286),
+	    isString = __webpack_require__(287),
+	    last = __webpack_require__(407),
+	    parent = __webpack_require__(408);
 
 	/**
 	 * Checks if `path` exists on `object`.
@@ -58819,7 +57767,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 390 */
+/* 407 */
 /***/ function(module, exports) {
 
 	/**
@@ -58844,11 +57792,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 391 */
+/* 408 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseSlice = __webpack_require__(392),
-	    get = __webpack_require__(382);
+	var baseSlice = __webpack_require__(409),
+	    get = __webpack_require__(399);
 
 	/**
 	 * Gets the parent value at `path` of `object`.
@@ -58866,7 +57814,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 392 */
+/* 409 */
 /***/ function(module, exports) {
 
 	/**
@@ -58903,7 +57851,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 393 */
+/* 410 */
 /***/ function(module, exports) {
 
 	/**
@@ -58929,12 +57877,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 394 */
+/* 411 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(266),
-	    basePropertyDeep = __webpack_require__(395),
-	    isKey = __webpack_require__(386);
+	var baseProperty = __webpack_require__(283),
+	    basePropertyDeep = __webpack_require__(412),
+	    isKey = __webpack_require__(403);
 
 	/**
 	 * Creates a function that returns the value at `path` of a given object.
@@ -58965,10 +57913,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 395 */
+/* 412 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(383);
+	var baseGet = __webpack_require__(400);
 
 	/**
 	 * A specialized version of `baseProperty` which supports deep paths.
@@ -58987,11 +57935,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 396 */
+/* 413 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseEach = __webpack_require__(397),
-	    isArrayLike = __webpack_require__(264);
+	var baseEach = __webpack_require__(414),
+	    isArrayLike = __webpack_require__(281);
 
 	/**
 	 * The base implementation of `_.map` without support for iteratee shorthands.
@@ -59015,11 +57963,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 397 */
+/* 414 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseForOwn = __webpack_require__(326),
-	    createBaseEach = __webpack_require__(398);
+	var baseForOwn = __webpack_require__(343),
+	    createBaseEach = __webpack_require__(415);
 
 	/**
 	 * The base implementation of `_.forEach` without support for iteratee shorthands.
@@ -59035,10 +57983,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 398 */
+/* 415 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var isArrayLike = __webpack_require__(264);
+	var isArrayLike = __webpack_require__(281);
 
 	/**
 	 * Creates a `baseEach` or `baseEachRight` function.
@@ -59073,20 +58021,20 @@ var StellarSdk =
 
 
 /***/ },
-/* 399 */
+/* 416 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(400);
+	module.exports = __webpack_require__(417);
 
 
 /***/ },
-/* 400 */
+/* 417 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayEach = __webpack_require__(321),
-	    baseEach = __webpack_require__(397),
-	    isArray = __webpack_require__(271),
-	    toFunction = __webpack_require__(401);
+	var arrayEach = __webpack_require__(338),
+	    baseEach = __webpack_require__(414),
+	    isArray = __webpack_require__(288),
+	    toFunction = __webpack_require__(418);
 
 	/**
 	 * Iterates over elements of `collection` invoking `iteratee` for each element.
@@ -59126,10 +58074,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 401 */
+/* 418 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var identity = __webpack_require__(393);
+	var identity = __webpack_require__(410);
 
 	/**
 	 * Converts `value` to a function if it's not one.
@@ -59146,14 +58094,2203 @@ var StellarSdk =
 
 
 /***/ },
-/* 402 */
+/* 419 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(420)
+
+	function error () {
+	  var m = [].slice.call(arguments).join(' ')
+	  throw new Error([
+	    m,
+	    'we accept pull requests',
+	    'http://github.com/dominictarr/crypto-browserify'
+	    ].join('\n'))
+	}
+
+	exports.createHash = __webpack_require__(422)
+
+	exports.createHmac = __webpack_require__(431)
+
+	exports.randomBytes = function(size, callback) {
+	  if (callback && callback.call) {
+	    try {
+	      callback.call(this, undefined, new Buffer(rng(size)))
+	    } catch (err) { callback(err) }
+	  } else {
+	    return new Buffer(rng(size))
+	  }
+	}
+
+	function each(a, f) {
+	  for(var i in a)
+	    f(a[i], i)
+	}
+
+	exports.getHashes = function () {
+	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
+	}
+
+	var p = __webpack_require__(432)(exports)
+	exports.pbkdf2 = p.pbkdf2
+	exports.pbkdf2Sync = p.pbkdf2Sync
+	__webpack_require__(434)(exports, module.exports);
+
+	// the least I can do is make error messages for the rest of the node.js/crypto api.
+	each(['createCredentials'
+	, 'createSign'
+	, 'createVerify'
+	, 'createDiffieHellman'
+	], function (name) {
+	  exports[name] = function () {
+	    error('sorry,', name, 'is not implemented yet')
+	  }
+	})
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 420 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
+	  var g = ('undefined' === typeof window ? global : window) || {}
+	  _crypto = (
+	    g.crypto || g.msCrypto || __webpack_require__(421)
+	  )
+	  module.exports = function(size) {
+	    // Modern Browsers
+	    if(_crypto.getRandomValues) {
+	      var bytes = new Buffer(size); //in browserify, this is an extended Uint8Array
+	      /* This will not work in older browsers.
+	       * See https://developer.mozilla.org/en-US/docs/Web/API/window.crypto.getRandomValues
+	       */
+	    
+	      _crypto.getRandomValues(bytes);
+	      return bytes;
+	    }
+	    else if (_crypto.randomBytes) {
+	      return _crypto.randomBytes(size)
+	    }
+	    else
+	      throw new Error(
+	        'secure random number generation not supported by this browser\n'+
+	        'use chrome, FireFox or Internet Explorer 11'
+	      )
+	  }
+	}())
+
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(170).Buffer))
+
+/***/ },
+/* 421 */
+/***/ function(module, exports) {
+
+	/* (ignored) */
+
+/***/ },
+/* 422 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(423)
+
+	var md5 = toConstructor(__webpack_require__(428))
+	var rmd160 = toConstructor(__webpack_require__(430))
+
+	function toConstructor (fn) {
+	  return function () {
+	    var buffers = []
+	    var m= {
+	      update: function (data, enc) {
+	        if(!Buffer.isBuffer(data)) data = new Buffer(data, enc)
+	        buffers.push(data)
+	        return this
+	      },
+	      digest: function (enc) {
+	        var buf = Buffer.concat(buffers)
+	        var r = fn(buf)
+	        buffers = null
+	        return enc ? r.toString(enc) : r
+	      }
+	    }
+	    return m
+	  }
+	}
+
+	module.exports = function (alg) {
+	  if('md5' === alg) return new md5()
+	  if('rmd160' === alg) return new rmd160()
+	  return createHash(alg)
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 423 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var exports = module.exports = function (alg) {
+	  var Alg = exports[alg]
+	  if(!Alg) throw new Error(alg + ' is not supported (we accept pull requests)')
+	  return new Alg()
+	}
+
+	var Buffer = __webpack_require__(170).Buffer
+	var Hash   = __webpack_require__(424)(Buffer)
+
+	exports.sha1 = __webpack_require__(425)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(426)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(427)(Buffer, Hash)
+
+
+/***/ },
+/* 424 */
+/***/ function(module, exports) {
+
+	module.exports = function (Buffer) {
+
+	  //prototype class for hash functions
+	  function Hash (blockSize, finalSize) {
+	    this._block = new Buffer(blockSize) //new Uint32Array(blockSize/4)
+	    this._finalSize = finalSize
+	    this._blockSize = blockSize
+	    this._len = 0
+	    this._s = 0
+	  }
+
+	  Hash.prototype.init = function () {
+	    this._s = 0
+	    this._len = 0
+	  }
+
+	  Hash.prototype.update = function (data, enc) {
+	    if ("string" === typeof data) {
+	      enc = enc || "utf8"
+	      data = new Buffer(data, enc)
+	    }
+
+	    var l = this._len += data.length
+	    var s = this._s = (this._s || 0)
+	    var f = 0
+	    var buffer = this._block
+
+	    while (s < l) {
+	      var t = Math.min(data.length, f + this._blockSize - (s % this._blockSize))
+	      var ch = (t - f)
+
+	      for (var i = 0; i < ch; i++) {
+	        buffer[(s % this._blockSize) + i] = data[i + f]
+	      }
+
+	      s += ch
+	      f += ch
+
+	      if ((s % this._blockSize) === 0) {
+	        this._update(buffer)
+	      }
+	    }
+	    this._s = s
+
+	    return this
+	  }
+
+	  Hash.prototype.digest = function (enc) {
+	    // Suppose the length of the message M, in bits, is l
+	    var l = this._len * 8
+
+	    // Append the bit 1 to the end of the message
+	    this._block[this._len % this._blockSize] = 0x80
+
+	    // and then k zero bits, where k is the smallest non-negative solution to the equation (l + 1 + k) === finalSize mod blockSize
+	    this._block.fill(0, this._len % this._blockSize + 1)
+
+	    if (l % (this._blockSize * 8) >= this._finalSize * 8) {
+	      this._update(this._block)
+	      this._block.fill(0)
+	    }
+
+	    // to this append the block which is equal to the number l written in binary
+	    // TODO: handle case where l is > Math.pow(2, 29)
+	    this._block.writeInt32BE(l, this._blockSize - 4)
+
+	    var hash = this._update(this._block) || this._hash()
+
+	    return enc ? hash.toString(enc) : hash
+	  }
+
+	  Hash.prototype._update = function () {
+	    throw new Error('_update must be implemented by subclass')
+	  }
+
+	  return Hash
+	}
+
+
+/***/ },
+/* 425 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-1, as defined
+	 * in FIPS PUB 180-1
+	 * Version 2.1a Copyright Paul Johnston 2000 - 2002.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 * Distributed under the BSD License
+	 * See http://pajhome.org.uk/crypt/md5 for details.
+	 */
+
+	var inherits = __webpack_require__(200).inherits
+
+	module.exports = function (Buffer, Hash) {
+
+	  var A = 0|0
+	  var B = 4|0
+	  var C = 8|0
+	  var D = 12|0
+	  var E = 16|0
+
+	  var W = new (typeof Int32Array === 'undefined' ? Array : Int32Array)(80)
+
+	  var POOL = []
+
+	  function Sha1 () {
+	    if(POOL.length)
+	      return POOL.pop().init()
+
+	    if(!(this instanceof Sha1)) return new Sha1()
+	    this._w = W
+	    Hash.call(this, 16*4, 14*4)
+
+	    this._h = null
+	    this.init()
+	  }
+
+	  inherits(Sha1, Hash)
+
+	  Sha1.prototype.init = function () {
+	    this._a = 0x67452301
+	    this._b = 0xefcdab89
+	    this._c = 0x98badcfe
+	    this._d = 0x10325476
+	    this._e = 0xc3d2e1f0
+
+	    Hash.prototype.init.call(this)
+	    return this
+	  }
+
+	  Sha1.prototype._POOL = POOL
+	  Sha1.prototype._update = function (X) {
+
+	    var a, b, c, d, e, _a, _b, _c, _d, _e
+
+	    a = _a = this._a
+	    b = _b = this._b
+	    c = _c = this._c
+	    d = _d = this._d
+	    e = _e = this._e
+
+	    var w = this._w
+
+	    for(var j = 0; j < 80; j++) {
+	      var W = w[j] = j < 16 ? X.readInt32BE(j*4)
+	        : rol(w[j - 3] ^ w[j -  8] ^ w[j - 14] ^ w[j - 16], 1)
+
+	      var t = add(
+	        add(rol(a, 5), sha1_ft(j, b, c, d)),
+	        add(add(e, W), sha1_kt(j))
+	      )
+
+	      e = d
+	      d = c
+	      c = rol(b, 30)
+	      b = a
+	      a = t
+	    }
+
+	    this._a = add(a, _a)
+	    this._b = add(b, _b)
+	    this._c = add(c, _c)
+	    this._d = add(d, _d)
+	    this._e = add(e, _e)
+	  }
+
+	  Sha1.prototype._hash = function () {
+	    if(POOL.length < 100) POOL.push(this)
+	    var H = new Buffer(20)
+	    //console.log(this._a|0, this._b|0, this._c|0, this._d|0, this._e|0)
+	    H.writeInt32BE(this._a|0, A)
+	    H.writeInt32BE(this._b|0, B)
+	    H.writeInt32BE(this._c|0, C)
+	    H.writeInt32BE(this._d|0, D)
+	    H.writeInt32BE(this._e|0, E)
+	    return H
+	  }
+
+	  /*
+	   * Perform the appropriate triplet combination function for the current
+	   * iteration
+	   */
+	  function sha1_ft(t, b, c, d) {
+	    if(t < 20) return (b & c) | ((~b) & d);
+	    if(t < 40) return b ^ c ^ d;
+	    if(t < 60) return (b & c) | (b & d) | (c & d);
+	    return b ^ c ^ d;
+	  }
+
+	  /*
+	   * Determine the appropriate additive constant for the current iteration
+	   */
+	  function sha1_kt(t) {
+	    return (t < 20) ?  1518500249 : (t < 40) ?  1859775393 :
+	           (t < 60) ? -1894007588 : -899497514;
+	  }
+
+	  /*
+	   * Add integers, wrapping at 2^32. This uses 16-bit operations internally
+	   * to work around bugs in some JS interpreters.
+	   * //dominictarr: this is 10 years old, so maybe this can be dropped?)
+	   *
+	   */
+	  function add(x, y) {
+	    return (x + y ) | 0
+	  //lets see how this goes on testling.
+	  //  var lsw = (x & 0xFFFF) + (y & 0xFFFF);
+	  //  var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+	  //  return (msw << 16) | (lsw & 0xFFFF);
+	  }
+
+	  /*
+	   * Bitwise rotate a 32-bit number to the left.
+	   */
+	  function rol(num, cnt) {
+	    return (num << cnt) | (num >>> (32 - cnt));
+	  }
+
+	  return Sha1
+	}
+
+
+/***/ },
+/* 426 */
+/***/ function(module, exports, __webpack_require__) {
+
+	
+	/**
+	 * A JavaScript implementation of the Secure Hash Algorithm, SHA-256, as defined
+	 * in FIPS 180-2
+	 * Version 2.2-beta Copyright Angel Marin, Paul Johnston 2000 - 2009.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 *
+	 */
+
+	var inherits = __webpack_require__(200).inherits
+
+	module.exports = function (Buffer, Hash) {
+
+	  var K = [
+	      0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
+	      0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
+	      0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
+	      0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
+	      0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
+	      0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
+	      0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
+	      0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
+	      0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
+	      0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
+	      0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
+	      0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
+	      0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
+	      0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
+	      0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
+	      0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
+	    ]
+
+	  var W = new Array(64)
+
+	  function Sha256() {
+	    this.init()
+
+	    this._w = W //new Array(64)
+
+	    Hash.call(this, 16*4, 14*4)
+	  }
+
+	  inherits(Sha256, Hash)
+
+	  Sha256.prototype.init = function () {
+
+	    this._a = 0x6a09e667|0
+	    this._b = 0xbb67ae85|0
+	    this._c = 0x3c6ef372|0
+	    this._d = 0xa54ff53a|0
+	    this._e = 0x510e527f|0
+	    this._f = 0x9b05688c|0
+	    this._g = 0x1f83d9ab|0
+	    this._h = 0x5be0cd19|0
+
+	    this._len = this._s = 0
+
+	    return this
+	  }
+
+	  function S (X, n) {
+	    return (X >>> n) | (X << (32 - n));
+	  }
+
+	  function R (X, n) {
+	    return (X >>> n);
+	  }
+
+	  function Ch (x, y, z) {
+	    return ((x & y) ^ ((~x) & z));
+	  }
+
+	  function Maj (x, y, z) {
+	    return ((x & y) ^ (x & z) ^ (y & z));
+	  }
+
+	  function Sigma0256 (x) {
+	    return (S(x, 2) ^ S(x, 13) ^ S(x, 22));
+	  }
+
+	  function Sigma1256 (x) {
+	    return (S(x, 6) ^ S(x, 11) ^ S(x, 25));
+	  }
+
+	  function Gamma0256 (x) {
+	    return (S(x, 7) ^ S(x, 18) ^ R(x, 3));
+	  }
+
+	  function Gamma1256 (x) {
+	    return (S(x, 17) ^ S(x, 19) ^ R(x, 10));
+	  }
+
+	  Sha256.prototype._update = function(M) {
+
+	    var W = this._w
+	    var a, b, c, d, e, f, g, h
+	    var T1, T2
+
+	    a = this._a | 0
+	    b = this._b | 0
+	    c = this._c | 0
+	    d = this._d | 0
+	    e = this._e | 0
+	    f = this._f | 0
+	    g = this._g | 0
+	    h = this._h | 0
+
+	    for (var j = 0; j < 64; j++) {
+	      var w = W[j] = j < 16
+	        ? M.readInt32BE(j * 4)
+	        : Gamma1256(W[j - 2]) + W[j - 7] + Gamma0256(W[j - 15]) + W[j - 16]
+
+	      T1 = h + Sigma1256(e) + Ch(e, f, g) + K[j] + w
+
+	      T2 = Sigma0256(a) + Maj(a, b, c);
+	      h = g; g = f; f = e; e = d + T1; d = c; c = b; b = a; a = T1 + T2;
+	    }
+
+	    this._a = (a + this._a) | 0
+	    this._b = (b + this._b) | 0
+	    this._c = (c + this._c) | 0
+	    this._d = (d + this._d) | 0
+	    this._e = (e + this._e) | 0
+	    this._f = (f + this._f) | 0
+	    this._g = (g + this._g) | 0
+	    this._h = (h + this._h) | 0
+
+	  };
+
+	  Sha256.prototype._hash = function () {
+	    var H = new Buffer(32)
+
+	    H.writeInt32BE(this._a,  0)
+	    H.writeInt32BE(this._b,  4)
+	    H.writeInt32BE(this._c,  8)
+	    H.writeInt32BE(this._d, 12)
+	    H.writeInt32BE(this._e, 16)
+	    H.writeInt32BE(this._f, 20)
+	    H.writeInt32BE(this._g, 24)
+	    H.writeInt32BE(this._h, 28)
+
+	    return H
+	  }
+
+	  return Sha256
+
+	}
+
+
+/***/ },
+/* 427 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var inherits = __webpack_require__(200).inherits
+
+	module.exports = function (Buffer, Hash) {
+	  var K = [
+	    0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
+	    0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
+	    0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019,
+	    0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
+	    0xd807aa98, 0xa3030242, 0x12835b01, 0x45706fbe,
+	    0x243185be, 0x4ee4b28c, 0x550c7dc3, 0xd5ffb4e2,
+	    0x72be5d74, 0xf27b896f, 0x80deb1fe, 0x3b1696b1,
+	    0x9bdc06a7, 0x25c71235, 0xc19bf174, 0xcf692694,
+	    0xe49b69c1, 0x9ef14ad2, 0xefbe4786, 0x384f25e3,
+	    0x0fc19dc6, 0x8b8cd5b5, 0x240ca1cc, 0x77ac9c65,
+	    0x2de92c6f, 0x592b0275, 0x4a7484aa, 0x6ea6e483,
+	    0x5cb0a9dc, 0xbd41fbd4, 0x76f988da, 0x831153b5,
+	    0x983e5152, 0xee66dfab, 0xa831c66d, 0x2db43210,
+	    0xb00327c8, 0x98fb213f, 0xbf597fc7, 0xbeef0ee4,
+	    0xc6e00bf3, 0x3da88fc2, 0xd5a79147, 0x930aa725,
+	    0x06ca6351, 0xe003826f, 0x14292967, 0x0a0e6e70,
+	    0x27b70a85, 0x46d22ffc, 0x2e1b2138, 0x5c26c926,
+	    0x4d2c6dfc, 0x5ac42aed, 0x53380d13, 0x9d95b3df,
+	    0x650a7354, 0x8baf63de, 0x766a0abb, 0x3c77b2a8,
+	    0x81c2c92e, 0x47edaee6, 0x92722c85, 0x1482353b,
+	    0xa2bfe8a1, 0x4cf10364, 0xa81a664b, 0xbc423001,
+	    0xc24b8b70, 0xd0f89791, 0xc76c51a3, 0x0654be30,
+	    0xd192e819, 0xd6ef5218, 0xd6990624, 0x5565a910,
+	    0xf40e3585, 0x5771202a, 0x106aa070, 0x32bbd1b8,
+	    0x19a4c116, 0xb8d2d0c8, 0x1e376c08, 0x5141ab53,
+	    0x2748774c, 0xdf8eeb99, 0x34b0bcb5, 0xe19b48a8,
+	    0x391c0cb3, 0xc5c95a63, 0x4ed8aa4a, 0xe3418acb,
+	    0x5b9cca4f, 0x7763e373, 0x682e6ff3, 0xd6b2b8a3,
+	    0x748f82ee, 0x5defb2fc, 0x78a5636f, 0x43172f60,
+	    0x84c87814, 0xa1f0ab72, 0x8cc70208, 0x1a6439ec,
+	    0x90befffa, 0x23631e28, 0xa4506ceb, 0xde82bde9,
+	    0xbef9a3f7, 0xb2c67915, 0xc67178f2, 0xe372532b,
+	    0xca273ece, 0xea26619c, 0xd186b8c7, 0x21c0c207,
+	    0xeada7dd6, 0xcde0eb1e, 0xf57d4f7f, 0xee6ed178,
+	    0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6,
+	    0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
+	    0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493,
+	    0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c,
+	    0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a,
+	    0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
+	  ]
+
+	  var W = new Array(160)
+
+	  function Sha512() {
+	    this.init()
+	    this._w = W
+
+	    Hash.call(this, 128, 112)
+	  }
+
+	  inherits(Sha512, Hash)
+
+	  Sha512.prototype.init = function () {
+
+	    this._a = 0x6a09e667|0
+	    this._b = 0xbb67ae85|0
+	    this._c = 0x3c6ef372|0
+	    this._d = 0xa54ff53a|0
+	    this._e = 0x510e527f|0
+	    this._f = 0x9b05688c|0
+	    this._g = 0x1f83d9ab|0
+	    this._h = 0x5be0cd19|0
+
+	    this._al = 0xf3bcc908|0
+	    this._bl = 0x84caa73b|0
+	    this._cl = 0xfe94f82b|0
+	    this._dl = 0x5f1d36f1|0
+	    this._el = 0xade682d1|0
+	    this._fl = 0x2b3e6c1f|0
+	    this._gl = 0xfb41bd6b|0
+	    this._hl = 0x137e2179|0
+
+	    this._len = this._s = 0
+
+	    return this
+	  }
+
+	  function S (X, Xl, n) {
+	    return (X >>> n) | (Xl << (32 - n))
+	  }
+
+	  function Ch (x, y, z) {
+	    return ((x & y) ^ ((~x) & z));
+	  }
+
+	  function Maj (x, y, z) {
+	    return ((x & y) ^ (x & z) ^ (y & z));
+	  }
+
+	  Sha512.prototype._update = function(M) {
+
+	    var W = this._w
+	    var a, b, c, d, e, f, g, h
+	    var al, bl, cl, dl, el, fl, gl, hl
+
+	    a = this._a | 0
+	    b = this._b | 0
+	    c = this._c | 0
+	    d = this._d | 0
+	    e = this._e | 0
+	    f = this._f | 0
+	    g = this._g | 0
+	    h = this._h | 0
+
+	    al = this._al | 0
+	    bl = this._bl | 0
+	    cl = this._cl | 0
+	    dl = this._dl | 0
+	    el = this._el | 0
+	    fl = this._fl | 0
+	    gl = this._gl | 0
+	    hl = this._hl | 0
+
+	    for (var i = 0; i < 80; i++) {
+	      var j = i * 2
+
+	      var Wi, Wil
+
+	      if (i < 16) {
+	        Wi = W[j] = M.readInt32BE(j * 4)
+	        Wil = W[j + 1] = M.readInt32BE(j * 4 + 4)
+
+	      } else {
+	        var x  = W[j - 15*2]
+	        var xl = W[j - 15*2 + 1]
+	        var gamma0  = S(x, xl, 1) ^ S(x, xl, 8) ^ (x >>> 7)
+	        var gamma0l = S(xl, x, 1) ^ S(xl, x, 8) ^ S(xl, x, 7)
+
+	        x  = W[j - 2*2]
+	        xl = W[j - 2*2 + 1]
+	        var gamma1  = S(x, xl, 19) ^ S(xl, x, 29) ^ (x >>> 6)
+	        var gamma1l = S(xl, x, 19) ^ S(x, xl, 29) ^ S(xl, x, 6)
+
+	        // W[i] = gamma0 + W[i - 7] + gamma1 + W[i - 16]
+	        var Wi7  = W[j - 7*2]
+	        var Wi7l = W[j - 7*2 + 1]
+
+	        var Wi16  = W[j - 16*2]
+	        var Wi16l = W[j - 16*2 + 1]
+
+	        Wil = gamma0l + Wi7l
+	        Wi  = gamma0  + Wi7 + ((Wil >>> 0) < (gamma0l >>> 0) ? 1 : 0)
+	        Wil = Wil + gamma1l
+	        Wi  = Wi  + gamma1  + ((Wil >>> 0) < (gamma1l >>> 0) ? 1 : 0)
+	        Wil = Wil + Wi16l
+	        Wi  = Wi  + Wi16 + ((Wil >>> 0) < (Wi16l >>> 0) ? 1 : 0)
+
+	        W[j] = Wi
+	        W[j + 1] = Wil
+	      }
+
+	      var maj = Maj(a, b, c)
+	      var majl = Maj(al, bl, cl)
+
+	      var sigma0h = S(a, al, 28) ^ S(al, a, 2) ^ S(al, a, 7)
+	      var sigma0l = S(al, a, 28) ^ S(a, al, 2) ^ S(a, al, 7)
+	      var sigma1h = S(e, el, 14) ^ S(e, el, 18) ^ S(el, e, 9)
+	      var sigma1l = S(el, e, 14) ^ S(el, e, 18) ^ S(e, el, 9)
+
+	      // t1 = h + sigma1 + ch + K[i] + W[i]
+	      var Ki = K[j]
+	      var Kil = K[j + 1]
+
+	      var ch = Ch(e, f, g)
+	      var chl = Ch(el, fl, gl)
+
+	      var t1l = hl + sigma1l
+	      var t1 = h + sigma1h + ((t1l >>> 0) < (hl >>> 0) ? 1 : 0)
+	      t1l = t1l + chl
+	      t1 = t1 + ch + ((t1l >>> 0) < (chl >>> 0) ? 1 : 0)
+	      t1l = t1l + Kil
+	      t1 = t1 + Ki + ((t1l >>> 0) < (Kil >>> 0) ? 1 : 0)
+	      t1l = t1l + Wil
+	      t1 = t1 + Wi + ((t1l >>> 0) < (Wil >>> 0) ? 1 : 0)
+
+	      // t2 = sigma0 + maj
+	      var t2l = sigma0l + majl
+	      var t2 = sigma0h + maj + ((t2l >>> 0) < (sigma0l >>> 0) ? 1 : 0)
+
+	      h  = g
+	      hl = gl
+	      g  = f
+	      gl = fl
+	      f  = e
+	      fl = el
+	      el = (dl + t1l) | 0
+	      e  = (d + t1 + ((el >>> 0) < (dl >>> 0) ? 1 : 0)) | 0
+	      d  = c
+	      dl = cl
+	      c  = b
+	      cl = bl
+	      b  = a
+	      bl = al
+	      al = (t1l + t2l) | 0
+	      a  = (t1 + t2 + ((al >>> 0) < (t1l >>> 0) ? 1 : 0)) | 0
+	    }
+
+	    this._al = (this._al + al) | 0
+	    this._bl = (this._bl + bl) | 0
+	    this._cl = (this._cl + cl) | 0
+	    this._dl = (this._dl + dl) | 0
+	    this._el = (this._el + el) | 0
+	    this._fl = (this._fl + fl) | 0
+	    this._gl = (this._gl + gl) | 0
+	    this._hl = (this._hl + hl) | 0
+
+	    this._a = (this._a + a + ((this._al >>> 0) < (al >>> 0) ? 1 : 0)) | 0
+	    this._b = (this._b + b + ((this._bl >>> 0) < (bl >>> 0) ? 1 : 0)) | 0
+	    this._c = (this._c + c + ((this._cl >>> 0) < (cl >>> 0) ? 1 : 0)) | 0
+	    this._d = (this._d + d + ((this._dl >>> 0) < (dl >>> 0) ? 1 : 0)) | 0
+	    this._e = (this._e + e + ((this._el >>> 0) < (el >>> 0) ? 1 : 0)) | 0
+	    this._f = (this._f + f + ((this._fl >>> 0) < (fl >>> 0) ? 1 : 0)) | 0
+	    this._g = (this._g + g + ((this._gl >>> 0) < (gl >>> 0) ? 1 : 0)) | 0
+	    this._h = (this._h + h + ((this._hl >>> 0) < (hl >>> 0) ? 1 : 0)) | 0
+	  }
+
+	  Sha512.prototype._hash = function () {
+	    var H = new Buffer(64)
+
+	    function writeInt64BE(h, l, offset) {
+	      H.writeInt32BE(h, offset)
+	      H.writeInt32BE(l, offset + 4)
+	    }
+
+	    writeInt64BE(this._a, this._al, 0)
+	    writeInt64BE(this._b, this._bl, 8)
+	    writeInt64BE(this._c, this._cl, 16)
+	    writeInt64BE(this._d, this._dl, 24)
+	    writeInt64BE(this._e, this._el, 32)
+	    writeInt64BE(this._f, this._fl, 40)
+	    writeInt64BE(this._g, this._gl, 48)
+	    writeInt64BE(this._h, this._hl, 56)
+
+	    return H
+	  }
+
+	  return Sha512
+
+	}
+
+
+/***/ },
+/* 428 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/*
+	 * A JavaScript implementation of the RSA Data Security, Inc. MD5 Message
+	 * Digest Algorithm, as defined in RFC 1321.
+	 * Version 2.1 Copyright (C) Paul Johnston 1999 - 2002.
+	 * Other contributors: Greg Holt, Andrew Kepert, Ydnar, Lostinet
+	 * Distributed under the BSD License
+	 * See http://pajhome.org.uk/crypt/md5 for more info.
+	 */
+
+	var helpers = __webpack_require__(429);
+
+	/*
+	 * Calculate the MD5 of an array of little-endian words, and a bit length
+	 */
+	function core_md5(x, len)
+	{
+	  /* append padding */
+	  x[len >> 5] |= 0x80 << ((len) % 32);
+	  x[(((len + 64) >>> 9) << 4) + 14] = len;
+
+	  var a =  1732584193;
+	  var b = -271733879;
+	  var c = -1732584194;
+	  var d =  271733878;
+
+	  for(var i = 0; i < x.length; i += 16)
+	  {
+	    var olda = a;
+	    var oldb = b;
+	    var oldc = c;
+	    var oldd = d;
+
+	    a = md5_ff(a, b, c, d, x[i+ 0], 7 , -680876936);
+	    d = md5_ff(d, a, b, c, x[i+ 1], 12, -389564586);
+	    c = md5_ff(c, d, a, b, x[i+ 2], 17,  606105819);
+	    b = md5_ff(b, c, d, a, x[i+ 3], 22, -1044525330);
+	    a = md5_ff(a, b, c, d, x[i+ 4], 7 , -176418897);
+	    d = md5_ff(d, a, b, c, x[i+ 5], 12,  1200080426);
+	    c = md5_ff(c, d, a, b, x[i+ 6], 17, -1473231341);
+	    b = md5_ff(b, c, d, a, x[i+ 7], 22, -45705983);
+	    a = md5_ff(a, b, c, d, x[i+ 8], 7 ,  1770035416);
+	    d = md5_ff(d, a, b, c, x[i+ 9], 12, -1958414417);
+	    c = md5_ff(c, d, a, b, x[i+10], 17, -42063);
+	    b = md5_ff(b, c, d, a, x[i+11], 22, -1990404162);
+	    a = md5_ff(a, b, c, d, x[i+12], 7 ,  1804603682);
+	    d = md5_ff(d, a, b, c, x[i+13], 12, -40341101);
+	    c = md5_ff(c, d, a, b, x[i+14], 17, -1502002290);
+	    b = md5_ff(b, c, d, a, x[i+15], 22,  1236535329);
+
+	    a = md5_gg(a, b, c, d, x[i+ 1], 5 , -165796510);
+	    d = md5_gg(d, a, b, c, x[i+ 6], 9 , -1069501632);
+	    c = md5_gg(c, d, a, b, x[i+11], 14,  643717713);
+	    b = md5_gg(b, c, d, a, x[i+ 0], 20, -373897302);
+	    a = md5_gg(a, b, c, d, x[i+ 5], 5 , -701558691);
+	    d = md5_gg(d, a, b, c, x[i+10], 9 ,  38016083);
+	    c = md5_gg(c, d, a, b, x[i+15], 14, -660478335);
+	    b = md5_gg(b, c, d, a, x[i+ 4], 20, -405537848);
+	    a = md5_gg(a, b, c, d, x[i+ 9], 5 ,  568446438);
+	    d = md5_gg(d, a, b, c, x[i+14], 9 , -1019803690);
+	    c = md5_gg(c, d, a, b, x[i+ 3], 14, -187363961);
+	    b = md5_gg(b, c, d, a, x[i+ 8], 20,  1163531501);
+	    a = md5_gg(a, b, c, d, x[i+13], 5 , -1444681467);
+	    d = md5_gg(d, a, b, c, x[i+ 2], 9 , -51403784);
+	    c = md5_gg(c, d, a, b, x[i+ 7], 14,  1735328473);
+	    b = md5_gg(b, c, d, a, x[i+12], 20, -1926607734);
+
+	    a = md5_hh(a, b, c, d, x[i+ 5], 4 , -378558);
+	    d = md5_hh(d, a, b, c, x[i+ 8], 11, -2022574463);
+	    c = md5_hh(c, d, a, b, x[i+11], 16,  1839030562);
+	    b = md5_hh(b, c, d, a, x[i+14], 23, -35309556);
+	    a = md5_hh(a, b, c, d, x[i+ 1], 4 , -1530992060);
+	    d = md5_hh(d, a, b, c, x[i+ 4], 11,  1272893353);
+	    c = md5_hh(c, d, a, b, x[i+ 7], 16, -155497632);
+	    b = md5_hh(b, c, d, a, x[i+10], 23, -1094730640);
+	    a = md5_hh(a, b, c, d, x[i+13], 4 ,  681279174);
+	    d = md5_hh(d, a, b, c, x[i+ 0], 11, -358537222);
+	    c = md5_hh(c, d, a, b, x[i+ 3], 16, -722521979);
+	    b = md5_hh(b, c, d, a, x[i+ 6], 23,  76029189);
+	    a = md5_hh(a, b, c, d, x[i+ 9], 4 , -640364487);
+	    d = md5_hh(d, a, b, c, x[i+12], 11, -421815835);
+	    c = md5_hh(c, d, a, b, x[i+15], 16,  530742520);
+	    b = md5_hh(b, c, d, a, x[i+ 2], 23, -995338651);
+
+	    a = md5_ii(a, b, c, d, x[i+ 0], 6 , -198630844);
+	    d = md5_ii(d, a, b, c, x[i+ 7], 10,  1126891415);
+	    c = md5_ii(c, d, a, b, x[i+14], 15, -1416354905);
+	    b = md5_ii(b, c, d, a, x[i+ 5], 21, -57434055);
+	    a = md5_ii(a, b, c, d, x[i+12], 6 ,  1700485571);
+	    d = md5_ii(d, a, b, c, x[i+ 3], 10, -1894986606);
+	    c = md5_ii(c, d, a, b, x[i+10], 15, -1051523);
+	    b = md5_ii(b, c, d, a, x[i+ 1], 21, -2054922799);
+	    a = md5_ii(a, b, c, d, x[i+ 8], 6 ,  1873313359);
+	    d = md5_ii(d, a, b, c, x[i+15], 10, -30611744);
+	    c = md5_ii(c, d, a, b, x[i+ 6], 15, -1560198380);
+	    b = md5_ii(b, c, d, a, x[i+13], 21,  1309151649);
+	    a = md5_ii(a, b, c, d, x[i+ 4], 6 , -145523070);
+	    d = md5_ii(d, a, b, c, x[i+11], 10, -1120210379);
+	    c = md5_ii(c, d, a, b, x[i+ 2], 15,  718787259);
+	    b = md5_ii(b, c, d, a, x[i+ 9], 21, -343485551);
+
+	    a = safe_add(a, olda);
+	    b = safe_add(b, oldb);
+	    c = safe_add(c, oldc);
+	    d = safe_add(d, oldd);
+	  }
+	  return Array(a, b, c, d);
+
+	}
+
+	/*
+	 * These functions implement the four basic operations the algorithm uses.
+	 */
+	function md5_cmn(q, a, b, x, s, t)
+	{
+	  return safe_add(bit_rol(safe_add(safe_add(a, q), safe_add(x, t)), s),b);
+	}
+	function md5_ff(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn((b & c) | ((~b) & d), a, b, x, s, t);
+	}
+	function md5_gg(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn((b & d) | (c & (~d)), a, b, x, s, t);
+	}
+	function md5_hh(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn(b ^ c ^ d, a, b, x, s, t);
+	}
+	function md5_ii(a, b, c, d, x, s, t)
+	{
+	  return md5_cmn(c ^ (b | (~d)), a, b, x, s, t);
+	}
+
+	/*
+	 * Add integers, wrapping at 2^32. This uses 16-bit operations internally
+	 * to work around bugs in some JS interpreters.
+	 */
+	function safe_add(x, y)
+	{
+	  var lsw = (x & 0xFFFF) + (y & 0xFFFF);
+	  var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+	  return (msw << 16) | (lsw & 0xFFFF);
+	}
+
+	/*
+	 * Bitwise rotate a 32-bit number to the left.
+	 */
+	function bit_rol(num, cnt)
+	{
+	  return (num << cnt) | (num >>> (32 - cnt));
+	}
+
+	module.exports = function md5(buf) {
+	  return helpers.hash(buf, core_md5, 16);
+	};
+
+
+/***/ },
+/* 429 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
+	var zeroBuffer = new Buffer(intSize); zeroBuffer.fill(0);
+	var chrsz = 8;
+
+	function toArray(buf, bigEndian) {
+	  if ((buf.length % intSize) !== 0) {
+	    var len = buf.length + (intSize - (buf.length % intSize));
+	    buf = Buffer.concat([buf, zeroBuffer], len);
+	  }
+
+	  var arr = [];
+	  var fn = bigEndian ? buf.readInt32BE : buf.readInt32LE;
+	  for (var i = 0; i < buf.length; i += intSize) {
+	    arr.push(fn.call(buf, i));
+	  }
+	  return arr;
+	}
+
+	function toBuffer(arr, size, bigEndian) {
+	  var buf = new Buffer(size);
+	  var fn = bigEndian ? buf.writeInt32BE : buf.writeInt32LE;
+	  for (var i = 0; i < arr.length; i++) {
+	    fn.call(buf, arr[i], i * 4, true);
+	  }
+	  return buf;
+	}
+
+	function hash(buf, fn, hashSize, bigEndian) {
+	  if (!Buffer.isBuffer(buf)) buf = new Buffer(buf);
+	  var arr = fn(toArray(buf, bigEndian), buf.length * chrsz);
+	  return toBuffer(arr, hashSize, bigEndian);
+	}
+
+	module.exports = { hash: hash };
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 430 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {
+	module.exports = ripemd160
+
+
+
+	/*
+	CryptoJS v3.1.2
+	code.google.com/p/crypto-js
+	(c) 2009-2013 by Jeff Mott. All rights reserved.
+	code.google.com/p/crypto-js/wiki/License
+	*/
+	/** @preserve
+	(c) 2012 by Cédric Mesnil. All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+	    - Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	    - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	*/
+
+	// Constants table
+	var zl = [
+	    0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15,
+	    7,  4, 13,  1, 10,  6, 15,  3, 12,  0,  9,  5,  2, 14, 11,  8,
+	    3, 10, 14,  4,  9, 15,  8,  1,  2,  7,  0,  6, 13, 11,  5, 12,
+	    1,  9, 11, 10,  0,  8, 12,  4, 13,  3,  7, 15, 14,  5,  6,  2,
+	    4,  0,  5,  9,  7, 12,  2, 10, 14,  1,  3,  8, 11,  6, 15, 13];
+	var zr = [
+	    5, 14,  7,  0,  9,  2, 11,  4, 13,  6, 15,  8,  1, 10,  3, 12,
+	    6, 11,  3,  7,  0, 13,  5, 10, 14, 15,  8, 12,  4,  9,  1,  2,
+	    15,  5,  1,  3,  7, 14,  6,  9, 11,  8, 12,  2, 10,  0,  4, 13,
+	    8,  6,  4,  1,  3, 11, 15,  0,  5, 12,  2, 13,  9,  7, 10, 14,
+	    12, 15, 10,  4,  1,  5,  8,  7,  6,  2, 13, 14,  0,  3,  9, 11];
+	var sl = [
+	     11, 14, 15, 12,  5,  8,  7,  9, 11, 13, 14, 15,  6,  7,  9,  8,
+	    7, 6,   8, 13, 11,  9,  7, 15,  7, 12, 15,  9, 11,  7, 13, 12,
+	    11, 13,  6,  7, 14,  9, 13, 15, 14,  8, 13,  6,  5, 12,  7,  5,
+	      11, 12, 14, 15, 14, 15,  9,  8,  9, 14,  5,  6,  8,  6,  5, 12,
+	    9, 15,  5, 11,  6,  8, 13, 12,  5, 12, 13, 14, 11,  8,  5,  6 ];
+	var sr = [
+	    8,  9,  9, 11, 13, 15, 15,  5,  7,  7,  8, 11, 14, 14, 12,  6,
+	    9, 13, 15,  7, 12,  8,  9, 11,  7,  7, 12,  7,  6, 15, 13, 11,
+	    9,  7, 15, 11,  8,  6,  6, 14, 12, 13,  5, 14, 13, 13,  7,  5,
+	    15,  5,  8, 11, 14, 14,  6, 14,  6,  9, 12,  9, 12,  5, 15,  8,
+	    8,  5, 12,  9, 12,  5, 14,  6,  8, 13,  6,  5, 15, 13, 11, 11 ];
+
+	var hl =  [ 0x00000000, 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xA953FD4E];
+	var hr =  [ 0x50A28BE6, 0x5C4DD124, 0x6D703EF3, 0x7A6D76E9, 0x00000000];
+
+	var bytesToWords = function (bytes) {
+	  var words = [];
+	  for (var i = 0, b = 0; i < bytes.length; i++, b += 8) {
+	    words[b >>> 5] |= bytes[i] << (24 - b % 32);
+	  }
+	  return words;
+	};
+
+	var wordsToBytes = function (words) {
+	  var bytes = [];
+	  for (var b = 0; b < words.length * 32; b += 8) {
+	    bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
+	  }
+	  return bytes;
+	};
+
+	var processBlock = function (H, M, offset) {
+
+	  // Swap endian
+	  for (var i = 0; i < 16; i++) {
+	    var offset_i = offset + i;
+	    var M_offset_i = M[offset_i];
+
+	    // Swap
+	    M[offset_i] = (
+	        (((M_offset_i << 8)  | (M_offset_i >>> 24)) & 0x00ff00ff) |
+	        (((M_offset_i << 24) | (M_offset_i >>> 8))  & 0xff00ff00)
+	    );
+	  }
+
+	  // Working variables
+	  var al, bl, cl, dl, el;
+	  var ar, br, cr, dr, er;
+
+	  ar = al = H[0];
+	  br = bl = H[1];
+	  cr = cl = H[2];
+	  dr = dl = H[3];
+	  er = el = H[4];
+	  // Computation
+	  var t;
+	  for (var i = 0; i < 80; i += 1) {
+	    t = (al +  M[offset+zl[i]])|0;
+	    if (i<16){
+	        t +=  f1(bl,cl,dl) + hl[0];
+	    } else if (i<32) {
+	        t +=  f2(bl,cl,dl) + hl[1];
+	    } else if (i<48) {
+	        t +=  f3(bl,cl,dl) + hl[2];
+	    } else if (i<64) {
+	        t +=  f4(bl,cl,dl) + hl[3];
+	    } else {// if (i<80) {
+	        t +=  f5(bl,cl,dl) + hl[4];
+	    }
+	    t = t|0;
+	    t =  rotl(t,sl[i]);
+	    t = (t+el)|0;
+	    al = el;
+	    el = dl;
+	    dl = rotl(cl, 10);
+	    cl = bl;
+	    bl = t;
+
+	    t = (ar + M[offset+zr[i]])|0;
+	    if (i<16){
+	        t +=  f5(br,cr,dr) + hr[0];
+	    } else if (i<32) {
+	        t +=  f4(br,cr,dr) + hr[1];
+	    } else if (i<48) {
+	        t +=  f3(br,cr,dr) + hr[2];
+	    } else if (i<64) {
+	        t +=  f2(br,cr,dr) + hr[3];
+	    } else {// if (i<80) {
+	        t +=  f1(br,cr,dr) + hr[4];
+	    }
+	    t = t|0;
+	    t =  rotl(t,sr[i]) ;
+	    t = (t+er)|0;
+	    ar = er;
+	    er = dr;
+	    dr = rotl(cr, 10);
+	    cr = br;
+	    br = t;
+	  }
+	  // Intermediate hash value
+	  t    = (H[1] + cl + dr)|0;
+	  H[1] = (H[2] + dl + er)|0;
+	  H[2] = (H[3] + el + ar)|0;
+	  H[3] = (H[4] + al + br)|0;
+	  H[4] = (H[0] + bl + cr)|0;
+	  H[0] =  t;
+	};
+
+	function f1(x, y, z) {
+	  return ((x) ^ (y) ^ (z));
+	}
+
+	function f2(x, y, z) {
+	  return (((x)&(y)) | ((~x)&(z)));
+	}
+
+	function f3(x, y, z) {
+	  return (((x) | (~(y))) ^ (z));
+	}
+
+	function f4(x, y, z) {
+	  return (((x) & (z)) | ((y)&(~(z))));
+	}
+
+	function f5(x, y, z) {
+	  return ((x) ^ ((y) |(~(z))));
+	}
+
+	function rotl(x,n) {
+	  return (x<<n) | (x>>>(32-n));
+	}
+
+	function ripemd160(message) {
+	  var H = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0];
+
+	  if (typeof message == 'string')
+	    message = new Buffer(message, 'utf8');
+
+	  var m = bytesToWords(message);
+
+	  var nBitsLeft = message.length * 8;
+	  var nBitsTotal = message.length * 8;
+
+	  // Add padding
+	  m[nBitsLeft >>> 5] |= 0x80 << (24 - nBitsLeft % 32);
+	  m[(((nBitsLeft + 64) >>> 9) << 4) + 14] = (
+	      (((nBitsTotal << 8)  | (nBitsTotal >>> 24)) & 0x00ff00ff) |
+	      (((nBitsTotal << 24) | (nBitsTotal >>> 8))  & 0xff00ff00)
+	  );
+
+	  for (var i=0 ; i<m.length; i += 16) {
+	    processBlock(H, m, i);
+	  }
+
+	  // Swap endian
+	  for (var i = 0; i < 5; i++) {
+	      // Shortcut
+	    var H_i = H[i];
+
+	    // Swap
+	    H[i] = (((H_i << 8)  | (H_i >>> 24)) & 0x00ff00ff) |
+	          (((H_i << 24) | (H_i >>> 8))  & 0xff00ff00);
+	  }
+
+	  var digestbytes = wordsToBytes(H);
+	  return new Buffer(digestbytes);
+	}
+
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 431 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(422)
+
+	var zeroBuffer = new Buffer(128)
+	zeroBuffer.fill(0)
+
+	module.exports = Hmac
+
+	function Hmac (alg, key) {
+	  if(!(this instanceof Hmac)) return new Hmac(alg, key)
+	  this._opad = opad
+	  this._alg = alg
+
+	  var blocksize = (alg === 'sha512') ? 128 : 64
+
+	  key = this._key = !Buffer.isBuffer(key) ? new Buffer(key) : key
+
+	  if(key.length > blocksize) {
+	    key = createHash(alg).update(key).digest()
+	  } else if(key.length < blocksize) {
+	    key = Buffer.concat([key, zeroBuffer], blocksize)
+	  }
+
+	  var ipad = this._ipad = new Buffer(blocksize)
+	  var opad = this._opad = new Buffer(blocksize)
+
+	  for(var i = 0; i < blocksize; i++) {
+	    ipad[i] = key[i] ^ 0x36
+	    opad[i] = key[i] ^ 0x5C
+	  }
+
+	  this._hash = createHash(alg).update(ipad)
+	}
+
+	Hmac.prototype.update = function (data, enc) {
+	  this._hash.update(data, enc)
+	  return this
+	}
+
+	Hmac.prototype.digest = function (enc) {
+	  var h = this._hash.digest()
+	  return createHash(this._alg).update(this._opad).update(h).digest(enc)
+	}
+
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 432 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var pbkdf2Export = __webpack_require__(433)
+
+	module.exports = function (crypto, exports) {
+	  exports = exports || {}
+
+	  var exported = pbkdf2Export(crypto)
+
+	  exports.pbkdf2 = exported.pbkdf2
+	  exports.pbkdf2Sync = exported.pbkdf2Sync
+
+	  return exports
+	}
+
+
+/***/ },
+/* 433 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
+	  function pbkdf2(password, salt, iterations, keylen, digest, callback) {
+	    if ('function' === typeof digest) {
+	      callback = digest
+	      digest = undefined
+	    }
+
+	    if ('function' !== typeof callback)
+	      throw new Error('No callback provided to pbkdf2')
+
+	    setTimeout(function() {
+	      var result
+
+	      try {
+	        result = pbkdf2Sync(password, salt, iterations, keylen, digest)
+	      } catch (e) {
+	        return callback(e)
+	      }
+
+	      callback(undefined, result)
+	    })
+	  }
+
+	  function pbkdf2Sync(password, salt, iterations, keylen, digest) {
+	    if ('number' !== typeof iterations)
+	      throw new TypeError('Iterations not a number')
+
+	    if (iterations < 0)
+	      throw new TypeError('Bad iterations')
+
+	    if ('number' !== typeof keylen)
+	      throw new TypeError('Key length not a number')
+
+	    if (keylen < 0)
+	      throw new TypeError('Bad key length')
+
+	    digest = digest || 'sha1'
+
+	    if (!Buffer.isBuffer(password)) password = new Buffer(password)
+	    if (!Buffer.isBuffer(salt)) salt = new Buffer(salt)
+
+	    var hLen, l = 1, r, T
+	    var DK = new Buffer(keylen)
+	    var block1 = new Buffer(salt.length + 4)
+	    salt.copy(block1, 0, 0, salt.length)
+
+	    for (var i = 1; i <= l; i++) {
+	      block1.writeUInt32BE(i, salt.length)
+
+	      var U = crypto.createHmac(digest, password).update(block1).digest()
+
+	      if (!hLen) {
+	        hLen = U.length
+	        T = new Buffer(hLen)
+	        l = Math.ceil(keylen / hLen)
+	        r = keylen - (l - 1) * hLen
+
+	        if (keylen > (Math.pow(2, 32) - 1) * hLen)
+	          throw new TypeError('keylen exceeds maximum length')
+	      }
+
+	      U.copy(T, 0, 0, hLen)
+
+	      for (var j = 1; j < iterations; j++) {
+	        U = crypto.createHmac(digest, password).update(U).digest()
+
+	        for (var k = 0; k < hLen; k++) {
+	          T[k] ^= U[k]
+	        }
+	      }
+
+	      var destPos = (i - 1) * hLen
+	      var len = (i == l ? r : hLen)
+	      T.copy(DK, destPos, 0, len)
+	    }
+
+	    return DK
+	  }
+
+	  return {
+	    pbkdf2: pbkdf2,
+	    pbkdf2Sync: pbkdf2Sync
+	  }
+	}
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 434 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function (crypto, exports) {
+	  exports = exports || {};
+	  var ciphers = __webpack_require__(435)(crypto);
+	  exports.createCipher = ciphers.createCipher;
+	  exports.createCipheriv = ciphers.createCipheriv;
+	  var deciphers = __webpack_require__(447)(crypto);
+	  exports.createDecipher = deciphers.createDecipher;
+	  exports.createDecipheriv = deciphers.createDecipheriv;
+	  var modes = __webpack_require__(438);
+	  function listCiphers () {
+	    return Object.keys(modes);
+	  }
+	  exports.listCiphers = listCiphers;
+	};
+
+
+
+/***/ },
+/* 435 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(436);
+	var Transform = __webpack_require__(437);
+	var inherits = __webpack_require__(175);
+	var modes = __webpack_require__(438);
+	var ebtk = __webpack_require__(439);
+	var StreamCipher = __webpack_require__(440);
+	inherits(Cipher, Transform);
+	function Cipher(mode, key, iv) {
+	  if (!(this instanceof Cipher)) {
+	    return new Cipher(mode, key, iv);
+	  }
+	  Transform.call(this);
+	  this._cache = new Splitter();
+	  this._cipher = new aes.AES(key);
+	  this._prev = new Buffer(iv.length);
+	  iv.copy(this._prev);
+	  this._mode = mode;
+	}
+	Cipher.prototype._transform = function (data, _, next) {
+	  this._cache.add(data);
+	  var chunk;
+	  var thing;
+	  while ((chunk = this._cache.get())) {
+	    thing = this._mode.encrypt(this, chunk);
+	    this.push(thing);
+	  }
+	  next();
+	};
+	Cipher.prototype._flush = function (next) {
+	  var chunk = this._cache.flush();
+	  this.push(this._mode.encrypt(this, chunk));
+	  this._cipher.scrub();
+	  next();
+	};
+
+
+	function Splitter() {
+	   if (!(this instanceof Splitter)) {
+	    return new Splitter();
+	  }
+	  this.cache = new Buffer('');
+	}
+	Splitter.prototype.add = function (data) {
+	  this.cache = Buffer.concat([this.cache, data]);
+	};
+
+	Splitter.prototype.get = function () {
+	  if (this.cache.length > 15) {
+	    var out = this.cache.slice(0, 16);
+	    this.cache = this.cache.slice(16);
+	    return out;
+	  }
+	  return null;
+	};
+	Splitter.prototype.flush = function () {
+	  var len = 16 - this.cache.length;
+	  var padBuff = new Buffer(len);
+
+	  var i = -1;
+	  while (++i < len) {
+	    padBuff.writeUInt8(len, i);
+	  }
+	  var out = Buffer.concat([this.cache, padBuff]);
+	  return out;
+	};
+	var modelist = {
+	  ECB: __webpack_require__(441),
+	  CBC: __webpack_require__(442),
+	  CFB: __webpack_require__(444),
+	  OFB: __webpack_require__(445),
+	  CTR: __webpack_require__(446)
+	};
+	module.exports = function (crypto) {
+	  function createCipheriv(suite, password, iv) {
+	    var config = modes[suite];
+	    if (!config) {
+	      throw new TypeError('invalid suite type');
+	    }
+	    if (typeof iv === 'string') {
+	      iv = new Buffer(iv);
+	    }
+	    if (typeof password === 'string') {
+	      password = new Buffer(password);
+	    }
+	    if (password.length !== config.key/8) {
+	      throw new TypeError('invalid key length ' + password.length);
+	    }
+	    if (iv.length !== config.iv) {
+	      throw new TypeError('invalid iv length ' + iv.length);
+	    }
+	    if (config.type === 'stream') {
+	      return new StreamCipher(modelist[config.mode], password, iv);
+	    }
+	    return new Cipher(modelist[config.mode], password, iv);
+	  }
+	  function createCipher (suite, password) {
+	    var config = modes[suite];
+	    if (!config) {
+	      throw new TypeError('invalid suite type');
+	    }
+	    var keys = ebtk(crypto, password, config.key, config.iv);
+	    return createCipheriv(suite, keys.key, keys.iv);
+	  }
+	  return {
+	    createCipher: createCipher,
+	    createCipheriv: createCipheriv
+	  };
+	};
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 436 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var uint_max = Math.pow(2, 32);
+	function fixup_uint32(x) {
+	    var ret, x_pos;
+	    ret = x > uint_max || x < 0 ? (x_pos = Math.abs(x) % uint_max, x < 0 ? uint_max - x_pos : x_pos) : x;
+	    return ret;
+	}
+	function scrub_vec(v) {
+	  var i, _i, _ref;
+	  for (i = _i = 0, _ref = v.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+	    v[i] = 0;
+	  }
+	  return false;
+	}
+
+	function Global() {
+	  var i;
+	  this.SBOX = [];
+	  this.INV_SBOX = [];
+	  this.SUB_MIX = (function() {
+	    var _i, _results;
+	    _results = [];
+	    for (i = _i = 0; _i < 4; i = ++_i) {
+	      _results.push([]);
+	    }
+	    return _results;
+	  })();
+	  this.INV_SUB_MIX = (function() {
+	    var _i, _results;
+	    _results = [];
+	    for (i = _i = 0; _i < 4; i = ++_i) {
+	      _results.push([]);
+	    }
+	    return _results;
+	  })();
+	  this.init();
+	  this.RCON = [0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36];
+	}
+
+	Global.prototype.init = function() {
+	  var d, i, sx, t, x, x2, x4, x8, xi, _i;
+	  d = (function() {
+	    var _i, _results;
+	    _results = [];
+	    for (i = _i = 0; _i < 256; i = ++_i) {
+	      if (i < 128) {
+	        _results.push(i << 1);
+	      } else {
+	        _results.push((i << 1) ^ 0x11b);
+	      }
+	    }
+	    return _results;
+	  })();
+	  x = 0;
+	  xi = 0;
+	  for (i = _i = 0; _i < 256; i = ++_i) {
+	    sx = xi ^ (xi << 1) ^ (xi << 2) ^ (xi << 3) ^ (xi << 4);
+	    sx = (sx >>> 8) ^ (sx & 0xff) ^ 0x63;
+	    this.SBOX[x] = sx;
+	    this.INV_SBOX[sx] = x;
+	    x2 = d[x];
+	    x4 = d[x2];
+	    x8 = d[x4];
+	    t = (d[sx] * 0x101) ^ (sx * 0x1010100);
+	    this.SUB_MIX[0][x] = (t << 24) | (t >>> 8);
+	    this.SUB_MIX[1][x] = (t << 16) | (t >>> 16);
+	    this.SUB_MIX[2][x] = (t << 8) | (t >>> 24);
+	    this.SUB_MIX[3][x] = t;
+	    t = (x8 * 0x1010101) ^ (x4 * 0x10001) ^ (x2 * 0x101) ^ (x * 0x1010100);
+	    this.INV_SUB_MIX[0][sx] = (t << 24) | (t >>> 8);
+	    this.INV_SUB_MIX[1][sx] = (t << 16) | (t >>> 16);
+	    this.INV_SUB_MIX[2][sx] = (t << 8) | (t >>> 24);
+	    this.INV_SUB_MIX[3][sx] = t;
+	    if (x === 0) {
+	      x = xi = 1;
+	    } else {
+	      x = x2 ^ d[d[d[x8 ^ x2]]];
+	      xi ^= d[d[xi]];
+	    }
+	  }
+	  return true;
+	};
+
+	var G = new Global();
+
+
+	AES.blockSize = 4 * 4;
+
+	AES.prototype.blockSize = AES.blockSize;
+
+	AES.keySize = 256 / 8;
+
+	AES.prototype.keySize = AES.keySize;
+
+	AES.ivSize = AES.blockSize;
+
+	AES.prototype.ivSize = AES.ivSize;
+
+	 function bufferToArray(buf) {
+	  var len = buf.length/4;
+	  var out = new Array(len);
+	  var i = -1;
+	  while (++i < len) {
+	    out[i] = buf.readUInt32BE(i * 4);
+	  }
+	  return out;
+	 }
+	function AES(key) {
+	  this._key = bufferToArray(key);
+	  this._doReset();
+	}
+
+	AES.prototype._doReset = function() {
+	  var invKsRow, keySize, keyWords, ksRow, ksRows, t, _i, _j;
+	  keyWords = this._key;
+	  keySize = keyWords.length;
+	  this._nRounds = keySize + 6;
+	  ksRows = (this._nRounds + 1) * 4;
+	  this._keySchedule = [];
+	  for (ksRow = _i = 0; 0 <= ksRows ? _i < ksRows : _i > ksRows; ksRow = 0 <= ksRows ? ++_i : --_i) {
+	    this._keySchedule[ksRow] = ksRow < keySize ? keyWords[ksRow] : (t = this._keySchedule[ksRow - 1], (ksRow % keySize) === 0 ? (t = (t << 8) | (t >>> 24), t = (G.SBOX[t >>> 24] << 24) | (G.SBOX[(t >>> 16) & 0xff] << 16) | (G.SBOX[(t >>> 8) & 0xff] << 8) | G.SBOX[t & 0xff], t ^= G.RCON[(ksRow / keySize) | 0] << 24) : keySize > 6 && ksRow % keySize === 4 ? t = (G.SBOX[t >>> 24] << 24) | (G.SBOX[(t >>> 16) & 0xff] << 16) | (G.SBOX[(t >>> 8) & 0xff] << 8) | G.SBOX[t & 0xff] : void 0, this._keySchedule[ksRow - keySize] ^ t);
+	  }
+	  this._invKeySchedule = [];
+	  for (invKsRow = _j = 0; 0 <= ksRows ? _j < ksRows : _j > ksRows; invKsRow = 0 <= ksRows ? ++_j : --_j) {
+	    ksRow = ksRows - invKsRow;
+	    t = this._keySchedule[ksRow - (invKsRow % 4 ? 0 : 4)];
+	    this._invKeySchedule[invKsRow] = invKsRow < 4 || ksRow <= 4 ? t : G.INV_SUB_MIX[0][G.SBOX[t >>> 24]] ^ G.INV_SUB_MIX[1][G.SBOX[(t >>> 16) & 0xff]] ^ G.INV_SUB_MIX[2][G.SBOX[(t >>> 8) & 0xff]] ^ G.INV_SUB_MIX[3][G.SBOX[t & 0xff]];
+	  }
+	  return true;
+	};
+
+	AES.prototype.encryptBlock = function(M) {
+	  M = bufferToArray(new Buffer(M));
+	  var out = this._doCryptBlock(M, this._keySchedule, G.SUB_MIX, G.SBOX);
+	  var buf = new Buffer(16);
+	  buf.writeUInt32BE(out[0], 0);
+	  buf.writeUInt32BE(out[1], 4);
+	  buf.writeUInt32BE(out[2], 8);
+	  buf.writeUInt32BE(out[3], 12);
+	  return buf;
+	};
+
+	AES.prototype.decryptBlock = function(M) {
+	  M = bufferToArray(new Buffer(M));
+	  var temp = [M[3], M[1]];
+	  M[1] = temp[0];
+	  M[3] = temp[1];
+	  var out = this._doCryptBlock(M, this._invKeySchedule, G.INV_SUB_MIX, G.INV_SBOX);
+	  var buf = new Buffer(16);
+	  buf.writeUInt32BE(out[0], 0);
+	  buf.writeUInt32BE(out[3], 4);
+	  buf.writeUInt32BE(out[2], 8);
+	  buf.writeUInt32BE(out[1], 12);
+	  return buf;
+	};
+
+	AES.prototype.scrub = function() {
+	  scrub_vec(this._keySchedule);
+	  scrub_vec(this._invKeySchedule);
+	  scrub_vec(this._key);
+	};
+
+	AES.prototype._doCryptBlock = function(M, keySchedule, SUB_MIX, SBOX) {
+	  var ksRow, round, s0, s1, s2, s3, t0, t1, t2, t3, _i, _ref;
+
+	  s0 = M[0] ^ keySchedule[0];
+	  s1 = M[1] ^ keySchedule[1];
+	  s2 = M[2] ^ keySchedule[2];
+	  s3 = M[3] ^ keySchedule[3];
+	  ksRow = 4;
+	  for (round = _i = 1, _ref = this._nRounds; 1 <= _ref ? _i < _ref : _i > _ref; round = 1 <= _ref ? ++_i : --_i) {
+	    t0 = SUB_MIX[0][s0 >>> 24] ^ SUB_MIX[1][(s1 >>> 16) & 0xff] ^ SUB_MIX[2][(s2 >>> 8) & 0xff] ^ SUB_MIX[3][s3 & 0xff] ^ keySchedule[ksRow++];
+	    t1 = SUB_MIX[0][s1 >>> 24] ^ SUB_MIX[1][(s2 >>> 16) & 0xff] ^ SUB_MIX[2][(s3 >>> 8) & 0xff] ^ SUB_MIX[3][s0 & 0xff] ^ keySchedule[ksRow++];
+	    t2 = SUB_MIX[0][s2 >>> 24] ^ SUB_MIX[1][(s3 >>> 16) & 0xff] ^ SUB_MIX[2][(s0 >>> 8) & 0xff] ^ SUB_MIX[3][s1 & 0xff] ^ keySchedule[ksRow++];
+	    t3 = SUB_MIX[0][s3 >>> 24] ^ SUB_MIX[1][(s0 >>> 16) & 0xff] ^ SUB_MIX[2][(s1 >>> 8) & 0xff] ^ SUB_MIX[3][s2 & 0xff] ^ keySchedule[ksRow++];
+	    s0 = t0;
+	    s1 = t1;
+	    s2 = t2;
+	    s3 = t3;
+	  }
+	  t0 = ((SBOX[s0 >>> 24] << 24) | (SBOX[(s1 >>> 16) & 0xff] << 16) | (SBOX[(s2 >>> 8) & 0xff] << 8) | SBOX[s3 & 0xff]) ^ keySchedule[ksRow++];
+	  t1 = ((SBOX[s1 >>> 24] << 24) | (SBOX[(s2 >>> 16) & 0xff] << 16) | (SBOX[(s3 >>> 8) & 0xff] << 8) | SBOX[s0 & 0xff]) ^ keySchedule[ksRow++];
+	  t2 = ((SBOX[s2 >>> 24] << 24) | (SBOX[(s3 >>> 16) & 0xff] << 16) | (SBOX[(s0 >>> 8) & 0xff] << 8) | SBOX[s1 & 0xff]) ^ keySchedule[ksRow++];
+	  t3 = ((SBOX[s3 >>> 24] << 24) | (SBOX[(s0 >>> 16) & 0xff] << 16) | (SBOX[(s1 >>> 8) & 0xff] << 8) | SBOX[s2 & 0xff]) ^ keySchedule[ksRow++];
+	  return [
+	    fixup_uint32(t0),
+	    fixup_uint32(t1),
+	    fixup_uint32(t2),
+	    fixup_uint32(t3)
+	  ];
+
+	};
+
+
+
+
+	  exports.AES = AES;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 437 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(178).Transform;
+	var inherits = __webpack_require__(175);
+
+	module.exports = CipherBase;
+	inherits(CipherBase, Transform);
+	function CipherBase() {
+	  Transform.call(this);
+	}
+	CipherBase.prototype.update = function (data, inputEnd, outputEnc) {
+	  this.write(data, inputEnd);
+	  var outData = new Buffer('');
+	  var chunk;
+	  while ((chunk = this.read())) {
+	    outData = Buffer.concat([outData, chunk]);
+	  }
+	  if (outputEnc) {
+	    outData = outData.toString(outputEnc);
+	  }
+	  return outData;
+	};
+	CipherBase.prototype.final = function (outputEnc) {
+	  this.end();
+	  var outData = new Buffer('');
+	  var chunk;
+	  while ((chunk = this.read())) {
+	    outData = Buffer.concat([outData, chunk]);
+	  }
+	  if (outputEnc) {
+	    outData = outData.toString(outputEnc);
+	  }
+	  return outData;
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 438 */
+/***/ function(module, exports) {
+
+	exports['aes-128-ecb'] = {
+	  cipher: 'AES',
+	  key: 128,
+	  iv: 0,
+	  mode: 'ECB',
+	  type: 'block'
+	};
+	exports['aes-192-ecb'] = {
+	  cipher: 'AES',
+	  key: 192,
+	  iv: 0,
+	  mode: 'ECB',
+	  type: 'block'
+	};
+	exports['aes-256-ecb'] = {
+	  cipher: 'AES',
+	  key: 256,
+	  iv: 0,
+	  mode: 'ECB',
+	  type: 'block'
+	};
+	exports['aes-128-cbc'] = {
+	  cipher: 'AES',
+	  key: 128,
+	  iv: 16,
+	  mode: 'CBC',
+	  type: 'block'
+	};
+	exports['aes-192-cbc'] = {
+	  cipher: 'AES',
+	  key: 192,
+	  iv: 16,
+	  mode: 'CBC',
+	  type: 'block'
+	};
+	exports['aes-256-cbc'] = {
+	  cipher: 'AES',
+	  key: 256,
+	  iv: 16,
+	  mode: 'CBC',
+	  type: 'block'
+	};
+	exports['aes128'] = exports['aes-128-cbc'];
+	exports['aes192'] = exports['aes-192-cbc'];
+	exports['aes256'] = exports['aes-256-cbc'];
+	exports['aes-128-cfb'] = {
+	  cipher: 'AES',
+	  key: 128,
+	  iv: 16,
+	  mode: 'CFB',
+	  type: 'stream'
+	};
+	exports['aes-192-cfb'] = {
+	  cipher: 'AES',
+	  key: 192,
+	  iv: 16,
+	  mode: 'CFB',
+	  type: 'stream'
+	};
+	exports['aes-256-cfb'] = {
+	  cipher: 'AES',
+	  key: 256,
+	  iv: 16,
+	  mode: 'CFB',
+	  type: 'stream'
+	};
+	exports['aes-128-ofb'] = {
+	  cipher: 'AES',
+	  key: 128,
+	  iv: 16,
+	  mode: 'OFB',
+	  type: 'stream'
+	};
+	exports['aes-192-ofb'] = {
+	  cipher: 'AES',
+	  key: 192,
+	  iv: 16,
+	  mode: 'OFB',
+	  type: 'stream'
+	};
+	exports['aes-256-ofb'] = {
+	  cipher: 'AES',
+	  key: 256,
+	  iv: 16,
+	  mode: 'OFB',
+	  type: 'stream'
+	};
+	exports['aes-128-ctr'] = {
+	  cipher: 'AES',
+	  key: 128,
+	  iv: 16,
+	  mode: 'CTR',
+	  type: 'stream'
+	};
+	exports['aes-192-ctr'] = {
+	  cipher: 'AES',
+	  key: 192,
+	  iv: 16,
+	  mode: 'CTR',
+	  type: 'stream'
+	};
+	exports['aes-256-ctr'] = {
+	  cipher: 'AES',
+	  key: 256,
+	  iv: 16,
+	  mode: 'CTR',
+	  type: 'stream'
+	};
+
+/***/ },
+/* 439 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {
+	module.exports = function (crypto, password, keyLen, ivLen) {
+	  keyLen = keyLen/8;
+	  ivLen = ivLen || 0;
+	  var ki = 0;
+	  var ii = 0;
+	  var key = new Buffer(keyLen);
+	  var iv = new Buffer(ivLen);
+	  var addmd = 0;
+	  var md, md_buf;
+	  var i;
+	  while (true) {
+	    md = crypto.createHash('md5');
+	    if(addmd++ > 0) {
+	       md.update(md_buf);
+	    }
+	    md.update(password);
+	    md_buf = md.digest();
+	    i = 0;
+	    if(keyLen > 0) {
+	      while(true) {
+	        if(keyLen === 0) {
+	          break;
+	        }
+	        if(i === md_buf.length) {
+	          break;
+	        }
+	        key[ki++] = md_buf[i];
+	        keyLen--;
+	        i++;
+	       }
+	    }
+	    if(ivLen > 0 && i !== md_buf.length) {
+	      while(true) {
+	        if(ivLen === 0) {
+	          break;
+	        }
+	        if(i === md_buf.length) {
+	          break;
+	        }
+	       iv[ii++] = md_buf[i];
+	       ivLen--;
+	       i++;
+	     }
+	   }
+	   if(keyLen === 0 && ivLen === 0) {
+	      break;
+	    }
+	  }
+	  for(i=0;i<md_buf.length;i++) {
+	    md_buf[i] = 0;
+	  }
+	  return {
+	    key: key,
+	    iv: iv
+	  };
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 440 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(436);
+	var Transform = __webpack_require__(437);
+	var inherits = __webpack_require__(175);
+
+	inherits(StreamCipher, Transform);
+	module.exports = StreamCipher;
+	function StreamCipher(mode, key, iv, decrypt) {
+	  if (!(this instanceof StreamCipher)) {
+	    return new StreamCipher(mode, key, iv);
+	  }
+	  Transform.call(this);
+	  this._cipher = new aes.AES(key);
+	  this._prev = new Buffer(iv.length);
+	  this._cache = new Buffer('');
+	  this._secCache = new Buffer('');
+	  this._decrypt = decrypt;
+	  iv.copy(this._prev);
+	  this._mode = mode;
+	}
+	StreamCipher.prototype._transform = function (chunk, _, next) {
+	  next(null, this._mode.encrypt(this, chunk, this._decrypt));
+	};
+	StreamCipher.prototype._flush = function (next) {
+	  this._cipher.scrub();
+	  next();
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 441 */
+/***/ function(module, exports) {
+
+	exports.encrypt = function (self, block) {
+	  return self._cipher.encryptBlock(block);
+	};
+	exports.decrypt = function (self, block) {
+	  return self._cipher.decryptBlock(block);
+	};
+
+/***/ },
+/* 442 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var xor = __webpack_require__(443);
+	exports.encrypt = function (self, block) {
+	  var data = xor(block, self._prev);
+	  self._prev = self._cipher.encryptBlock(data);
+	  return self._prev;
+	};
+	exports.decrypt = function (self, block) {
+	  var pad = self._prev;
+	  self._prev = block;
+	  var out = self._cipher.decryptBlock(block);
+	  return xor(out, pad);
+	};
+
+/***/ },
+/* 443 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = xor;
+	function xor(a, b) {
+	  var len = Math.min(a.length, b.length);
+	  var out = new Buffer(len);
+	  var i = -1;
+	  while (++i < len) {
+	    out.writeUInt8(a[i] ^ b[i], i);
+	  }
+	  return out;
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 444 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(443);
+	exports.encrypt = function (self, data, decrypt) {
+	  var out = new Buffer('');
+	  var len;
+	  while (data.length) {
+	    if (self._cache.length === 0) {
+	      self._cache = self._cipher.encryptBlock(self._prev);
+	      self._prev = new Buffer('');
+	    }
+	    if (self._cache.length <= data.length) {
+	      len = self._cache.length;
+	      out = Buffer.concat([out, encryptStart(self, data.slice(0, len), decrypt)]);
+	      data = data.slice(len);
+	    } else {
+	      out = Buffer.concat([out, encryptStart(self, data, decrypt)]);
+	      break;
+	    }
+	  }
+	  return out;
+	};
+	function encryptStart(self, data, decrypt) {
+	  var len = data.length;
+	  var out = xor(data, self._cache);
+	  self._cache = self._cache.slice(len);
+	  self._prev = Buffer.concat([self._prev, decrypt?data:out]);
+	  return out;
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 445 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(443);
+	function getBlock(self) {
+	  self._prev = self._cipher.encryptBlock(self._prev);
+	  return self._prev;
+	}
+	exports.encrypt = function (self, chunk) {
+	  while (self._cache.length < chunk.length) {
+	    self._cache = Buffer.concat([self._cache, getBlock(self)]);
+	  }
+	  var pad = self._cache.slice(0, chunk.length);
+	  self._cache = self._cache.slice(chunk.length);
+	  return xor(chunk, pad);
+	};
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 446 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(443);
+	function getBlock(self) {
+	  var out = self._cipher.encryptBlock(self._prev);
+	  incr32(self._prev);
+	  return out;
+	}
+	exports.encrypt = function (self, chunk) {
+	  while (self._cache.length < chunk.length) {
+	    self._cache = Buffer.concat([self._cache, getBlock(self)]);
+	  }
+	  var pad = self._cache.slice(0, chunk.length);
+	  self._cache = self._cache.slice(chunk.length);
+	  return xor(chunk, pad);
+	};
+	function incr32(iv) {
+	  var len = iv.length;
+	  var item;
+	  while (len--) {
+	    item = iv.readUInt8(len);
+	    if (item === 255) {
+	      iv.writeUInt8(0, len);
+	    } else {
+	      item++;
+	      iv.writeUInt8(item, len);
+	      break;
+	    }
+	  }
+	}
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 447 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(436);
+	var Transform = __webpack_require__(437);
+	var inherits = __webpack_require__(175);
+	var modes = __webpack_require__(438);
+	var StreamCipher = __webpack_require__(440);
+	var ebtk = __webpack_require__(439);
+
+	inherits(Decipher, Transform);
+	function Decipher(mode, key, iv) {
+	  if (!(this instanceof Decipher)) {
+	    return new Decipher(mode, key, iv);
+	  }
+	  Transform.call(this);
+	  this._cache = new Splitter();
+	  this._last = void 0;
+	  this._cipher = new aes.AES(key);
+	  this._prev = new Buffer(iv.length);
+	  iv.copy(this._prev);
+	  this._mode = mode;
+	}
+	Decipher.prototype._transform = function (data, _, next) {
+	  this._cache.add(data);
+	  var chunk;
+	  var thing;
+	  while ((chunk = this._cache.get())) {
+	    thing = this._mode.decrypt(this, chunk);
+	    this.push(thing);
+	  }
+	  next();
+	};
+	Decipher.prototype._flush = function (next) {
+	  var chunk = this._cache.flush();
+	  if (!chunk) {
+	    return next;
+	  }
+
+	  this.push(unpad(this._mode.decrypt(this, chunk)));
+
+	  next();
+	};
+
+	function Splitter() {
+	   if (!(this instanceof Splitter)) {
+	    return new Splitter();
+	  }
+	  this.cache = new Buffer('');
+	}
+	Splitter.prototype.add = function (data) {
+	  this.cache = Buffer.concat([this.cache, data]);
+	};
+
+	Splitter.prototype.get = function () {
+	  if (this.cache.length > 16) {
+	    var out = this.cache.slice(0, 16);
+	    this.cache = this.cache.slice(16);
+	    return out;
+	  }
+	  return null;
+	};
+	Splitter.prototype.flush = function () {
+	  if (this.cache.length) {
+	    return this.cache;
+	  }
+	};
+	function unpad(last) {
+	  var padded = last[15];
+	  if (padded === 16) {
+	    return;
+	  }
+	  return last.slice(0, 16 - padded);
+	}
+
+	var modelist = {
+	  ECB: __webpack_require__(441),
+	  CBC: __webpack_require__(442),
+	  CFB: __webpack_require__(444),
+	  OFB: __webpack_require__(445),
+	  CTR: __webpack_require__(446)
+	};
+
+	module.exports = function (crypto) {
+	  function createDecipheriv(suite, password, iv) {
+	    var config = modes[suite];
+	    if (!config) {
+	      throw new TypeError('invalid suite type');
+	    }
+	    if (typeof iv === 'string') {
+	      iv = new Buffer(iv);
+	    }
+	    if (typeof password === 'string') {
+	      password = new Buffer(password);
+	    }
+	    if (password.length !== config.key/8) {
+	      throw new TypeError('invalid key length ' + password.length);
+	    }
+	    if (iv.length !== config.iv) {
+	      throw new TypeError('invalid iv length ' + iv.length);
+	    }
+	    if (config.type === 'stream') {
+	      return new StreamCipher(modelist[config.mode], password, iv, true);
+	    }
+	    return new Decipher(modelist[config.mode], password, iv);
+	  }
+
+	  function createDecipher (suite, password) {
+	    var config = modes[suite];
+	    if (!config) {
+	      throw new TypeError('invalid suite type');
+	    }
+	    var keys = ebtk(crypto, password, config.key, config.iv);
+	    return createDecipheriv(suite, keys.key, keys.iv);
+	  }
+	  return {
+	    createDecipher: createDecipher,
+	    createDecipheriv: createDecipheriv
+	  };
+	};
+
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+
+/***/ },
+/* 448 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
-
-	var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
 
 	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -59163,29 +60300,29 @@ var StellarSdk =
 	    value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(189));
+	var xdr = _interopRequire(__webpack_require__(206));
 
-	var UnsignedHyper = __webpack_require__(190).UnsignedHyper;
+	var UnsignedHyper = __webpack_require__(207).UnsignedHyper;
 
-	var hash = __webpack_require__(228).hash;
+	var hash = __webpack_require__(245).hash;
 
-	var Keypair = __webpack_require__(241).Keypair;
+	var Keypair = __webpack_require__(258).Keypair;
 
-	var Account = __webpack_require__(403).Account;
+	var Account = __webpack_require__(449).Account;
 
-	var Operation = __webpack_require__(288).Operation;
+	var Operation = __webpack_require__(305).Operation;
 
-	var Transaction = __webpack_require__(287).Transaction;
+	var Transaction = __webpack_require__(304).Transaction;
 
-	var Memo = __webpack_require__(404).Memo;
+	var Memo = __webpack_require__(450).Memo;
 
-	var BigNumber = _interopRequire(__webpack_require__(360));
+	var BigNumber = _interopRequire(__webpack_require__(377));
 
-	var clone = _interopRequire(__webpack_require__(290));
+	var clone = _interopRequire(__webpack_require__(307));
 
-	var map = _interopRequire(__webpack_require__(366));
+	var map = _interopRequire(__webpack_require__(383));
 
-	var isUndefined = _interopRequire(__webpack_require__(245));
+	var isUndefined = _interopRequire(__webpack_require__(262));
 
 	var BASE_FEE = 100; // Stroops
 	var MIN_LEDGER = 0;
@@ -59246,7 +60383,6 @@ var StellarSdk =
 	        }
 	        this.source = sourceAccount;
 	        this.operations = [];
-	        this.signers = [];
 
 	        this.baseFee = isUndefined(opts.fee) ? BASE_FEE : opts.fee;
 
@@ -59297,7 +60433,7 @@ var StellarSdk =
 	                var sequenceNumber = new BigNumber(this.source.sequenceNumber()).add(1);
 
 	                var attrs = {
-	                    sourceAccount: Keypair.fromAccountId(this.source.accountId()).xdrAccountId(),
+	                    sourceAccount: Keypair.fromPublicKey(this.source.accountId()).xdrAccountId(),
 	                    fee: this.baseFee * this.operations.length,
 	                    seqNum: xdr.SequenceNumber.fromString(sequenceNumber.toString()),
 	                    memo: this.memo,
@@ -59313,7 +60449,6 @@ var StellarSdk =
 	                var xenv = new xdr.TransactionEnvelope({ tx: xtx });
 
 	                var tx = new Transaction(xenv);
-	                tx.sign.apply(tx, _toConsumableArray(this.signers));
 
 	                this.source.incrementSequenceNumber();
 	                return tx;
@@ -59325,7 +60460,7 @@ var StellarSdk =
 	})();
 
 /***/ },
-/* 403 */
+/* 449 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59340,13 +60475,13 @@ var StellarSdk =
 	    value: true
 	});
 
-	var BigNumber = _interopRequire(__webpack_require__(360));
+	var BigNumber = _interopRequire(__webpack_require__(377));
 
-	var isString = _interopRequire(__webpack_require__(270));
+	var isString = _interopRequire(__webpack_require__(287));
 
-	var Keypair = __webpack_require__(241).Keypair;
+	var Keypair = __webpack_require__(258).Keypair;
 
-	var decodeCheck = __webpack_require__(247).decodeCheck;
+	var StrKey = __webpack_require__(264).StrKey;
 
 	var Account = exports.Account = (function () {
 	    /**
@@ -59364,7 +60499,7 @@ var StellarSdk =
 	    function Account(accountId, sequence) {
 	        _classCallCheck(this, Account);
 
-	        if (!Keypair.isValidPublicKey(accountId)) {
+	        if (!StrKey.isValidEd25519PublicKey(accountId)) {
 	            throw new Error("accountId is invalid");
 	        }
 	        if (!isString(sequence)) {
@@ -59406,36 +60541,13 @@ var StellarSdk =
 	                this.sequence = this.sequence.add(1);
 	            }
 	        }
-	    }, {
-	        isValidAccountId: {
-
-	            /**
-	             * Returns true if the given accountId is a valid Stellar account ID.
-	             * @param {string} accountId account ID to check
-	             * @returns {boolean}
-	             * @deprecated Use {@link Keypair.isValidPublicKey}
-	             */
-
-	            value: function isValidAccountId(accountId) {
-	                console.warn("Account.isValidAccountId is deprecated. Use Keypair.isValidPublicKey.");
-	                try {
-	                    var decoded = decodeCheck("accountId", accountId);
-	                    if (decoded.length !== 32) {
-	                        return false;
-	                    }
-	                } catch (err) {
-	                    return false;
-	                }
-	                return true;
-	            }
-	        }
 	    });
 
 	    return Account;
 	})();
 
 /***/ },
-/* 404 */
+/* 450 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -59450,17 +60562,17 @@ var StellarSdk =
 	    value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(189));
+	var xdr = _interopRequire(__webpack_require__(206));
 
-	var isUndefined = _interopRequire(__webpack_require__(245));
+	var isUndefined = _interopRequire(__webpack_require__(262));
 
-	var isNull = _interopRequire(__webpack_require__(246));
+	var isNull = _interopRequire(__webpack_require__(263));
 
-	var isString = _interopRequire(__webpack_require__(270));
+	var isString = _interopRequire(__webpack_require__(287));
 
-	var UnsignedHyper = __webpack_require__(190).UnsignedHyper;
+	var UnsignedHyper = __webpack_require__(207).UnsignedHyper;
 
-	var BigNumber = _interopRequire(__webpack_require__(360));
+	var BigNumber = _interopRequire(__webpack_require__(377));
 
 	/**
 	 * `Memo` represents memos attached to transactions. Use static methods to create memos.
@@ -59631,15 +60743,15 @@ var StellarSdk =
 
 	    return Memo;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(165).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
 
 /***/ },
-/* 405 */
+/* 451 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(117),
-	    castFunction = __webpack_require__(120),
-	    keysIn = __webpack_require__(406);
+	var baseFor = __webpack_require__(125),
+	    castFunction = __webpack_require__(128),
+	    keysIn = __webpack_require__(81);
 
 	/**
 	 * Iterates over own and inherited enumerable string keyed properties of an
@@ -59679,110 +60791,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 406 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var arrayLikeKeys = __webpack_require__(60),
-	    baseKeysIn = __webpack_require__(407),
-	    isArrayLike = __webpack_require__(79);
-
-	/**
-	 * Creates an array of the own and inherited enumerable property names of `object`.
-	 *
-	 * **Note:** Non-object values are coerced to objects.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 3.0.0
-	 * @category Object
-	 * @param {Object} object The object to query.
-	 * @returns {Array} Returns the array of property names.
-	 * @example
-	 *
-	 * function Foo() {
-	 *   this.a = 1;
-	 *   this.b = 2;
-	 * }
-	 *
-	 * Foo.prototype.c = 3;
-	 *
-	 * _.keysIn(new Foo);
-	 * // => ['a', 'b', 'c'] (iteration order is not guaranteed)
-	 */
-	function keysIn(object) {
-	  return isArrayLike(object) ? arrayLikeKeys(object, true) : baseKeysIn(object);
-	}
-
-	module.exports = keysIn;
-
-
-/***/ },
-/* 407 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isObject = __webpack_require__(33),
-	    isPrototype = __webpack_require__(76),
-	    nativeKeysIn = __webpack_require__(408);
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
-
-	/**
-	 * The base implementation of `_.keysIn` which doesn't treat sparse arrays as dense.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {Array} Returns the array of property names.
-	 */
-	function baseKeysIn(object) {
-	  if (!isObject(object)) {
-	    return nativeKeysIn(object);
-	  }
-	  var isProto = isPrototype(object),
-	      result = [];
-
-	  for (var key in object) {
-	    if (!(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
-	      result.push(key);
-	    }
-	  }
-	  return result;
-	}
-
-	module.exports = baseKeysIn;
-
-
-/***/ },
-/* 408 */
-/***/ function(module, exports) {
-
-	/**
-	 * This function is like
-	 * [`Object.keys`](http://ecma-international.org/ecma-262/7.0/#sec-object.keys)
-	 * except that it includes inherited enumerable properties.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {Array} Returns the array of property names.
-	 */
-	function nativeKeysIn(object) {
-	  var result = [];
-	  if (object != null) {
-	    for (var key in Object(object)) {
-	      result.push(key);
-	    }
-	  }
-	  return result;
-	}
-
-	module.exports = nativeKeysIn;
-
-
-/***/ },
-/* 409 */
+/* 452 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59799,7 +60808,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var LedgerCallBuilder = (function (_CallBuilder) {
 	    _inherits(LedgerCallBuilder, _CallBuilder);
@@ -59841,7 +60850,7 @@ var StellarSdk =
 	exports.LedgerCallBuilder = LedgerCallBuilder;
 
 /***/ },
-/* 410 */
+/* 453 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59858,7 +60867,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var TransactionCallBuilder = (function (_CallBuilder) {
 	    _inherits(TransactionCallBuilder, _CallBuilder);
@@ -59930,7 +60939,7 @@ var StellarSdk =
 	exports.TransactionCallBuilder = TransactionCallBuilder;
 
 /***/ },
-/* 411 */
+/* 454 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59947,7 +60956,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var OperationCallBuilder = (function (_CallBuilder) {
 	    _inherits(OperationCallBuilder, _CallBuilder);
@@ -60034,7 +61043,7 @@ var StellarSdk =
 	exports.OperationCallBuilder = OperationCallBuilder;
 
 /***/ },
-/* 412 */
+/* 455 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60049,9 +61058,9 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
-	var _orderbook_call_builder = __webpack_require__(413);
+	var _orderbook_call_builder = __webpack_require__(456);
 
 	var _errors = __webpack_require__(5);
 
@@ -60089,7 +61098,7 @@ var StellarSdk =
 	exports.OfferCallBuilder = OfferCallBuilder;
 
 /***/ },
-/* 413 */
+/* 456 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60106,7 +61115,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var OrderbookCallBuilder = (function (_CallBuilder) {
 	    _inherits(OrderbookCallBuilder, _CallBuilder);
@@ -60162,7 +61171,7 @@ var StellarSdk =
 	exports.OrderbookCallBuilder = OrderbookCallBuilder;
 
 /***/ },
-/* 414 */
+/* 457 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60177,7 +61186,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var PathCallBuilder = (function (_CallBuilder) {
 	    _inherits(PathCallBuilder, _CallBuilder);
@@ -60230,7 +61239,7 @@ var StellarSdk =
 	exports.PathCallBuilder = PathCallBuilder;
 
 /***/ },
-/* 415 */
+/* 458 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60247,7 +61256,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var PaymentCallBuilder = (function (_CallBuilder) {
 	    _inherits(PaymentCallBuilder, _CallBuilder);
@@ -60319,7 +61328,7 @@ var StellarSdk =
 	exports.PaymentCallBuilder = PaymentCallBuilder;
 
 /***/ },
-/* 416 */
+/* 459 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60336,7 +61345,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	/**
 	 * @class EffectCallBuilder
@@ -60427,7 +61436,7 @@ var StellarSdk =
 	exports.EffectCallBuilder = EffectCallBuilder;
 
 /***/ },
-/* 417 */
+/* 460 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60442,7 +61451,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(113);
+	var _call_builder = __webpack_require__(121);
 
 	var FriendbotBuilder = (function (_CallBuilder) {
 	    _inherits(FriendbotBuilder, _CallBuilder);
@@ -60461,7 +61470,7 @@ var StellarSdk =
 	exports.FriendbotBuilder = FriendbotBuilder;
 
 /***/ },
-/* 418 */
+/* 461 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var baseGetTag = __webpack_require__(27),
@@ -60497,7 +61506,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 419 */
+/* 462 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60514,31 +61523,31 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _axios = __webpack_require__(126);
+	var _axios = __webpack_require__(135);
 
 	var _axios2 = _interopRequireDefault(_axios);
 
-	var _urijs = __webpack_require__(122);
+	var _urijs = __webpack_require__(130);
 
 	var _urijs2 = _interopRequireDefault(_urijs);
 
-	var _bluebird = __webpack_require__(185);
+	var _bluebird = __webpack_require__(203);
 
 	var _bluebird2 = _interopRequireDefault(_bluebird);
 
-	var _lodashIsString = __webpack_require__(418);
+	var _lodashIsString = __webpack_require__(461);
 
 	var _lodashIsString2 = _interopRequireDefault(_lodashIsString);
 
-	var _lodashPick = __webpack_require__(420);
+	var _lodashPick = __webpack_require__(463);
 
 	var _lodashPick2 = _interopRequireDefault(_lodashPick);
 
 	var _config = __webpack_require__(6);
 
-	var _stellarBase = __webpack_require__(188);
+	var _stellarBase = __webpack_require__(205);
 
-	var _stellar_toml_resolver = __webpack_require__(436);
+	var _stellar_toml_resolver = __webpack_require__(491);
 
 	var FederationServer = (function () {
 	  /**
@@ -60673,7 +61682,7 @@ var StellarSdk =
 
 	      // Check if `value` is in account ID format
 	      if (value.indexOf('*') < 0) {
-	        if (!_stellarBase.Keypair.isValidPublicKey(value)) {
+	        if (!_stellarBase.StrKey.isValidEd25519PublicKey(value)) {
 	          return _bluebird2['default'].reject(new Error('Invalid Account ID'));
 	        } else {
 	          return _bluebird2['default'].resolve({ account_id: value });
@@ -60732,13 +61741,11 @@ var StellarSdk =
 	exports.FederationServer = FederationServer;
 
 /***/ },
-/* 420 */
+/* 463 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(421),
-	    basePick = __webpack_require__(422),
-	    flatRest = __webpack_require__(424),
-	    toKey = __webpack_require__(434);
+	var basePick = __webpack_require__(464),
+	    flatRest = __webpack_require__(481);
 
 	/**
 	 * Creates an object composed of the picked `object` properties.
@@ -60748,7 +61755,7 @@ var StellarSdk =
 	 * @memberOf _
 	 * @category Object
 	 * @param {Object} object The source object.
-	 * @param {...(string|string[])} [props] The property identifiers to pick.
+	 * @param {...(string|string[])} [paths] The property paths to pick.
 	 * @returns {Object} Returns the new object.
 	 * @example
 	 *
@@ -60757,15 +61764,425 @@ var StellarSdk =
 	 * _.pick(object, ['a', 'c']);
 	 * // => { 'a': 1, 'c': 3 }
 	 */
-	var pick = flatRest(function(object, props) {
-	  return object == null ? {} : basePick(object, arrayMap(props, toKey));
+	var pick = flatRest(function(object, paths) {
+	  return object == null ? {} : basePick(object, paths);
 	});
 
 	module.exports = pick;
 
 
 /***/ },
-/* 421 */
+/* 464 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var basePickBy = __webpack_require__(465),
+	    hasIn = __webpack_require__(478);
+
+	/**
+	 * The base implementation of `_.pick` without support for individual
+	 * property identifiers.
+	 *
+	 * @private
+	 * @param {Object} object The source object.
+	 * @param {string[]} paths The property paths to pick.
+	 * @returns {Object} Returns the new object.
+	 */
+	function basePick(object, paths) {
+	  return basePickBy(object, paths, function(value, path) {
+	    return hasIn(object, path);
+	  });
+	}
+
+	module.exports = basePick;
+
+
+/***/ },
+/* 465 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseGet = __webpack_require__(466),
+	    baseSet = __webpack_require__(477),
+	    castPath = __webpack_require__(467);
+
+	/**
+	 * The base implementation of  `_.pickBy` without support for iteratee shorthands.
+	 *
+	 * @private
+	 * @param {Object} object The source object.
+	 * @param {string[]} paths The property paths to pick.
+	 * @param {Function} predicate The function invoked per property.
+	 * @returns {Object} Returns the new object.
+	 */
+	function basePickBy(object, paths, predicate) {
+	  var index = -1,
+	      length = paths.length,
+	      result = {};
+
+	  while (++index < length) {
+	    var path = paths[index],
+	        value = baseGet(object, path);
+
+	    if (predicate(value, path)) {
+	      baseSet(result, castPath(path, object), value);
+	    }
+	  }
+	  return result;
+	}
+
+	module.exports = basePickBy;
+
+
+/***/ },
+/* 466 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var castPath = __webpack_require__(467),
+	    toKey = __webpack_require__(476);
+
+	/**
+	 * The base implementation of `_.get` without support for default values.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path of the property to get.
+	 * @returns {*} Returns the resolved value.
+	 */
+	function baseGet(object, path) {
+	  path = castPath(path, object);
+
+	  var index = 0,
+	      length = path.length;
+
+	  while (object != null && index < length) {
+	    object = object[toKey(path[index++])];
+	  }
+	  return (index && index == length) ? object : undefined;
+	}
+
+	module.exports = baseGet;
+
+
+/***/ },
+/* 467 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArray = __webpack_require__(65),
+	    isKey = __webpack_require__(468),
+	    stringToPath = __webpack_require__(470),
+	    toString = __webpack_require__(473);
+
+	/**
+	 * Casts `value` to a path array if it's not one.
+	 *
+	 * @private
+	 * @param {*} value The value to inspect.
+	 * @param {Object} [object] The object to query keys on.
+	 * @returns {Array} Returns the cast property path array.
+	 */
+	function castPath(value, object) {
+	  if (isArray(value)) {
+	    return value;
+	  }
+	  return isKey(value, object) ? [value] : stringToPath(toString(value));
+	}
+
+	module.exports = castPath;
+
+
+/***/ },
+/* 468 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var isArray = __webpack_require__(65),
+	    isSymbol = __webpack_require__(469);
+
+	/** Used to match property names within property paths. */
+	var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
+	    reIsPlainProp = /^\w*$/;
+
+	/**
+	 * Checks if `value` is a property name and not a property path.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {Object} [object] The object to query keys on.
+	 * @returns {boolean} Returns `true` if `value` is a property name, else `false`.
+	 */
+	function isKey(value, object) {
+	  if (isArray(value)) {
+	    return false;
+	  }
+	  var type = typeof value;
+	  if (type == 'number' || type == 'symbol' || type == 'boolean' ||
+	      value == null || isSymbol(value)) {
+	    return true;
+	  }
+	  return reIsPlainProp.test(value) || !reIsDeepProp.test(value) ||
+	    (object != null && value in Object(object));
+	}
+
+	module.exports = isKey;
+
+
+/***/ },
+/* 469 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseGetTag = __webpack_require__(27),
+	    isObjectLike = __webpack_require__(64);
+
+	/** `Object#toString` result references. */
+	var symbolTag = '[object Symbol]';
+
+	/**
+	 * Checks if `value` is classified as a `Symbol` primitive or object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
+	 * @example
+	 *
+	 * _.isSymbol(Symbol.iterator);
+	 * // => true
+	 *
+	 * _.isSymbol('abc');
+	 * // => false
+	 */
+	function isSymbol(value) {
+	  return typeof value == 'symbol' ||
+	    (isObjectLike(value) && baseGetTag(value) == symbolTag);
+	}
+
+	module.exports = isSymbol;
+
+
+/***/ },
+/* 470 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var memoizeCapped = __webpack_require__(471);
+
+	/** Used to match property names within property paths. */
+	var reLeadingDot = /^\./,
+	    rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
+
+	/** Used to match backslashes in property paths. */
+	var reEscapeChar = /\\(\\)?/g;
+
+	/**
+	 * Converts `string` to a property path array.
+	 *
+	 * @private
+	 * @param {string} string The string to convert.
+	 * @returns {Array} Returns the property path array.
+	 */
+	var stringToPath = memoizeCapped(function(string) {
+	  var result = [];
+	  if (reLeadingDot.test(string)) {
+	    result.push('');
+	  }
+	  string.replace(rePropName, function(match, number, quote, string) {
+	    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
+	  });
+	  return result;
+	});
+
+	module.exports = stringToPath;
+
+
+/***/ },
+/* 471 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var memoize = __webpack_require__(472);
+
+	/** Used as the maximum memoize cache size. */
+	var MAX_MEMOIZE_SIZE = 500;
+
+	/**
+	 * A specialized version of `_.memoize` which clears the memoized function's
+	 * cache when it exceeds `MAX_MEMOIZE_SIZE`.
+	 *
+	 * @private
+	 * @param {Function} func The function to have its output memoized.
+	 * @returns {Function} Returns the new memoized function.
+	 */
+	function memoizeCapped(func) {
+	  var result = memoize(func, function(key) {
+	    if (cache.size === MAX_MEMOIZE_SIZE) {
+	      cache.clear();
+	    }
+	    return key;
+	  });
+
+	  var cache = result.cache;
+	  return result;
+	}
+
+	module.exports = memoizeCapped;
+
+
+/***/ },
+/* 472 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var MapCache = __webpack_require__(38);
+
+	/** Error message constants. */
+	var FUNC_ERROR_TEXT = 'Expected a function';
+
+	/**
+	 * Creates a function that memoizes the result of `func`. If `resolver` is
+	 * provided, it determines the cache key for storing the result based on the
+	 * arguments provided to the memoized function. By default, the first argument
+	 * provided to the memoized function is used as the map cache key. The `func`
+	 * is invoked with the `this` binding of the memoized function.
+	 *
+	 * **Note:** The cache is exposed as the `cache` property on the memoized
+	 * function. Its creation may be customized by replacing the `_.memoize.Cache`
+	 * constructor with one whose instances implement the
+	 * [`Map`](http://ecma-international.org/ecma-262/7.0/#sec-properties-of-the-map-prototype-object)
+	 * method interface of `clear`, `delete`, `get`, `has`, and `set`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Function
+	 * @param {Function} func The function to have its output memoized.
+	 * @param {Function} [resolver] The function to resolve the cache key.
+	 * @returns {Function} Returns the new memoized function.
+	 * @example
+	 *
+	 * var object = { 'a': 1, 'b': 2 };
+	 * var other = { 'c': 3, 'd': 4 };
+	 *
+	 * var values = _.memoize(_.values);
+	 * values(object);
+	 * // => [1, 2]
+	 *
+	 * values(other);
+	 * // => [3, 4]
+	 *
+	 * object.a = 2;
+	 * values(object);
+	 * // => [1, 2]
+	 *
+	 * // Modify the result cache.
+	 * values.cache.set(object, ['a', 'b']);
+	 * values(object);
+	 * // => ['a', 'b']
+	 *
+	 * // Replace `_.memoize.Cache`.
+	 * _.memoize.Cache = WeakMap;
+	 */
+	function memoize(func, resolver) {
+	  if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
+	    throw new TypeError(FUNC_ERROR_TEXT);
+	  }
+	  var memoized = function() {
+	    var args = arguments,
+	        key = resolver ? resolver.apply(this, args) : args[0],
+	        cache = memoized.cache;
+
+	    if (cache.has(key)) {
+	      return cache.get(key);
+	    }
+	    var result = func.apply(this, args);
+	    memoized.cache = cache.set(key, result) || cache;
+	    return result;
+	  };
+	  memoized.cache = new (memoize.Cache || MapCache);
+	  return memoized;
+	}
+
+	// Expose `MapCache`.
+	memoize.Cache = MapCache;
+
+	module.exports = memoize;
+
+
+/***/ },
+/* 473 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseToString = __webpack_require__(474);
+
+	/**
+	 * Converts `value` to a string. An empty string is returned for `null`
+	 * and `undefined` values. The sign of `-0` is preserved.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to convert.
+	 * @returns {string} Returns the converted string.
+	 * @example
+	 *
+	 * _.toString(null);
+	 * // => ''
+	 *
+	 * _.toString(-0);
+	 * // => '-0'
+	 *
+	 * _.toString([1, 2, 3]);
+	 * // => '1,2,3'
+	 */
+	function toString(value) {
+	  return value == null ? '' : baseToString(value);
+	}
+
+	module.exports = toString;
+
+
+/***/ },
+/* 474 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Symbol = __webpack_require__(28),
+	    arrayMap = __webpack_require__(475),
+	    isArray = __webpack_require__(65),
+	    isSymbol = __webpack_require__(469);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0;
+
+	/** Used to convert symbols to primitives and strings. */
+	var symbolProto = Symbol ? Symbol.prototype : undefined,
+	    symbolToString = symbolProto ? symbolProto.toString : undefined;
+
+	/**
+	 * The base implementation of `_.toString` which doesn't convert nullish
+	 * values to empty strings.
+	 *
+	 * @private
+	 * @param {*} value The value to process.
+	 * @returns {string} Returns the string.
+	 */
+	function baseToString(value) {
+	  // Exit early for strings to avoid a performance hit in some environments.
+	  if (typeof value == 'string') {
+	    return value;
+	  }
+	  if (isArray(value)) {
+	    // Recursively convert values (susceptible to call stack limits).
+	    return arrayMap(value, baseToString) + '';
+	  }
+	  if (isSymbol(value)) {
+	    return symbolToString ? symbolToString.call(value) : '';
+	  }
+	  var result = (value + '');
+	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
+	}
+
+	module.exports = baseToString;
+
+
+/***/ },
+/* 475 */
 /***/ function(module, exports) {
 
 	/**
@@ -60792,71 +62209,196 @@ var StellarSdk =
 
 
 /***/ },
-/* 422 */
+/* 476 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var basePickBy = __webpack_require__(423);
+	var isSymbol = __webpack_require__(469);
+
+	/** Used as references for various `Number` constants. */
+	var INFINITY = 1 / 0;
 
 	/**
-	 * The base implementation of `_.pick` without support for individual
-	 * property identifiers.
+	 * Converts `value` to a string key if it's not a string or symbol.
 	 *
 	 * @private
-	 * @param {Object} object The source object.
-	 * @param {string[]} props The property identifiers to pick.
-	 * @returns {Object} Returns the new object.
+	 * @param {*} value The value to inspect.
+	 * @returns {string|symbol} Returns the key.
 	 */
-	function basePick(object, props) {
-	  object = Object(object);
-	  return basePickBy(object, props, function(value, key) {
-	    return key in object;
-	  });
+	function toKey(value) {
+	  if (typeof value == 'string' || isSymbol(value)) {
+	    return value;
+	  }
+	  var result = (value + '');
+	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
 	}
 
-	module.exports = basePick;
+	module.exports = toKey;
 
 
 /***/ },
-/* 423 */
+/* 477 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseAssignValue = __webpack_require__(55);
+	var assignValue = __webpack_require__(54),
+	    castPath = __webpack_require__(467),
+	    isIndex = __webpack_require__(69),
+	    isObject = __webpack_require__(33),
+	    toKey = __webpack_require__(476);
 
 	/**
-	 * The base implementation of  `_.pickBy` without support for iteratee shorthands.
+	 * The base implementation of `_.set`.
 	 *
 	 * @private
-	 * @param {Object} object The source object.
-	 * @param {string[]} props The property identifiers to pick from.
-	 * @param {Function} predicate The function invoked per property.
-	 * @returns {Object} Returns the new object.
+	 * @param {Object} object The object to modify.
+	 * @param {Array|string} path The path of the property to set.
+	 * @param {*} value The value to set.
+	 * @param {Function} [customizer] The function to customize path creation.
+	 * @returns {Object} Returns `object`.
 	 */
-	function basePickBy(object, props, predicate) {
+	function baseSet(object, path, value, customizer) {
+	  if (!isObject(object)) {
+	    return object;
+	  }
+	  path = castPath(path, object);
+
 	  var index = -1,
-	      length = props.length,
-	      result = {};
+	      length = path.length,
+	      lastIndex = length - 1,
+	      nested = object;
+
+	  while (nested != null && ++index < length) {
+	    var key = toKey(path[index]),
+	        newValue = value;
+
+	    if (index != lastIndex) {
+	      var objValue = nested[key];
+	      newValue = customizer ? customizer(objValue, key, nested) : undefined;
+	      if (newValue === undefined) {
+	        newValue = isObject(objValue)
+	          ? objValue
+	          : (isIndex(path[index + 1]) ? [] : {});
+	      }
+	    }
+	    assignValue(nested, key, newValue);
+	    nested = nested[key];
+	  }
+	  return object;
+	}
+
+	module.exports = baseSet;
+
+
+/***/ },
+/* 478 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseHasIn = __webpack_require__(479),
+	    hasPath = __webpack_require__(480);
+
+	/**
+	 * Checks if `path` is a direct or inherited property of `object`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path to check.
+	 * @returns {boolean} Returns `true` if `path` exists, else `false`.
+	 * @example
+	 *
+	 * var object = _.create({ 'a': _.create({ 'b': 2 }) });
+	 *
+	 * _.hasIn(object, 'a');
+	 * // => true
+	 *
+	 * _.hasIn(object, 'a.b');
+	 * // => true
+	 *
+	 * _.hasIn(object, ['a', 'b']);
+	 * // => true
+	 *
+	 * _.hasIn(object, 'b');
+	 * // => false
+	 */
+	function hasIn(object, path) {
+	  return object != null && hasPath(object, path, baseHasIn);
+	}
+
+	module.exports = hasIn;
+
+
+/***/ },
+/* 479 */
+/***/ function(module, exports) {
+
+	/**
+	 * The base implementation of `_.hasIn` without support for deep paths.
+	 *
+	 * @private
+	 * @param {Object} [object] The object to query.
+	 * @param {Array|string} key The key to check.
+	 * @returns {boolean} Returns `true` if `key` exists, else `false`.
+	 */
+	function baseHasIn(object, key) {
+	  return object != null && key in Object(object);
+	}
+
+	module.exports = baseHasIn;
+
+
+/***/ },
+/* 480 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var castPath = __webpack_require__(467),
+	    isArguments = __webpack_require__(62),
+	    isArray = __webpack_require__(65),
+	    isIndex = __webpack_require__(69),
+	    isLength = __webpack_require__(72),
+	    toKey = __webpack_require__(476);
+
+	/**
+	 * Checks if `path` exists on `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path to check.
+	 * @param {Function} hasFunc The function to check properties.
+	 * @returns {boolean} Returns `true` if `path` exists, else `false`.
+	 */
+	function hasPath(object, path, hasFunc) {
+	  path = castPath(path, object);
+
+	  var index = -1,
+	      length = path.length,
+	      result = false;
 
 	  while (++index < length) {
-	    var key = props[index],
-	        value = object[key];
-
-	    if (predicate(value, key)) {
-	      baseAssignValue(result, key, value);
+	    var key = toKey(path[index]);
+	    if (!(result = object != null && hasFunc(object, key))) {
+	      break;
 	    }
+	    object = object[key];
 	  }
-	  return result;
+	  if (result || ++index != length) {
+	    return result;
+	  }
+	  length = object == null ? 0 : object.length;
+	  return !!length && isLength(length) && isIndex(key, length) &&
+	    (isArray(object) || isArguments(object));
 	}
 
-	module.exports = basePickBy;
+	module.exports = hasPath;
 
 
 /***/ },
-/* 424 */
+/* 481 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var flatten = __webpack_require__(425),
-	    overRest = __webpack_require__(428),
-	    setToString = __webpack_require__(430);
+	var flatten = __webpack_require__(482),
+	    overRest = __webpack_require__(485),
+	    setToString = __webpack_require__(487);
 
 	/**
 	 * A specialized version of `baseRest` which flattens the rest array.
@@ -60873,10 +62415,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 425 */
+/* 482 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseFlatten = __webpack_require__(426);
+	var baseFlatten = __webpack_require__(483);
 
 	/**
 	 * Flattens `array` a single level deep.
@@ -60901,11 +62443,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 426 */
+/* 483 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var arrayPush = __webpack_require__(87),
-	    isFlattenable = __webpack_require__(427);
+	var arrayPush = __webpack_require__(92),
+	    isFlattenable = __webpack_require__(484);
 
 	/**
 	 * The base implementation of `_.flatten` with support for restricting flattening.
@@ -60945,7 +62487,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 427 */
+/* 484 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28),
@@ -60971,10 +62513,10 @@ var StellarSdk =
 
 
 /***/ },
-/* 428 */
+/* 485 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(429);
+	var apply = __webpack_require__(486);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -61013,7 +62555,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 429 */
+/* 486 */
 /***/ function(module, exports) {
 
 	/**
@@ -61040,11 +62582,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 430 */
+/* 487 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var baseSetToString = __webpack_require__(431),
-	    shortOut = __webpack_require__(433);
+	var baseSetToString = __webpack_require__(488),
+	    shortOut = __webpack_require__(490);
 
 	/**
 	 * Sets the `toString` method of `func` to return `string`.
@@ -61060,12 +62602,12 @@ var StellarSdk =
 
 
 /***/ },
-/* 431 */
+/* 488 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var constant = __webpack_require__(432),
+	var constant = __webpack_require__(489),
 	    defineProperty = __webpack_require__(56),
-	    identity = __webpack_require__(121);
+	    identity = __webpack_require__(129);
 
 	/**
 	 * The base implementation of `setToString` without support for hot loop shorting.
@@ -61088,7 +62630,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 432 */
+/* 489 */
 /***/ function(module, exports) {
 
 	/**
@@ -61120,7 +62662,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 433 */
+/* 490 */
 /***/ function(module, exports) {
 
 	/** Used to detect hot functions by number of calls within a span of milliseconds. */
@@ -61163,69 +62705,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 434 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var isSymbol = __webpack_require__(435);
-
-	/** Used as references for various `Number` constants. */
-	var INFINITY = 1 / 0;
-
-	/**
-	 * Converts `value` to a string key if it's not a string or symbol.
-	 *
-	 * @private
-	 * @param {*} value The value to inspect.
-	 * @returns {string|symbol} Returns the key.
-	 */
-	function toKey(value) {
-	  if (typeof value == 'string' || isSymbol(value)) {
-	    return value;
-	  }
-	  var result = (value + '');
-	  return (result == '0' && (1 / value) == -INFINITY) ? '-0' : result;
-	}
-
-	module.exports = toKey;
-
-
-/***/ },
-/* 435 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var baseGetTag = __webpack_require__(27),
-	    isObjectLike = __webpack_require__(64);
-
-	/** `Object#toString` result references. */
-	var symbolTag = '[object Symbol]';
-
-	/**
-	 * Checks if `value` is classified as a `Symbol` primitive or object.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 4.0.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is a symbol, else `false`.
-	 * @example
-	 *
-	 * _.isSymbol(Symbol.iterator);
-	 * // => true
-	 *
-	 * _.isSymbol('abc');
-	 * // => false
-	 */
-	function isSymbol(value) {
-	  return typeof value == 'symbol' ||
-	    (isObjectLike(value) && baseGetTag(value) == symbolTag);
-	}
-
-	module.exports = isSymbol;
-
-
-/***/ },
-/* 436 */
+/* 491 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -61240,19 +62720,23 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _axios = __webpack_require__(126);
+	var _axios = __webpack_require__(135);
 
 	var _axios2 = _interopRequireDefault(_axios);
 
-	var _bluebird = __webpack_require__(185);
+	var _bluebird = __webpack_require__(203);
 
 	var _bluebird2 = _interopRequireDefault(_bluebird);
 
-	var _toml = __webpack_require__(437);
+	var _toml = __webpack_require__(492);
 
 	var _toml2 = _interopRequireDefault(_toml);
 
 	var _config = __webpack_require__(6);
+
+	/**
+	 * StellarTomlResolver allows resolving `stellar.toml` files.
+	 */
 
 	var StellarTomlResolver = (function () {
 	    function StellarTomlResolver() {
@@ -61309,11 +62793,11 @@ var StellarSdk =
 	exports.StellarTomlResolver = StellarTomlResolver;
 
 /***/ },
-/* 437 */
+/* 492 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var parser = __webpack_require__(438);
-	var compiler = __webpack_require__(439);
+	var parser = __webpack_require__(493);
+	var compiler = __webpack_require__(494);
 
 	module.exports = {
 	  parse: function(input) {
@@ -61324,7 +62808,7 @@ var StellarSdk =
 
 
 /***/ },
-/* 438 */
+/* 493 */
 /***/ function(module, exports) {
 
 	module.exports = (function() {
@@ -65284,11 +66768,11 @@ var StellarSdk =
 
 
 /***/ },
-/* 439 */
+/* 494 */
 /***/ function(module, exports) {
 
+	"use strict";
 	function compile(nodes) {
-	  "use strict";
 	  var assignedPaths = [];
 	  var valueAssignments = [];
 	  var currentPath = "";
