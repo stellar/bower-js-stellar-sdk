@@ -2057,8 +2057,10 @@ var StellarSdk =
 	var NotFoundError = NetworkError.subclass("NotFoundError");
 	exports.NotFoundError = NotFoundError;
 	var BadRequestError = Error.subclass("BadRequestError");
-
 	exports.BadRequestError = BadRequestError;
+	var BadResponseError = Error.subclass("BadResponseError");
+
+	exports.BadResponseError = BadResponseError;
 	/**
 	 * From: https://github.com/joyent/node/blob/master/lib/util.js
 	 * Inherit the prototype methods from one constructor into another.
@@ -5580,17 +5582,16 @@ var StellarSdk =
 	var SUBMIT_TRANSACTION_TIMEOUT = 20 * 1000;
 
 	exports.SUBMIT_TRANSACTION_TIMEOUT = SUBMIT_TRANSACTION_TIMEOUT;
+	/**
+	 * Server handles the network connection to a [Horizon](https://www.stellar.org/developers/horizon/learn/index.html)
+	 * instance and exposes an interface for requests to that instance.
+	 * @constructor
+	 * @param {string} serverURL Horizon Server URL (ex. `https://horizon-testnet.stellar.org`).
+	 * @param {object} [opts]
+	 * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments! You can also use {@link Config} class to set this globally.
+	 */
 
 	var Server = (function () {
-	    /**
-	     * Server handles the network connection to a [Horizon](https://www.stellar.org/developers/horizon/learn/index.html)
-	     * instance and exposes an interface for requests to that instance.
-	     * @constructor
-	     * @param {string} serverURL Horizon Server URL (ex. `https://horizon-testnet.stellar.org`).
-	     * @param {object} [opts]
-	     * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments! You can also use {@link Config} class to set this globally.
-	     */
-
 	    function Server(serverURL) {
 	        var opts = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -5625,7 +5626,7 @@ var StellarSdk =
 	                if (response instanceof Error) {
 	                    return Promise.reject(response);
 	                } else {
-	                    return Promise.reject(response.data);
+	                    return Promise.reject(new _errors.BadResponseError("Transaction submission failed. Server responded: " + response.status + " " + response.statusText, response.data));
 	                }
 	            });
 	            return toBluebird(promise);
@@ -26244,19 +26245,19 @@ var StellarSdk =
 
 	var _lodashForIn2 = _interopRequireDefault(_lodashForIn);
 
-	var AccountResponse = (function () {
-	    /**
-	     * Do not create this object directly, use {@link Server#loadAccount}.
-	     *
-	     * Returns information and links relating to a single account.
-	     * The balances section in the returned JSON will also list all the trust lines this account has set up.
-	     * It also contains {@link Account} object and exposes it's methods so can be used in {@link TransactionBuilder}.
-	     *
-	     * @see [Account Details](https://www.stellar.org/developers/horizon/reference/accounts-single.html)
-	     * @param {string} response Response from horizon account endpoint.
-	     * @returns {AccountResponse}
-	     */
+	/**
+	 * Do not create this object directly, use {@link Server#loadAccount}.
+	 *
+	 * Returns information and links relating to a single account.
+	 * The balances section in the returned JSON will also list all the trust lines this account has set up.
+	 * It also contains {@link Account} object and exposes it's methods so can be used in {@link TransactionBuilder}.
+	 *
+	 * @see [Account Details](https://www.stellar.org/developers/horizon/reference/accounts-single.html)
+	 * @param {string} response Response from horizon account endpoint.
+	 * @returns {AccountResponse}
+	 */
 
+	var AccountResponse = (function () {
 	    function AccountResponse(response) {
 	        var _this = this;
 
@@ -48085,25 +48086,25 @@ var StellarSdk =
 
 	var nacl = _interopRequire(__webpack_require__(287));
 
-	var Keypair = exports.Keypair = (function () {
-	  /**
-	   * `Keypair` represents public (and secret) keys of the account.
-	   *
-	   * Currently `Keypair` only supports ed25519 but in a future this class can be abstraction layer for other
-	   * public-key signature systems.
-	   *
-	   * Use more convenient methods to create `Keypair` object:
-	   * * `{@link Keypair.fromPublicKey}`
-	   * * `{@link Keypair.fromSecret}`
-	   * * `{@link Keypair.random}`
-	   *
-	   * @constructor
-	   * @param {object} keys At least one of keys must be provided.
-	   * @param {string} keys.type Public-key signature system name. (currently only `ed25519` keys are supported)
-	   * @param {Buffer} [keys.publicKey] Raw public key
-	   * @param {Buffer} [keys.secretKey] Raw secret key (32-byte secret seed in ed25519`)
-	   */
+	/**
+	 * `Keypair` represents public (and secret) keys of the account.
+	 *
+	 * Currently `Keypair` only supports ed25519 but in a future this class can be abstraction layer for other
+	 * public-key signature systems.
+	 *
+	 * Use more convenient methods to create `Keypair` object:
+	 * * `{@link Keypair.fromPublicKey}`
+	 * * `{@link Keypair.fromSecret}`
+	 * * `{@link Keypair.random}`
+	 *
+	 * @constructor
+	 * @param {object} keys At least one of keys must be provided.
+	 * @param {string} keys.type Public-key signature system name. (currently only `ed25519` keys are supported)
+	 * @param {Buffer} [keys.publicKey] Raw public key
+	 * @param {Buffer} [keys.secretKey] Raw secret key (32-byte secret seed in ed25519`)
+	 */
 
+	var Keypair = exports.Keypair = (function () {
 	  function Keypair(keys) {
 	    _classCallCheck(this, Keypair);
 
@@ -48397,20 +48398,20 @@ var StellarSdk =
 	exports.Networks = Networks;
 	var current = null;
 
-	var Network = exports.Network = (function () {
-		/**
-	   * The Network class provides helper methods to get the passphrase or id for different
-	   * stellar networks.  It also provides the {@link Network.current} class method that returns the network
-	   * that will be used by this process for the purposes of generating signatures.
-	   *
-	   * You should select network your app will use before adding the first signature. You can use the `use`,
-	   * `usePublicNetwork` and `useTestNetwork` helper methods.
-	   *
-	  * Creates a new `Network` object.
-	  * @constructor
-	  * @param {string} networkPassphrase Network passphrase
-	  */
+	/**
+	 * The Network class provides helper methods to get the passphrase or id for different
+	 * stellar networks.  It also provides the {@link Network.current} class method that returns the network
+	 * that will be used by this process for the purposes of generating signatures.
+	 *
+	 * You should select network your app will use before adding the first signature. You can use the `use`,
+	 * `usePublicNetwork` and `useTestNetwork` helper methods.
+	 *
+	 * Creates a new `Network` object.
+	 * @constructor
+	 * @param {string} networkPassphrase Network passphrase
+	 */
 
+	var Network = exports.Network = (function () {
 		function Network(networkPassphrase) {
 			_classCallCheck(this, Network);
 
@@ -50268,16 +50269,16 @@ var StellarSdk =
 	var MIN_LEDGER = 0;
 	var MAX_LEDGER = 4294967295; // max uint32
 
-	var Transaction = exports.Transaction = (function () {
-	  /**
-	   * A new Transaction object is created from a transaction envelope or via {@link TransactionBuilder}.
-	   * Once a Transaction has been created from an envelope, its attributes and operations
-	   * should not be changed. You should only add signers (using {@link Transaction#sign}) to a Transaction object before
-	   * submitting to the network or forwarding on to additional signers.
-	   * @constructor
-	   * @param {string|xdr.TransactionEnvelope} envelope - The transaction envelope object or base64 encoded string.
-	   */
+	/**
+	 * A new Transaction object is created from a transaction envelope or via {@link TransactionBuilder}.
+	 * Once a Transaction has been created from an envelope, its attributes and operations
+	 * should not be changed. You should only add signers (using {@link Transaction#sign}) to a Transaction object before
+	 * submitting to the network or forwarding on to additional signers.
+	 * @constructor
+	 * @param {string|xdr.TransactionEnvelope} envelope - The transaction envelope object or base64 encoded string.
+	 */
 
+	var Transaction = exports.Transaction = (function () {
 	  function Transaction(envelope) {
 	    _classCallCheck(this, Transaction);
 
@@ -51324,19 +51325,19 @@ var StellarSdk =
 
 	var trimEnd = _interopRequire(__webpack_require__(342));
 
-	var Asset = exports.Asset = (function () {
-	  /**
-	   * Asset class represents an asset, either the native asset (`XLM`)
-	   * or a asset code / issuer account ID pair.
-	   *
-	   * An asset code describes an asset code and issuer pair. In the case of the native
-	   * asset XLM, the issuer will be null.
-	   *
-	   * @constructor
-	   * @param {string} code - The asset code.
-	   * @param {string} issuer - The account ID of the issuer.
-	   */
+	/**
+	 * Asset class represents an asset, either the native asset (`XLM`)
+	 * or a asset code / issuer account ID pair.
+	 *
+	 * An asset code describes an asset code and issuer pair. In the case of the native
+	 * asset XLM, the issuer will be null.
+	 *
+	 * @constructor
+	 * @param {string} code - The asset code.
+	 * @param {string} issuer - The account ID of the issuer.
+	 */
 
+	var Asset = exports.Asset = (function () {
 	  function Asset(code, issuer) {
 	    _classCallCheck(this, Asset);
 
@@ -59146,50 +59147,50 @@ var StellarSdk =
 	var MIN_LEDGER = 0;
 	var MAX_LEDGER = 4294967295; // max uint32
 
-	var TransactionBuilder = exports.TransactionBuilder = (function () {
-	  /**
-	   * <p>Transaction builder helps constructs a new `{@link Transaction}` using the given {@link Account}
-	   * as the transaction's "source account". The transaction will use the current sequence
-	   * number of the given account as its sequence number and increment the given account's
-	   * sequence number by one. The given source account must include a private key for signing
-	   * the transaction or an error will be thrown.</p>
-	   *
-	   * <p>Operations can be added to the transaction via their corresponding builder methods, and
-	   * each returns the TransactionBuilder object so they can be chained together. After adding
-	   * the desired operations, call the `build()` method on the `TransactionBuilder` to return a fully
-	   * constructed `{@link Transaction}` that can be signed. The returned transaction will contain the
-	   * sequence number of the source account and include the signature from the source account.</p>
-	   *
-	   * <p>The following code example creates a new transaction with {@link Operation.createAccount} and
-	   * {@link Operation.payment} operations.
-	   * The Transaction's source account first funds `destinationA`, then sends
-	   * a payment to `destinationB`. The built transaction is then signed by `sourceKeypair`.</p>
-	   *
-	   * ```
-	   * var transaction = new TransactionBuilder(source)
-	   *  .addOperation(Operation.createAccount({
-	          destination: destinationA,
-	          startingBalance: "20"
-	      }) // <- funds and creates destinationA
-	      .addOperation(Operation.payment({
-	          destination: destinationB,
-	          amount: "100"
-	          asset: Asset.native()
-	      }) // <- sends 100 XLM to destinationB
-	   *   .build();
-	   *
-	   * transaction.sign(sourceKeypair);
-	   * ```
-	   * @constructor
-	   * @param {Account} sourceAccount - The source account for this transaction.
-	   * @param {object} [opts]
-	   * @param {number} [opts.fee] - The max fee willing to pay per operation in this transaction (**in stroops**).
-	   * @param {object} [opts.timebounds] - The timebounds for the validity of this transaction.
-	   * @param {number|string} [opts.timebounds.minTime] - 64 bit unix timestamp
-	   * @param {number|string} [opts.timebounds.maxTime] - 64 bit unix timestamp
-	   * @param {Memo} [opts.memo] - The memo for the transaction
-	   */
+	/**
+	 * <p>Transaction builder helps constructs a new `{@link Transaction}` using the given {@link Account}
+	 * as the transaction's "source account". The transaction will use the current sequence
+	 * number of the given account as its sequence number and increment the given account's
+	 * sequence number by one. The given source account must include a private key for signing
+	 * the transaction or an error will be thrown.</p>
+	 *
+	 * <p>Operations can be added to the transaction via their corresponding builder methods, and
+	 * each returns the TransactionBuilder object so they can be chained together. After adding
+	 * the desired operations, call the `build()` method on the `TransactionBuilder` to return a fully
+	 * constructed `{@link Transaction}` that can be signed. The returned transaction will contain the
+	 * sequence number of the source account and include the signature from the source account.</p>
+	 *
+	 * <p>The following code example creates a new transaction with {@link Operation.createAccount} and
+	 * {@link Operation.payment} operations.
+	 * The Transaction's source account first funds `destinationA`, then sends
+	 * a payment to `destinationB`. The built transaction is then signed by `sourceKeypair`.</p>
+	 *
+	 * ```
+	 * var transaction = new TransactionBuilder(source)
+	 *  .addOperation(Operation.createAccount({
+	        destination: destinationA,
+	        startingBalance: "20"
+	    }) // <- funds and creates destinationA
+	    .addOperation(Operation.payment({
+	        destination: destinationB,
+	        amount: "100"
+	        asset: Asset.native()
+	    }) // <- sends 100 XLM to destinationB
+	 *   .build();
+	 *
+	 * transaction.sign(sourceKeypair);
+	 * ```
+	 * @constructor
+	 * @param {Account} sourceAccount - The source account for this transaction.
+	 * @param {object} [opts]
+	 * @param {number} [opts.fee] - The max fee willing to pay per operation in this transaction (**in stroops**).
+	 * @param {object} [opts.timebounds] - The timebounds for the validity of this transaction.
+	 * @param {number|string} [opts.timebounds.minTime] - 64 bit unix timestamp
+	 * @param {number|string} [opts.timebounds.maxTime] - 64 bit unix timestamp
+	 * @param {Memo} [opts.memo] - The memo for the transaction
+	 */
 
+	var TransactionBuilder = exports.TransactionBuilder = (function () {
 	  function TransactionBuilder(sourceAccount) {
 	    var opts = arguments[1] === undefined ? {} : arguments[1];
 
@@ -59300,19 +59301,19 @@ var StellarSdk =
 
 	var StrKey = __webpack_require__(295).StrKey;
 
-	var Account = exports.Account = (function () {
-	  /**
-	   * Create a new Account object.
-	   *
-	   * `Account` represents a single account in Stellar network and it's sequence number.
-	   * Account tracks the sequence number as it is used by {@link TransactionBuilder}.
-	   * See [Accounts](https://stellar.org/developers/learn/concepts/accounts.html) for more information about how
-	   * accounts work in Stellar.
-	   * @constructor
-	   * @param {string} accountId ID of the account (ex. `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`)
-	   * @param {string} sequence current sequence number of the account
-	   */
+	/**
+	 * Create a new Account object.
+	 *
+	 * `Account` represents a single account in Stellar network and it's sequence number.
+	 * Account tracks the sequence number as it is used by {@link TransactionBuilder}.
+	 * See [Accounts](https://stellar.org/developers/learn/concepts/accounts.html) for more information about how
+	 * accounts work in Stellar.
+	 * @constructor
+	 * @param {string} accountId ID of the account (ex. `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`)
+	 * @param {string} sequence current sequence number of the account
+	 */
 
+	var Account = exports.Account = (function () {
 	  function Account(accountId, sequence) {
 	    _classCallCheck(this, Account);
 
@@ -59682,18 +59683,18 @@ var StellarSdk =
 
 	var _errors = __webpack_require__(5);
 
+	/**
+	 * Creates a new {@link OfferCallBuilder} pointed to server defined by serverUrl.
+	 *
+	 * Do not create this object directly, use {@link Server#offers}.
+	 * @see [Offers for Account](https://www.stellar.org/developers/horizon/reference/offers-for-account.html)
+	 * @param {string} serverUrl Horizon server URL.
+	 * @param {string} resource Resource to query offers
+	 * @param {...string} resourceParams Parameters for selected resource
+	 */
+
 	var OfferCallBuilder = (function (_CallBuilder) {
 	    _inherits(OfferCallBuilder, _CallBuilder);
-
-	    /**
-	     * Creates a new {@link OfferCallBuilder} pointed to server defined by serverUrl.
-	     *
-	     * Do not create this object directly, use {@link Server#offers}.
-	     * @see [Offers for Account](https://www.stellar.org/developers/horizon/reference/offers-for-account.html)
-	     * @param {string} serverUrl Horizon server URL.
-	     * @param {string} resource Resource to query offers
-	     * @param {...string} resourceParams Parameters for selected resource
-	     */
 
 	    function OfferCallBuilder(serverUrl, resource) {
 	        _classCallCheck(this, OfferCallBuilder);
@@ -59735,18 +59736,18 @@ var StellarSdk =
 
 	var _call_builder = __webpack_require__(121);
 
+	/**
+	 * Creates a new {@link OrderbookCallBuilder} pointed to server defined by serverUrl.
+	 *
+	 * Do not create this object directly, use {@link Server#orderbook}.
+	 * @see [Orderbook Details](https://www.stellar.org/developers/horizon/reference/orderbook-details.html)
+	 * @param {string} serverUrl serverUrl Horizon server URL.
+	 * @param {Asset} selling Asset being sold
+	 * @param {Asset} buying Asset being bought
+	 */
+
 	var OrderbookCallBuilder = (function (_CallBuilder) {
 	    _inherits(OrderbookCallBuilder, _CallBuilder);
-
-	    /**
-	     * Creates a new {@link OrderbookCallBuilder} pointed to server defined by serverUrl.
-	     *
-	     * Do not create this object directly, use {@link Server#orderbook}.
-	     * @see [Orderbook Details](https://www.stellar.org/developers/horizon/reference/orderbook-details.html)
-	     * @param {string} serverUrl serverUrl Horizon server URL.
-	     * @param {Asset} selling Asset being sold
-	     * @param {Asset} buying Asset being bought
-	     */
 
 	    function OrderbookCallBuilder(serverUrl, selling, buying) {
 	        _classCallCheck(this, OrderbookCallBuilder);
@@ -59806,32 +59807,32 @@ var StellarSdk =
 
 	var _call_builder = __webpack_require__(121);
 
+	/**
+	 * The Stellar Network allows payments to be made across assets through path payments. A path payment specifies a
+	 * series of assets to route a payment through, from source asset (the asset debited from the payer) to destination
+	 * asset (the asset credited to the payee).
+	 *
+	 * A path search is specified using:
+	 *
+	 * * The destination address
+	 * * The source address
+	 * * The asset and amount that the destination account should receive
+	 *
+	 * As part of the search, horizon will load a list of assets available to the source address and will find any
+	 * payment paths from those source assets to the desired destination asset. The search's amount parameter will be
+	 * used to determine if there a given path can satisfy a payment of the desired amount.
+	 *
+	 * Do not create this object directly, use {@link Server#paths}.
+	 * @see [Find Payment Paths](https://www.stellar.org/developers/horizon/reference/path-finding.html)
+	 * @param {string} serverUrl Horizon server URL.
+	 * @param {string} source The sender's account ID. Any returned path must use a source that the sender can hold.
+	 * @param {string} destination The destination account ID that any returned path should use.
+	 * @param {Asset} destinationAsset The destination asset.
+	 * @param {string} destinationAmount The amount, denominated in the destination asset, that any returned path should be able to satisfy.
+	 */
+
 	var PathCallBuilder = (function (_CallBuilder) {
 	    _inherits(PathCallBuilder, _CallBuilder);
-
-	    /**
-	     * The Stellar Network allows payments to be made across assets through path payments. A path payment specifies a
-	     * series of assets to route a payment through, from source asset (the asset debited from the payer) to destination
-	     * asset (the asset credited to the payee).
-	     *
-	     * A path search is specified using:
-	     *
-	     * * The destination address
-	     * * The source address
-	     * * The asset and amount that the destination account should receive
-	     *
-	     * As part of the search, horizon will load a list of assets available to the source address and will find any
-	     * payment paths from those source assets to the desired destination asset. The search's amount parameter will be
-	     * used to determine if there a given path can satisfy a payment of the desired amount.
-	     *
-	     * Do not create this object directly, use {@link Server#paths}.
-	     * @see [Find Payment Paths](https://www.stellar.org/developers/horizon/reference/path-finding.html)
-	     * @param {string} serverUrl Horizon server URL.
-	     * @param {string} source The sender's account ID. Any returned path must use a source that the sender can hold.
-	     * @param {string} destination The destination account ID that any returned path should use.
-	     * @param {Asset} destinationAsset The destination asset.
-	     * @param {string} destinationAmount The amount, denominated in the destination asset, that any returned path should be able to satisfy.
-	     */
 
 	    function PathCallBuilder(serverUrl, source, destination, destinationAsset, destinationAmount) {
 	        _classCallCheck(this, PathCallBuilder);
@@ -60129,25 +60130,26 @@ var StellarSdk =
 
 	var _stellarBase = __webpack_require__(237);
 
+	var _errors = __webpack_require__(5);
+
 	var _stellar_toml_resolver = __webpack_require__(444);
 
 	// FEDERATION_RESPONSE_MAX_SIZE is the maximum size of response from a federation server
 	var FEDERATION_RESPONSE_MAX_SIZE = 100 * 1024;
 
 	exports.FEDERATION_RESPONSE_MAX_SIZE = FEDERATION_RESPONSE_MAX_SIZE;
+	/**
+	 * FederationServer handles a network connection to a
+	 * [federation server](https://www.stellar.org/developers/learn/concepts/federation.html)
+	 * instance and exposes an interface for requests to that instance.
+	 * @constructor
+	 * @param {string} serverURL The federation server URL (ex. `https://acme.com/federation`).
+	 * @param {string} domain Domain this server represents
+	 * @param {object} [opts]
+	 * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments! You can also use {@link Config} class to set this globally.
+	 */
 
 	var FederationServer = (function () {
-	  /**
-	   * FederationServer handles a network connection to a
-	   * [federation server](https://www.stellar.org/developers/learn/concepts/federation.html)
-	   * instance and exposes an interface for requests to that instance.
-	   * @constructor
-	   * @param {string} serverURL The federation server URL (ex. `https://acme.com/federation`).
-	   * @param {string} domain Domain this server represents
-	   * @param {object} [opts]
-	   * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments! You can also use {@link Config} class to set this globally.
-	   */
-
 	  function FederationServer(serverURL, domain) {
 	    var opts = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
@@ -60261,7 +60263,7 @@ var StellarSdk =
 	        if (response instanceof Error) {
 	          return _bluebird2['default'].reject(response);
 	        } else {
-	          return _bluebird2['default'].reject(response.data);
+	          return _bluebird2['default'].reject(new _errors.BadResponseError('Server query failed. Server responded: ' + response.status + ' ' + response.statusText, response.data));
 	        }
 	      });
 	    }
@@ -60868,7 +60870,7 @@ var StellarSdk =
 	                    var tomlObject = _toml2['default'].parse(response.data);
 	                    return _bluebird2['default'].resolve(tomlObject);
 	                } catch (e) {
-	                    return _bluebird2['default'].reject('Parsing error on line ' + e.line + ', column ' + e.column + ': ' + e.message);
+	                    return _bluebird2['default'].reject(new Error('Parsing error on line ' + e.line + ', column ' + e.column + ': ' + e.message));
 	                }
 	            });
 	        }
