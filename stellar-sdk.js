@@ -5579,7 +5579,7 @@ var StellarSdk =
 	var URI = __webpack_require__(130);
 	var URITemplate = __webpack_require__(130).URITemplate;
 
-	var SUBMIT_TRANSACTION_TIMEOUT = 20 * 1000;
+	var SUBMIT_TRANSACTION_TIMEOUT = 60 * 1000;
 
 	exports.SUBMIT_TRANSACTION_TIMEOUT = SUBMIT_TRANSACTION_TIMEOUT;
 	/**
