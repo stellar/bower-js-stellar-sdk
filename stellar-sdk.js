@@ -636,7 +636,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _federation_server = __webpack_require__(429);
+	var _federation_server = __webpack_require__(432);
 
 	Object.defineProperty(exports, "FederationServer", {
 	  enumerable: true,
@@ -651,7 +651,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _stellar_toml_resolver = __webpack_require__(444);
+	var _stellar_toml_resolver = __webpack_require__(447);
 
 	Object.defineProperty(exports, "StellarTomlResolver", {
 	  enumerable: true,
@@ -5560,13 +5560,19 @@ var StellarSdk =
 
 	var _orderbook_call_builder = __webpack_require__(424);
 
-	var _path_call_builder = __webpack_require__(425);
+	var _trades_call_builder = __webpack_require__(425);
 
-	var _payment_call_builder = __webpack_require__(426);
+	var _path_call_builder = __webpack_require__(426);
 
-	var _effect_call_builder = __webpack_require__(427);
+	var _payment_call_builder = __webpack_require__(427);
 
-	var _friendbot_builder = __webpack_require__(428);
+	var _effect_call_builder = __webpack_require__(428);
+
+	var _friendbot_builder = __webpack_require__(429);
+
+	var _assets_call_builder = __webpack_require__(430);
+
+	var _trade_aggregation_call_builder = __webpack_require__(431);
 
 	var _stellarBase = __webpack_require__(237);
 
@@ -5698,6 +5704,16 @@ var StellarSdk =
 	        }
 
 	        /**
+	         * Returns new {@link TradesCallBuilder} object configured by a current Horizon server configuration.
+	         * @returns {TradesCallBuilder}
+	         */
+	    }, {
+	        key: "trades",
+	        value: function trades() {
+	            return new _trades_call_builder.TradesCallBuilder(URI(this.serverURL));
+	        }
+
+	        /**
 	         * Returns new {@link OperationCallBuilder} object configured by a current Horizon server configuration.
 	         * @returns {OperationCallBuilder}
 	         */
@@ -5768,6 +5784,16 @@ var StellarSdk =
 	        }
 
 	        /**
+	         * Returns new {@link AssetsCallBuilder} object configured with the current Horizon server configuration.
+	         * @returns {AssetsCallBuilder}
+	         */
+	    }, {
+	        key: "assets",
+	        value: function assets() {
+	            return new _assets_call_builder.AssetsCallBuilder(URI(this.serverURL));
+	        }
+
+	        /**
 	        * Fetches an account's most current state in the ledger and then creates and returns an {@link Account} object.
 	        * @param {string} accountId - The account to load.
 	        * @returns {Promise} Returns a promise to the {@link AccountResponse} object with populated sequence number.
@@ -5778,6 +5804,22 @@ var StellarSdk =
 	            return this.accounts().accountId(accountId).call().then(function (res) {
 	                return new _account_response.AccountResponse(res);
 	            });
+	        }
+
+	        /**
+	         * 
+	         * @param {Asset} base base aseet
+	         * @param {Asset} counter counter asset
+	         * @param {long} start_time lower time boundary represented as millis since epoch
+	         * @param {long} end_time upper time boundary represented as millis since epoch
+	         * @param {long} resolution segment duration as millis since epoch. *Supported values are 5 minutes (300000), 15 minutes (900000), 1 hour (3600000), 1 day (86400000) and 1 week (604800000).
+	         * Returns new {@link TradeAggregationCallBuilder} object configured with the current Horizon server configuration.
+	         * @returns {TradeAggregationCallBuilder}
+	         */
+	    }, {
+	        key: "tradeAggregation",
+	        value: function tradeAggregation(base, counter, start_time, end_time, resolution) {
+	            return new _trade_aggregation_call_builder.TradeAggregationCallBuilder(URI(this.serverURL), base, counter, start_time, end_time, resolution);
 	        }
 	    }]);
 
@@ -59726,8 +59768,6 @@ var StellarSdk =
 	    value: true
 	});
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
 	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -59770,20 +59810,6 @@ var StellarSdk =
 	        }
 	    }
 
-	    /**
-	     * People on the Stellar network can make offers to buy or sell assets. These offers are summarized by the assets being bought and sold in orderbooks. When an offer is fully or partially fulfilled, a trade happens.
-	     * @see [Trades for Orderbook](https://www.stellar.org/developers/horizon/reference/trades-for-orderbook.html)
-	     * @returns {OrderbookCallBuilder}
-	     */
-
-	    _createClass(OrderbookCallBuilder, [{
-	        key: "trades",
-	        value: function trades() {
-	            this.filter.push(['order_book', 'trades']);
-	            return this;
-	        }
-	    }]);
-
 	    return OrderbookCallBuilder;
 	})(_call_builder.CallBuilder);
 
@@ -59791,6 +59817,89 @@ var StellarSdk =
 
 /***/ }),
 /* 425 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _call_builder = __webpack_require__(121);
+
+	/**
+	 * Creates a new {@link TradesCallBuilder} pointed to server defined by serverUrl.
+	 *
+	 * Do not create this object directly, use {@link Server#trades}.
+	 * @see [Trades](https://www.stellar.org/developers/horizon/reference/endpoints/trades.html)
+	 * @param {string} serverUrl serverUrl Horizon server URL.
+	 */
+
+	var TradesCallBuilder = (function (_CallBuilder) {
+	    _inherits(TradesCallBuilder, _CallBuilder);
+
+	    function TradesCallBuilder(serverUrl) {
+	        _classCallCheck(this, TradesCallBuilder);
+
+	        _get(Object.getPrototypeOf(TradesCallBuilder.prototype), "constructor", this).call(this, serverUrl);
+	        this.url.segment('trades');
+	    }
+
+	    /**
+	    * Filter trades for a specific asset pair (orderbook)
+	    * @param {Asset} base asset
+	    * @param {Asset} counter asset
+	    * @returns {TradesCallBuilder}
+	    */
+
+	    _createClass(TradesCallBuilder, [{
+	        key: "forAssetPair",
+	        value: function forAssetPair(base, counter) {
+	            if (!base.isNative()) {
+	                this.url.addQuery("base_asset_type", base.getAssetType());
+	                this.url.addQuery("base_asset_code", base.getCode());
+	                this.url.addQuery("base_asset_issuer", base.getIssuer());
+	            } else {
+	                this.url.addQuery("base_asset_type", 'native');
+	            }
+	            if (!counter.isNative()) {
+	                this.url.addQuery("counter_asset_type", counter.getAssetType());
+	                this.url.addQuery("counter_asset_code", counter.getCode());
+	                this.url.addQuery("counter_asset_issuer", counter.getIssuer());
+	            } else {
+	                this.url.addQuery("counter_asset_type", 'native');
+	            }
+	            return this;
+	        }
+
+	        /**
+	        * Filter trades for a specific offer
+	        * @param offerId
+	        * @returns {TradesCallBuilder}
+	        */
+	    }, {
+	        key: "forOffer",
+	        value: function forOffer(offerId) {
+	            this.url.addQuery("offer_id", offerId);
+	            return this;
+	        }
+	    }]);
+
+	    return TradesCallBuilder;
+	})(_call_builder.CallBuilder);
+
+	exports.TradesCallBuilder = TradesCallBuilder;
+
+/***/ }),
+/* 426 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59858,7 +59967,7 @@ var StellarSdk =
 	exports.PathCallBuilder = PathCallBuilder;
 
 /***/ }),
-/* 426 */
+/* 427 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59947,7 +60056,7 @@ var StellarSdk =
 	exports.PaymentCallBuilder = PaymentCallBuilder;
 
 /***/ }),
-/* 427 */
+/* 428 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60055,7 +60164,7 @@ var StellarSdk =
 	exports.EffectCallBuilder = EffectCallBuilder;
 
 /***/ }),
-/* 428 */
+/* 429 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60089,7 +60198,174 @@ var StellarSdk =
 	exports.FriendbotBuilder = FriendbotBuilder;
 
 /***/ }),
-/* 429 */
+/* 430 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _call_builder = __webpack_require__(121);
+
+	/**
+	 * Creates a new {@link AssetsCallBuilder} pointed to server defined by serverUrl.
+	 *
+	 * Do not create this object directly, use {@link Server#assets}.
+	 * @constructor
+	 * @extends CallBuilder
+	 * @param {string} serverUrl Horizon server URL.
+	 */
+
+	var AssetsCallBuilder = (function (_CallBuilder) {
+	    _inherits(AssetsCallBuilder, _CallBuilder);
+
+	    function AssetsCallBuilder(serverUrl) {
+	        _classCallCheck(this, AssetsCallBuilder);
+
+	        _get(Object.getPrototypeOf(AssetsCallBuilder.prototype), "constructor", this).call(this, serverUrl);
+	        this.url.segment('assets');
+	    }
+
+	    /**
+	     * This endpoint filters all assets by the asset code.
+	     * @param {string} value For example: `USD`
+	     * @returns {AssetsCallBuilder}
+	     */
+
+	    _createClass(AssetsCallBuilder, [{
+	        key: "forCode",
+	        value: function forCode(value) {
+	            this.url.addQuery("asset_code", value);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint filters all assets by the asset issuer.
+	         * @param {string} value For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
+	         * @returns {AssetsCallBuilder}
+	         */
+	    }, {
+	        key: "forIssuer",
+	        value: function forIssuer(value) {
+	            this.url.addQuery("asset_issuer", value);
+	            return this;
+	        }
+	    }]);
+
+	    return AssetsCallBuilder;
+	})(_call_builder.CallBuilder);
+
+	exports.AssetsCallBuilder = AssetsCallBuilder;
+
+/***/ }),
+/* 431 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _call_builder = __webpack_require__(121);
+
+	var _errors = __webpack_require__(5);
+
+	var allowedResolutions = [300000, 900000, 3600000, 86400000, 604800000];
+
+	/**
+	 * Trade Aggregations facilitate efficient gathering of historical trade data
+	 * Do not create this object directly, use {@link Server#tradeAggregation}.
+	 * @param {string} serverUrl serverUrl Horizon server URL.
+	 * @param {Asset} base base asset
+	 * @param {Asset} counter counter asset
+	 * @param {long} start_time lower time boundary represented as millis since epoch
+	 * @param {long} end_time upper time boundary represented as millis since epoch
+	 * @param {long} resolution segment duration as millis since epoch. *Supported values are 5 minutes (300000), 15 minutes (900000), 1 hour (3600000), 1 day (86400000) and 1 week (604800000).
+	 * @returns {OrderbookCallBuilder}
+	 */
+
+	var TradeAggregationCallBuilder = (function (_CallBuilder) {
+	    _inherits(TradeAggregationCallBuilder, _CallBuilder);
+
+	    function TradeAggregationCallBuilder(serverUrl, base, counter, start_time, end_time, resolution) {
+	        _classCallCheck(this, TradeAggregationCallBuilder);
+
+	        _get(Object.getPrototypeOf(TradeAggregationCallBuilder.prototype), "constructor", this).call(this, serverUrl);
+
+	        this.url.segment('trade_aggregations');
+	        if (!base.isNative()) {
+	            this.url.addQuery("base_asset_type", base.getAssetType());
+	            this.url.addQuery("base_asset_code", base.getCode());
+	            this.url.addQuery("base_asset_issuer", base.getIssuer());
+	        } else {
+	            this.url.addQuery("base_asset_type", 'native');
+	        }
+	        if (!counter.isNative()) {
+	            this.url.addQuery("counter_asset_type", counter.getAssetType());
+	            this.url.addQuery("counter_asset_code", counter.getCode());
+	            this.url.addQuery("counter_asset_issuer", counter.getIssuer());
+	        } else {
+	            this.url.addQuery("counter_asset_type", 'native');
+	        }
+	        if (typeof start_time === 'undefined' || typeof end_time === 'undefined') {
+	            throw new _errors.BadRequestError("Invalid time bounds", [start_time, end_time]);
+	        } else {
+	            this.url.addQuery("start_time", start_time);
+	            this.url.addQuery("end_time", end_time);
+	        }
+	        if (!this.isValidResolution(resolution)) {
+	            throw new _errors.BadRequestError("Invalid resolution", resolution);
+	        } else {
+	            this.url.addQuery("resolution", resolution);
+	        }
+	    }
+
+	    /**
+	     * @private
+	     * @param {long} resolution 
+	     */
+
+	    _createClass(TradeAggregationCallBuilder, [{
+	        key: "isValidResolution",
+	        value: function isValidResolution(resolution) {
+	            var found = false;
+
+	            for (var i = 0; i < allowedResolutions.length; i++) {
+	                if (allowedResolutions[i] == resolution) {
+	                    found = true;
+	                    break;
+	                }
+	            }
+	            return found;
+	        }
+	    }]);
+
+	    return TradeAggregationCallBuilder;
+	})(_call_builder.CallBuilder);
+
+	exports.TradeAggregationCallBuilder = TradeAggregationCallBuilder;
+
+/***/ }),
+/* 432 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60122,7 +60398,7 @@ var StellarSdk =
 
 	var _lodashIsString2 = _interopRequireDefault(_lodashIsString);
 
-	var _lodashPick = __webpack_require__(430);
+	var _lodashPick = __webpack_require__(433);
 
 	var _lodashPick2 = _interopRequireDefault(_lodashPick);
 
@@ -60132,7 +60408,7 @@ var StellarSdk =
 
 	var _errors = __webpack_require__(5);
 
-	var _stellar_toml_resolver = __webpack_require__(444);
+	var _stellar_toml_resolver = __webpack_require__(447);
 
 	// FEDERATION_RESPONSE_MAX_SIZE is the maximum size of response from a federation server
 	var FEDERATION_RESPONSE_MAX_SIZE = 100 * 1024;
@@ -60337,11 +60613,11 @@ var StellarSdk =
 	exports.FederationServer = FederationServer;
 
 /***/ }),
-/* 430 */
+/* 433 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var basePick = __webpack_require__(431),
-	    flatRest = __webpack_require__(434);
+	var basePick = __webpack_require__(434),
+	    flatRest = __webpack_require__(437);
 
 	/**
 	 * Creates an object composed of the picked `object` properties.
@@ -60368,10 +60644,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 431 */
+/* 434 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var basePickBy = __webpack_require__(432),
+	var basePickBy = __webpack_require__(435),
 	    hasIn = __webpack_require__(376);
 
 	/**
@@ -60393,11 +60669,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 432 */
+/* 435 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var baseGet = __webpack_require__(369),
-	    baseSet = __webpack_require__(433),
+	    baseSet = __webpack_require__(436),
 	    castPath = __webpack_require__(370);
 
 	/**
@@ -60429,7 +60705,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 433 */
+/* 436 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var assignValue = __webpack_require__(54),
@@ -60482,12 +60758,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 434 */
+/* 437 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var flatten = __webpack_require__(435),
-	    overRest = __webpack_require__(438),
-	    setToString = __webpack_require__(440);
+	var flatten = __webpack_require__(438),
+	    overRest = __webpack_require__(441),
+	    setToString = __webpack_require__(443);
 
 	/**
 	 * A specialized version of `baseRest` which flattens the rest array.
@@ -60504,10 +60780,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 435 */
+/* 438 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseFlatten = __webpack_require__(436);
+	var baseFlatten = __webpack_require__(439);
 
 	/**
 	 * Flattens `array` a single level deep.
@@ -60532,11 +60808,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 436 */
+/* 439 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var arrayPush = __webpack_require__(92),
-	    isFlattenable = __webpack_require__(437);
+	    isFlattenable = __webpack_require__(440);
 
 	/**
 	 * The base implementation of `_.flatten` with support for restricting flattening.
@@ -60576,7 +60852,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 437 */
+/* 440 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28),
@@ -60602,10 +60878,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 438 */
+/* 441 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(439);
+	var apply = __webpack_require__(442);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -60644,7 +60920,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 439 */
+/* 442 */
 /***/ (function(module, exports) {
 
 	/**
@@ -60671,11 +60947,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 440 */
+/* 443 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseSetToString = __webpack_require__(441),
-	    shortOut = __webpack_require__(443);
+	var baseSetToString = __webpack_require__(444),
+	    shortOut = __webpack_require__(446);
 
 	/**
 	 * Sets the `toString` method of `func` to return `string`.
@@ -60691,10 +60967,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 441 */
+/* 444 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var constant = __webpack_require__(442),
+	var constant = __webpack_require__(445),
 	    defineProperty = __webpack_require__(56),
 	    identity = __webpack_require__(129);
 
@@ -60719,7 +60995,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 442 */
+/* 445 */
 /***/ (function(module, exports) {
 
 	/**
@@ -60751,7 +61027,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 443 */
+/* 446 */
 /***/ (function(module, exports) {
 
 	/** Used to detect hot functions by number of calls within a span of milliseconds. */
@@ -60794,7 +61070,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 444 */
+/* 447 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60817,7 +61093,7 @@ var StellarSdk =
 
 	var _bluebird2 = _interopRequireDefault(_bluebird);
 
-	var _toml = __webpack_require__(445);
+	var _toml = __webpack_require__(448);
 
 	var _toml2 = _interopRequireDefault(_toml);
 
@@ -60892,11 +61168,11 @@ var StellarSdk =
 	exports.StellarTomlResolver = StellarTomlResolver;
 
 /***/ }),
-/* 445 */
+/* 448 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var parser = __webpack_require__(446);
-	var compiler = __webpack_require__(447);
+	var parser = __webpack_require__(449);
+	var compiler = __webpack_require__(450);
 
 	module.exports = {
 	  parse: function(input) {
@@ -60907,7 +61183,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 446 */
+/* 449 */
 /***/ (function(module, exports) {
 
 	module.exports = (function() {
@@ -64754,7 +65030,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 447 */
+/* 450 */
 /***/ (function(module, exports) {
 
 	"use strict";
