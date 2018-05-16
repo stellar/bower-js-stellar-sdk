@@ -589,9 +589,9 @@ var StellarSdk =
 	"use strict";
 
 	module.exports = __webpack_require__(1);
-	module.exports.axios = __webpack_require__(135);
-	module.exports.bluebird = __webpack_require__(200);
-	module.exports.StellarBase = __webpack_require__(237);
+	module.exports.axios = __webpack_require__(132);
+	module.exports.bluebird = __webpack_require__(197);
+	module.exports.StellarBase = __webpack_require__(234);
 
 	/*globals _*/
 	_.noConflict();
@@ -627,7 +627,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _server = __webpack_require__(119);
+	var _server = __webpack_require__(116);
 
 	Object.defineProperty(exports, "Server", {
 	  enumerable: true,
@@ -636,7 +636,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _federation_server = __webpack_require__(432);
+	var _federation_server = __webpack_require__(422);
 
 	Object.defineProperty(exports, "FederationServer", {
 	  enumerable: true,
@@ -651,7 +651,7 @@ var StellarSdk =
 	  }
 	});
 
-	var _stellar_toml_resolver = __webpack_require__(447);
+	var _stellar_toml_resolver = __webpack_require__(437);
 
 	Object.defineProperty(exports, "StellarTomlResolver", {
 	  enumerable: true,
@@ -668,7 +668,7 @@ var StellarSdk =
 
 	// expose classes and functions from stellar-base
 
-	var _stellarBase = __webpack_require__(237);
+	var _stellarBase = __webpack_require__(234);
 
 	_defaults(exports, _interopExportWildcard(_stellarBase, _defaults));
 
@@ -2234,10 +2234,12 @@ var StellarSdk =
 	    getTag = __webpack_require__(97),
 	    initCloneArray = __webpack_require__(102),
 	    initCloneByTag = __webpack_require__(103),
-	    initCloneObject = __webpack_require__(117),
+	    initCloneObject = __webpack_require__(110),
 	    isArray = __webpack_require__(65),
 	    isBuffer = __webpack_require__(66),
+	    isMap = __webpack_require__(112),
 	    isObject = __webpack_require__(33),
+	    isSet = __webpack_require__(114),
 	    keys = __webpack_require__(59);
 
 	/** Used to compose bitmasks for cloning. */
@@ -2345,7 +2347,7 @@ var StellarSdk =
 	      if (!cloneableTags[tag]) {
 	        return object ? value : {};
 	      }
-	      result = initCloneByTag(value, tag, baseClone, isDeep);
+	      result = initCloneByTag(value, tag, isDeep);
 	    }
 	  }
 	  // Check for circular references and return its corresponding clone.
@@ -2355,6 +2357,22 @@ var StellarSdk =
 	    return stacked;
 	  }
 	  stack.set(value, result);
+
+	  if (isSet(value)) {
+	    value.forEach(function(subValue) {
+	      result.add(baseClone(subValue, bitmask, customizer, subValue, value, stack));
+	    });
+
+	    return result;
+	  }
+
+	  if (isMap(value)) {
+	    value.forEach(function(subValue, key) {
+	      result.set(key, baseClone(subValue, bitmask, customizer, key, value, stack));
+	    });
+
+	    return result;
+	  }
 
 	  var keysFunc = isFull
 	    ? (isFlat ? getAllKeysIn : getAllKeys)
@@ -4124,10 +4142,13 @@ var StellarSdk =
 	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
 	 */
 	function isIndex(value, length) {
+	  var type = typeof value;
 	  length = length == null ? MAX_SAFE_INTEGER : length;
+
 	  return !!length &&
-	    (typeof value == 'number' || reIsUint.test(value)) &&
-	    (value > -1 && value % 1 == 0 && value < length);
+	    (type == 'number' ||
+	      (type != 'symbol' && reIsUint.test(value))) &&
+	        (value > -1 && value % 1 == 0 && value < length);
 	}
 
 	module.exports = isIndex;
@@ -4314,6 +4335,14 @@ var StellarSdk =
 	/** Used to access faster Node.js helpers. */
 	var nodeUtil = (function() {
 	  try {
+	    // Use `util.types` for Node.js 10+.
+	    var types = freeModule && freeModule.require && freeModule.require('util').types;
+
+	    if (types) {
+	      return types;
+	    }
+
+	    // Legacy `process.binding('util')` for Node.js < 10.
 	    return freeProcess && freeProcess.binding && freeProcess.binding('util');
 	  } catch (e) {}
 	}());
@@ -5063,7 +5092,7 @@ var StellarSdk =
 	 */
 	function initCloneArray(array) {
 	  var length = array.length,
-	      result = array.constructor(length);
+	      result = new array.constructor(length);
 
 	  // Add properties assigned by `RegExp#exec`.
 	  if (length && typeof array[0] == 'string' && hasOwnProperty.call(array, 'index')) {
@@ -5082,11 +5111,9 @@ var StellarSdk =
 
 	var cloneArrayBuffer = __webpack_require__(104),
 	    cloneDataView = __webpack_require__(106),
-	    cloneMap = __webpack_require__(107),
-	    cloneRegExp = __webpack_require__(111),
-	    cloneSet = __webpack_require__(112),
-	    cloneSymbol = __webpack_require__(115),
-	    cloneTypedArray = __webpack_require__(116);
+	    cloneRegExp = __webpack_require__(107),
+	    cloneSymbol = __webpack_require__(108),
+	    cloneTypedArray = __webpack_require__(109);
 
 	/** `Object#toString` result references. */
 	var boolTag = '[object Boolean]',
@@ -5114,16 +5141,15 @@ var StellarSdk =
 	 * Initializes an object clone based on its `toStringTag`.
 	 *
 	 * **Note:** This function only supports cloning values with tags of
-	 * `Boolean`, `Date`, `Error`, `Number`, `RegExp`, or `String`.
+	 * `Boolean`, `Date`, `Error`, `Map`, `Number`, `RegExp`, `Set`, or `String`.
 	 *
 	 * @private
 	 * @param {Object} object The object to clone.
 	 * @param {string} tag The `toStringTag` of the object to clone.
-	 * @param {Function} cloneFunc The function to clone values.
 	 * @param {boolean} [isDeep] Specify a deep clone.
 	 * @returns {Object} Returns the initialized clone.
 	 */
-	function initCloneByTag(object, tag, cloneFunc, isDeep) {
+	function initCloneByTag(object, tag, isDeep) {
 	  var Ctor = object.constructor;
 	  switch (tag) {
 	    case arrayBufferTag:
@@ -5142,7 +5168,7 @@ var StellarSdk =
 	      return cloneTypedArray(object, isDeep);
 
 	    case mapTag:
-	      return cloneMap(object, isDeep, cloneFunc);
+	      return new Ctor;
 
 	    case numberTag:
 	    case stringTag:
@@ -5152,7 +5178,7 @@ var StellarSdk =
 	      return cloneRegExp(object);
 
 	    case setTag:
-	      return cloneSet(object, isDeep, cloneFunc);
+	      return new Ctor;
 
 	    case symbolTag:
 	      return cloneSymbol(object);
@@ -5220,111 +5246,6 @@ var StellarSdk =
 
 /***/ }),
 /* 107 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	var addMapEntry = __webpack_require__(108),
-	    arrayReduce = __webpack_require__(109),
-	    mapToArray = __webpack_require__(110);
-
-	/** Used to compose bitmasks for cloning. */
-	var CLONE_DEEP_FLAG = 1;
-
-	/**
-	 * Creates a clone of `map`.
-	 *
-	 * @private
-	 * @param {Object} map The map to clone.
-	 * @param {Function} cloneFunc The function to clone values.
-	 * @param {boolean} [isDeep] Specify a deep clone.
-	 * @returns {Object} Returns the cloned map.
-	 */
-	function cloneMap(map, isDeep, cloneFunc) {
-	  var array = isDeep ? cloneFunc(mapToArray(map), CLONE_DEEP_FLAG) : mapToArray(map);
-	  return arrayReduce(array, addMapEntry, new map.constructor);
-	}
-
-	module.exports = cloneMap;
-
-
-/***/ }),
-/* 108 */
-/***/ (function(module, exports) {
-
-	/**
-	 * Adds the key-value `pair` to `map`.
-	 *
-	 * @private
-	 * @param {Object} map The map to modify.
-	 * @param {Array} pair The key-value pair to add.
-	 * @returns {Object} Returns `map`.
-	 */
-	function addMapEntry(map, pair) {
-	  // Don't return `map.set` because it's not chainable in IE 11.
-	  map.set(pair[0], pair[1]);
-	  return map;
-	}
-
-	module.exports = addMapEntry;
-
-
-/***/ }),
-/* 109 */
-/***/ (function(module, exports) {
-
-	/**
-	 * A specialized version of `_.reduce` for arrays without support for
-	 * iteratee shorthands.
-	 *
-	 * @private
-	 * @param {Array} [array] The array to iterate over.
-	 * @param {Function} iteratee The function invoked per iteration.
-	 * @param {*} [accumulator] The initial value.
-	 * @param {boolean} [initAccum] Specify using the first element of `array` as
-	 *  the initial value.
-	 * @returns {*} Returns the accumulated value.
-	 */
-	function arrayReduce(array, iteratee, accumulator, initAccum) {
-	  var index = -1,
-	      length = array == null ? 0 : array.length;
-
-	  if (initAccum && length) {
-	    accumulator = array[++index];
-	  }
-	  while (++index < length) {
-	    accumulator = iteratee(accumulator, array[index], index, array);
-	  }
-	  return accumulator;
-	}
-
-	module.exports = arrayReduce;
-
-
-/***/ }),
-/* 110 */
-/***/ (function(module, exports) {
-
-	/**
-	 * Converts `map` to its key-value pairs.
-	 *
-	 * @private
-	 * @param {Object} map The map to convert.
-	 * @returns {Array} Returns the key-value pairs.
-	 */
-	function mapToArray(map) {
-	  var index = -1,
-	      result = Array(map.size);
-
-	  map.forEach(function(value, key) {
-	    result[++index] = [key, value];
-	  });
-	  return result;
-	}
-
-	module.exports = mapToArray;
-
-
-/***/ }),
-/* 111 */
 /***/ (function(module, exports) {
 
 	/** Used to match `RegExp` flags from their coerced string values. */
@@ -5347,80 +5268,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 112 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	var addSetEntry = __webpack_require__(113),
-	    arrayReduce = __webpack_require__(109),
-	    setToArray = __webpack_require__(114);
-
-	/** Used to compose bitmasks for cloning. */
-	var CLONE_DEEP_FLAG = 1;
-
-	/**
-	 * Creates a clone of `set`.
-	 *
-	 * @private
-	 * @param {Object} set The set to clone.
-	 * @param {Function} cloneFunc The function to clone values.
-	 * @param {boolean} [isDeep] Specify a deep clone.
-	 * @returns {Object} Returns the cloned set.
-	 */
-	function cloneSet(set, isDeep, cloneFunc) {
-	  var array = isDeep ? cloneFunc(setToArray(set), CLONE_DEEP_FLAG) : setToArray(set);
-	  return arrayReduce(array, addSetEntry, new set.constructor);
-	}
-
-	module.exports = cloneSet;
-
-
-/***/ }),
-/* 113 */
-/***/ (function(module, exports) {
-
-	/**
-	 * Adds `value` to `set`.
-	 *
-	 * @private
-	 * @param {Object} set The set to modify.
-	 * @param {*} value The value to add.
-	 * @returns {Object} Returns `set`.
-	 */
-	function addSetEntry(set, value) {
-	  // Don't return `set.add` because it's not chainable in IE 11.
-	  set.add(value);
-	  return set;
-	}
-
-	module.exports = addSetEntry;
-
-
-/***/ }),
-/* 114 */
-/***/ (function(module, exports) {
-
-	/**
-	 * Converts `set` to an array of its values.
-	 *
-	 * @private
-	 * @param {Object} set The set to convert.
-	 * @returns {Array} Returns the values.
-	 */
-	function setToArray(set) {
-	  var index = -1,
-	      result = Array(set.size);
-
-	  set.forEach(function(value) {
-	    result[++index] = value;
-	  });
-	  return result;
-	}
-
-	module.exports = setToArray;
-
-
-/***/ }),
-/* 115 */
+/* 108 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28);
@@ -5444,7 +5292,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 116 */
+/* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var cloneArrayBuffer = __webpack_require__(104);
@@ -5466,10 +5314,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 117 */
+/* 110 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseCreate = __webpack_require__(118),
+	var baseCreate = __webpack_require__(111),
 	    getPrototype = __webpack_require__(93),
 	    isPrototype = __webpack_require__(76);
 
@@ -5490,7 +5338,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 118 */
+/* 111 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(33);
@@ -5526,7 +5374,121 @@ var StellarSdk =
 
 
 /***/ }),
-/* 119 */
+/* 112 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	var baseIsMap = __webpack_require__(113),
+	    baseUnary = __webpack_require__(73),
+	    nodeUtil = __webpack_require__(74);
+
+	/* Node.js helper references. */
+	var nodeIsMap = nodeUtil && nodeUtil.isMap;
+
+	/**
+	 * Checks if `value` is classified as a `Map` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.3.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a map, else `false`.
+	 * @example
+	 *
+	 * _.isMap(new Map);
+	 * // => true
+	 *
+	 * _.isMap(new WeakMap);
+	 * // => false
+	 */
+	var isMap = nodeIsMap ? baseUnary(nodeIsMap) : baseIsMap;
+
+	module.exports = isMap;
+
+
+/***/ }),
+/* 113 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	var getTag = __webpack_require__(97),
+	    isObjectLike = __webpack_require__(64);
+
+	/** `Object#toString` result references. */
+	var mapTag = '[object Map]';
+
+	/**
+	 * The base implementation of `_.isMap` without Node.js optimizations.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a map, else `false`.
+	 */
+	function baseIsMap(value) {
+	  return isObjectLike(value) && getTag(value) == mapTag;
+	}
+
+	module.exports = baseIsMap;
+
+
+/***/ }),
+/* 114 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	var baseIsSet = __webpack_require__(115),
+	    baseUnary = __webpack_require__(73),
+	    nodeUtil = __webpack_require__(74);
+
+	/* Node.js helper references. */
+	var nodeIsSet = nodeUtil && nodeUtil.isSet;
+
+	/**
+	 * Checks if `value` is classified as a `Set` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.3.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a set, else `false`.
+	 * @example
+	 *
+	 * _.isSet(new Set);
+	 * // => true
+	 *
+	 * _.isSet(new WeakSet);
+	 * // => false
+	 */
+	var isSet = nodeIsSet ? baseUnary(nodeIsSet) : baseIsSet;
+
+	module.exports = isSet;
+
+
+/***/ }),
+/* 115 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	var getTag = __webpack_require__(97),
+	    isObjectLike = __webpack_require__(64);
+
+	/** `Object#toString` result references. */
+	var setTag = '[object Set]';
+
+	/**
+	 * The base implementation of `_.isSet` without Node.js optimizations.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a set, else `false`.
+	 */
+	function baseIsSet(value) {
+	  return isObjectLike(value) && getTag(value) == setTag;
+	}
+
+	module.exports = baseIsSet;
+
+
+/***/ }),
+/* 116 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5544,46 +5506,46 @@ var StellarSdk =
 
 	var _errors = __webpack_require__(5);
 
-	var _account_call_builder = __webpack_require__(120);
+	var _account_call_builder = __webpack_require__(117);
 
-	var _account_response = __webpack_require__(236);
+	var _account_response = __webpack_require__(233);
 
 	var _config = __webpack_require__(6);
 
-	var _ledger_call_builder = __webpack_require__(420);
+	var _ledger_call_builder = __webpack_require__(410);
 
-	var _transaction_call_builder = __webpack_require__(421);
+	var _transaction_call_builder = __webpack_require__(411);
 
-	var _operation_call_builder = __webpack_require__(422);
+	var _operation_call_builder = __webpack_require__(412);
 
-	var _offer_call_builder = __webpack_require__(423);
+	var _offer_call_builder = __webpack_require__(413);
 
-	var _orderbook_call_builder = __webpack_require__(424);
+	var _orderbook_call_builder = __webpack_require__(414);
 
-	var _trades_call_builder = __webpack_require__(425);
+	var _trades_call_builder = __webpack_require__(415);
 
-	var _path_call_builder = __webpack_require__(426);
+	var _path_call_builder = __webpack_require__(416);
 
-	var _payment_call_builder = __webpack_require__(427);
+	var _payment_call_builder = __webpack_require__(417);
 
-	var _effect_call_builder = __webpack_require__(428);
+	var _effect_call_builder = __webpack_require__(418);
 
-	var _friendbot_builder = __webpack_require__(429);
+	var _friendbot_builder = __webpack_require__(419);
 
-	var _assets_call_builder = __webpack_require__(430);
+	var _assets_call_builder = __webpack_require__(420);
 
-	var _trade_aggregation_call_builder = __webpack_require__(431);
+	var _trade_aggregation_call_builder = __webpack_require__(421);
 
-	var _stellarBase = __webpack_require__(237);
+	var _stellarBase = __webpack_require__(234);
 
-	var _lodashIsString = __webpack_require__(316);
+	var _lodashIsString = __webpack_require__(304);
 
 	var _lodashIsString2 = _interopRequireDefault(_lodashIsString);
 
-	var axios = __webpack_require__(135);
-	var toBluebird = __webpack_require__(200).resolve;
-	var URI = __webpack_require__(130);
-	var URITemplate = __webpack_require__(130).URITemplate;
+	var axios = __webpack_require__(132);
+	var toBluebird = __webpack_require__(197).resolve;
+	var URI = __webpack_require__(127);
+	var URITemplate = __webpack_require__(127).URITemplate;
 
 	var SUBMIT_TRANSACTION_TIMEOUT = 60 * 1000;
 
@@ -5829,7 +5791,7 @@ var StellarSdk =
 	exports.Server = Server;
 
 /***/ }),
-/* 120 */
+/* 117 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -5846,7 +5808,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var AccountCallBuilder = (function (_CallBuilder) {
 	  _inherits(AccountCallBuilder, _CallBuilder);
@@ -5891,7 +5853,7 @@ var StellarSdk =
 	exports.AccountCallBuilder = AccountCallBuilder;
 
 /***/ }),
-/* 121 */
+/* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5908,16 +5870,16 @@ var StellarSdk =
 
 	var _errors = __webpack_require__(5);
 
-	var _lodashForEach = __webpack_require__(122);
+	var _lodashForEach = __webpack_require__(119);
 
 	var _lodashForEach2 = _interopRequireDefault(_lodashForEach);
 
-	var URI = __webpack_require__(130);
-	var URITemplate = __webpack_require__(134);
+	var URI = __webpack_require__(127);
+	var URITemplate = __webpack_require__(131);
 
-	var axios = __webpack_require__(135);
-	var EventSource = typeof window === 'undefined' ? __webpack_require__(154) : window.EventSource;
-	var toBluebird = __webpack_require__(200).resolve;
+	var axios = __webpack_require__(132);
+	var EventSource = typeof window === 'undefined' ? __webpack_require__(151) : window.EventSource;
+	var toBluebird = __webpack_require__(197).resolve;
 
 	/**
 	 * Creates a new {@link CallBuilder} pointed to server defined by serverUrl.
@@ -5978,6 +5940,7 @@ var StellarSdk =
 	     * @param {object} [options] EventSource options.
 	     * @param {function} [options.onmessage] Callback function to handle incoming messages.
 	     * @param {function} [options.onerror] Callback function to handle errors.
+	     * @param {number} [options.reconnectTimeout] Custom stream connection timeout in ms, default is 15 seconds.
 	     * @returns {function} Close function. Run to close the connection and stop listening for new events.
 	     */
 	  }, {
@@ -5999,7 +5962,7 @@ var StellarSdk =
 	        timeout = setTimeout(function () {
 	          es.close();
 	          es = createEventSource();
-	        }, 15 * 1000);
+	        }, options.reconnectTimeout || 15 * 1000);
 	      };
 
 	      var createEventSource = function createEventSource() {
@@ -6060,7 +6023,7 @@ var StellarSdk =
 	        }
 
 	        return _this3._sendNormalRequest(uri).then(function (r) {
-	          return _this3._parseRecord(r);
+	          return _this3._parseResponse(r);
 	        });
 	      };
 	    }
@@ -6204,12 +6167,12 @@ var StellarSdk =
 	exports.CallBuilder = CallBuilder;
 
 /***/ }),
-/* 122 */
+/* 119 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var arrayEach = __webpack_require__(53),
-	    baseEach = __webpack_require__(123),
-	    castFunction = __webpack_require__(128),
+	    baseEach = __webpack_require__(120),
+	    castFunction = __webpack_require__(125),
 	    isArray = __webpack_require__(65);
 
 	/**
@@ -6251,11 +6214,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 123 */
+/* 120 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseForOwn = __webpack_require__(124),
-	    createBaseEach = __webpack_require__(127);
+	var baseForOwn = __webpack_require__(121),
+	    createBaseEach = __webpack_require__(124);
 
 	/**
 	 * The base implementation of `_.forEach` without support for iteratee shorthands.
@@ -6271,10 +6234,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 124 */
+/* 121 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(125),
+	var baseFor = __webpack_require__(122),
 	    keys = __webpack_require__(59);
 
 	/**
@@ -6293,10 +6256,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 125 */
+/* 122 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var createBaseFor = __webpack_require__(126);
+	var createBaseFor = __webpack_require__(123);
 
 	/**
 	 * The base implementation of `baseForOwn` which iterates over `object`
@@ -6315,7 +6278,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 126 */
+/* 123 */
 /***/ (function(module, exports) {
 
 	/**
@@ -6346,7 +6309,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 127 */
+/* 124 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var isArrayLike = __webpack_require__(79);
@@ -6384,10 +6347,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 128 */
+/* 125 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var identity = __webpack_require__(129);
+	var identity = __webpack_require__(126);
 
 	/**
 	 * Casts `value` to `identity` if it's not a function.
@@ -6404,7 +6367,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 129 */
+/* 126 */
 /***/ (function(module, exports) {
 
 	/**
@@ -6431,7 +6394,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 130 */
+/* 127 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -6451,10 +6414,10 @@ var StellarSdk =
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
 	  if (typeof module === 'object' && module.exports) {
 	    // Node
-	    module.exports = factory(__webpack_require__(131), __webpack_require__(132), __webpack_require__(133));
+	    module.exports = factory(__webpack_require__(128), __webpack_require__(129), __webpack_require__(130));
 	  } else if (true) {
 	    // AMD. Register as an anonymous module.
-	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(131), __webpack_require__(132), __webpack_require__(133)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(128), __webpack_require__(129), __webpack_require__(130)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  } else {
 	    // Browser globals (root is window)
 	    root.URI = factory(root.punycode, root.IPv6, root.SecondLevelDomains, root);
@@ -8676,7 +8639,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 131 */
+/* 128 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.4.0 by @mathias */
@@ -9214,7 +9177,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ }),
-/* 132 */
+/* 129 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -9405,7 +9368,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 133 */
+/* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -9651,7 +9614,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 134 */
+/* 131 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -9672,10 +9635,10 @@ var StellarSdk =
 	  // https://github.com/umdjs/umd/blob/master/returnExports.js
 	  if (typeof module === 'object' && module.exports) {
 	    // Node
-	    module.exports = factory(__webpack_require__(130));
+	    module.exports = factory(__webpack_require__(127));
 	  } else if (true) {
 	    // AMD. Register as an anonymous module.
-	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(130)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(127)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	  } else {
 	    // Browser globals (root is window)
 	    root.URITemplate = factory(root.URI, root);
@@ -10170,25 +10133,25 @@ var StellarSdk =
 
 
 /***/ }),
-/* 135 */
+/* 132 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(136);
+	module.exports = __webpack_require__(133);
 
 /***/ }),
-/* 136 */
+/* 133 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var defaults = __webpack_require__(137);
-	var utils = __webpack_require__(138);
-	var dispatchRequest = __webpack_require__(140);
-	var InterceptorManager = __webpack_require__(149);
-	var isAbsoluteURL = __webpack_require__(150);
-	var combineURLs = __webpack_require__(151);
-	var bind = __webpack_require__(152);
-	var transformData = __webpack_require__(144);
+	var defaults = __webpack_require__(134);
+	var utils = __webpack_require__(135);
+	var dispatchRequest = __webpack_require__(137);
+	var InterceptorManager = __webpack_require__(146);
+	var isAbsoluteURL = __webpack_require__(147);
+	var combineURLs = __webpack_require__(148);
+	var bind = __webpack_require__(149);
+	var transformData = __webpack_require__(141);
 
 	function Axios(defaultConfig) {
 	  this.defaults = utils.merge({}, defaultConfig);
@@ -10277,7 +10240,7 @@ var StellarSdk =
 	axios.all = function all(promises) {
 	  return Promise.all(promises);
 	};
-	axios.spread = __webpack_require__(153);
+	axios.spread = __webpack_require__(150);
 
 	// Provide aliases for supported request methods
 	utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
@@ -10305,13 +10268,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 137 */
+/* 134 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
-	var normalizeHeaderName = __webpack_require__(139);
+	var utils = __webpack_require__(135);
+	var normalizeHeaderName = __webpack_require__(136);
 
 	var PROTECTION_PREFIX = /^\)\]\}',?\n/;
 	var DEFAULT_CONTENT_TYPE = {
@@ -10383,7 +10346,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 138 */
+/* 135 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -10666,12 +10629,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 139 */
+/* 136 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	module.exports = function normalizeHeaderName(headers, normalizedName) {
 	  utils.forEach(headers, function processHeader(value, name) {
@@ -10684,7 +10647,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 140 */
+/* 137 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -10706,10 +10669,10 @@ var StellarSdk =
 	        adapter = config.adapter;
 	      } else if (typeof XMLHttpRequest !== 'undefined') {
 	        // For browsers use XHR adapter
-	        adapter = __webpack_require__(141);
+	        adapter = __webpack_require__(138);
 	      } else if (typeof process !== 'undefined') {
 	        // For node use HTTP adapter
-	        adapter = __webpack_require__(141);
+	        adapter = __webpack_require__(138);
 	      }
 
 	      if (typeof adapter === 'function') {
@@ -10725,18 +10688,18 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 141 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
 
-	var utils = __webpack_require__(138);
-	var buildURL = __webpack_require__(142);
-	var parseHeaders = __webpack_require__(143);
-	var transformData = __webpack_require__(144);
-	var isURLSameOrigin = __webpack_require__(145);
-	var btoa = (typeof window !== 'undefined' && window.btoa) || __webpack_require__(146);
-	var settle = __webpack_require__(147);
+	var utils = __webpack_require__(135);
+	var buildURL = __webpack_require__(139);
+	var parseHeaders = __webpack_require__(140);
+	var transformData = __webpack_require__(141);
+	var isURLSameOrigin = __webpack_require__(142);
+	var btoa = (typeof window !== 'undefined' && window.btoa) || __webpack_require__(143);
+	var settle = __webpack_require__(144);
 
 	module.exports = function xhrAdapter(resolve, reject, config) {
 	  var requestData = config.data;
@@ -10833,7 +10796,7 @@ var StellarSdk =
 	  // This is only done if running in a standard browser environment.
 	  // Specifically not if we're in a web worker, or react-native.
 	  if (utils.isStandardBrowserEnv()) {
-	    var cookies = __webpack_require__(148);
+	    var cookies = __webpack_require__(145);
 
 	    // Add xsrf header
 	    var xsrfValue = config.withCredentials || isURLSameOrigin(config.url) ?
@@ -10894,12 +10857,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 142 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	function encode(val) {
 	  return encodeURIComponent(val).
@@ -10968,12 +10931,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 143 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	/**
 	 * Parse headers into an object
@@ -11011,12 +10974,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 144 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	/**
 	 * Transform the data for a request or a response
@@ -11037,12 +11000,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 145 */
+/* 142 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	module.exports = (
 	  utils.isStandardBrowserEnv() ?
@@ -11111,7 +11074,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 146 */
+/* 143 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -11153,7 +11116,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 147 */
+/* 144 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -11177,12 +11140,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 148 */
+/* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	module.exports = (
 	  utils.isStandardBrowserEnv() ?
@@ -11236,12 +11199,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 149 */
+/* 146 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var utils = __webpack_require__(138);
+	var utils = __webpack_require__(135);
 
 	function InterceptorManager() {
 	  this.handlers = [];
@@ -11294,7 +11257,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 150 */
+/* 147 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -11314,7 +11277,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 151 */
+/* 148 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -11332,7 +11295,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 152 */
+/* 149 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -11349,7 +11312,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 153 */
+/* 150 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -11382,15 +11345,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 154 */
+/* 151 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {var original = __webpack_require__(155)
-	  , parse = __webpack_require__(160).parse
-	  , events = __webpack_require__(166)
-	  , https = __webpack_require__(167)
-	  , http = __webpack_require__(168)
-	  , util = __webpack_require__(197);
+	/* WEBPACK VAR INJECTION */(function(process) {var original = __webpack_require__(152)
+	  , parse = __webpack_require__(156).parse
+	  , events = __webpack_require__(162)
+	  , https = __webpack_require__(163)
+	  , http = __webpack_require__(164)
+	  , util = __webpack_require__(194);
 
 	/**
 	 * Creates a new EventSource object
@@ -11716,12 +11679,12 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 155 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var parse = __webpack_require__(156);
+	var parse = __webpack_require__(153);
 
 	/**
 	 * Transform an URL to a valid origin value.
@@ -11768,18 +11731,18 @@ var StellarSdk =
 
 
 /***/ }),
-/* 156 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	'use strict';
+	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
 
-	var required = __webpack_require__(157)
-	  , lolcation = __webpack_require__(158)
-	  , qs = __webpack_require__(159)
-	  , relativere = /^\/(?!\/)/;
+	var required = __webpack_require__(154)
+	  , qs = __webpack_require__(155)
+	  , protocolre = /^([a-z][a-z0-9.+-]*:)?(\/\/)?([\S\s]*)/i
+	  , slashes = /^[A-Za-z][A-Za-z0-9+-.]*:\/\//;
 
 	/**
-	 * These are the parse instructions for the URL parsers, it informs the parser
+	 * These are the parse rules for the URL parser, it informs the parser
 	 * about:
 	 *
 	 * 0. The char it Needs to parse, if it's a string it should be done using
@@ -11790,26 +11753,132 @@ var StellarSdk =
 	 * 3. Inherit from location if non existing in the parser.
 	 * 4. `toLowerCase` the resulting value.
 	 */
-	var instructions = [
+	var rules = [
 	  ['#', 'hash'],                        // Extract from the back.
 	  ['?', 'query'],                       // Extract from the back.
-	  ['//', 'protocol', 2, 1, 1],          // Extract from the front.
 	  ['/', 'pathname'],                    // Extract from the back.
 	  ['@', 'auth', 1],                     // Extract from the front.
 	  [NaN, 'host', undefined, 1, 1],       // Set left over value.
-	  [/\:(\d+)$/, 'port'],                 // RegExp the back.
+	  [/:(\d+)$/, 'port', undefined, 1],    // RegExp the back.
 	  [NaN, 'hostname', undefined, 1, 1]    // Set left over.
 	];
 
 	/**
+	 * These properties should not be copied or inherited from. This is only needed
+	 * for all non blob URL's as a blob URL does not include a hash, only the
+	 * origin.
+	 *
+	 * @type {Object}
+	 * @private
+	 */
+	var ignore = { hash: 1, query: 1 };
+
+	/**
+	 * The location object differs when your code is loaded through a normal page,
+	 * Worker or through a worker using a blob. And with the blobble begins the
+	 * trouble as the location object will contain the URL of the blob, not the
+	 * location of the page where our code is loaded in. The actual origin is
+	 * encoded in the `pathname` so we can thankfully generate a good "default"
+	 * location from it so we can generate proper relative URL's again.
+	 *
+	 * @param {Object|String} loc Optional default location object.
+	 * @returns {Object} lolcation object.
+	 * @api public
+	 */
+	function lolcation(loc) {
+	  loc = loc || global.location || {};
+
+	  var finaldestination = {}
+	    , type = typeof loc
+	    , key;
+
+	  if ('blob:' === loc.protocol) {
+	    finaldestination = new URL(unescape(loc.pathname), {});
+	  } else if ('string' === type) {
+	    finaldestination = new URL(loc, {});
+	    for (key in ignore) delete finaldestination[key];
+	  } else if ('object' === type) {
+	    for (key in loc) {
+	      if (key in ignore) continue;
+	      finaldestination[key] = loc[key];
+	    }
+
+	    if (finaldestination.slashes === undefined) {
+	      finaldestination.slashes = slashes.test(loc.href);
+	    }
+	  }
+
+	  return finaldestination;
+	}
+
+	/**
+	 * @typedef ProtocolExtract
+	 * @type Object
+	 * @property {String} protocol Protocol matched in the URL, in lowercase.
+	 * @property {Boolean} slashes `true` if protocol is followed by "//", else `false`.
+	 * @property {String} rest Rest of the URL that is not part of the protocol.
+	 */
+
+	/**
+	 * Extract protocol information from a URL with/without double slash ("//").
+	 *
+	 * @param {String} address URL we want to extract from.
+	 * @return {ProtocolExtract} Extracted information.
+	 * @api private
+	 */
+	function extractProtocol(address) {
+	  var match = protocolre.exec(address);
+
+	  return {
+	    protocol: match[1] ? match[1].toLowerCase() : '',
+	    slashes: !!match[2],
+	    rest: match[3]
+	  };
+	}
+
+	/**
+	 * Resolve a relative URL pathname against a base URL pathname.
+	 *
+	 * @param {String} relative Pathname of the relative URL.
+	 * @param {String} base Pathname of the base URL.
+	 * @return {String} Resolved pathname.
+	 * @api private
+	 */
+	function resolve(relative, base) {
+	  var path = (base || '/').split('/').slice(0, -1).concat(relative.split('/'))
+	    , i = path.length
+	    , last = path[i - 1]
+	    , unshift = false
+	    , up = 0;
+
+	  while (i--) {
+	    if (path[i] === '.') {
+	      path.splice(i, 1);
+	    } else if (path[i] === '..') {
+	      path.splice(i, 1);
+	      up++;
+	    } else if (up) {
+	      if (i === 0) unshift = true;
+	      path.splice(i, 1);
+	      up--;
+	    }
+	  }
+
+	  if (unshift) path.unshift('');
+	  if (last === '.' || last === '..') path.push('');
+
+	  return path.join('/');
+	}
+
+	/**
 	 * The actual URL instance. Instead of returning an object we've opted-in to
 	 * create an actual constructor as it's much more memory efficient and
-	 * faster and it pleases my CDO.
+	 * faster and it pleases my OCD.
 	 *
 	 * @constructor
 	 * @param {String} address URL we want to parse.
-	 * @param {Boolean|function} parser Parser for the query string.
-	 * @param {Object} location Location defaults for relative paths.
+	 * @param {Object|String} location Location defaults for relative paths.
+	 * @param {Boolean|Function} parser Parser for the query string.
 	 * @api public
 	 */
 	function URL(address, location, parser) {
@@ -11817,8 +11886,8 @@ var StellarSdk =
 	    return new URL(address, location, parser);
 	  }
 
-	  var relative = relativere.test(address)
-	    , parse, instruction, index, key
+	  var relative, extracted, parse, instruction, index, key
+	    , instructions = rules.slice()
 	    , type = typeof location
 	    , url = this
 	    , i = 0;
@@ -11839,11 +11908,24 @@ var StellarSdk =
 	    location = null;
 	  }
 
-	  if (parser && 'function' !== typeof parser) {
-	    parser = qs.parse;
-	  }
+	  if (parser && 'function' !== typeof parser) parser = qs.parse;
 
 	  location = lolcation(location);
+
+	  //
+	  // Extract protocol information before running the instructions.
+	  //
+	  extracted = extractProtocol(address || '');
+	  relative = !extracted.protocol && !extracted.slashes;
+	  url.slashes = extracted.slashes || relative && location.slashes;
+	  url.protocol = extracted.protocol || location.protocol || '';
+	  address = extracted.rest;
+
+	  //
+	  // When the authority component is absent the URL starts with a path
+	  // component.
+	  //
+	  if (!extracted.slashes) instructions[2] = [/(.*)/, 'pathname'];
 
 	  for (; i < instructions.length; i++) {
 	    instruction = instructions[i];
@@ -11862,20 +11944,20 @@ var StellarSdk =
 	          address = address.slice(0, index);
 	        }
 	      }
-	    } else if (index = parse.exec(address)) {
+	    } else if ((index = parse.exec(address))) {
 	      url[key] = index[1];
-	      address = address.slice(0, address.length - index[0].length);
+	      address = address.slice(0, index.index);
 	    }
 
-	    url[key] = url[key] || (instruction[3] || ('port' === key && relative) ? location[key] || '' : '');
+	    url[key] = url[key] || (
+	      relative && instruction[3] ? location[key] || '' : ''
+	    );
 
 	    //
 	    // Hostname, host and protocol should be lowercased so they can be used to
 	    // create a proper `origin`.
 	    //
-	    if (instruction[4]) {
-	      url[key] = url[key].toLowerCase();
-	    }
+	    if (instruction[4]) url[key] = url[key].toLowerCase();
 	  }
 
 	  //
@@ -11884,6 +11966,18 @@ var StellarSdk =
 	  // parser.
 	  //
 	  if (parser) url.query = parser(url.query);
+
+	  //
+	  // If the URL is relative, resolve the pathname against the base URL.
+	  //
+	  if (
+	      relative
+	    && location.slashes
+	    && url.pathname.charAt(0) !== '/'
+	    && (url.pathname !== '' || location.pathname !== '')
+	  ) {
+	    url.pathname = resolve(url.pathname, location.pathname);
+	  }
 
 	  //
 	  // We should not add port numbers if they are already the default port number
@@ -11905,6 +11999,10 @@ var StellarSdk =
 	    url.password = instruction[1] || '';
 	  }
 
+	  url.origin = url.protocol && url.host && url.protocol !== 'file:'
+	    ? url.protocol +'//'+ url.host
+	    : 'null';
+
 	  //
 	  // The href is just the compiled result.
 	  //
@@ -11915,49 +12013,93 @@ var StellarSdk =
 	 * This is convenience method for changing properties in the URL instance to
 	 * insure that they all propagate correctly.
 	 *
-	 * @param {String} prop Property we need to adjust.
-	 * @param {Mixed} value The newly assigned value.
+	 * @param {String} part          Property we need to adjust.
+	 * @param {Mixed} value          The newly assigned value.
+	 * @param {Boolean|Function} fn  When setting the query, it will be the function
+	 *                               used to parse the query.
+	 *                               When setting the protocol, double slash will be
+	 *                               removed from the final url if it is true.
 	 * @returns {URL}
 	 * @api public
 	 */
-	URL.prototype.set = function set(part, value, fn) {
+	function set(part, value, fn) {
 	  var url = this;
 
-	  if ('query' === part) {
-	    if ('string' === typeof value && value.length) {
-	      value = (fn || qs.parse)(value);
-	    }
+	  switch (part) {
+	    case 'query':
+	      if ('string' === typeof value && value.length) {
+	        value = (fn || qs.parse)(value);
+	      }
 
-	    url[part] = value;
-	  } else if ('port' === part) {
-	    url[part] = value;
+	      url[part] = value;
+	      break;
 
-	    if (!required(value, url.protocol)) {
-	      url.host = url.hostname;
-	      url[part] = '';
-	    } else if (value) {
-	      url.host = url.hostname +':'+ value;
-	    }
-	  } else if ('hostname' === part) {
-	    url[part] = value;
+	    case 'port':
+	      url[part] = value;
 
-	    if (url.port) value += ':'+ url.port;
-	    url.host = value;
-	  } else if ('host' === part) {
-	    url[part] = value;
+	      if (!required(value, url.protocol)) {
+	        url.host = url.hostname;
+	        url[part] = '';
+	      } else if (value) {
+	        url.host = url.hostname +':'+ value;
+	      }
 
-	    if (/\:\d+/.test(value)) {
-	      value = value.split(':');
-	      url.hostname = value[0];
-	      url.port = value[1];
-	    }
-	  } else {
-	    url[part] = value;
+	      break;
+
+	    case 'hostname':
+	      url[part] = value;
+
+	      if (url.port) value += ':'+ url.port;
+	      url.host = value;
+	      break;
+
+	    case 'host':
+	      url[part] = value;
+
+	      if (/:\d+$/.test(value)) {
+	        value = value.split(':');
+	        url.port = value.pop();
+	        url.hostname = value.join(':');
+	      } else {
+	        url.hostname = value;
+	        url.port = '';
+	      }
+
+	      break;
+
+	    case 'protocol':
+	      url.protocol = value.toLowerCase();
+	      url.slashes = !fn;
+	      break;
+
+	    case 'pathname':
+	    case 'hash':
+	      if (value) {
+	        var char = part === 'pathname' ? '/' : '#';
+	        url[part] = value.charAt(0) !== char ? char + value : value;
+	      } else {
+	        url[part] = value;
+	      }
+	      break;
+
+	    default:
+	      url[part] = value;
 	  }
 
+	  for (var i = 0; i < rules.length; i++) {
+	    var ins = rules[i];
+
+	    if (ins[4]) url[ins[1]] = url[ins[1]].toLowerCase();
+	  }
+
+	  url.origin = url.protocol && url.host && url.protocol !== 'file:'
+	    ? url.protocol +'//'+ url.host
+	    : 'null';
+
 	  url.href = url.toString();
+
 	  return url;
-	};
+	}
 
 	/**
 	 * Transform the properties back in to a valid and full URL string.
@@ -11966,12 +12108,16 @@ var StellarSdk =
 	 * @returns {String}
 	 * @api public
 	 */
-	URL.prototype.toString = function toString(stringify) {
+	function toString(stringify) {
 	  if (!stringify || 'function' !== typeof stringify) stringify = qs.stringify;
 
 	  var query
 	    , url = this
-	    , result = url.protocol +'//';
+	    , protocol = url.protocol;
+
+	  if (protocol && protocol.charAt(protocol.length - 1) !== ':') protocol += ':';
+
+	  var result = protocol + (url.slashes ? '//' : '');
 
 	  if (url.username) {
 	    result += url.username;
@@ -11979,10 +12125,7 @@ var StellarSdk =
 	    result += '@';
 	  }
 
-	  result += url.hostname;
-	  if (url.port) result += ':'+ url.port;
-
-	  result += url.pathname;
+	  result += url.host + url.pathname;
 
 	  query = 'object' === typeof url.query ? stringify(url.query) : url.query;
 	  if (query) result += '?' !== query.charAt(0) ? '?'+ query : query;
@@ -11990,19 +12133,24 @@ var StellarSdk =
 	  if (url.hash) result += url.hash;
 
 	  return result;
-	};
+	}
+
+	URL.prototype = { set: set, toString: toString };
 
 	//
 	// Expose the URL parser and some additional properties that might be useful for
-	// others.
+	// others or testing.
 	//
-	URL.qs = qs;
+	URL.extractProtocol = extractProtocol;
 	URL.location = lolcation;
+	URL.qs = qs;
+
 	module.exports = URL;
 
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 157 */
+/* 154 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -12046,64 +12194,23 @@ var StellarSdk =
 
 
 /***/ }),
-/* 158 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
-
-	/**
-	 * These properties should not be copied or inherited from. This is only needed
-	 * for all non blob URL's as the a blob URL does not include a hash, only the
-	 * origin.
-	 *
-	 * @type {Object}
-	 * @private
-	 */
-	var ignore = { hash: 1, query: 1 }
-	  , URL;
-
-	/**
-	 * The location object differs when your code is loaded through a normal page,
-	 * Worker or through a worker using a blob. And with the blobble begins the
-	 * trouble as the location object will contain the URL of the blob, not the
-	 * location of the page where our code is loaded in. The actual origin is
-	 * encoded in the `pathname` so we can thankfully generate a good "default"
-	 * location from it so we can generate proper relative URL's again.
-	 *
-	 * @param {Object} loc Optional default location object.
-	 * @returns {Object} lolcation object.
-	 * @api public
-	 */
-	module.exports = function lolcation(loc) {
-	  loc = loc || global.location || {};
-	  URL = URL || __webpack_require__(156);
-
-	  var finaldestination = {}
-	    , type = typeof loc
-	    , key;
-
-	  if ('blob:' === loc.protocol) {
-	    finaldestination = new URL(unescape(loc.pathname), {});
-	  } else if ('string' === type) {
-	    finaldestination = new URL(loc, {});
-	    for (key in ignore) delete finaldestination[key];
-	  } else if ('object' === type) for (key in loc) {
-	    if (key in ignore) continue;
-	    finaldestination[key] = loc[key];
-	  }
-
-	  return finaldestination;
-	};
-
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
-
-/***/ }),
-/* 159 */
+/* 155 */
 /***/ (function(module, exports) {
 
 	'use strict';
 
 	var has = Object.prototype.hasOwnProperty;
+
+	/**
+	 * Decode a URI encoded string.
+	 *
+	 * @param {String} input The URI encoded string.
+	 * @returns {String} The decoded string.
+	 * @api private
+	 */
+	function decode(input) {
+	  return decodeURIComponent(input.replace(/\+/g, ' '));
+	}
 
 	/**
 	 * Simple query string parser.
@@ -12117,15 +12224,18 @@ var StellarSdk =
 	    , result = {}
 	    , part;
 
-	  //
-	  // Little nifty parsing hack, leverage the fact that RegExp.exec increments
-	  // the lastIndex property so we can continue executing this loop until we've
-	  // parsed all results.
-	  //
-	  for (;
-	    part = parser.exec(query);
-	    result[decodeURIComponent(part[1])] = decodeURIComponent(part[2])
-	  );
+	  while (part = parser.exec(query)) {
+	    var key = decode(part[1])
+	      , value = decode(part[2]);
+
+	    //
+	    // Prevent overriding of existing properties. This ensures that build-in
+	    // methods like `toString` or __proto__ are not overriden by malicious
+	    // querystrings.
+	    //
+	    if (key in result) continue;
+	    result[key] = value;
+	  }
 
 	  return result;
 	}
@@ -12165,7 +12275,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 160 */
+/* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -12191,8 +12301,8 @@ var StellarSdk =
 
 	'use strict';
 
-	var punycode = __webpack_require__(161);
-	var util = __webpack_require__(162);
+	var punycode = __webpack_require__(157);
+	var util = __webpack_require__(158);
 
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -12267,7 +12377,7 @@ var StellarSdk =
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(163);
+	    querystring = __webpack_require__(159);
 
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && util.isObject(url) && url instanceof Url) return url;
@@ -12903,7 +13013,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 161 */
+/* 157 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -13438,7 +13548,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ }),
-/* 162 */
+/* 158 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -13460,17 +13570,17 @@ var StellarSdk =
 
 
 /***/ }),
-/* 163 */
+/* 159 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(164);
-	exports.encode = exports.stringify = __webpack_require__(165);
+	exports.decode = exports.parse = __webpack_require__(160);
+	exports.encode = exports.stringify = __webpack_require__(161);
 
 
 /***/ }),
-/* 164 */
+/* 160 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -13556,7 +13666,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 165 */
+/* 161 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -13626,7 +13736,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 166 */
+/* 162 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -13934,10 +14044,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 167 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var http = __webpack_require__(168);
+	var http = __webpack_require__(164);
 
 	var https = module.exports;
 
@@ -13954,13 +14064,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 168 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(169)
-	var extend = __webpack_require__(195)
-	var statusCodes = __webpack_require__(196)
-	var url = __webpack_require__(160)
+	/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(165)
+	var response = __webpack_require__(172)
+	var extend = __webpack_require__(192)
+	var statusCodes = __webpack_require__(193)
+	var url = __webpack_require__(156)
 
 	var http = exports
 
@@ -14003,8 +14114,13 @@ var StellarSdk =
 		return req
 	}
 
+	http.ClientRequest = ClientRequest
+	http.IncomingMessage = response.IncomingMessage
+
 	http.Agent = function () {}
 	http.Agent.defaultMaxSockets = 4
+
+	http.globalAgent = new http.Agent()
 
 	http.STATUS_CODES = statusCodes
 
@@ -14039,14 +14155,14 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 169 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(174)
-	var inherits = __webpack_require__(175)
-	var response = __webpack_require__(176)
-	var stream = __webpack_require__(177)
-	var toArrayBuffer = __webpack_require__(194)
+	/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(170)
+	var inherits = __webpack_require__(171)
+	var response = __webpack_require__(172)
+	var stream = __webpack_require__(173)
+	var toArrayBuffer = __webpack_require__(191)
 
 	var IncomingMessage = response.IncomingMessage
 	var rStates = response.readyStates
@@ -14082,9 +14198,8 @@ var StellarSdk =
 
 		var preferBinary
 		var useFetch = true
-		if (opts.mode === 'disable-fetch' || 'timeout' in opts) {
-			// If the use of XHR should be preferred and includes preserving the 'content-type' header.
-			// Force XHR to be used since the Fetch API does not yet support timeouts.
+		if (opts.mode === 'disable-fetch' || ('requestTimeout' in opts && !capability.abortController)) {
+			// If the use of XHR should be preferred. Not typically needed.
 			useFetch = false
 			preferBinary = true
 		} else if (opts.mode === 'prefer-streaming') {
@@ -14101,6 +14216,7 @@ var StellarSdk =
 			throw new Error('Invalid value for opts.mode')
 		}
 		self._mode = decideMode(preferBinary, useFetch)
+		self._fetchTimer = null
 
 		self.on('finish', function () {
 			self._onFinish()
@@ -14146,7 +14262,9 @@ var StellarSdk =
 		var headersObj = self._headers
 		var body = null
 		if (opts.method !== 'GET' && opts.method !== 'HEAD') {
-			if (capability.blobConstructor) {
+			if (capability.arraybuffer) {
+				body = toArrayBuffer(Buffer.concat(self._body))
+			} else if (capability.blobConstructor) {
 				body = new global.Blob(self._body.map(function (buffer) {
 					return toArrayBuffer(buffer)
 				}), {
@@ -14173,17 +14291,36 @@ var StellarSdk =
 		})
 
 		if (self._mode === 'fetch') {
+			var signal = null
+			var fetchTimer = null
+			if (capability.abortController) {
+				var controller = new AbortController()
+				signal = controller.signal
+				self._fetchAbortController = controller
+
+				if ('requestTimeout' in opts && opts.requestTimeout !== 0) {
+					self._fetchTimer = global.setTimeout(function () {
+						self.emit('requestTimeout')
+						if (self._fetchAbortController)
+							self._fetchAbortController.abort()
+					}, opts.requestTimeout)
+				}
+			}
+
 			global.fetch(self._opts.url, {
 				method: self._opts.method,
 				headers: headersList,
 				body: body || undefined,
 				mode: 'cors',
-				credentials: opts.withCredentials ? 'include' : 'same-origin'
+				credentials: opts.withCredentials ? 'include' : 'same-origin',
+				signal: signal
 			}).then(function (response) {
 				self._fetchResponse = response
 				self._connect()
 			}, function (reason) {
-				self.emit('error', reason)
+				global.clearTimeout(self._fetchTimer)
+				if (!self._destroyed)
+					self.emit('error', reason)
 			})
 		} else {
 			var xhr = self._xhr = new global.XMLHttpRequest()
@@ -14206,10 +14343,10 @@ var StellarSdk =
 			if (self._mode === 'text' && 'overrideMimeType' in xhr)
 				xhr.overrideMimeType('text/plain; charset=x-user-defined')
 
-			if ('timeout' in opts) {
-				xhr.timeout = opts.timeout
+			if ('requestTimeout' in opts) {
+				xhr.timeout = opts.requestTimeout
 				xhr.ontimeout = function () {
-					self.emit('timeout')
+					self.emit('requestTimeout')
 				}
 			}
 
@@ -14283,7 +14420,7 @@ var StellarSdk =
 		if (self._destroyed)
 			return
 
-		self._response = new IncomingMessage(self._xhr, self._fetchResponse, self._mode)
+		self._response = new IncomingMessage(self._xhr, self._fetchResponse, self._mode, self._fetchTimer)
 		self._response.on('error', function(err) {
 			self.emit('error', err)
 		})
@@ -14301,12 +14438,13 @@ var StellarSdk =
 	ClientRequest.prototype.abort = ClientRequest.prototype.destroy = function () {
 		var self = this
 		self._destroyed = true
+		global.clearTimeout(self._fetchTimer)
 		if (self._response)
 			self._response._destroyed = true
 		if (self._xhr)
 			self._xhr.abort()
-		// Currently, there isn't a way to truly abort a fetch.
-		// If you like bikeshedding, see https://github.com/whatwg/fetch/issues/27
+		else if (self._fetchAbortController)
+			self._fetchAbortController.abort()
 	}
 
 	ClientRequest.prototype.end = function (data, encoding, cb) {
@@ -14349,10 +14487,10 @@ var StellarSdk =
 		'via'
 	]
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer, (function() { return this; }()), __webpack_require__(3)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 170 */
+/* 166 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -14365,9 +14503,9 @@ var StellarSdk =
 
 	'use strict'
 
-	var base64 = __webpack_require__(171)
-	var ieee754 = __webpack_require__(172)
-	var isArray = __webpack_require__(173)
+	var base64 = __webpack_require__(167)
+	var ieee754 = __webpack_require__(168)
+	var isArray = __webpack_require__(169)
 
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -16148,7 +16286,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 171 */
+/* 167 */
 /***/ (function(module, exports) {
 
 	'use strict'
@@ -16167,68 +16305,102 @@ var StellarSdk =
 	  revLookup[code.charCodeAt(i)] = i
 	}
 
+	// Support decoding URL-safe base64 strings, as Node.js does.
+	// See: https://en.wikipedia.org/wiki/Base64#URL_applications
 	revLookup['-'.charCodeAt(0)] = 62
 	revLookup['_'.charCodeAt(0)] = 63
 
-	function placeHoldersCount (b64) {
+	function getLens (b64) {
 	  var len = b64.length
+
 	  if (len % 4 > 0) {
 	    throw new Error('Invalid string. Length must be a multiple of 4')
 	  }
 
-	  // the number of equal signs (place holders)
-	  // if there are two placeholders, than the two characters before it
-	  // represent one byte
-	  // if there is only one, then the three characters before it represent 2 bytes
-	  // this is just a cheap hack to not do indexOf twice
-	  return b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0
+	  // Trim off extra bytes after placeholder bytes are found
+	  // See: https://github.com/beatgammit/base64-js/issues/42
+	  var validLen = b64.indexOf('=')
+	  if (validLen === -1) validLen = len
+
+	  var placeHoldersLen = validLen === len
+	    ? 0
+	    : 4 - (validLen % 4)
+
+	  return [validLen, placeHoldersLen]
 	}
 
+	// base64 is 4/3 + up to two characters of the original data
 	function byteLength (b64) {
-	  // base64 is 4/3 + up to two characters of the original data
-	  return (b64.length * 3 / 4) - placeHoldersCount(b64)
+	  var lens = getLens(b64)
+	  var validLen = lens[0]
+	  var placeHoldersLen = lens[1]
+	  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
+	}
+
+	function _byteLength (b64, validLen, placeHoldersLen) {
+	  return ((validLen + placeHoldersLen) * 3 / 4) - placeHoldersLen
 	}
 
 	function toByteArray (b64) {
-	  var i, l, tmp, placeHolders, arr
-	  var len = b64.length
-	  placeHolders = placeHoldersCount(b64)
+	  var tmp
+	  var lens = getLens(b64)
+	  var validLen = lens[0]
+	  var placeHoldersLen = lens[1]
 
-	  arr = new Arr((len * 3 / 4) - placeHolders)
+	  var arr = new Arr(_byteLength(b64, validLen, placeHoldersLen))
+
+	  var curByte = 0
 
 	  // if there are placeholders, only get up to the last complete 4 chars
-	  l = placeHolders > 0 ? len - 4 : len
+	  var len = placeHoldersLen > 0
+	    ? validLen - 4
+	    : validLen
 
-	  var L = 0
-
-	  for (i = 0; i < l; i += 4) {
-	    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)]
-	    arr[L++] = (tmp >> 16) & 0xFF
-	    arr[L++] = (tmp >> 8) & 0xFF
-	    arr[L++] = tmp & 0xFF
+	  for (var i = 0; i < len; i += 4) {
+	    tmp =
+	      (revLookup[b64.charCodeAt(i)] << 18) |
+	      (revLookup[b64.charCodeAt(i + 1)] << 12) |
+	      (revLookup[b64.charCodeAt(i + 2)] << 6) |
+	      revLookup[b64.charCodeAt(i + 3)]
+	    arr[curByte++] = (tmp >> 16) & 0xFF
+	    arr[curByte++] = (tmp >> 8) & 0xFF
+	    arr[curByte++] = tmp & 0xFF
 	  }
 
-	  if (placeHolders === 2) {
-	    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4)
-	    arr[L++] = tmp & 0xFF
-	  } else if (placeHolders === 1) {
-	    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2)
-	    arr[L++] = (tmp >> 8) & 0xFF
-	    arr[L++] = tmp & 0xFF
+	  if (placeHoldersLen === 2) {
+	    tmp =
+	      (revLookup[b64.charCodeAt(i)] << 2) |
+	      (revLookup[b64.charCodeAt(i + 1)] >> 4)
+	    arr[curByte++] = tmp & 0xFF
+	  }
+
+	  if (placeHoldersLen === 1) {
+	    tmp =
+	      (revLookup[b64.charCodeAt(i)] << 10) |
+	      (revLookup[b64.charCodeAt(i + 1)] << 4) |
+	      (revLookup[b64.charCodeAt(i + 2)] >> 2)
+	    arr[curByte++] = (tmp >> 8) & 0xFF
+	    arr[curByte++] = tmp & 0xFF
 	  }
 
 	  return arr
 	}
 
 	function tripletToBase64 (num) {
-	  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+	  return lookup[num >> 18 & 0x3F] +
+	    lookup[num >> 12 & 0x3F] +
+	    lookup[num >> 6 & 0x3F] +
+	    lookup[num & 0x3F]
 	}
 
 	function encodeChunk (uint8, start, end) {
 	  var tmp
 	  var output = []
 	  for (var i = start; i < end; i += 3) {
-	    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+	    tmp =
+	      ((uint8[i] << 16) & 0xFF0000) +
+	      ((uint8[i + 1] << 8) & 0xFF00) +
+	      (uint8[i + 2] & 0xFF)
 	    output.push(tripletToBase64(tmp))
 	  }
 	  return output.join('')
@@ -16238,42 +16410,45 @@ var StellarSdk =
 	  var tmp
 	  var len = uint8.length
 	  var extraBytes = len % 3 // if we have 1 byte left, pad 2 bytes
-	  var output = ''
 	  var parts = []
 	  var maxChunkLength = 16383 // must be multiple of 3
 
 	  // go through the array every three bytes, we'll deal with trailing stuff later
 	  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
-	    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)))
+	    parts.push(encodeChunk(
+	      uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)
+	    ))
 	  }
 
 	  // pad the end with zeros, but make sure to not forget the extra bytes
 	  if (extraBytes === 1) {
 	    tmp = uint8[len - 1]
-	    output += lookup[tmp >> 2]
-	    output += lookup[(tmp << 4) & 0x3F]
-	    output += '=='
+	    parts.push(
+	      lookup[tmp >> 2] +
+	      lookup[(tmp << 4) & 0x3F] +
+	      '=='
+	    )
 	  } else if (extraBytes === 2) {
-	    tmp = (uint8[len - 2] << 8) + (uint8[len - 1])
-	    output += lookup[tmp >> 10]
-	    output += lookup[(tmp >> 4) & 0x3F]
-	    output += lookup[(tmp << 2) & 0x3F]
-	    output += '='
+	    tmp = (uint8[len - 2] << 8) + uint8[len - 1]
+	    parts.push(
+	      lookup[tmp >> 10] +
+	      lookup[(tmp >> 4) & 0x3F] +
+	      lookup[(tmp << 2) & 0x3F] +
+	      '='
+	    )
 	  }
-
-	  parts.push(output)
 
 	  return parts.join('')
 	}
 
 
 /***/ }),
-/* 172 */
+/* 168 */
 /***/ (function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
 	  var e, m
-	  var eLen = nBytes * 8 - mLen - 1
+	  var eLen = (nBytes * 8) - mLen - 1
 	  var eMax = (1 << eLen) - 1
 	  var eBias = eMax >> 1
 	  var nBits = -7
@@ -16286,12 +16461,12 @@ var StellarSdk =
 	  e = s & ((1 << (-nBits)) - 1)
 	  s >>= (-nBits)
 	  nBits += eLen
-	  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+	  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
 	  m = e & ((1 << (-nBits)) - 1)
 	  e >>= (-nBits)
 	  nBits += mLen
-	  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+	  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
 	  if (e === 0) {
 	    e = 1 - eBias
@@ -16306,7 +16481,7 @@ var StellarSdk =
 
 	exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 	  var e, m, c
-	  var eLen = nBytes * 8 - mLen - 1
+	  var eLen = (nBytes * 8) - mLen - 1
 	  var eMax = (1 << eLen) - 1
 	  var eBias = eMax >> 1
 	  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
@@ -16339,7 +16514,7 @@ var StellarSdk =
 	      m = 0
 	      e = eMax
 	    } else if (e + eBias >= 1) {
-	      m = (value * c - 1) * Math.pow(2, mLen)
+	      m = ((value * c) - 1) * Math.pow(2, mLen)
 	      e = e + eBias
 	    } else {
 	      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
@@ -16358,7 +16533,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 173 */
+/* 169 */
 /***/ (function(module, exports) {
 
 	var toString = {}.toString;
@@ -16369,10 +16544,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 174 */
+/* 170 */
 /***/ (function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
+
+	exports.writableStream = isFunction(global.WritableStream)
+
+	exports.abortController = isFunction(global.AbortController)
 
 	exports.blobConstructor = false
 	try {
@@ -16445,7 +16624,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 175 */
+/* 171 */
 /***/ (function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -16474,12 +16653,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 176 */
+/* 172 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(174)
-	var inherits = __webpack_require__(175)
-	var stream = __webpack_require__(177)
+	/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(170)
+	var inherits = __webpack_require__(171)
+	var stream = __webpack_require__(173)
 
 	var rStates = exports.readyStates = {
 		UNSENT: 0,
@@ -16489,7 +16668,7 @@ var StellarSdk =
 		DONE: 4
 	}
 
-	var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
+	var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode, fetchTimer) {
 		var self = this
 		stream.Readable.call(self)
 
@@ -16514,30 +16693,64 @@ var StellarSdk =
 			self.statusCode = response.status
 			self.statusMessage = response.statusText
 			
-			response.headers.forEach(function(header, key){
+			response.headers.forEach(function (header, key){
 				self.headers[key.toLowerCase()] = header
 				self.rawHeaders.push(key, header)
 			})
 
+			if (capability.writableStream) {
+				var writable = new WritableStream({
+					write: function (chunk) {
+						return new Promise(function (resolve, reject) {
+							if (self._destroyed) {
+								reject()
+							} else if(self.push(new Buffer(chunk))) {
+								resolve()
+							} else {
+								self._resumeFetch = resolve
+							}
+						})
+					},
+					close: function () {
+						global.clearTimeout(fetchTimer)
+						if (!self._destroyed)
+							self.push(null)
+					},
+					abort: function (err) {
+						if (!self._destroyed)
+							self.emit('error', err)
+					}
+				})
 
-			// TODO: this doesn't respect backpressure. Once WritableStream is available, this can be fixed
+				try {
+					response.body.pipeTo(writable).catch(function (err) {
+						global.clearTimeout(fetchTimer)
+						if (!self._destroyed)
+							self.emit('error', err)
+					})
+					return
+				} catch (e) {} // pipeTo method isn't defined. Can't find a better way to feature test this
+			}
+			// fallback for when writableStream or pipeTo aren't available
 			var reader = response.body.getReader()
 			function read () {
 				reader.read().then(function (result) {
 					if (self._destroyed)
 						return
 					if (result.done) {
+						global.clearTimeout(fetchTimer)
 						self.push(null)
 						return
 					}
 					self.push(new Buffer(result.value))
 					read()
-				}).catch(function(err) {
-					self.emit('error', err)
+				}).catch(function (err) {
+					global.clearTimeout(fetchTimer)
+					if (!self._destroyed)
+						self.emit('error', err)
 				})
 			}
 			read()
-
 		} else {
 			self._xhr = xhr
 			self._pos = 0
@@ -16581,7 +16794,15 @@ var StellarSdk =
 
 	inherits(IncomingMessage, stream.Readable)
 
-	IncomingMessage.prototype._read = function () {}
+	IncomingMessage.prototype._read = function () {
+		var self = this
+
+		var resolve = self._resumeFetch
+		if (resolve) {
+			self._resumeFetch = null
+			resolve()
+		}
+	}
 
 	IncomingMessage.prototype._onXHRProgress = function () {
 		var self = this
@@ -16660,23 +16881,23 @@ var StellarSdk =
 		}
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(170).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(166).Buffer, (function() { return this; }())))
 
 /***/ }),
-/* 177 */
+/* 173 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(178);
+	exports = module.exports = __webpack_require__(174);
 	exports.Stream = exports;
 	exports.Readable = exports;
-	exports.Writable = __webpack_require__(187);
-	exports.Duplex = __webpack_require__(186);
-	exports.Transform = __webpack_require__(192);
-	exports.PassThrough = __webpack_require__(193);
+	exports.Writable = __webpack_require__(184);
+	exports.Duplex = __webpack_require__(183);
+	exports.Transform = __webpack_require__(189);
+	exports.PassThrough = __webpack_require__(190);
 
 
 /***/ }),
-/* 178 */
+/* 174 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -16704,13 +16925,13 @@ var StellarSdk =
 
 	/*<replacement>*/
 
-	var processNextTick = __webpack_require__(179);
+	var pna = __webpack_require__(175);
 	/*</replacement>*/
 
 	module.exports = Readable;
 
 	/*<replacement>*/
-	var isArray = __webpack_require__(173);
+	var isArray = __webpack_require__(169);
 	/*</replacement>*/
 
 	/*<replacement>*/
@@ -16720,7 +16941,7 @@ var StellarSdk =
 	Readable.ReadableState = ReadableState;
 
 	/*<replacement>*/
-	var EE = __webpack_require__(166).EventEmitter;
+	var EE = __webpack_require__(162).EventEmitter;
 
 	var EElistenerCount = function (emitter, type) {
 	  return emitter.listeners(type).length;
@@ -16728,13 +16949,12 @@ var StellarSdk =
 	/*</replacement>*/
 
 	/*<replacement>*/
-	var Stream = __webpack_require__(180);
+	var Stream = __webpack_require__(176);
 	/*</replacement>*/
 
-	// TODO(bmeurer): Change this back to const once hole checks are
-	// properly optimized away early in Ignition+TurboFan.
 	/*<replacement>*/
-	var Buffer = __webpack_require__(181).Buffer;
+
+	var Buffer = __webpack_require__(177).Buffer;
 	var OurUint8Array = global.Uint8Array || function () {};
 	function _uint8ArrayToBuffer(chunk) {
 	  return Buffer.from(chunk);
@@ -16742,15 +16962,16 @@ var StellarSdk =
 	function _isUint8Array(obj) {
 	  return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 	}
+
 	/*</replacement>*/
 
 	/*<replacement>*/
-	var util = __webpack_require__(182);
-	util.inherits = __webpack_require__(175);
+	var util = __webpack_require__(178);
+	util.inherits = __webpack_require__(171);
 	/*</replacement>*/
 
 	/*<replacement>*/
-	var debugUtil = __webpack_require__(183);
+	var debugUtil = __webpack_require__(179);
 	var debug = void 0;
 	if (debugUtil && debugUtil.debuglog) {
 	  debug = debugUtil.debuglog('stream');
@@ -16759,8 +16980,8 @@ var StellarSdk =
 	}
 	/*</replacement>*/
 
-	var BufferList = __webpack_require__(184);
-	var destroyImpl = __webpack_require__(185);
+	var BufferList = __webpack_require__(180);
+	var destroyImpl = __webpack_require__(182);
 	var StringDecoder;
 
 	util.inherits(Readable, Stream);
@@ -16770,33 +16991,40 @@ var StellarSdk =
 	function prependListener(emitter, event, fn) {
 	  // Sadly this is not cacheable as some libraries bundle their own
 	  // event emitter implementation with them.
-	  if (typeof emitter.prependListener === 'function') {
-	    return emitter.prependListener(event, fn);
-	  } else {
-	    // This is a hack to make sure that our error handler is attached before any
-	    // userland ones.  NEVER DO THIS. This is here only because this code needs
-	    // to continue to work with older versions of Node.js that do not include
-	    // the prependListener() method. The goal is to eventually remove this hack.
-	    if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
-	  }
+	  if (typeof emitter.prependListener === 'function') return emitter.prependListener(event, fn);
+
+	  // This is a hack to make sure that our error handler is attached before any
+	  // userland ones.  NEVER DO THIS. This is here only because this code needs
+	  // to continue to work with older versions of Node.js that do not include
+	  // the prependListener() method. The goal is to eventually remove this hack.
+	  if (!emitter._events || !emitter._events[event]) emitter.on(event, fn);else if (isArray(emitter._events[event])) emitter._events[event].unshift(fn);else emitter._events[event] = [fn, emitter._events[event]];
 	}
 
 	function ReadableState(options, stream) {
-	  Duplex = Duplex || __webpack_require__(186);
+	  Duplex = Duplex || __webpack_require__(183);
 
 	  options = options || {};
+
+	  // Duplex streams are both readable and writable, but share
+	  // the same options object.
+	  // However, some cases require setting options to different
+	  // values for the readable and the writable sides of the duplex stream.
+	  // These options can be provided separately as readableXXX and writableXXX.
+	  var isDuplex = stream instanceof Duplex;
 
 	  // object stream flag. Used to make read(n) ignore n and to
 	  // make all the buffer merging and length checks go away
 	  this.objectMode = !!options.objectMode;
 
-	  if (stream instanceof Duplex) this.objectMode = this.objectMode || !!options.readableObjectMode;
+	  if (isDuplex) this.objectMode = this.objectMode || !!options.readableObjectMode;
 
 	  // the point at which it stops calling _read() to fill the buffer
 	  // Note: 0 is a valid value, means "don't call _read preemptively ever"
 	  var hwm = options.highWaterMark;
+	  var readableHwm = options.readableHighWaterMark;
 	  var defaultHwm = this.objectMode ? 16 : 16 * 1024;
-	  this.highWaterMark = hwm || hwm === 0 ? hwm : defaultHwm;
+
+	  if (hwm || hwm === 0) this.highWaterMark = hwm;else if (isDuplex && (readableHwm || readableHwm === 0)) this.highWaterMark = readableHwm;else this.highWaterMark = defaultHwm;
 
 	  // cast to ints.
 	  this.highWaterMark = Math.floor(this.highWaterMark);
@@ -16843,14 +17071,14 @@ var StellarSdk =
 	  this.decoder = null;
 	  this.encoding = null;
 	  if (options.encoding) {
-	    if (!StringDecoder) StringDecoder = __webpack_require__(191).StringDecoder;
+	    if (!StringDecoder) StringDecoder = __webpack_require__(188).StringDecoder;
 	    this.decoder = new StringDecoder(options.encoding);
 	    this.encoding = options.encoding;
 	  }
 	}
 
 	function Readable(options) {
-	  Duplex = Duplex || __webpack_require__(186);
+	  Duplex = Duplex || __webpack_require__(183);
 
 	  if (!(this instanceof Readable)) return new Readable(options);
 
@@ -16999,7 +17227,7 @@ var StellarSdk =
 
 	// backwards compatibility.
 	Readable.prototype.setEncoding = function (enc) {
-	  if (!StringDecoder) StringDecoder = __webpack_require__(191).StringDecoder;
+	  if (!StringDecoder) StringDecoder = __webpack_require__(188).StringDecoder;
 	  this._readableState.decoder = new StringDecoder(enc);
 	  this._readableState.encoding = enc;
 	  return this;
@@ -17169,7 +17397,7 @@ var StellarSdk =
 	  if (!state.emittedReadable) {
 	    debug('emitReadable', state.flowing);
 	    state.emittedReadable = true;
-	    if (state.sync) processNextTick(emitReadable_, stream);else emitReadable_(stream);
+	    if (state.sync) pna.nextTick(emitReadable_, stream);else emitReadable_(stream);
 	  }
 	}
 
@@ -17188,7 +17416,7 @@ var StellarSdk =
 	function maybeReadMore(stream, state) {
 	  if (!state.readingMore) {
 	    state.readingMore = true;
-	    processNextTick(maybeReadMore_, stream, state);
+	    pna.nextTick(maybeReadMore_, stream, state);
 	  }
 	}
 
@@ -17233,7 +17461,7 @@ var StellarSdk =
 	  var doEnd = (!pipeOpts || pipeOpts.end !== false) && dest !== process.stdout && dest !== process.stderr;
 
 	  var endFn = doEnd ? onend : unpipe;
-	  if (state.endEmitted) processNextTick(endFn);else src.once('end', endFn);
+	  if (state.endEmitted) pna.nextTick(endFn);else src.once('end', endFn);
 
 	  dest.on('unpipe', onunpipe);
 	  function onunpipe(readable, unpipeInfo) {
@@ -17423,7 +17651,7 @@ var StellarSdk =
 	      state.readableListening = state.needReadable = true;
 	      state.emittedReadable = false;
 	      if (!state.reading) {
-	        processNextTick(nReadingNextTick, this);
+	        pna.nextTick(nReadingNextTick, this);
 	      } else if (state.length) {
 	        emitReadable(this);
 	      }
@@ -17454,7 +17682,7 @@ var StellarSdk =
 	function resume(stream, state) {
 	  if (!state.resumeScheduled) {
 	    state.resumeScheduled = true;
-	    processNextTick(resume_, stream, state);
+	    pna.nextTick(resume_, stream, state);
 	  }
 	}
 
@@ -17491,18 +17719,19 @@ var StellarSdk =
 	// This is *not* part of the readable stream interface.
 	// It is an ugly unfortunate mess of history.
 	Readable.prototype.wrap = function (stream) {
+	  var _this = this;
+
 	  var state = this._readableState;
 	  var paused = false;
 
-	  var self = this;
 	  stream.on('end', function () {
 	    debug('wrapped end');
 	    if (state.decoder && !state.ended) {
 	      var chunk = state.decoder.end();
-	      if (chunk && chunk.length) self.push(chunk);
+	      if (chunk && chunk.length) _this.push(chunk);
 	    }
 
-	    self.push(null);
+	    _this.push(null);
 	  });
 
 	  stream.on('data', function (chunk) {
@@ -17512,7 +17741,7 @@ var StellarSdk =
 	    // don't skip over falsy values in objectMode
 	    if (state.objectMode && (chunk === null || chunk === undefined)) return;else if (!state.objectMode && (!chunk || !chunk.length)) return;
 
-	    var ret = self.push(chunk);
+	    var ret = _this.push(chunk);
 	    if (!ret) {
 	      paused = true;
 	      stream.pause();
@@ -17533,12 +17762,12 @@ var StellarSdk =
 
 	  // proxy certain important events.
 	  for (var n = 0; n < kProxyEvents.length; n++) {
-	    stream.on(kProxyEvents[n], self.emit.bind(self, kProxyEvents[n]));
+	    stream.on(kProxyEvents[n], this.emit.bind(this, kProxyEvents[n]));
 	  }
 
 	  // when we try to consume some more bytes, simply unpause the
 	  // underlying stream.
-	  self._read = function (n) {
+	  this._read = function (n) {
 	    debug('wrapped _read', n);
 	    if (paused) {
 	      paused = false;
@@ -17546,8 +17775,18 @@ var StellarSdk =
 	    }
 	  };
 
-	  return self;
+	  return this;
 	};
+
+	Object.defineProperty(Readable.prototype, 'readableHighWaterMark', {
+	  // making it explicit this property is not enumerable
+	  // because otherwise some prototype manipulation in
+	  // userland will fail
+	  enumerable: false,
+	  get: function () {
+	    return this._readableState.highWaterMark;
+	  }
+	});
 
 	// exposed for testing purposes only.
 	Readable._fromList = fromList;
@@ -17661,7 +17900,7 @@ var StellarSdk =
 
 	  if (!state.endEmitted) {
 	    state.ended = true;
-	    processNextTick(endReadableNT, state, stream);
+	    pna.nextTick(endReadableNT, state, stream);
 	  }
 	}
 
@@ -17674,12 +17913,6 @@ var StellarSdk =
 	  }
 	}
 
-	function forEach(xs, f) {
-	  for (var i = 0, l = xs.length; i < l; i++) {
-	    f(xs[i], i);
-	  }
-	}
-
 	function indexOf(xs, x) {
 	  for (var i = 0, l = xs.length; i < l; i++) {
 	    if (xs[i] === x) return i;
@@ -17689,7 +17922,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 179 */
+/* 175 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -17697,9 +17930,9 @@ var StellarSdk =
 	if (!process.version ||
 	    process.version.indexOf('v0.') === 0 ||
 	    process.version.indexOf('v1.') === 0 && process.version.indexOf('v1.8.') !== 0) {
-	  module.exports = nextTick;
+	  module.exports = { nextTick: nextTick };
 	} else {
-	  module.exports = process.nextTick;
+	  module.exports = process
 	}
 
 	function nextTick(fn, arg1, arg2, arg3) {
@@ -17736,21 +17969,22 @@ var StellarSdk =
 	  }
 	}
 
+
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 180 */
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(166).EventEmitter;
+	module.exports = __webpack_require__(162).EventEmitter;
 
 
 /***/ }),
-/* 181 */
+/* 177 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* eslint-disable node/no-deprecated-api */
-	var buffer = __webpack_require__(170)
+	var buffer = __webpack_require__(166)
 	var Buffer = buffer.Buffer
 
 	// alternative to using Object.keys for old browsers
@@ -17814,7 +18048,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 182 */
+/* 178 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// Copyright Joyent, Inc. and other Node contributors.
@@ -17925,26 +18159,24 @@ var StellarSdk =
 	  return Object.prototype.toString.call(o);
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 183 */
+/* 179 */
 /***/ (function(module, exports) {
 
 	/* (ignored) */
 
 /***/ }),
-/* 184 */
+/* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	/*<replacement>*/
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var Buffer = __webpack_require__(181).Buffer;
-	/*</replacement>*/
+	var Buffer = __webpack_require__(177).Buffer;
+	var util = __webpack_require__(181);
 
 	function copyBuffer(src, target, offset) {
 	  src.copy(target, offset);
@@ -18012,15 +18244,28 @@ var StellarSdk =
 	  return BufferList;
 	}();
 
+	if (util && util.inspect && util.inspect.custom) {
+	  module.exports.prototype[util.inspect.custom] = function () {
+	    var obj = util.inspect({ length: this.length });
+	    return this.constructor.name + ' ' + obj;
+	  };
+	}
+
 /***/ }),
-/* 185 */
+/* 181 */
+/***/ (function(module, exports) {
+
+	/* (ignored) */
+
+/***/ }),
+/* 182 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	/*<replacement>*/
 
-	var processNextTick = __webpack_require__(179);
+	var pna = __webpack_require__(175);
 	/*</replacement>*/
 
 	// undocumented cb() API, needed for core, not for public API
@@ -18034,9 +18279,9 @@ var StellarSdk =
 	    if (cb) {
 	      cb(err);
 	    } else if (err && (!this._writableState || !this._writableState.errorEmitted)) {
-	      processNextTick(emitErrorNT, this, err);
+	      pna.nextTick(emitErrorNT, this, err);
 	    }
-	    return;
+	    return this;
 	  }
 
 	  // we set destroyed to true before firing error callbacks in order
@@ -18053,7 +18298,7 @@ var StellarSdk =
 
 	  this._destroy(err || null, function (err) {
 	    if (!cb && err) {
-	      processNextTick(emitErrorNT, _this, err);
+	      pna.nextTick(emitErrorNT, _this, err);
 	      if (_this._writableState) {
 	        _this._writableState.errorEmitted = true;
 	      }
@@ -18061,6 +18306,8 @@ var StellarSdk =
 	      cb(err);
 	    }
 	  });
+
+	  return this;
 	}
 
 	function undestroy() {
@@ -18090,7 +18337,7 @@ var StellarSdk =
 	};
 
 /***/ }),
-/* 186 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -18123,7 +18370,7 @@ var StellarSdk =
 
 	/*<replacement>*/
 
-	var processNextTick = __webpack_require__(179);
+	var pna = __webpack_require__(175);
 	/*</replacement>*/
 
 	/*<replacement>*/
@@ -18138,19 +18385,22 @@ var StellarSdk =
 	module.exports = Duplex;
 
 	/*<replacement>*/
-	var util = __webpack_require__(182);
-	util.inherits = __webpack_require__(175);
+	var util = __webpack_require__(178);
+	util.inherits = __webpack_require__(171);
 	/*</replacement>*/
 
-	var Readable = __webpack_require__(178);
-	var Writable = __webpack_require__(187);
+	var Readable = __webpack_require__(174);
+	var Writable = __webpack_require__(184);
 
 	util.inherits(Duplex, Readable);
 
-	var keys = objectKeys(Writable.prototype);
-	for (var v = 0; v < keys.length; v++) {
-	  var method = keys[v];
-	  if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
+	{
+	  // avoid scope creep, the keys array can then be collected
+	  var keys = objectKeys(Writable.prototype);
+	  for (var v = 0; v < keys.length; v++) {
+	    var method = keys[v];
+	    if (!Duplex.prototype[method]) Duplex.prototype[method] = Writable.prototype[method];
+	  }
 	}
 
 	function Duplex(options) {
@@ -18169,6 +18419,16 @@ var StellarSdk =
 	  this.once('end', onend);
 	}
 
+	Object.defineProperty(Duplex.prototype, 'writableHighWaterMark', {
+	  // making it explicit this property is not enumerable
+	  // because otherwise some prototype manipulation in
+	  // userland will fail
+	  enumerable: false,
+	  get: function () {
+	    return this._writableState.highWaterMark;
+	  }
+	});
+
 	// the no-half-open enforcer
 	function onend() {
 	  // if we allow half-open state, or if the writable side ended,
@@ -18177,7 +18437,7 @@ var StellarSdk =
 
 	  // no more data can be written.
 	  // But allow more writes to happen in this tick.
-	  processNextTick(onEndNT, this);
+	  pna.nextTick(onEndNT, this);
 	}
 
 	function onEndNT(self) {
@@ -18209,17 +18469,11 @@ var StellarSdk =
 	  this.push(null);
 	  this.end();
 
-	  processNextTick(cb, err);
+	  pna.nextTick(cb, err);
 	};
 
-	function forEach(xs, f) {
-	  for (var i = 0, l = xs.length; i < l; i++) {
-	    f(xs[i], i);
-	  }
-	}
-
 /***/ }),
-/* 187 */
+/* 184 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, setImmediate, global) {// Copyright Joyent, Inc. and other Node contributors.
@@ -18251,7 +18505,7 @@ var StellarSdk =
 
 	/*<replacement>*/
 
-	var processNextTick = __webpack_require__(179);
+	var pna = __webpack_require__(175);
 	/*</replacement>*/
 
 	module.exports = Writable;
@@ -18278,7 +18532,7 @@ var StellarSdk =
 	/* </replacement> */
 
 	/*<replacement>*/
-	var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : processNextTick;
+	var asyncWrite = !process.browser && ['v0.10', 'v0.9.'].indexOf(process.version.slice(0, 5)) > -1 ? setImmediate : pna.nextTick;
 	/*</replacement>*/
 
 	/*<replacement>*/
@@ -18288,22 +18542,23 @@ var StellarSdk =
 	Writable.WritableState = WritableState;
 
 	/*<replacement>*/
-	var util = __webpack_require__(182);
-	util.inherits = __webpack_require__(175);
+	var util = __webpack_require__(178);
+	util.inherits = __webpack_require__(171);
 	/*</replacement>*/
 
 	/*<replacement>*/
 	var internalUtil = {
-	  deprecate: __webpack_require__(190)
+	  deprecate: __webpack_require__(187)
 	};
 	/*</replacement>*/
 
 	/*<replacement>*/
-	var Stream = __webpack_require__(180);
+	var Stream = __webpack_require__(176);
 	/*</replacement>*/
 
 	/*<replacement>*/
-	var Buffer = __webpack_require__(181).Buffer;
+
+	var Buffer = __webpack_require__(177).Buffer;
 	var OurUint8Array = global.Uint8Array || function () {};
 	function _uint8ArrayToBuffer(chunk) {
 	  return Buffer.from(chunk);
@@ -18311,31 +18566,41 @@ var StellarSdk =
 	function _isUint8Array(obj) {
 	  return Buffer.isBuffer(obj) || obj instanceof OurUint8Array;
 	}
+
 	/*</replacement>*/
 
-	var destroyImpl = __webpack_require__(185);
+	var destroyImpl = __webpack_require__(182);
 
 	util.inherits(Writable, Stream);
 
 	function nop() {}
 
 	function WritableState(options, stream) {
-	  Duplex = Duplex || __webpack_require__(186);
+	  Duplex = Duplex || __webpack_require__(183);
 
 	  options = options || {};
+
+	  // Duplex streams are both readable and writable, but share
+	  // the same options object.
+	  // However, some cases require setting options to different
+	  // values for the readable and the writable sides of the duplex stream.
+	  // These options can be provided separately as readableXXX and writableXXX.
+	  var isDuplex = stream instanceof Duplex;
 
 	  // object stream flag to indicate whether or not this stream
 	  // contains buffers or objects.
 	  this.objectMode = !!options.objectMode;
 
-	  if (stream instanceof Duplex) this.objectMode = this.objectMode || !!options.writableObjectMode;
+	  if (isDuplex) this.objectMode = this.objectMode || !!options.writableObjectMode;
 
 	  // the point at which write() starts returning false
 	  // Note: 0 is a valid value, means that we always return false if
 	  // the entire buffer is not flushed immediately on write()
 	  var hwm = options.highWaterMark;
+	  var writableHwm = options.writableHighWaterMark;
 	  var defaultHwm = this.objectMode ? 16 : 16 * 1024;
-	  this.highWaterMark = hwm || hwm === 0 ? hwm : defaultHwm;
+
+	  if (hwm || hwm === 0) this.highWaterMark = hwm;else if (isDuplex && (writableHwm || writableHwm === 0)) this.highWaterMark = writableHwm;else this.highWaterMark = defaultHwm;
 
 	  // cast to ints.
 	  this.highWaterMark = Math.floor(this.highWaterMark);
@@ -18449,6 +18714,7 @@ var StellarSdk =
 	  Object.defineProperty(Writable, Symbol.hasInstance, {
 	    value: function (object) {
 	      if (realHasInstance.call(this, object)) return true;
+	      if (this !== Writable) return false;
 
 	      return object && object._writableState instanceof WritableState;
 	    }
@@ -18460,7 +18726,7 @@ var StellarSdk =
 	}
 
 	function Writable(options) {
-	  Duplex = Duplex || __webpack_require__(186);
+	  Duplex = Duplex || __webpack_require__(183);
 
 	  // Writable ctor is applied to Duplexes, too.
 	  // `realHasInstance` is necessary because using plain `instanceof`
@@ -18500,7 +18766,7 @@ var StellarSdk =
 	  var er = new Error('write after end');
 	  // TODO: defer error events consistently everywhere, not just the cb
 	  stream.emit('error', er);
-	  processNextTick(cb, er);
+	  pna.nextTick(cb, er);
 	}
 
 	// Checks that a user-supplied chunk is valid, especially for the particular
@@ -18517,7 +18783,7 @@ var StellarSdk =
 	  }
 	  if (er) {
 	    stream.emit('error', er);
-	    processNextTick(cb, er);
+	    pna.nextTick(cb, er);
 	    valid = false;
 	  }
 	  return valid;
@@ -18526,7 +18792,7 @@ var StellarSdk =
 	Writable.prototype.write = function (chunk, encoding, cb) {
 	  var state = this._writableState;
 	  var ret = false;
-	  var isBuf = _isUint8Array(chunk) && !state.objectMode;
+	  var isBuf = !state.objectMode && _isUint8Array(chunk);
 
 	  if (isBuf && !Buffer.isBuffer(chunk)) {
 	    chunk = _uint8ArrayToBuffer(chunk);
@@ -18579,6 +18845,16 @@ var StellarSdk =
 	  }
 	  return chunk;
 	}
+
+	Object.defineProperty(Writable.prototype, 'writableHighWaterMark', {
+	  // making it explicit this property is not enumerable
+	  // because otherwise some prototype manipulation in
+	  // userland will fail
+	  enumerable: false,
+	  get: function () {
+	    return this._writableState.highWaterMark;
+	  }
+	});
 
 	// if we're already writing something, then just put this
 	// in the queue, and wait our turn.  Otherwise, call _write
@@ -18637,10 +18913,10 @@ var StellarSdk =
 	  if (sync) {
 	    // defer the callback if we are being called synchronously
 	    // to avoid piling up things on the stack
-	    processNextTick(cb, er);
+	    pna.nextTick(cb, er);
 	    // this can emit finish, and it will always happen
 	    // after error
-	    processNextTick(finishMaybe, stream, state);
+	    pna.nextTick(finishMaybe, stream, state);
 	    stream._writableState.errorEmitted = true;
 	    stream.emit('error', er);
 	  } else {
@@ -18738,6 +19014,7 @@ var StellarSdk =
 	    } else {
 	      state.corkedRequestsFree = new CorkedRequest(state);
 	    }
+	    state.bufferedRequestCount = 0;
 	  } else {
 	    // Slow case, write chunks one-by-one
 	    while (entry) {
@@ -18748,6 +19025,7 @@ var StellarSdk =
 
 	      doWrite(stream, state, false, len, chunk, encoding, cb);
 	      entry = entry.next;
+	      state.bufferedRequestCount--;
 	      // if we didn't call the onwrite immediately, then
 	      // it means that we need to wait until it does.
 	      // also, that means that the chunk and cb are currently
@@ -18760,7 +19038,6 @@ var StellarSdk =
 	    if (entry === null) state.lastBufferedRequest = null;
 	  }
 
-	  state.bufferedRequestCount = 0;
 	  state.bufferedRequest = entry;
 	  state.bufferProcessing = false;
 	}
@@ -18814,7 +19091,7 @@ var StellarSdk =
 	    if (typeof stream._final === 'function') {
 	      state.pendingcb++;
 	      state.finalCalled = true;
-	      processNextTick(callFinal, stream, state);
+	      pna.nextTick(callFinal, stream, state);
 	    } else {
 	      state.prefinished = true;
 	      stream.emit('prefinish');
@@ -18838,7 +19115,7 @@ var StellarSdk =
 	  state.ending = true;
 	  finishMaybe(stream, state);
 	  if (cb) {
-	    if (state.finished) processNextTick(cb);else stream.once('finish', cb);
+	    if (state.finished) pna.nextTick(cb);else stream.once('finish', cb);
 	  }
 	  state.ended = true;
 	  stream.writable = false;
@@ -18886,21 +19163,24 @@ var StellarSdk =
 	  this.end();
 	  cb(err);
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(188).setImmediate, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(185).setImmediate, (function() { return this; }())))
 
 /***/ }),
-/* 188 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
+	/* WEBPACK VAR INJECTION */(function(global) {var scope = (typeof global !== "undefined" && global) ||
+	            (typeof self !== "undefined" && self) ||
+	            window;
 	var apply = Function.prototype.apply;
 
 	// DOM APIs, for completeness
 
 	exports.setTimeout = function() {
-	  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+	  return new Timeout(apply.call(setTimeout, scope, arguments), clearTimeout);
 	};
 	exports.setInterval = function() {
-	  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+	  return new Timeout(apply.call(setInterval, scope, arguments), clearInterval);
 	};
 	exports.clearTimeout =
 	exports.clearInterval = function(timeout) {
@@ -18915,7 +19195,7 @@ var StellarSdk =
 	}
 	Timeout.prototype.unref = Timeout.prototype.ref = function() {};
 	Timeout.prototype.close = function() {
-	  this._clearFn.call(window, this._id);
+	  this._clearFn.call(scope, this._id);
 	};
 
 	// Does not start the time, just sets up the members needed.
@@ -18942,13 +19222,21 @@ var StellarSdk =
 	};
 
 	// setimmediate attaches itself to the global object
-	__webpack_require__(189);
-	exports.setImmediate = setImmediate;
-	exports.clearImmediate = clearImmediate;
+	__webpack_require__(186);
+	// On some exotic environments, it's not clear which object `setimmediate` was
+	// able to install onto.  Search each possibility in the same order as the
+	// `setimmediate` library.
+	exports.setImmediate = (typeof self !== "undefined" && self.setImmediate) ||
+	                       (typeof global !== "undefined" && global.setImmediate) ||
+	                       (this && this.setImmediate);
+	exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
+	                         (typeof global !== "undefined" && global.clearImmediate) ||
+	                         (this && this.clearImmediate);
 
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 189 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -19141,7 +19429,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 190 */
+/* 187 */
 /***/ (function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -19215,12 +19503,36 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 191 */
+/* 188 */
 /***/ (function(module, exports, __webpack_require__) {
+
+	// Copyright Joyent, Inc. and other Node contributors.
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a
+	// copy of this software and associated documentation files (the
+	// "Software"), to deal in the Software without restriction, including
+	// without limitation the rights to use, copy, modify, merge, publish,
+	// distribute, sublicense, and/or sell copies of the Software, and to permit
+	// persons to whom the Software is furnished to do so, subject to the
+	// following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included
+	// in all copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+	// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 	'use strict';
 
-	var Buffer = __webpack_require__(181).Buffer;
+	/*<replacement>*/
+
+	var Buffer = __webpack_require__(177).Buffer;
+	/*</replacement>*/
 
 	var isEncoding = Buffer.isEncoding || function (encoding) {
 	  encoding = '' + encoding;
@@ -19332,10 +19644,10 @@ var StellarSdk =
 	};
 
 	// Checks the type of a UTF-8 byte, whether it's ASCII, a leading byte, or a
-	// continuation byte.
+	// continuation byte. If an invalid byte is detected, -2 is returned.
 	function utf8CheckByte(byte) {
 	  if (byte <= 0x7F) return 0;else if (byte >> 5 === 0x06) return 2;else if (byte >> 4 === 0x0E) return 3;else if (byte >> 3 === 0x1E) return 4;
-	  return -1;
+	  return byte >> 6 === 0x02 ? -1 : -2;
 	}
 
 	// Checks at most 3 bytes at the end of a Buffer in order to detect an
@@ -19349,13 +19661,13 @@ var StellarSdk =
 	    if (nb > 0) self.lastNeed = nb - 1;
 	    return nb;
 	  }
-	  if (--j < i) return 0;
+	  if (--j < i || nb === -2) return 0;
 	  nb = utf8CheckByte(buf[j]);
 	  if (nb >= 0) {
 	    if (nb > 0) self.lastNeed = nb - 2;
 	    return nb;
 	  }
-	  if (--j < i) return 0;
+	  if (--j < i || nb === -2) return 0;
 	  nb = utf8CheckByte(buf[j]);
 	  if (nb >= 0) {
 	    if (nb > 0) {
@@ -19369,7 +19681,7 @@ var StellarSdk =
 	// Validates as many continuation bytes for a multi-byte UTF-8 character as
 	// needed or are available. If we see a non-continuation byte where we expect
 	// one, we "replace" the validated continuation bytes we've seen so far with
-	// UTF-8 replacement characters ('\ufffd'), to match v8's UTF-8 decoding
+	// a single UTF-8 replacement character ('\ufffd'), to match v8's UTF-8 decoding
 	// behavior. The continuation byte check is included three times in the case
 	// where all of the continuation bytes for a character exist in the same buffer.
 	// It is also done this way as a slight performance increase instead of using a
@@ -19377,17 +19689,17 @@ var StellarSdk =
 	function utf8CheckExtraBytes(self, buf, p) {
 	  if ((buf[0] & 0xC0) !== 0x80) {
 	    self.lastNeed = 0;
-	    return '\ufffd'.repeat(p);
+	    return '\ufffd';
 	  }
 	  if (self.lastNeed > 1 && buf.length > 1) {
 	    if ((buf[1] & 0xC0) !== 0x80) {
 	      self.lastNeed = 1;
-	      return '\ufffd'.repeat(p + 1);
+	      return '\ufffd';
 	    }
 	    if (self.lastNeed > 2 && buf.length > 2) {
 	      if ((buf[2] & 0xC0) !== 0x80) {
 	        self.lastNeed = 2;
-	        return '\ufffd'.repeat(p + 2);
+	        return '\ufffd';
 	      }
 	    }
 	  }
@@ -19418,11 +19730,11 @@ var StellarSdk =
 	  return buf.toString('utf8', i, end);
 	}
 
-	// For UTF-8, a replacement character for each buffered byte of a (partial)
-	// character needs to be added to the output.
+	// For UTF-8, a replacement character is added when ending on a partial
+	// character.
 	function utf8End(buf) {
 	  var r = buf && buf.length ? this.write(buf) : '';
-	  if (this.lastNeed) return r + '\ufffd'.repeat(this.lastTotal - this.lastNeed);
+	  if (this.lastNeed) return r + '\ufffd';
 	  return r;
 	}
 
@@ -19492,7 +19804,7 @@ var StellarSdk =
 	}
 
 /***/ }),
-/* 192 */
+/* 189 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -19562,48 +19874,37 @@ var StellarSdk =
 
 	module.exports = Transform;
 
-	var Duplex = __webpack_require__(186);
+	var Duplex = __webpack_require__(183);
 
 	/*<replacement>*/
-	var util = __webpack_require__(182);
-	util.inherits = __webpack_require__(175);
+	var util = __webpack_require__(178);
+	util.inherits = __webpack_require__(171);
 	/*</replacement>*/
 
 	util.inherits(Transform, Duplex);
 
-	function TransformState(stream) {
-	  this.afterTransform = function (er, data) {
-	    return afterTransform(stream, er, data);
-	  };
-
-	  this.needTransform = false;
-	  this.transforming = false;
-	  this.writecb = null;
-	  this.writechunk = null;
-	  this.writeencoding = null;
-	}
-
-	function afterTransform(stream, er, data) {
-	  var ts = stream._transformState;
+	function afterTransform(er, data) {
+	  var ts = this._transformState;
 	  ts.transforming = false;
 
 	  var cb = ts.writecb;
 
 	  if (!cb) {
-	    return stream.emit('error', new Error('write callback called multiple times'));
+	    return this.emit('error', new Error('write callback called multiple times'));
 	  }
 
 	  ts.writechunk = null;
 	  ts.writecb = null;
 
-	  if (data !== null && data !== undefined) stream.push(data);
+	  if (data != null) // single equals check for both `null` and `undefined`
+	    this.push(data);
 
 	  cb(er);
 
-	  var rs = stream._readableState;
+	  var rs = this._readableState;
 	  rs.reading = false;
 	  if (rs.needReadable || rs.length < rs.highWaterMark) {
-	    stream._read(rs.highWaterMark);
+	    this._read(rs.highWaterMark);
 	  }
 	}
 
@@ -19612,9 +19913,14 @@ var StellarSdk =
 
 	  Duplex.call(this, options);
 
-	  this._transformState = new TransformState(this);
-
-	  var stream = this;
+	  this._transformState = {
+	    afterTransform: afterTransform.bind(this),
+	    needTransform: false,
+	    transforming: false,
+	    writecb: null,
+	    writechunk: null,
+	    writeencoding: null
+	  };
 
 	  // start out asking for a readable event once data is transformed.
 	  this._readableState.needReadable = true;
@@ -19631,11 +19937,19 @@ var StellarSdk =
 	  }
 
 	  // When the writable side finishes, then flush out anything remaining.
-	  this.once('prefinish', function () {
-	    if (typeof this._flush === 'function') this._flush(function (er, data) {
-	      done(stream, er, data);
-	    });else done(stream);
-	  });
+	  this.on('prefinish', prefinish);
+	}
+
+	function prefinish() {
+	  var _this = this;
+
+	  if (typeof this._flush === 'function') {
+	    this._flush(function (er, data) {
+	      done(_this, er, data);
+	    });
+	  } else {
+	    done(this, null, null);
+	  }
 	}
 
 	Transform.prototype.push = function (chunk, encoding) {
@@ -19685,33 +19999,31 @@ var StellarSdk =
 	};
 
 	Transform.prototype._destroy = function (err, cb) {
-	  var _this = this;
+	  var _this2 = this;
 
 	  Duplex.prototype._destroy.call(this, err, function (err2) {
 	    cb(err2);
-	    _this.emit('close');
+	    _this2.emit('close');
 	  });
 	};
 
 	function done(stream, er, data) {
 	  if (er) return stream.emit('error', er);
 
-	  if (data !== null && data !== undefined) stream.push(data);
+	  if (data != null) // single equals check for both `null` and `undefined`
+	    stream.push(data);
 
 	  // if there's nothing in the write buffer, then that means
 	  // that nothing more will ever be provided
-	  var ws = stream._writableState;
-	  var ts = stream._transformState;
+	  if (stream._writableState.length) throw new Error('Calling transform done when ws.length != 0');
 
-	  if (ws.length) throw new Error('Calling transform done when ws.length != 0');
-
-	  if (ts.transforming) throw new Error('Calling transform done when still transforming');
+	  if (stream._transformState.transforming) throw new Error('Calling transform done when still transforming');
 
 	  return stream.push(null);
 	}
 
 /***/ }),
-/* 193 */
+/* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -19743,11 +20055,11 @@ var StellarSdk =
 
 	module.exports = PassThrough;
 
-	var Transform = __webpack_require__(192);
+	var Transform = __webpack_require__(189);
 
 	/*<replacement>*/
-	var util = __webpack_require__(182);
-	util.inherits = __webpack_require__(175);
+	var util = __webpack_require__(178);
+	util.inherits = __webpack_require__(171);
 	/*</replacement>*/
 
 	util.inherits(PassThrough, Transform);
@@ -19763,10 +20075,10 @@ var StellarSdk =
 	};
 
 /***/ }),
-/* 194 */
+/* 191 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var Buffer = __webpack_require__(170).Buffer
+	var Buffer = __webpack_require__(166).Buffer
 
 	module.exports = function (buf) {
 		// If the buffer is backed by a Uint8Array, a faster version will work
@@ -19796,7 +20108,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 195 */
+/* 192 */
 /***/ (function(module, exports) {
 
 	module.exports = extend
@@ -19821,7 +20133,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 196 */
+/* 193 */
 /***/ (function(module, exports) {
 
 	module.exports = {
@@ -19891,7 +20203,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 197 */
+/* 194 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -20419,7 +20731,7 @@ var StellarSdk =
 	}
 	exports.isPrimitive = isPrimitive;
 
-	exports.isBuffer = __webpack_require__(198);
+	exports.isBuffer = __webpack_require__(195);
 
 	function objectToString(o) {
 	  return Object.prototype.toString.call(o);
@@ -20463,7 +20775,7 @@ var StellarSdk =
 	 *     prototype.
 	 * @param {function} superCtor Constructor function to inherit prototype from.
 	 */
-	exports.inherits = __webpack_require__(199);
+	exports.inherits = __webpack_require__(196);
 
 	exports._extend = function(origin, add) {
 	  // Don't do anything if add isn't an object
@@ -20484,7 +20796,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 198 */
+/* 195 */
 /***/ (function(module, exports) {
 
 	module.exports = function isBuffer(arg) {
@@ -20495,7 +20807,7 @@ var StellarSdk =
 	}
 
 /***/ }),
-/* 199 */
+/* 196 */
 /***/ (function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -20524,7 +20836,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 200 */
+/* 197 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -20535,13 +20847,13 @@ var StellarSdk =
 	    catch (e) {}
 	    return bluebird;
 	}
-	var bluebird = __webpack_require__(201)();
+	var bluebird = __webpack_require__(198)();
 	bluebird.noConflict = noConflict;
 	module.exports = bluebird;
 
 
 /***/ }),
-/* 201 */
+/* 198 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {"use strict";
@@ -20557,7 +20869,7 @@ var StellarSdk =
 	};
 	function Proxyable() {}
 	var UNDEFINED_BINDING = {};
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 
 	var getDomain;
 	if (util.isNode) {
@@ -20573,11 +20885,11 @@ var StellarSdk =
 	}
 	util.notEnumerableProp(Promise, "_getDomain", getDomain);
 
-	var es5 = __webpack_require__(203);
-	var Async = __webpack_require__(204);
+	var es5 = __webpack_require__(200);
+	var Async = __webpack_require__(201);
 	var async = new Async();
 	es5.defineProperty(Promise, "_async", {value: async});
-	var errors = __webpack_require__(207);
+	var errors = __webpack_require__(204);
 	var TypeError = Promise.TypeError = errors.TypeError;
 	Promise.RangeError = errors.RangeError;
 	var CancellationError = Promise.CancellationError = errors.CancellationError;
@@ -20588,19 +20900,19 @@ var StellarSdk =
 	var INTERNAL = function(){};
 	var APPLY = {};
 	var NEXT_FILTER = {};
-	var tryConvertToPromise = __webpack_require__(208)(Promise, INTERNAL);
+	var tryConvertToPromise = __webpack_require__(205)(Promise, INTERNAL);
 	var PromiseArray =
-	    __webpack_require__(209)(Promise, INTERNAL,
+	    __webpack_require__(206)(Promise, INTERNAL,
 	                               tryConvertToPromise, apiRejection, Proxyable);
-	var Context = __webpack_require__(210)(Promise);
+	var Context = __webpack_require__(207)(Promise);
 	 /*jshint unused:false*/
 	var createContext = Context.create;
-	var debug = __webpack_require__(211)(Promise, Context);
+	var debug = __webpack_require__(208)(Promise, Context);
 	var CapturedTrace = debug.CapturedTrace;
 	var PassThroughHandlerContext =
-	    __webpack_require__(212)(Promise, tryConvertToPromise, NEXT_FILTER);
-	var catchFilter = __webpack_require__(213)(NEXT_FILTER);
-	var nodebackForPromise = __webpack_require__(214);
+	    __webpack_require__(209)(Promise, tryConvertToPromise, NEXT_FILTER);
+	var catchFilter = __webpack_require__(210)(NEXT_FILTER);
+	var nodebackForPromise = __webpack_require__(211);
 	var errorObj = util.errorObj;
 	var tryCatch = util.tryCatch;
 	function check(self, executor) {
@@ -21270,31 +21582,31 @@ var StellarSdk =
 	                       "_makeSelfResolutionError",
 	                       makeSelfResolutionError);
 
-	__webpack_require__(215)(Promise, INTERNAL, tryConvertToPromise, apiRejection,
+	__webpack_require__(212)(Promise, INTERNAL, tryConvertToPromise, apiRejection,
 	    debug);
-	__webpack_require__(216)(Promise, INTERNAL, tryConvertToPromise, debug);
-	__webpack_require__(217)(Promise, PromiseArray, apiRejection, debug);
-	__webpack_require__(218)(Promise);
-	__webpack_require__(219)(Promise);
-	__webpack_require__(220)(
+	__webpack_require__(213)(Promise, INTERNAL, tryConvertToPromise, debug);
+	__webpack_require__(214)(Promise, PromiseArray, apiRejection, debug);
+	__webpack_require__(215)(Promise);
+	__webpack_require__(216)(Promise);
+	__webpack_require__(217)(
 	    Promise, PromiseArray, tryConvertToPromise, INTERNAL, async, getDomain);
 	Promise.Promise = Promise;
 	Promise.version = "3.5.1";
-	__webpack_require__(221)(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
-	__webpack_require__(222)(Promise);
-	__webpack_require__(223)(Promise, apiRejection, tryConvertToPromise, createContext, INTERNAL, debug);
-	__webpack_require__(224)(Promise, INTERNAL, debug);
-	__webpack_require__(225)(Promise, apiRejection, INTERNAL, tryConvertToPromise, Proxyable, debug);
-	__webpack_require__(226)(Promise);
-	__webpack_require__(227)(Promise, INTERNAL);
-	__webpack_require__(228)(Promise, PromiseArray, tryConvertToPromise, apiRejection);
-	__webpack_require__(229)(Promise, INTERNAL, tryConvertToPromise, apiRejection);
-	__webpack_require__(230)(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
-	__webpack_require__(231)(Promise, PromiseArray, debug);
-	__webpack_require__(232)(Promise, PromiseArray, apiRejection);
-	__webpack_require__(233)(Promise, INTERNAL);
-	__webpack_require__(234)(Promise, INTERNAL);
-	__webpack_require__(235)(Promise);
+	__webpack_require__(218)(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
+	__webpack_require__(219)(Promise);
+	__webpack_require__(220)(Promise, apiRejection, tryConvertToPromise, createContext, INTERNAL, debug);
+	__webpack_require__(221)(Promise, INTERNAL, debug);
+	__webpack_require__(222)(Promise, apiRejection, INTERNAL, tryConvertToPromise, Proxyable, debug);
+	__webpack_require__(223)(Promise);
+	__webpack_require__(224)(Promise, INTERNAL);
+	__webpack_require__(225)(Promise, PromiseArray, tryConvertToPromise, apiRejection);
+	__webpack_require__(226)(Promise, INTERNAL, tryConvertToPromise, apiRejection);
+	__webpack_require__(227)(Promise, PromiseArray, apiRejection, tryConvertToPromise, INTERNAL, debug);
+	__webpack_require__(228)(Promise, PromiseArray, debug);
+	__webpack_require__(229)(Promise, PromiseArray, apiRejection);
+	__webpack_require__(230)(Promise, INTERNAL);
+	__webpack_require__(231)(Promise, INTERNAL);
+	__webpack_require__(232)(Promise);
 	                                                         
 	    util.toFastProperties(Promise);                                          
 	    util.toFastProperties(Promise.prototype);                                
@@ -21323,11 +21635,11 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 202 */
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {"use strict";
-	var es5 = __webpack_require__(203);
+	var es5 = __webpack_require__(200);
 	var canEvaluate = typeof navigator == "undefined";
 
 	var errorObj = {e: {}};
@@ -21710,7 +22022,7 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 203 */
+/* 200 */
 /***/ (function(module, exports) {
 
 	var isES5 = (function(){
@@ -21796,15 +22108,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 204 */
+/* 201 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {"use strict";
 	var firstLineError;
 	try {throw new Error(); } catch (e) {firstLineError = e;}
-	var schedule = __webpack_require__(205);
-	var Queue = __webpack_require__(206);
-	var util = __webpack_require__(202);
+	var schedule = __webpack_require__(202);
+	var Queue = __webpack_require__(203);
+	var util = __webpack_require__(199);
 
 	function Async() {
 	    this._customScheduler = false;
@@ -21964,11 +22276,11 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 205 */
+/* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process, setImmediate) {"use strict";
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var schedule;
 	var noAsyncScheduler = function() {
 	    throw new Error("No async scheduler available\u000a\u000a    See http://goo.gl/MqrFmX\u000a");
@@ -22029,10 +22341,10 @@ var StellarSdk =
 	}
 	module.exports = schedule;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3), __webpack_require__(188).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3), __webpack_require__(185).setImmediate))
 
 /***/ }),
-/* 206 */
+/* 203 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -22111,13 +22423,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 207 */
+/* 204 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var es5 = __webpack_require__(203);
+	var es5 = __webpack_require__(200);
 	var Objectfreeze = es5.freeze;
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var inherits = util.inherits;
 	var notEnumerableProp = util.notEnumerableProp;
 
@@ -22233,12 +22545,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 208 */
+/* 205 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var errorObj = util.errorObj;
 	var isObject = util.isObject;
 
@@ -22325,13 +22637,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 209 */
+/* 206 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise, INTERNAL, tryConvertToPromise,
 	    apiRejection, Proxyable) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var isArray = util.isArray;
 
 	function toResolutionValue(val) {
@@ -22516,7 +22828,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 210 */
+/* 207 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -22591,15 +22903,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 211 */
+/* 208 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {"use strict";
 	module.exports = function(Promise, Context) {
 	var getDomain = Promise._getDomain;
 	var async = Promise._async;
-	var Warning = __webpack_require__(207).Warning;
-	var util = __webpack_require__(202);
+	var Warning = __webpack_require__(204).Warning;
+	var util = __webpack_require__(199);
 	var canAttachTrace = util.canAttachTrace;
 	var unhandledRejectionHandled;
 	var possiblyUnhandledRejection;
@@ -23517,15 +23829,15 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 212 */
+/* 209 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise, tryConvertToPromise, NEXT_FILTER) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var CancellationError = Promise.CancellationError;
 	var errorObj = util.errorObj;
-	var catchFilter = __webpack_require__(213)(NEXT_FILTER);
+	var catchFilter = __webpack_require__(210)(NEXT_FILTER);
 
 	function PassThroughHandlerContext(promise, type, handler) {
 	    this.promise = promise;
@@ -23669,13 +23981,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 213 */
+/* 210 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(NEXT_FILTER) {
-	var util = __webpack_require__(202);
-	var getKeys = __webpack_require__(203).keys;
+	var util = __webpack_require__(199);
+	var getKeys = __webpack_require__(200).keys;
 	var tryCatch = util.tryCatch;
 	var errorObj = util.errorObj;
 
@@ -23717,15 +24029,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 214 */
+/* 211 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var maybeWrapAsError = util.maybeWrapAsError;
-	var errors = __webpack_require__(207);
+	var errors = __webpack_require__(204);
 	var OperationalError = errors.OperationalError;
-	var es5 = __webpack_require__(203);
+	var es5 = __webpack_require__(200);
 
 	function isUntypedError(obj) {
 	    return obj instanceof Error &&
@@ -23774,13 +24086,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 215 */
+/* 212 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports =
 	function(Promise, INTERNAL, tryConvertToPromise, apiRejection, debug) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var tryCatch = util.tryCatch;
 
 	Promise.method = function (fn) {
@@ -23835,7 +24147,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 216 */
+/* 213 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -23908,12 +24220,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 217 */
+/* 214 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise, PromiseArray, apiRejection, debug) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var tryCatch = util.tryCatch;
 	var errorObj = util.errorObj;
 	var async = Promise._async;
@@ -24043,7 +24355,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 218 */
+/* 215 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -24095,7 +24407,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 219 */
+/* 216 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -24204,14 +24516,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 220 */
+/* 217 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports =
 	function(Promise, PromiseArray, tryConvertToPromise, INTERNAL, async,
 	         getDomain) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var canEvaluate = util.canEvaluate;
 	var tryCatch = util.tryCatch;
 	var errorObj = util.errorObj;
@@ -24378,7 +24690,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 221 */
+/* 218 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24389,7 +24701,7 @@ var StellarSdk =
 	                          INTERNAL,
 	                          debug) {
 	var getDomain = Promise._getDomain;
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var tryCatch = util.tryCatch;
 	var errorObj = util.errorObj;
 	var async = Promise._async;
@@ -24552,7 +24864,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 222 */
+/* 219 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -24564,7 +24876,7 @@ var StellarSdk =
 	}
 
 	module.exports = function(Promise) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var canEvaluate = util.canEvaluate;
 	var isIdentifier = util.isIdentifier;
 
@@ -24681,15 +24993,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 223 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function (Promise, apiRejection, tryConvertToPromise,
 	    createContext, INTERNAL, debug) {
-	    var util = __webpack_require__(202);
-	    var TypeError = __webpack_require__(207).TypeError;
-	    var inherits = __webpack_require__(202).inherits;
+	    var util = __webpack_require__(199);
+	    var TypeError = __webpack_require__(204).TypeError;
+	    var inherits = __webpack_require__(199).inherits;
 	    var errorObj = util.errorObj;
 	    var tryCatch = util.tryCatch;
 	    var NULL = {};
@@ -24913,12 +25225,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 224 */
+/* 221 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise, INTERNAL, debug) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var TimeoutError = Promise.TimeoutError;
 
 	function HandleWrapper(handle)  {
@@ -25012,7 +25324,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 225 */
+/* 222 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -25022,9 +25334,9 @@ var StellarSdk =
 	                          tryConvertToPromise,
 	                          Proxyable,
 	                          debug) {
-	var errors = __webpack_require__(207);
+	var errors = __webpack_require__(204);
 	var TypeError = errors.TypeError;
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var errorObj = util.errorObj;
 	var tryCatch = util.tryCatch;
 	var yieldHandlers = [];
@@ -25241,12 +25553,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 226 */
+/* 223 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var async = Promise._async;
 	var tryCatch = util.tryCatch;
 	var errorObj = util.errorObj;
@@ -25305,18 +25617,18 @@ var StellarSdk =
 
 
 /***/ }),
-/* 227 */
+/* 224 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(Promise, INTERNAL) {
 	var THIS = {};
-	var util = __webpack_require__(202);
-	var nodebackForPromise = __webpack_require__(214);
+	var util = __webpack_require__(199);
+	var nodebackForPromise = __webpack_require__(211);
 	var withAppended = util.withAppended;
 	var maybeWrapAsError = util.maybeWrapAsError;
 	var canEvaluate = util.canEvaluate;
-	var TypeError = __webpack_require__(207).TypeError;
+	var TypeError = __webpack_require__(204).TypeError;
 	var defaultSuffix = "Async";
 	var defaultPromisified = {__isPromisified__: true};
 	var noCopyProps = [
@@ -25625,15 +25937,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 228 */
+/* 225 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(
 	    Promise, PromiseArray, tryConvertToPromise, apiRejection) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var isObject = util.isObject;
-	var es5 = __webpack_require__(203);
+	var es5 = __webpack_require__(200);
 	var Es6Map;
 	if (typeof Map === "function") Es6Map = Map;
 
@@ -25749,13 +26061,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 229 */
+/* 226 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports = function(
 	    Promise, INTERNAL, tryConvertToPromise, apiRejection) {
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 
 	var raceLater = function (promise) {
 	    return promise.then(function(array) {
@@ -25804,7 +26116,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 230 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -25815,7 +26127,7 @@ var StellarSdk =
 	                          INTERNAL,
 	                          debug) {
 	var getDomain = Promise._getDomain;
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 	var tryCatch = util.tryCatch;
 
 	function ReductionPromiseArray(promises, fn, initialValue, _each) {
@@ -25982,14 +26294,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 231 */
+/* 228 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports =
 	    function(Promise, PromiseArray, debug) {
 	var PromiseInspection = Promise.PromiseInspection;
-	var util = __webpack_require__(202);
+	var util = __webpack_require__(199);
 
 	function SettledPromiseArray(values) {
 	    this.constructor$(values);
@@ -26031,15 +26343,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 232 */
+/* 229 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	module.exports =
 	function(Promise, PromiseArray, apiRejection) {
-	var util = __webpack_require__(202);
-	var RangeError = __webpack_require__(207).RangeError;
-	var AggregateError = __webpack_require__(207).AggregateError;
+	var util = __webpack_require__(199);
+	var RangeError = __webpack_require__(204).RangeError;
+	var AggregateError = __webpack_require__(204).AggregateError;
 	var isArray = util.isArray;
 	var CANCELLATION = {};
 
@@ -26185,7 +26497,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 233 */
+/* 230 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -26203,7 +26515,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 234 */
+/* 231 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -26239,7 +26551,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 235 */
+/* 232 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -26266,7 +26578,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 236 */
+/* 233 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -26281,9 +26593,9 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _stellarBase = __webpack_require__(237);
+	var _stellarBase = __webpack_require__(234);
 
-	var _lodashForIn = __webpack_require__(419);
+	var _lodashForIn = __webpack_require__(409);
 
 	var _lodashForIn2 = _interopRequireDefault(_lodashForIn);
 
@@ -26349,7 +26661,7 @@ var StellarSdk =
 	exports.AccountResponse = AccountResponse;
 
 /***/ }),
-/* 237 */
+/* 234 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -26364,2475 +26676,111 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(238));
+	var xdr = _interopRequire(__webpack_require__(235));
 
 	exports.xdr = xdr;
-	exports.hash = __webpack_require__(277).hash;
+	exports.hash = __webpack_require__(265).hash;
 
-	var _signing = __webpack_require__(286);
+	var _signing = __webpack_require__(274);
 
 	exports.sign = _signing.sign;
 	exports.verify = _signing.verify;
 	exports.FastSigning = _signing.FastSigning;
-	exports.Keypair = __webpack_require__(289).Keypair;
+	exports.Keypair = __webpack_require__(277).Keypair;
 
-	var _jsXdr = __webpack_require__(239);
+	var _jsXdr = __webpack_require__(236);
 
 	exports.UnsignedHyper = _jsXdr.UnsignedHyper;
 	exports.Hyper = _jsXdr.Hyper;
-	exports.Transaction = __webpack_require__(324).Transaction;
-	exports.TransactionBuilder = __webpack_require__(417).TransactionBuilder;
-	exports.Asset = __webpack_require__(326).Asset;
+	exports.Transaction = __webpack_require__(312).Transaction;
+	exports.TransactionBuilder = __webpack_require__(407).TransactionBuilder;
+	exports.Asset = __webpack_require__(314).Asset;
 
-	var _operation = __webpack_require__(325);
+	var _operation = __webpack_require__(313);
 
 	exports.Operation = _operation.Operation;
 	exports.AuthRequiredFlag = _operation.AuthRequiredFlag;
 	exports.AuthRevocableFlag = _operation.AuthRevocableFlag;
 	exports.AuthImmutableFlag = _operation.AuthImmutableFlag;
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(349)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(337)));
 
-	exports.Account = __webpack_require__(418).Account;
+	exports.Account = __webpack_require__(408).Account;
 
-	var _network = __webpack_require__(290);
+	var _network = __webpack_require__(278);
 
 	exports.Network = _network.Network;
 	exports.Networks = _network.Networks;
-	exports.StrKey = __webpack_require__(295).StrKey;
+	exports.StrKey = __webpack_require__(283).StrKey;
 	exports["default"] = module.exports;
 
 /***/ }),
-/* 238 */
+/* 235 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	"use strict";var _interopRequireWildcard=function(obj){return obj && obj.__esModule?obj:{"default":obj};};var XDR=_interopRequireWildcard(__webpack_require__(239));var types=XDR.config(function(xdr){xdr.typedef("Value", xdr.varOpaque());xdr.struct("ScpBallot", [["counter", xdr.lookup("Uint32")], ["value", xdr.lookup("Value")]]);xdr["enum"]("ScpStatementType", {scpStPrepare:0, scpStConfirm:1, scpStExternalize:2, scpStNominate:3});xdr.struct("ScpNomination", [["quorumSetHash", xdr.lookup("Hash")], ["votes", xdr.varArray(xdr.lookup("Value"), 2147483647)], ["accepted", xdr.varArray(xdr.lookup("Value"), 2147483647)]]);xdr.struct("ScpStatementPrepare", [["quorumSetHash", xdr.lookup("Hash")], ["ballot", xdr.lookup("ScpBallot")], ["prepared", xdr.option(xdr.lookup("ScpBallot"))], ["preparedPrime", xdr.option(xdr.lookup("ScpBallot"))], ["nC", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")]]);xdr.struct("ScpStatementConfirm", [["ballot", xdr.lookup("ScpBallot")], ["nPrepared", xdr.lookup("Uint32")], ["nCommit", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")], ["quorumSetHash", xdr.lookup("Hash")]]);xdr.struct("ScpStatementExternalize", [["commit", xdr.lookup("ScpBallot")], ["nH", xdr.lookup("Uint32")], ["commitQuorumSetHash", xdr.lookup("Hash")]]);xdr.union("ScpStatementPledges", {switchOn:xdr.lookup("ScpStatementType"), switchName:"type", switches:[["scpStPrepare", "prepare"], ["scpStConfirm", "confirm"], ["scpStExternalize", "externalize"], ["scpStNominate", "nominate"]], arms:{prepare:xdr.lookup("ScpStatementPrepare"), confirm:xdr.lookup("ScpStatementConfirm"), externalize:xdr.lookup("ScpStatementExternalize"), nominate:xdr.lookup("ScpNomination")}});xdr.struct("ScpStatement", [["nodeId", xdr.lookup("NodeId")], ["slotIndex", xdr.lookup("Uint64")], ["pledges", xdr.lookup("ScpStatementPledges")]]);xdr.struct("ScpEnvelope", [["statement", xdr.lookup("ScpStatement")], ["signature", xdr.lookup("Signature")]]);xdr.struct("ScpQuorumSet", [["threshold", xdr.lookup("Uint32")], ["validators", xdr.varArray(xdr.lookup("PublicKey"), 2147483647)], ["innerSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)]]);xdr.typedef("AccountId", xdr.lookup("PublicKey"));xdr.typedef("Thresholds", xdr.opaque(4));xdr.typedef("String32", xdr.string(32));xdr.typedef("String64", xdr.string(64));xdr.typedef("SequenceNumber", xdr.lookup("Uint64"));xdr.typedef("DataValue", xdr.varOpaque(64));xdr["enum"]("AssetType", {assetTypeNative:0, assetTypeCreditAlphanum4:1, assetTypeCreditAlphanum12:2});xdr.struct("AssetAlphaNum4", [["assetCode", xdr.opaque(4)], ["issuer", xdr.lookup("AccountId")]]);xdr.struct("AssetAlphaNum12", [["assetCode", xdr.opaque(12)], ["issuer", xdr.lookup("AccountId")]]);xdr.union("Asset", {switchOn:xdr.lookup("AssetType"), switchName:"type", switches:[["assetTypeNative", xdr["void"]()], ["assetTypeCreditAlphanum4", "alphaNum4"], ["assetTypeCreditAlphanum12", "alphaNum12"]], arms:{alphaNum4:xdr.lookup("AssetAlphaNum4"), alphaNum12:xdr.lookup("AssetAlphaNum12")}});xdr.struct("Price", [["n", xdr.lookup("Int32")], ["d", xdr.lookup("Int32")]]);xdr["enum"]("ThresholdIndices", {thresholdMasterWeight:0, thresholdLow:1, thresholdMed:2, thresholdHigh:3});xdr["enum"]("LedgerEntryType", {account:0, trustline:1, offer:2, datum:3});xdr.struct("Signer", [["key", xdr.lookup("SignerKey")], ["weight", xdr.lookup("Uint32")]]);xdr["enum"]("AccountFlags", {authRequiredFlag:1, authRevocableFlag:2, authImmutableFlag:4});xdr.union("AccountEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("AccountEntry", [["accountId", xdr.lookup("AccountId")], ["balance", xdr.lookup("Int64")], ["seqNum", xdr.lookup("SequenceNumber")], ["numSubEntries", xdr.lookup("Uint32")], ["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["flags", xdr.lookup("Uint32")], ["homeDomain", xdr.lookup("String32")], ["thresholds", xdr.lookup("Thresholds")], ["signers", xdr.varArray(xdr.lookup("Signer"), 20)], ["ext", xdr.lookup("AccountEntryExt")]]);xdr["enum"]("TrustLineFlags", {authorizedFlag:1});xdr.union("TrustLineEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TrustLineEntry", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["balance", xdr.lookup("Int64")], ["limit", xdr.lookup("Int64")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("TrustLineEntryExt")]]);xdr["enum"]("OfferEntryFlags", {passiveFlag:1});xdr.union("OfferEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("OfferEntry", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("OfferEntryExt")]]);xdr.union("DataEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("DataEntry", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")], ["dataValue", xdr.lookup("DataValue")], ["ext", xdr.lookup("DataEntryExt")]]);xdr.union("LedgerEntryData", {switchOn:xdr.lookup("LedgerEntryType"), switchName:"type", switches:[["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]], arms:{account:xdr.lookup("AccountEntry"), trustLine:xdr.lookup("TrustLineEntry"), offer:xdr.lookup("OfferEntry"), data:xdr.lookup("DataEntry")}});xdr.union("LedgerEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerEntry", [["lastModifiedLedgerSeq", xdr.lookup("Uint32")], ["data", xdr.lookup("LedgerEntryData")], ["ext", xdr.lookup("LedgerEntryExt")]]);xdr["enum"]("EnvelopeType", {envelopeTypeScp:1, envelopeTypeTx:2, envelopeTypeAuth:3});xdr.typedef("UpgradeType", xdr.varOpaque(128));xdr.union("StellarValueExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("StellarValue", [["txSetHash", xdr.lookup("Hash")], ["closeTime", xdr.lookup("Uint64")], ["upgrades", xdr.varArray(xdr.lookup("UpgradeType"), 6)], ["ext", xdr.lookup("StellarValueExt")]]);xdr.union("LedgerHeaderExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerHeader", [["ledgerVersion", xdr.lookup("Uint32")], ["previousLedgerHash", xdr.lookup("Hash")], ["scpValue", xdr.lookup("StellarValue")], ["txSetResultHash", xdr.lookup("Hash")], ["bucketListHash", xdr.lookup("Hash")], ["ledgerSeq", xdr.lookup("Uint32")], ["totalCoins", xdr.lookup("Int64")], ["feePool", xdr.lookup("Int64")], ["inflationSeq", xdr.lookup("Uint32")], ["idPool", xdr.lookup("Uint64")], ["baseFee", xdr.lookup("Uint32")], ["baseReserve", xdr.lookup("Uint32")], ["maxTxSetSize", xdr.lookup("Uint32")], ["skipList", xdr.array(xdr.lookup("Hash"), 4)], ["ext", xdr.lookup("LedgerHeaderExt")]]);xdr["enum"]("LedgerUpgradeType", {ledgerUpgradeVersion:1, ledgerUpgradeBaseFee:2, ledgerUpgradeMaxTxSetSize:3});xdr.union("LedgerUpgrade", {switchOn:xdr.lookup("LedgerUpgradeType"), switchName:"type", switches:[["ledgerUpgradeVersion", "newLedgerVersion"], ["ledgerUpgradeBaseFee", "newBaseFee"], ["ledgerUpgradeMaxTxSetSize", "newMaxTxSetSize"]], arms:{newLedgerVersion:xdr.lookup("Uint32"), newBaseFee:xdr.lookup("Uint32"), newMaxTxSetSize:xdr.lookup("Uint32")}});xdr.struct("LedgerKeyAccount", [["accountId", xdr.lookup("AccountId")]]);xdr.struct("LedgerKeyTrustLine", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")]]);xdr.struct("LedgerKeyOffer", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")]]);xdr.struct("LedgerKeyData", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")]]);xdr.union("LedgerKey", {switchOn:xdr.lookup("LedgerEntryType"), switchName:"type", switches:[["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]], arms:{account:xdr.lookup("LedgerKeyAccount"), trustLine:xdr.lookup("LedgerKeyTrustLine"), offer:xdr.lookup("LedgerKeyOffer"), data:xdr.lookup("LedgerKeyData")}});xdr["enum"]("BucketEntryType", {liveentry:0, deadentry:1});xdr.union("BucketEntry", {switchOn:xdr.lookup("BucketEntryType"), switchName:"type", switches:[["liveentry", "liveEntry"], ["deadentry", "deadEntry"]], arms:{liveEntry:xdr.lookup("LedgerEntry"), deadEntry:xdr.lookup("LedgerKey")}});xdr.struct("TransactionSet", [["previousLedgerHash", xdr.lookup("Hash")], ["txes", xdr.varArray(xdr.lookup("TransactionEnvelope"), 2147483647)]]);xdr.struct("TransactionResultPair", [["transactionHash", xdr.lookup("Hash")], ["result", xdr.lookup("TransactionResult")]]);xdr.struct("TransactionResultSet", [["results", xdr.varArray(xdr.lookup("TransactionResultPair"), 2147483647)]]);xdr.union("TransactionHistoryEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionHistoryEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txSet", xdr.lookup("TransactionSet")], ["ext", xdr.lookup("TransactionHistoryEntryExt")]]);xdr.union("TransactionHistoryResultEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionHistoryResultEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txResultSet", xdr.lookup("TransactionResultSet")], ["ext", xdr.lookup("TransactionHistoryResultEntryExt")]]);xdr.union("LedgerHeaderHistoryEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerHeaderHistoryEntry", [["hash", xdr.lookup("Hash")], ["header", xdr.lookup("LedgerHeader")], ["ext", xdr.lookup("LedgerHeaderHistoryEntryExt")]]);xdr.struct("LedgerScpMessages", [["ledgerSeq", xdr.lookup("Uint32")], ["messages", xdr.varArray(xdr.lookup("ScpEnvelope"), 2147483647)]]);xdr.struct("ScpHistoryEntryV0", [["quorumSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)], ["ledgerMessages", xdr.lookup("LedgerScpMessages")]]);xdr.union("ScpHistoryEntry", {switchOn:xdr.int(), switchName:"v", switches:[[0, "v0"]], arms:{v0:xdr.lookup("ScpHistoryEntryV0")}});xdr["enum"]("LedgerEntryChangeType", {ledgerEntryCreated:0, ledgerEntryUpdated:1, ledgerEntryRemoved:2, ledgerEntryState:3});xdr.union("LedgerEntryChange", {switchOn:xdr.lookup("LedgerEntryChangeType"), switchName:"type", switches:[["ledgerEntryCreated", "created"], ["ledgerEntryUpdated", "updated"], ["ledgerEntryRemoved", "removed"], ["ledgerEntryState", "state"]], arms:{created:xdr.lookup("LedgerEntry"), updated:xdr.lookup("LedgerEntry"), removed:xdr.lookup("LedgerKey"), state:xdr.lookup("LedgerEntry")}});xdr.typedef("LedgerEntryChanges", xdr.varArray(xdr.lookup("LedgerEntryChange"), 2147483647));xdr.struct("OperationMeta", [["changes", xdr.lookup("LedgerEntryChanges")]]);xdr.union("TransactionMeta", {switchOn:xdr.int(), switchName:"v", switches:[[0, "operations"]], arms:{operations:xdr.varArray(xdr.lookup("OperationMeta"), 2147483647)}});xdr["enum"]("ErrorCode", {errMisc:0, errDatum:1, errConf:2, errAuth:3, errLoad:4});xdr.struct("Error", [["code", xdr.lookup("ErrorCode")], ["msg", xdr.string(100)]]);xdr.struct("AuthCert", [["pubkey", xdr.lookup("Curve25519Public")], ["expiration", xdr.lookup("Uint64")], ["sig", xdr.lookup("Signature")]]);xdr.struct("Hello", [["ledgerVersion", xdr.lookup("Uint32")], ["overlayVersion", xdr.lookup("Uint32")], ["overlayMinVersion", xdr.lookup("Uint32")], ["networkId", xdr.lookup("Hash")], ["versionStr", xdr.string(100)], ["listeningPort", xdr.int()], ["peerId", xdr.lookup("NodeId")], ["cert", xdr.lookup("AuthCert")], ["nonce", xdr.lookup("Uint256")]]);xdr.struct("Auth", [["unused", xdr.int()]]);xdr["enum"]("IpAddrType", {iPv4:0, iPv6:1});xdr.union("PeerAddressIp", {switchOn:xdr.lookup("IpAddrType"), switchName:"type", switches:[["iPv4", "ipv4"], ["iPv6", "ipv6"]], arms:{ipv4:xdr.opaque(4), ipv6:xdr.opaque(16)}});xdr.struct("PeerAddress", [["ip", xdr.lookup("PeerAddressIp")], ["port", xdr.lookup("Uint32")], ["numFailures", xdr.lookup("Uint32")]]);xdr["enum"]("MessageType", {errorMsg:0, auth:2, dontHave:3, getPeer:4, peer:5, getTxSet:6, txSet:7, transaction:8, getScpQuorumset:9, scpQuorumset:10, scpMessage:11, getScpState:12, hello:13});xdr.struct("DontHave", [["type", xdr.lookup("MessageType")], ["reqHash", xdr.lookup("Uint256")]]);xdr.union("StellarMessage", {switchOn:xdr.lookup("MessageType"), switchName:"type", switches:[["errorMsg", "error"], ["hello", "hello"], ["auth", "auth"], ["dontHave", "dontHave"], ["getPeer", xdr["void"]()], ["peer", "peers"], ["getTxSet", "txSetHash"], ["txSet", "txSet"], ["transaction", "transaction"], ["getScpQuorumset", "qSetHash"], ["scpQuorumset", "qSet"], ["scpMessage", "envelope"], ["getScpState", "getScpLedgerSeq"]], arms:{error:xdr.lookup("Error"), hello:xdr.lookup("Hello"), auth:xdr.lookup("Auth"), dontHave:xdr.lookup("DontHave"), peers:xdr.varArray(xdr.lookup("PeerAddress"), 2147483647), txSetHash:xdr.lookup("Uint256"), txSet:xdr.lookup("TransactionSet"), transaction:xdr.lookup("TransactionEnvelope"), qSetHash:xdr.lookup("Uint256"), qSet:xdr.lookup("ScpQuorumSet"), envelope:xdr.lookup("ScpEnvelope"), getScpLedgerSeq:xdr.lookup("Uint32")}});xdr.struct("AuthenticatedMessageV0", [["sequence", xdr.lookup("Uint64")], ["message", xdr.lookup("StellarMessage")], ["mac", xdr.lookup("HmacSha256Mac")]]);xdr.union("AuthenticatedMessage", {switchOn:xdr.lookup("Uint32"), switchName:"v", switches:[[0, "v0"]], arms:{v0:xdr.lookup("AuthenticatedMessageV0")}});xdr.struct("DecoratedSignature", [["hint", xdr.lookup("SignatureHint")], ["signature", xdr.lookup("Signature")]]);xdr["enum"]("OperationType", {createAccount:0, payment:1, pathPayment:2, manageOffer:3, createPassiveOffer:4, setOption:5, changeTrust:6, allowTrust:7, accountMerge:8, inflation:9, manageDatum:10});xdr.struct("CreateAccountOp", [["destination", xdr.lookup("AccountId")], ["startingBalance", xdr.lookup("Int64")]]);xdr.struct("PaymentOp", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);xdr.struct("PathPaymentOp", [["sendAsset", xdr.lookup("Asset")], ["sendMax", xdr.lookup("Int64")], ["destination", xdr.lookup("AccountId")], ["destAsset", xdr.lookup("Asset")], ["destAmount", xdr.lookup("Int64")], ["path", xdr.varArray(xdr.lookup("Asset"), 5)]]);xdr.struct("ManageOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["offerId", xdr.lookup("Uint64")]]);xdr.struct("CreatePassiveOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")]]);xdr.struct("SetOptionsOp", [["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["clearFlags", xdr.option(xdr.lookup("Uint32"))], ["setFlags", xdr.option(xdr.lookup("Uint32"))], ["masterWeight", xdr.option(xdr.lookup("Uint32"))], ["lowThreshold", xdr.option(xdr.lookup("Uint32"))], ["medThreshold", xdr.option(xdr.lookup("Uint32"))], ["highThreshold", xdr.option(xdr.lookup("Uint32"))], ["homeDomain", xdr.option(xdr.lookup("String32"))], ["signer", xdr.option(xdr.lookup("Signer"))]]);xdr.struct("ChangeTrustOp", [["line", xdr.lookup("Asset")], ["limit", xdr.lookup("Int64")]]);xdr.union("AllowTrustOpAsset", {switchOn:xdr.lookup("AssetType"), switchName:"type", switches:[["assetTypeCreditAlphanum4", "assetCode4"], ["assetTypeCreditAlphanum12", "assetCode12"]], arms:{assetCode4:xdr.opaque(4), assetCode12:xdr.opaque(12)}});xdr.struct("AllowTrustOp", [["trustor", xdr.lookup("AccountId")], ["asset", xdr.lookup("AllowTrustOpAsset")], ["authorize", xdr.bool()]]);xdr.struct("ManageDataOp", [["dataName", xdr.lookup("String64")], ["dataValue", xdr.option(xdr.lookup("DataValue"))]]);xdr.union("OperationBody", {switchOn:xdr.lookup("OperationType"), switchName:"type", switches:[["createAccount", "createAccountOp"], ["payment", "paymentOp"], ["pathPayment", "pathPaymentOp"], ["manageOffer", "manageOfferOp"], ["createPassiveOffer", "createPassiveOfferOp"], ["setOption", "setOptionsOp"], ["changeTrust", "changeTrustOp"], ["allowTrust", "allowTrustOp"], ["accountMerge", "destination"], ["inflation", xdr["void"]()], ["manageDatum", "manageDataOp"]], arms:{createAccountOp:xdr.lookup("CreateAccountOp"), paymentOp:xdr.lookup("PaymentOp"), pathPaymentOp:xdr.lookup("PathPaymentOp"), manageOfferOp:xdr.lookup("ManageOfferOp"), createPassiveOfferOp:xdr.lookup("CreatePassiveOfferOp"), setOptionsOp:xdr.lookup("SetOptionsOp"), changeTrustOp:xdr.lookup("ChangeTrustOp"), allowTrustOp:xdr.lookup("AllowTrustOp"), destination:xdr.lookup("AccountId"), manageDataOp:xdr.lookup("ManageDataOp")}});xdr.struct("Operation", [["sourceAccount", xdr.option(xdr.lookup("AccountId"))], ["body", xdr.lookup("OperationBody")]]);xdr["enum"]("MemoType", {memoNone:0, memoText:1, memoId:2, memoHash:3, memoReturn:4});xdr.union("Memo", {switchOn:xdr.lookup("MemoType"), switchName:"type", switches:[["memoNone", xdr["void"]()], ["memoText", "text"], ["memoId", "id"], ["memoHash", "hash"], ["memoReturn", "retHash"]], arms:{text:xdr.string(28), id:xdr.lookup("Uint64"), hash:xdr.lookup("Hash"), retHash:xdr.lookup("Hash")}});xdr.struct("TimeBounds", [["minTime", xdr.lookup("Uint64")], ["maxTime", xdr.lookup("Uint64")]]);xdr.union("TransactionExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("Transaction", [["sourceAccount", xdr.lookup("AccountId")], ["fee", xdr.lookup("Uint32")], ["seqNum", xdr.lookup("SequenceNumber")], ["timeBounds", xdr.option(xdr.lookup("TimeBounds"))], ["memo", xdr.lookup("Memo")], ["operations", xdr.varArray(xdr.lookup("Operation"), 100)], ["ext", xdr.lookup("TransactionExt")]]);xdr.union("TransactionSignaturePayloadTaggedTransaction", {switchOn:xdr.lookup("EnvelopeType"), switchName:"type", switches:[["envelopeTypeTx", "tx"]], arms:{tx:xdr.lookup("Transaction")}});xdr.struct("TransactionSignaturePayload", [["networkId", xdr.lookup("Hash")], ["taggedTransaction", xdr.lookup("TransactionSignaturePayloadTaggedTransaction")]]);xdr.struct("TransactionEnvelope", [["tx", xdr.lookup("Transaction")], ["signatures", xdr.varArray(xdr.lookup("DecoratedSignature"), 20)]]);xdr.struct("ClaimOfferAtom", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["assetSold", xdr.lookup("Asset")], ["amountSold", xdr.lookup("Int64")], ["assetBought", xdr.lookup("Asset")], ["amountBought", xdr.lookup("Int64")]]);xdr["enum"]("CreateAccountResultCode", {createAccountSuccess:0, createAccountMalformed:-1, createAccountUnderfunded:-2, createAccountLowReserve:-3, createAccountAlreadyExist:-4});xdr.union("CreateAccountResult", {switchOn:xdr.lookup("CreateAccountResultCode"), switchName:"code", switches:[["createAccountSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("PaymentResultCode", {paymentSuccess:0, paymentMalformed:-1, paymentUnderfunded:-2, paymentSrcNoTrust:-3, paymentSrcNotAuthorized:-4, paymentNoDestination:-5, paymentNoTrust:-6, paymentNotAuthorized:-7, paymentLineFull:-8, paymentNoIssuer:-9});xdr.union("PaymentResult", {switchOn:xdr.lookup("PaymentResultCode"), switchName:"code", switches:[["paymentSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("PathPaymentResultCode", {pathPaymentSuccess:0, pathPaymentMalformed:-1, pathPaymentUnderfunded:-2, pathPaymentSrcNoTrust:-3, pathPaymentSrcNotAuthorized:-4, pathPaymentNoDestination:-5, pathPaymentNoTrust:-6, pathPaymentNotAuthorized:-7, pathPaymentLineFull:-8, pathPaymentNoIssuer:-9, pathPaymentTooFewOffer:-10, pathPaymentOfferCrossSelf:-11, pathPaymentOverSendmax:-12});xdr.struct("SimplePaymentResult", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);xdr.struct("PathPaymentResultSuccess", [["offers", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["last", xdr.lookup("SimplePaymentResult")]]);xdr.union("PathPaymentResult", {switchOn:xdr.lookup("PathPaymentResultCode"), switchName:"code", switches:[["pathPaymentSuccess", "success"], ["pathPaymentNoIssuer", "noIssuer"]], arms:{success:xdr.lookup("PathPaymentResultSuccess"), noIssuer:xdr.lookup("Asset")}, defaultArm:xdr["void"]()});xdr["enum"]("ManageOfferResultCode", {manageOfferSuccess:0, manageOfferMalformed:-1, manageOfferSellNoTrust:-2, manageOfferBuyNoTrust:-3, manageOfferSellNotAuthorized:-4, manageOfferBuyNotAuthorized:-5, manageOfferLineFull:-6, manageOfferUnderfunded:-7, manageOfferCrossSelf:-8, manageOfferSellNoIssuer:-9, manageOfferBuyNoIssuer:-10, manageOfferNotFound:-11, manageOfferLowReserve:-12});xdr["enum"]("ManageOfferEffect", {manageOfferCreated:0, manageOfferUpdated:1, manageOfferDeleted:2});xdr.union("ManageOfferSuccessResultOffer", {switchOn:xdr.lookup("ManageOfferEffect"), switchName:"effect", switches:[["manageOfferCreated", "offer"], ["manageOfferUpdated", "offer"]], arms:{offer:xdr.lookup("OfferEntry")}, defaultArm:xdr["void"]()});xdr.struct("ManageOfferSuccessResult", [["offersClaimed", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["offer", xdr.lookup("ManageOfferSuccessResultOffer")]]);xdr.union("ManageOfferResult", {switchOn:xdr.lookup("ManageOfferResultCode"), switchName:"code", switches:[["manageOfferSuccess", "success"]], arms:{success:xdr.lookup("ManageOfferSuccessResult")}, defaultArm:xdr["void"]()});xdr["enum"]("SetOptionsResultCode", {setOptionsSuccess:0, setOptionsLowReserve:-1, setOptionsTooManySigner:-2, setOptionsBadFlag:-3, setOptionsInvalidInflation:-4, setOptionsCantChange:-5, setOptionsUnknownFlag:-6, setOptionsThresholdOutOfRange:-7, setOptionsBadSigner:-8, setOptionsInvalidHomeDomain:-9});xdr.union("SetOptionsResult", {switchOn:xdr.lookup("SetOptionsResultCode"), switchName:"code", switches:[["setOptionsSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("ChangeTrustResultCode", {changeTrustSuccess:0, changeTrustMalformed:-1, changeTrustNoIssuer:-2, changeTrustInvalidLimit:-3, changeTrustLowReserve:-4, changeTrustSelfNotAllowed:-5});xdr.union("ChangeTrustResult", {switchOn:xdr.lookup("ChangeTrustResultCode"), switchName:"code", switches:[["changeTrustSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("AllowTrustResultCode", {allowTrustSuccess:0, allowTrustMalformed:-1, allowTrustNoTrustLine:-2, allowTrustTrustNotRequired:-3, allowTrustCantRevoke:-4, allowTrustSelfNotAllowed:-5});xdr.union("AllowTrustResult", {switchOn:xdr.lookup("AllowTrustResultCode"), switchName:"code", switches:[["allowTrustSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("AccountMergeResultCode", {accountMergeSuccess:0, accountMergeMalformed:-1, accountMergeNoAccount:-2, accountMergeImmutableSet:-3, accountMergeHasSubEntry:-4});xdr.union("AccountMergeResult", {switchOn:xdr.lookup("AccountMergeResultCode"), switchName:"code", switches:[["accountMergeSuccess", "sourceAccountBalance"]], arms:{sourceAccountBalance:xdr.lookup("Int64")}, defaultArm:xdr["void"]()});xdr["enum"]("InflationResultCode", {inflationSuccess:0, inflationNotTime:-1});xdr.struct("InflationPayout", [["destination", xdr.lookup("AccountId")], ["amount", xdr.lookup("Int64")]]);xdr.union("InflationResult", {switchOn:xdr.lookup("InflationResultCode"), switchName:"code", switches:[["inflationSuccess", "payouts"]], arms:{payouts:xdr.varArray(xdr.lookup("InflationPayout"), 2147483647)}, defaultArm:xdr["void"]()});xdr["enum"]("ManageDataResultCode", {manageDataSuccess:0, manageDataNotSupportedYet:-1, manageDataNameNotFound:-2, manageDataLowReserve:-3, manageDataInvalidName:-4});xdr.union("ManageDataResult", {switchOn:xdr.lookup("ManageDataResultCode"), switchName:"code", switches:[["manageDataSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("OperationResultCode", {opInner:0, opBadAuth:-1, opNoAccount:-2});xdr.union("OperationResultTr", {switchOn:xdr.lookup("OperationType"), switchName:"type", switches:[["createAccount", "createAccountResult"], ["payment", "paymentResult"], ["pathPayment", "pathPaymentResult"], ["manageOffer", "manageOfferResult"], ["createPassiveOffer", "createPassiveOfferResult"], ["setOption", "setOptionsResult"], ["changeTrust", "changeTrustResult"], ["allowTrust", "allowTrustResult"], ["accountMerge", "accountMergeResult"], ["inflation", "inflationResult"], ["manageDatum", "manageDataResult"]], arms:{createAccountResult:xdr.lookup("CreateAccountResult"), paymentResult:xdr.lookup("PaymentResult"), pathPaymentResult:xdr.lookup("PathPaymentResult"), manageOfferResult:xdr.lookup("ManageOfferResult"), createPassiveOfferResult:xdr.lookup("ManageOfferResult"), setOptionsResult:xdr.lookup("SetOptionsResult"), changeTrustResult:xdr.lookup("ChangeTrustResult"), allowTrustResult:xdr.lookup("AllowTrustResult"), accountMergeResult:xdr.lookup("AccountMergeResult"), inflationResult:xdr.lookup("InflationResult"), manageDataResult:xdr.lookup("ManageDataResult")}});xdr.union("OperationResult", {switchOn:xdr.lookup("OperationResultCode"), switchName:"code", switches:[["opInner", "tr"]], arms:{tr:xdr.lookup("OperationResultTr")}, defaultArm:xdr["void"]()});xdr["enum"]("TransactionResultCode", {txSuccess:0, txFailed:-1, txTooEarly:-2, txTooLate:-3, txMissingOperation:-4, txBadSeq:-5, txBadAuth:-6, txInsufficientBalance:-7, txNoAccount:-8, txInsufficientFee:-9, txBadAuthExtra:-10, txInternalError:-11});xdr.union("TransactionResultResult", {switchOn:xdr.lookup("TransactionResultCode"), switchName:"code", switches:[["txSuccess", "results"], ["txFailed", "results"]], arms:{results:xdr.varArray(xdr.lookup("OperationResult"), 2147483647)}, defaultArm:xdr["void"]()});xdr.union("TransactionResultExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionResult", [["feeCharged", xdr.lookup("Int64")], ["result", xdr.lookup("TransactionResultResult")], ["ext", xdr.lookup("TransactionResultExt")]]);xdr.typedef("Hash", xdr.opaque(32));xdr.typedef("Uint256", xdr.opaque(32));xdr.typedef("Uint32", xdr.uint());xdr.typedef("Int32", xdr.int());xdr.typedef("Uint64", xdr.uhyper());xdr.typedef("Int64", xdr.hyper());xdr["enum"]("CryptoKeyType", {keyTypeEd25519:0, keyTypePreAuthTx:1, keyTypeHashX:2});xdr["enum"]("PublicKeyType", {publicKeyTypeEd25519:0});xdr["enum"]("SignerKeyType", {signerKeyTypeEd25519:0, signerKeyTypePreAuthTx:1, signerKeyTypeHashX:2});xdr.union("PublicKey", {switchOn:xdr.lookup("PublicKeyType"), switchName:"type", switches:[["publicKeyTypeEd25519", "ed25519"]], arms:{ed25519:xdr.lookup("Uint256")}});xdr.union("SignerKey", {switchOn:xdr.lookup("SignerKeyType"), switchName:"type", switches:[["signerKeyTypeEd25519", "ed25519"], ["signerKeyTypePreAuthTx", "preAuthTx"], ["signerKeyTypeHashX", "hashX"]], arms:{ed25519:xdr.lookup("Uint256"), preAuthTx:xdr.lookup("Uint256"), hashX:xdr.lookup("Uint256")}});xdr.typedef("Signature", xdr.varOpaque(64));xdr.typedef("SignatureHint", xdr.opaque(4));xdr.typedef("NodeId", xdr.lookup("PublicKey"));xdr.struct("Curve25519Secret", [["key", xdr.opaque(32)]]);xdr.struct("Curve25519Public", [["key", xdr.opaque(32)]]);xdr.struct("HmacSha256Key", [["key", xdr.opaque(32)]]);xdr.struct("HmacSha256Mac", [["mac", xdr.opaque(32)]]);});module.exports = types;
+	"use strict";var _interopRequireWildcard=function(obj){return obj && obj.__esModule?obj:{"default":obj};};var XDR=_interopRequireWildcard(__webpack_require__(236));var types=XDR.config(function(xdr){xdr.typedef("Value", xdr.varOpaque());xdr.struct("ScpBallot", [["counter", xdr.lookup("Uint32")], ["value", xdr.lookup("Value")]]);xdr["enum"]("ScpStatementType", {scpStPrepare:0, scpStConfirm:1, scpStExternalize:2, scpStNominate:3});xdr.struct("ScpNomination", [["quorumSetHash", xdr.lookup("Hash")], ["votes", xdr.varArray(xdr.lookup("Value"), 2147483647)], ["accepted", xdr.varArray(xdr.lookup("Value"), 2147483647)]]);xdr.struct("ScpStatementPrepare", [["quorumSetHash", xdr.lookup("Hash")], ["ballot", xdr.lookup("ScpBallot")], ["prepared", xdr.option(xdr.lookup("ScpBallot"))], ["preparedPrime", xdr.option(xdr.lookup("ScpBallot"))], ["nC", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")]]);xdr.struct("ScpStatementConfirm", [["ballot", xdr.lookup("ScpBallot")], ["nPrepared", xdr.lookup("Uint32")], ["nCommit", xdr.lookup("Uint32")], ["nH", xdr.lookup("Uint32")], ["quorumSetHash", xdr.lookup("Hash")]]);xdr.struct("ScpStatementExternalize", [["commit", xdr.lookup("ScpBallot")], ["nH", xdr.lookup("Uint32")], ["commitQuorumSetHash", xdr.lookup("Hash")]]);xdr.union("ScpStatementPledges", {switchOn:xdr.lookup("ScpStatementType"), switchName:"type", switches:[["scpStPrepare", "prepare"], ["scpStConfirm", "confirm"], ["scpStExternalize", "externalize"], ["scpStNominate", "nominate"]], arms:{prepare:xdr.lookup("ScpStatementPrepare"), confirm:xdr.lookup("ScpStatementConfirm"), externalize:xdr.lookup("ScpStatementExternalize"), nominate:xdr.lookup("ScpNomination")}});xdr.struct("ScpStatement", [["nodeId", xdr.lookup("NodeId")], ["slotIndex", xdr.lookup("Uint64")], ["pledges", xdr.lookup("ScpStatementPledges")]]);xdr.struct("ScpEnvelope", [["statement", xdr.lookup("ScpStatement")], ["signature", xdr.lookup("Signature")]]);xdr.struct("ScpQuorumSet", [["threshold", xdr.lookup("Uint32")], ["validators", xdr.varArray(xdr.lookup("PublicKey"), 2147483647)], ["innerSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)]]);xdr.typedef("AccountId", xdr.lookup("PublicKey"));xdr.typedef("Thresholds", xdr.opaque(4));xdr.typedef("String32", xdr.string(32));xdr.typedef("String64", xdr.string(64));xdr.typedef("SequenceNumber", xdr.lookup("Uint64"));xdr.typedef("DataValue", xdr.varOpaque(64));xdr["enum"]("AssetType", {assetTypeNative:0, assetTypeCreditAlphanum4:1, assetTypeCreditAlphanum12:2});xdr.struct("AssetAlphaNum4", [["assetCode", xdr.opaque(4)], ["issuer", xdr.lookup("AccountId")]]);xdr.struct("AssetAlphaNum12", [["assetCode", xdr.opaque(12)], ["issuer", xdr.lookup("AccountId")]]);xdr.union("Asset", {switchOn:xdr.lookup("AssetType"), switchName:"type", switches:[["assetTypeNative", xdr["void"]()], ["assetTypeCreditAlphanum4", "alphaNum4"], ["assetTypeCreditAlphanum12", "alphaNum12"]], arms:{alphaNum4:xdr.lookup("AssetAlphaNum4"), alphaNum12:xdr.lookup("AssetAlphaNum12")}});xdr.struct("Price", [["n", xdr.lookup("Int32")], ["d", xdr.lookup("Int32")]]);xdr["enum"]("ThresholdIndices", {thresholdMasterWeight:0, thresholdLow:1, thresholdMed:2, thresholdHigh:3});xdr["enum"]("LedgerEntryType", {account:0, trustline:1, offer:2, datum:3});xdr.struct("Signer", [["key", xdr.lookup("SignerKey")], ["weight", xdr.lookup("Uint32")]]);xdr["enum"]("AccountFlags", {authRequiredFlag:1, authRevocableFlag:2, authImmutableFlag:4});xdr.union("AccountEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("AccountEntry", [["accountId", xdr.lookup("AccountId")], ["balance", xdr.lookup("Int64")], ["seqNum", xdr.lookup("SequenceNumber")], ["numSubEntries", xdr.lookup("Uint32")], ["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["flags", xdr.lookup("Uint32")], ["homeDomain", xdr.lookup("String32")], ["thresholds", xdr.lookup("Thresholds")], ["signers", xdr.varArray(xdr.lookup("Signer"), 20)], ["ext", xdr.lookup("AccountEntryExt")]]);xdr["enum"]("TrustLineFlags", {authorizedFlag:1});xdr.union("TrustLineEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TrustLineEntry", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["balance", xdr.lookup("Int64")], ["limit", xdr.lookup("Int64")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("TrustLineEntryExt")]]);xdr["enum"]("OfferEntryFlags", {passiveFlag:1});xdr.union("OfferEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("OfferEntry", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["flags", xdr.lookup("Uint32")], ["ext", xdr.lookup("OfferEntryExt")]]);xdr.union("DataEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("DataEntry", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")], ["dataValue", xdr.lookup("DataValue")], ["ext", xdr.lookup("DataEntryExt")]]);xdr.union("LedgerEntryData", {switchOn:xdr.lookup("LedgerEntryType"), switchName:"type", switches:[["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]], arms:{account:xdr.lookup("AccountEntry"), trustLine:xdr.lookup("TrustLineEntry"), offer:xdr.lookup("OfferEntry"), data:xdr.lookup("DataEntry")}});xdr.union("LedgerEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerEntry", [["lastModifiedLedgerSeq", xdr.lookup("Uint32")], ["data", xdr.lookup("LedgerEntryData")], ["ext", xdr.lookup("LedgerEntryExt")]]);xdr["enum"]("EnvelopeType", {envelopeTypeScp:1, envelopeTypeTx:2, envelopeTypeAuth:3});xdr.typedef("UpgradeType", xdr.varOpaque(128));xdr.union("StellarValueExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("StellarValue", [["txSetHash", xdr.lookup("Hash")], ["closeTime", xdr.lookup("Uint64")], ["upgrades", xdr.varArray(xdr.lookup("UpgradeType"), 6)], ["ext", xdr.lookup("StellarValueExt")]]);xdr.union("LedgerHeaderExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerHeader", [["ledgerVersion", xdr.lookup("Uint32")], ["previousLedgerHash", xdr.lookup("Hash")], ["scpValue", xdr.lookup("StellarValue")], ["txSetResultHash", xdr.lookup("Hash")], ["bucketListHash", xdr.lookup("Hash")], ["ledgerSeq", xdr.lookup("Uint32")], ["totalCoins", xdr.lookup("Int64")], ["feePool", xdr.lookup("Int64")], ["inflationSeq", xdr.lookup("Uint32")], ["idPool", xdr.lookup("Uint64")], ["baseFee", xdr.lookup("Uint32")], ["baseReserve", xdr.lookup("Uint32")], ["maxTxSetSize", xdr.lookup("Uint32")], ["skipList", xdr.array(xdr.lookup("Hash"), 4)], ["ext", xdr.lookup("LedgerHeaderExt")]]);xdr["enum"]("LedgerUpgradeType", {ledgerUpgradeVersion:1, ledgerUpgradeBaseFee:2, ledgerUpgradeMaxTxSetSize:3});xdr.union("LedgerUpgrade", {switchOn:xdr.lookup("LedgerUpgradeType"), switchName:"type", switches:[["ledgerUpgradeVersion", "newLedgerVersion"], ["ledgerUpgradeBaseFee", "newBaseFee"], ["ledgerUpgradeMaxTxSetSize", "newMaxTxSetSize"]], arms:{newLedgerVersion:xdr.lookup("Uint32"), newBaseFee:xdr.lookup("Uint32"), newMaxTxSetSize:xdr.lookup("Uint32")}});xdr.struct("LedgerKeyAccount", [["accountId", xdr.lookup("AccountId")]]);xdr.struct("LedgerKeyTrustLine", [["accountId", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")]]);xdr.struct("LedgerKeyOffer", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")]]);xdr.struct("LedgerKeyData", [["accountId", xdr.lookup("AccountId")], ["dataName", xdr.lookup("String64")]]);xdr.union("LedgerKey", {switchOn:xdr.lookup("LedgerEntryType"), switchName:"type", switches:[["account", "account"], ["trustline", "trustLine"], ["offer", "offer"], ["datum", "data"]], arms:{account:xdr.lookup("LedgerKeyAccount"), trustLine:xdr.lookup("LedgerKeyTrustLine"), offer:xdr.lookup("LedgerKeyOffer"), data:xdr.lookup("LedgerKeyData")}});xdr["enum"]("BucketEntryType", {liveentry:0, deadentry:1});xdr.union("BucketEntry", {switchOn:xdr.lookup("BucketEntryType"), switchName:"type", switches:[["liveentry", "liveEntry"], ["deadentry", "deadEntry"]], arms:{liveEntry:xdr.lookup("LedgerEntry"), deadEntry:xdr.lookup("LedgerKey")}});xdr.struct("TransactionSet", [["previousLedgerHash", xdr.lookup("Hash")], ["txes", xdr.varArray(xdr.lookup("TransactionEnvelope"), 2147483647)]]);xdr.struct("TransactionResultPair", [["transactionHash", xdr.lookup("Hash")], ["result", xdr.lookup("TransactionResult")]]);xdr.struct("TransactionResultSet", [["results", xdr.varArray(xdr.lookup("TransactionResultPair"), 2147483647)]]);xdr.union("TransactionHistoryEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionHistoryEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txSet", xdr.lookup("TransactionSet")], ["ext", xdr.lookup("TransactionHistoryEntryExt")]]);xdr.union("TransactionHistoryResultEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionHistoryResultEntry", [["ledgerSeq", xdr.lookup("Uint32")], ["txResultSet", xdr.lookup("TransactionResultSet")], ["ext", xdr.lookup("TransactionHistoryResultEntryExt")]]);xdr.union("LedgerHeaderHistoryEntryExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("LedgerHeaderHistoryEntry", [["hash", xdr.lookup("Hash")], ["header", xdr.lookup("LedgerHeader")], ["ext", xdr.lookup("LedgerHeaderHistoryEntryExt")]]);xdr.struct("LedgerScpMessages", [["ledgerSeq", xdr.lookup("Uint32")], ["messages", xdr.varArray(xdr.lookup("ScpEnvelope"), 2147483647)]]);xdr.struct("ScpHistoryEntryV0", [["quorumSets", xdr.varArray(xdr.lookup("ScpQuorumSet"), 2147483647)], ["ledgerMessages", xdr.lookup("LedgerScpMessages")]]);xdr.union("ScpHistoryEntry", {switchOn:xdr.int(), switchName:"v", switches:[[0, "v0"]], arms:{v0:xdr.lookup("ScpHistoryEntryV0")}});xdr["enum"]("LedgerEntryChangeType", {ledgerEntryCreated:0, ledgerEntryUpdated:1, ledgerEntryRemoved:2, ledgerEntryState:3});xdr.union("LedgerEntryChange", {switchOn:xdr.lookup("LedgerEntryChangeType"), switchName:"type", switches:[["ledgerEntryCreated", "created"], ["ledgerEntryUpdated", "updated"], ["ledgerEntryRemoved", "removed"], ["ledgerEntryState", "state"]], arms:{created:xdr.lookup("LedgerEntry"), updated:xdr.lookup("LedgerEntry"), removed:xdr.lookup("LedgerKey"), state:xdr.lookup("LedgerEntry")}});xdr.typedef("LedgerEntryChanges", xdr.varArray(xdr.lookup("LedgerEntryChange"), 2147483647));xdr.struct("OperationMeta", [["changes", xdr.lookup("LedgerEntryChanges")]]);xdr.union("TransactionMeta", {switchOn:xdr.int(), switchName:"v", switches:[[0, "operations"]], arms:{operations:xdr.varArray(xdr.lookup("OperationMeta"), 2147483647)}});xdr["enum"]("ErrorCode", {errMisc:0, errDatum:1, errConf:2, errAuth:3, errLoad:4});xdr.struct("Error", [["code", xdr.lookup("ErrorCode")], ["msg", xdr.string(100)]]);xdr.struct("AuthCert", [["pubkey", xdr.lookup("Curve25519Public")], ["expiration", xdr.lookup("Uint64")], ["sig", xdr.lookup("Signature")]]);xdr.struct("Hello", [["ledgerVersion", xdr.lookup("Uint32")], ["overlayVersion", xdr.lookup("Uint32")], ["overlayMinVersion", xdr.lookup("Uint32")], ["networkId", xdr.lookup("Hash")], ["versionStr", xdr.string(100)], ["listeningPort", xdr.int()], ["peerId", xdr.lookup("NodeId")], ["cert", xdr.lookup("AuthCert")], ["nonce", xdr.lookup("Uint256")]]);xdr.struct("Auth", [["unused", xdr.int()]]);xdr["enum"]("IpAddrType", {iPv4:0, iPv6:1});xdr.union("PeerAddressIp", {switchOn:xdr.lookup("IpAddrType"), switchName:"type", switches:[["iPv4", "ipv4"], ["iPv6", "ipv6"]], arms:{ipv4:xdr.opaque(4), ipv6:xdr.opaque(16)}});xdr.struct("PeerAddress", [["ip", xdr.lookup("PeerAddressIp")], ["port", xdr.lookup("Uint32")], ["numFailures", xdr.lookup("Uint32")]]);xdr["enum"]("MessageType", {errorMsg:0, auth:2, dontHave:3, getPeer:4, peer:5, getTxSet:6, txSet:7, transaction:8, getScpQuorumset:9, scpQuorumset:10, scpMessage:11, getScpState:12, hello:13});xdr.struct("DontHave", [["type", xdr.lookup("MessageType")], ["reqHash", xdr.lookup("Uint256")]]);xdr.union("StellarMessage", {switchOn:xdr.lookup("MessageType"), switchName:"type", switches:[["errorMsg", "error"], ["hello", "hello"], ["auth", "auth"], ["dontHave", "dontHave"], ["getPeer", xdr["void"]()], ["peer", "peers"], ["getTxSet", "txSetHash"], ["txSet", "txSet"], ["transaction", "transaction"], ["getScpQuorumset", "qSetHash"], ["scpQuorumset", "qSet"], ["scpMessage", "envelope"], ["getScpState", "getScpLedgerSeq"]], arms:{error:xdr.lookup("Error"), hello:xdr.lookup("Hello"), auth:xdr.lookup("Auth"), dontHave:xdr.lookup("DontHave"), peers:xdr.varArray(xdr.lookup("PeerAddress"), 2147483647), txSetHash:xdr.lookup("Uint256"), txSet:xdr.lookup("TransactionSet"), transaction:xdr.lookup("TransactionEnvelope"), qSetHash:xdr.lookup("Uint256"), qSet:xdr.lookup("ScpQuorumSet"), envelope:xdr.lookup("ScpEnvelope"), getScpLedgerSeq:xdr.lookup("Uint32")}});xdr.struct("AuthenticatedMessageV0", [["sequence", xdr.lookup("Uint64")], ["message", xdr.lookup("StellarMessage")], ["mac", xdr.lookup("HmacSha256Mac")]]);xdr.union("AuthenticatedMessage", {switchOn:xdr.lookup("Uint32"), switchName:"v", switches:[[0, "v0"]], arms:{v0:xdr.lookup("AuthenticatedMessageV0")}});xdr.struct("DecoratedSignature", [["hint", xdr.lookup("SignatureHint")], ["signature", xdr.lookup("Signature")]]);xdr["enum"]("OperationType", {createAccount:0, payment:1, pathPayment:2, manageOffer:3, createPassiveOffer:4, setOption:5, changeTrust:6, allowTrust:7, accountMerge:8, inflation:9, manageDatum:10});xdr.struct("CreateAccountOp", [["destination", xdr.lookup("AccountId")], ["startingBalance", xdr.lookup("Int64")]]);xdr.struct("PaymentOp", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);xdr.struct("PathPaymentOp", [["sendAsset", xdr.lookup("Asset")], ["sendMax", xdr.lookup("Int64")], ["destination", xdr.lookup("AccountId")], ["destAsset", xdr.lookup("Asset")], ["destAmount", xdr.lookup("Int64")], ["path", xdr.varArray(xdr.lookup("Asset"), 5)]]);xdr.struct("ManageOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")], ["offerId", xdr.lookup("Uint64")]]);xdr.struct("CreatePassiveOfferOp", [["selling", xdr.lookup("Asset")], ["buying", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")], ["price", xdr.lookup("Price")]]);xdr.struct("SetOptionsOp", [["inflationDest", xdr.option(xdr.lookup("AccountId"))], ["clearFlags", xdr.option(xdr.lookup("Uint32"))], ["setFlags", xdr.option(xdr.lookup("Uint32"))], ["masterWeight", xdr.option(xdr.lookup("Uint32"))], ["lowThreshold", xdr.option(xdr.lookup("Uint32"))], ["medThreshold", xdr.option(xdr.lookup("Uint32"))], ["highThreshold", xdr.option(xdr.lookup("Uint32"))], ["homeDomain", xdr.option(xdr.lookup("String32"))], ["signer", xdr.option(xdr.lookup("Signer"))]]);xdr.struct("ChangeTrustOp", [["line", xdr.lookup("Asset")], ["limit", xdr.lookup("Int64")]]);xdr.union("AllowTrustOpAsset", {switchOn:xdr.lookup("AssetType"), switchName:"type", switches:[["assetTypeCreditAlphanum4", "assetCode4"], ["assetTypeCreditAlphanum12", "assetCode12"]], arms:{assetCode4:xdr.opaque(4), assetCode12:xdr.opaque(12)}});xdr.struct("AllowTrustOp", [["trustor", xdr.lookup("AccountId")], ["asset", xdr.lookup("AllowTrustOpAsset")], ["authorize", xdr.bool()]]);xdr.struct("ManageDataOp", [["dataName", xdr.lookup("String64")], ["dataValue", xdr.option(xdr.lookup("DataValue"))]]);xdr.union("OperationBody", {switchOn:xdr.lookup("OperationType"), switchName:"type", switches:[["createAccount", "createAccountOp"], ["payment", "paymentOp"], ["pathPayment", "pathPaymentOp"], ["manageOffer", "manageOfferOp"], ["createPassiveOffer", "createPassiveOfferOp"], ["setOption", "setOptionsOp"], ["changeTrust", "changeTrustOp"], ["allowTrust", "allowTrustOp"], ["accountMerge", "destination"], ["inflation", xdr["void"]()], ["manageDatum", "manageDataOp"]], arms:{createAccountOp:xdr.lookup("CreateAccountOp"), paymentOp:xdr.lookup("PaymentOp"), pathPaymentOp:xdr.lookup("PathPaymentOp"), manageOfferOp:xdr.lookup("ManageOfferOp"), createPassiveOfferOp:xdr.lookup("CreatePassiveOfferOp"), setOptionsOp:xdr.lookup("SetOptionsOp"), changeTrustOp:xdr.lookup("ChangeTrustOp"), allowTrustOp:xdr.lookup("AllowTrustOp"), destination:xdr.lookup("AccountId"), manageDataOp:xdr.lookup("ManageDataOp")}});xdr.struct("Operation", [["sourceAccount", xdr.option(xdr.lookup("AccountId"))], ["body", xdr.lookup("OperationBody")]]);xdr["enum"]("MemoType", {memoNone:0, memoText:1, memoId:2, memoHash:3, memoReturn:4});xdr.union("Memo", {switchOn:xdr.lookup("MemoType"), switchName:"type", switches:[["memoNone", xdr["void"]()], ["memoText", "text"], ["memoId", "id"], ["memoHash", "hash"], ["memoReturn", "retHash"]], arms:{text:xdr.string(28), id:xdr.lookup("Uint64"), hash:xdr.lookup("Hash"), retHash:xdr.lookup("Hash")}});xdr.struct("TimeBounds", [["minTime", xdr.lookup("Uint64")], ["maxTime", xdr.lookup("Uint64")]]);xdr.union("TransactionExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("Transaction", [["sourceAccount", xdr.lookup("AccountId")], ["fee", xdr.lookup("Uint32")], ["seqNum", xdr.lookup("SequenceNumber")], ["timeBounds", xdr.option(xdr.lookup("TimeBounds"))], ["memo", xdr.lookup("Memo")], ["operations", xdr.varArray(xdr.lookup("Operation"), 100)], ["ext", xdr.lookup("TransactionExt")]]);xdr.union("TransactionSignaturePayloadTaggedTransaction", {switchOn:xdr.lookup("EnvelopeType"), switchName:"type", switches:[["envelopeTypeTx", "tx"]], arms:{tx:xdr.lookup("Transaction")}});xdr.struct("TransactionSignaturePayload", [["networkId", xdr.lookup("Hash")], ["taggedTransaction", xdr.lookup("TransactionSignaturePayloadTaggedTransaction")]]);xdr.struct("TransactionEnvelope", [["tx", xdr.lookup("Transaction")], ["signatures", xdr.varArray(xdr.lookup("DecoratedSignature"), 20)]]);xdr.struct("ClaimOfferAtom", [["sellerId", xdr.lookup("AccountId")], ["offerId", xdr.lookup("Uint64")], ["assetSold", xdr.lookup("Asset")], ["amountSold", xdr.lookup("Int64")], ["assetBought", xdr.lookup("Asset")], ["amountBought", xdr.lookup("Int64")]]);xdr["enum"]("CreateAccountResultCode", {createAccountSuccess:0, createAccountMalformed:-1, createAccountUnderfunded:-2, createAccountLowReserve:-3, createAccountAlreadyExist:-4});xdr.union("CreateAccountResult", {switchOn:xdr.lookup("CreateAccountResultCode"), switchName:"code", switches:[["createAccountSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("PaymentResultCode", {paymentSuccess:0, paymentMalformed:-1, paymentUnderfunded:-2, paymentSrcNoTrust:-3, paymentSrcNotAuthorized:-4, paymentNoDestination:-5, paymentNoTrust:-6, paymentNotAuthorized:-7, paymentLineFull:-8, paymentNoIssuer:-9});xdr.union("PaymentResult", {switchOn:xdr.lookup("PaymentResultCode"), switchName:"code", switches:[["paymentSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("PathPaymentResultCode", {pathPaymentSuccess:0, pathPaymentMalformed:-1, pathPaymentUnderfunded:-2, pathPaymentSrcNoTrust:-3, pathPaymentSrcNotAuthorized:-4, pathPaymentNoDestination:-5, pathPaymentNoTrust:-6, pathPaymentNotAuthorized:-7, pathPaymentLineFull:-8, pathPaymentNoIssuer:-9, pathPaymentTooFewOffer:-10, pathPaymentOfferCrossSelf:-11, pathPaymentOverSendmax:-12});xdr.struct("SimplePaymentResult", [["destination", xdr.lookup("AccountId")], ["asset", xdr.lookup("Asset")], ["amount", xdr.lookup("Int64")]]);xdr.struct("PathPaymentResultSuccess", [["offers", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["last", xdr.lookup("SimplePaymentResult")]]);xdr.union("PathPaymentResult", {switchOn:xdr.lookup("PathPaymentResultCode"), switchName:"code", switches:[["pathPaymentSuccess", "success"], ["pathPaymentNoIssuer", "noIssuer"]], arms:{success:xdr.lookup("PathPaymentResultSuccess"), noIssuer:xdr.lookup("Asset")}, defaultArm:xdr["void"]()});xdr["enum"]("ManageOfferResultCode", {manageOfferSuccess:0, manageOfferMalformed:-1, manageOfferSellNoTrust:-2, manageOfferBuyNoTrust:-3, manageOfferSellNotAuthorized:-4, manageOfferBuyNotAuthorized:-5, manageOfferLineFull:-6, manageOfferUnderfunded:-7, manageOfferCrossSelf:-8, manageOfferSellNoIssuer:-9, manageOfferBuyNoIssuer:-10, manageOfferNotFound:-11, manageOfferLowReserve:-12});xdr["enum"]("ManageOfferEffect", {manageOfferCreated:0, manageOfferUpdated:1, manageOfferDeleted:2});xdr.union("ManageOfferSuccessResultOffer", {switchOn:xdr.lookup("ManageOfferEffect"), switchName:"effect", switches:[["manageOfferCreated", "offer"], ["manageOfferUpdated", "offer"]], arms:{offer:xdr.lookup("OfferEntry")}, defaultArm:xdr["void"]()});xdr.struct("ManageOfferSuccessResult", [["offersClaimed", xdr.varArray(xdr.lookup("ClaimOfferAtom"), 2147483647)], ["offer", xdr.lookup("ManageOfferSuccessResultOffer")]]);xdr.union("ManageOfferResult", {switchOn:xdr.lookup("ManageOfferResultCode"), switchName:"code", switches:[["manageOfferSuccess", "success"]], arms:{success:xdr.lookup("ManageOfferSuccessResult")}, defaultArm:xdr["void"]()});xdr["enum"]("SetOptionsResultCode", {setOptionsSuccess:0, setOptionsLowReserve:-1, setOptionsTooManySigner:-2, setOptionsBadFlag:-3, setOptionsInvalidInflation:-4, setOptionsCantChange:-5, setOptionsUnknownFlag:-6, setOptionsThresholdOutOfRange:-7, setOptionsBadSigner:-8, setOptionsInvalidHomeDomain:-9});xdr.union("SetOptionsResult", {switchOn:xdr.lookup("SetOptionsResultCode"), switchName:"code", switches:[["setOptionsSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("ChangeTrustResultCode", {changeTrustSuccess:0, changeTrustMalformed:-1, changeTrustNoIssuer:-2, changeTrustInvalidLimit:-3, changeTrustLowReserve:-4, changeTrustSelfNotAllowed:-5});xdr.union("ChangeTrustResult", {switchOn:xdr.lookup("ChangeTrustResultCode"), switchName:"code", switches:[["changeTrustSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("AllowTrustResultCode", {allowTrustSuccess:0, allowTrustMalformed:-1, allowTrustNoTrustLine:-2, allowTrustTrustNotRequired:-3, allowTrustCantRevoke:-4, allowTrustSelfNotAllowed:-5});xdr.union("AllowTrustResult", {switchOn:xdr.lookup("AllowTrustResultCode"), switchName:"code", switches:[["allowTrustSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("AccountMergeResultCode", {accountMergeSuccess:0, accountMergeMalformed:-1, accountMergeNoAccount:-2, accountMergeImmutableSet:-3, accountMergeHasSubEntry:-4});xdr.union("AccountMergeResult", {switchOn:xdr.lookup("AccountMergeResultCode"), switchName:"code", switches:[["accountMergeSuccess", "sourceAccountBalance"]], arms:{sourceAccountBalance:xdr.lookup("Int64")}, defaultArm:xdr["void"]()});xdr["enum"]("InflationResultCode", {inflationSuccess:0, inflationNotTime:-1});xdr.struct("InflationPayout", [["destination", xdr.lookup("AccountId")], ["amount", xdr.lookup("Int64")]]);xdr.union("InflationResult", {switchOn:xdr.lookup("InflationResultCode"), switchName:"code", switches:[["inflationSuccess", "payouts"]], arms:{payouts:xdr.varArray(xdr.lookup("InflationPayout"), 2147483647)}, defaultArm:xdr["void"]()});xdr["enum"]("ManageDataResultCode", {manageDataSuccess:0, manageDataNotSupportedYet:-1, manageDataNameNotFound:-2, manageDataLowReserve:-3, manageDataInvalidName:-4});xdr.union("ManageDataResult", {switchOn:xdr.lookup("ManageDataResultCode"), switchName:"code", switches:[["manageDataSuccess", xdr["void"]()]], arms:{}, defaultArm:xdr["void"]()});xdr["enum"]("OperationResultCode", {opInner:0, opBadAuth:-1, opNoAccount:-2});xdr.union("OperationResultTr", {switchOn:xdr.lookup("OperationType"), switchName:"type", switches:[["createAccount", "createAccountResult"], ["payment", "paymentResult"], ["pathPayment", "pathPaymentResult"], ["manageOffer", "manageOfferResult"], ["createPassiveOffer", "createPassiveOfferResult"], ["setOption", "setOptionsResult"], ["changeTrust", "changeTrustResult"], ["allowTrust", "allowTrustResult"], ["accountMerge", "accountMergeResult"], ["inflation", "inflationResult"], ["manageDatum", "manageDataResult"]], arms:{createAccountResult:xdr.lookup("CreateAccountResult"), paymentResult:xdr.lookup("PaymentResult"), pathPaymentResult:xdr.lookup("PathPaymentResult"), manageOfferResult:xdr.lookup("ManageOfferResult"), createPassiveOfferResult:xdr.lookup("ManageOfferResult"), setOptionsResult:xdr.lookup("SetOptionsResult"), changeTrustResult:xdr.lookup("ChangeTrustResult"), allowTrustResult:xdr.lookup("AllowTrustResult"), accountMergeResult:xdr.lookup("AccountMergeResult"), inflationResult:xdr.lookup("InflationResult"), manageDataResult:xdr.lookup("ManageDataResult")}});xdr.union("OperationResult", {switchOn:xdr.lookup("OperationResultCode"), switchName:"code", switches:[["opInner", "tr"]], arms:{tr:xdr.lookup("OperationResultTr")}, defaultArm:xdr["void"]()});xdr["enum"]("TransactionResultCode", {txSuccess:0, txFailed:-1, txTooEarly:-2, txTooLate:-3, txMissingOperation:-4, txBadSeq:-5, txBadAuth:-6, txInsufficientBalance:-7, txNoAccount:-8, txInsufficientFee:-9, txBadAuthExtra:-10, txInternalError:-11});xdr.union("TransactionResultResult", {switchOn:xdr.lookup("TransactionResultCode"), switchName:"code", switches:[["txSuccess", "results"], ["txFailed", "results"]], arms:{results:xdr.varArray(xdr.lookup("OperationResult"), 2147483647)}, defaultArm:xdr["void"]()});xdr.union("TransactionResultExt", {switchOn:xdr.int(), switchName:"v", switches:[[0, xdr["void"]()]], arms:{}});xdr.struct("TransactionResult", [["feeCharged", xdr.lookup("Int64")], ["result", xdr.lookup("TransactionResultResult")], ["ext", xdr.lookup("TransactionResultExt")]]);xdr.typedef("Hash", xdr.opaque(32));xdr.typedef("Uint256", xdr.opaque(32));xdr.typedef("Uint32", xdr.uint());xdr.typedef("Int32", xdr.int());xdr.typedef("Uint64", xdr.uhyper());xdr.typedef("Int64", xdr.hyper());xdr["enum"]("CryptoKeyType", {keyTypeEd25519:0, keyTypePreAuthTx:1, keyTypeHashX:2});xdr["enum"]("PublicKeyType", {publicKeyTypeEd25519:0});xdr["enum"]("SignerKeyType", {signerKeyTypeEd25519:0, signerKeyTypePreAuthTx:1, signerKeyTypeHashX:2});xdr.union("PublicKey", {switchOn:xdr.lookup("PublicKeyType"), switchName:"type", switches:[["publicKeyTypeEd25519", "ed25519"]], arms:{ed25519:xdr.lookup("Uint256")}});xdr.union("SignerKey", {switchOn:xdr.lookup("SignerKeyType"), switchName:"type", switches:[["signerKeyTypeEd25519", "ed25519"], ["signerKeyTypePreAuthTx", "preAuthTx"], ["signerKeyTypeHashX", "hashX"]], arms:{ed25519:xdr.lookup("Uint256"), preAuthTx:xdr.lookup("Uint256"), hashX:xdr.lookup("Uint256")}});xdr.typedef("Signature", xdr.varOpaque(64));xdr.typedef("SignatureHint", xdr.opaque(4));xdr.typedef("NodeId", xdr.lookup("PublicKey"));xdr.struct("Curve25519Secret", [["key", xdr.opaque(32)]]);xdr.struct("Curve25519Public", [["key", xdr.opaque(32)]]);xdr.struct("HmacSha256Key", [["key", xdr.opaque(32)]]);xdr.struct("HmacSha256Mac", [["mac", xdr.opaque(32)]]);});module.exports = types;
 
 /***/ }),
-/* 239 */
+/* 236 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _defaults = __webpack_require__(240)["default"];
+	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
 
-	var _interopRequireWildcard = __webpack_require__(242)["default"];
+	var _defaults = function (obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(243)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(237)));
 
-	var _config = __webpack_require__(274);
+	var _config = __webpack_require__(262);
 
 	_defaults(exports, _interopRequireWildcard(_config));
 
 	var config = _config.config;
 
 /***/ }),
-/* 240 */
+/* 237 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(241)["default"];
+	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
 
-	exports["default"] = function (obj, defaults) {
-	  var keys = _core.Object.getOwnPropertyNames(defaults);
-
-	  for (var i = 0; i < keys.length; i++) {
-	    var key = keys[i];
-
-	    var value = _core.Object.getOwnPropertyDescriptor(defaults, key);
-
-	    if (value && value.configurable && obj[key] === undefined) {
-	      Object.defineProperty(obj, key, value);
-	    }
-	  }
-
-	  return obj;
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 241 */
-/***/ (function(module, exports) {
-
-	/**
-	 * Core.js 0.6.1
-	 * https://github.com/zloirock/core-js
-	 * License: http://rock.mit-license.org
-	 * © 2015 Denis Pushkarev
-	 */
-	!function(global, framework, undefined){
-	'use strict';
-
-	/******************************************************************************
-	 * Module : common                                                            *
-	 ******************************************************************************/
-
-	  // Shortcuts for [[Class]] & property names
-	var OBJECT          = 'Object'
-	  , FUNCTION        = 'Function'
-	  , ARRAY           = 'Array'
-	  , STRING          = 'String'
-	  , NUMBER          = 'Number'
-	  , REGEXP          = 'RegExp'
-	  , DATE            = 'Date'
-	  , MAP             = 'Map'
-	  , SET             = 'Set'
-	  , WEAKMAP         = 'WeakMap'
-	  , WEAKSET         = 'WeakSet'
-	  , SYMBOL          = 'Symbol'
-	  , PROMISE         = 'Promise'
-	  , MATH            = 'Math'
-	  , ARGUMENTS       = 'Arguments'
-	  , PROTOTYPE       = 'prototype'
-	  , CONSTRUCTOR     = 'constructor'
-	  , TO_STRING       = 'toString'
-	  , TO_STRING_TAG   = TO_STRING + 'Tag'
-	  , TO_LOCALE       = 'toLocaleString'
-	  , HAS_OWN         = 'hasOwnProperty'
-	  , FOR_EACH        = 'forEach'
-	  , ITERATOR        = 'iterator'
-	  , FF_ITERATOR     = '@@' + ITERATOR
-	  , PROCESS         = 'process'
-	  , CREATE_ELEMENT  = 'createElement'
-	  // Aliases global objects and prototypes
-	  , Function        = global[FUNCTION]
-	  , Object          = global[OBJECT]
-	  , Array           = global[ARRAY]
-	  , String          = global[STRING]
-	  , Number          = global[NUMBER]
-	  , RegExp          = global[REGEXP]
-	  , Date            = global[DATE]
-	  , Map             = global[MAP]
-	  , Set             = global[SET]
-	  , WeakMap         = global[WEAKMAP]
-	  , WeakSet         = global[WEAKSET]
-	  , Symbol          = global[SYMBOL]
-	  , Math            = global[MATH]
-	  , TypeError       = global.TypeError
-	  , RangeError      = global.RangeError
-	  , setTimeout      = global.setTimeout
-	  , setImmediate    = global.setImmediate
-	  , clearImmediate  = global.clearImmediate
-	  , parseInt        = global.parseInt
-	  , isFinite        = global.isFinite
-	  , process         = global[PROCESS]
-	  , nextTick        = process && process.nextTick
-	  , document        = global.document
-	  , html            = document && document.documentElement
-	  , navigator       = global.navigator
-	  , define          = global.define
-	  , console         = global.console || {}
-	  , ArrayProto      = Array[PROTOTYPE]
-	  , ObjectProto     = Object[PROTOTYPE]
-	  , FunctionProto   = Function[PROTOTYPE]
-	  , Infinity        = 1 / 0
-	  , DOT             = '.';
-
-	// http://jsperf.com/core-js-isobject
-	function isObject(it){
-	  return it !== null && (typeof it == 'object' || typeof it == 'function');
-	}
-	function isFunction(it){
-	  return typeof it == 'function';
-	}
-	// Native function?
-	var isNative = ctx(/./.test, /\[native code\]\s*\}\s*$/, 1);
-
-	// Object internal [[Class]] or toStringTag
-	// http://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.prototype.tostring
-	var toString = ObjectProto[TO_STRING];
-	function setToStringTag(it, tag, stat){
-	  if(it && !has(it = stat ? it : it[PROTOTYPE], SYMBOL_TAG))hidden(it, SYMBOL_TAG, tag);
-	}
-	function cof(it){
-	  return toString.call(it).slice(8, -1);
-	}
-	function classof(it){
-	  var O, T;
-	  return it == undefined ? it === undefined ? 'Undefined' : 'Null'
-	    : typeof (T = (O = Object(it))[SYMBOL_TAG]) == 'string' ? T : cof(O);
-	}
-
-	// Function
-	var call  = FunctionProto.call
-	  , apply = FunctionProto.apply
-	  , REFERENCE_GET;
-	// Partial apply
-	function part(/* ...args */){
-	  var fn     = assertFunction(this)
-	    , length = arguments.length
-	    , args   = Array(length)
-	    , i      = 0
-	    , _      = path._
-	    , holder = false;
-	  while(length > i)if((args[i] = arguments[i++]) === _)holder = true;
-	  return function(/* ...args */){
-	    var that    = this
-	      , _length = arguments.length
-	      , i = 0, j = 0, _args;
-	    if(!holder && !_length)return invoke(fn, args, that);
-	    _args = args.slice();
-	    if(holder)for(;length > i; i++)if(_args[i] === _)_args[i] = arguments[j++];
-	    while(_length > j)_args.push(arguments[j++]);
-	    return invoke(fn, _args, that);
-	  }
-	}
-	// Optional / simple context binding
-	function ctx(fn, that, length){
-	  assertFunction(fn);
-	  if(~length && that === undefined)return fn;
-	  switch(length){
-	    case 1: return function(a){
-	      return fn.call(that, a);
-	    }
-	    case 2: return function(a, b){
-	      return fn.call(that, a, b);
-	    }
-	    case 3: return function(a, b, c){
-	      return fn.call(that, a, b, c);
-	    }
-	  } return function(/* ...args */){
-	      return fn.apply(that, arguments);
-	  }
-	}
-	// Fast apply
-	// http://jsperf.lnkit.com/fast-apply/5
-	function invoke(fn, args, that){
-	  var un = that === undefined;
-	  switch(args.length | 0){
-	    case 0: return un ? fn()
-	                      : fn.call(that);
-	    case 1: return un ? fn(args[0])
-	                      : fn.call(that, args[0]);
-	    case 2: return un ? fn(args[0], args[1])
-	                      : fn.call(that, args[0], args[1]);
-	    case 3: return un ? fn(args[0], args[1], args[2])
-	                      : fn.call(that, args[0], args[1], args[2]);
-	    case 4: return un ? fn(args[0], args[1], args[2], args[3])
-	                      : fn.call(that, args[0], args[1], args[2], args[3]);
-	    case 5: return un ? fn(args[0], args[1], args[2], args[3], args[4])
-	                      : fn.call(that, args[0], args[1], args[2], args[3], args[4]);
-	  } return              fn.apply(that, args);
-	}
-
-	// Object:
-	var create           = Object.create
-	  , getPrototypeOf   = Object.getPrototypeOf
-	  , setPrototypeOf   = Object.setPrototypeOf
-	  , defineProperty   = Object.defineProperty
-	  , defineProperties = Object.defineProperties
-	  , getOwnDescriptor = Object.getOwnPropertyDescriptor
-	  , getKeys          = Object.keys
-	  , getNames         = Object.getOwnPropertyNames
-	  , getSymbols       = Object.getOwnPropertySymbols
-	  , isFrozen         = Object.isFrozen
-	  , has              = ctx(call, ObjectProto[HAS_OWN], 2)
-	  // Dummy, fix for not array-like ES3 string in es5 module
-	  , ES5Object        = Object
-	  , Dict;
-	function toObject(it){
-	  return ES5Object(assertDefined(it));
-	}
-	function returnIt(it){
-	  return it;
-	}
-	function returnThis(){
-	  return this;
-	}
-	function get(object, key){
-	  if(has(object, key))return object[key];
-	}
-	function ownKeys(it){
-	  assertObject(it);
-	  return getSymbols ? getNames(it).concat(getSymbols(it)) : getNames(it);
-	}
-	// 19.1.2.1 Object.assign(target, source, ...)
-	var assign = Object.assign || function(target, source){
-	  var T = Object(assertDefined(target))
-	    , l = arguments.length
-	    , i = 1;
-	  while(l > i){
-	    var S      = ES5Object(arguments[i++])
-	      , keys   = getKeys(S)
-	      , length = keys.length
-	      , j      = 0
-	      , key;
-	    while(length > j)T[key = keys[j++]] = S[key];
-	  }
-	  return T;
-	}
-	function keyOf(object, el){
-	  var O      = toObject(object)
-	    , keys   = getKeys(O)
-	    , length = keys.length
-	    , index  = 0
-	    , key;
-	  while(length > index)if(O[key = keys[index++]] === el)return key;
-	}
-
-	// Array
-	// array('str1,str2,str3') => ['str1', 'str2', 'str3']
-	function array(it){
-	  return String(it).split(',');
-	}
-	var push    = ArrayProto.push
-	  , unshift = ArrayProto.unshift
-	  , slice   = ArrayProto.slice
-	  , splice  = ArrayProto.splice
-	  , indexOf = ArrayProto.indexOf
-	  , forEach = ArrayProto[FOR_EACH];
-	/*
-	 * 0 -> forEach
-	 * 1 -> map
-	 * 2 -> filter
-	 * 3 -> some
-	 * 4 -> every
-	 * 5 -> find
-	 * 6 -> findIndex
-	 */
-	function createArrayMethod(type){
-	  var isMap       = type == 1
-	    , isFilter    = type == 2
-	    , isSome      = type == 3
-	    , isEvery     = type == 4
-	    , isFindIndex = type == 6
-	    , noholes     = type == 5 || isFindIndex;
-	  return function(callbackfn/*, that = undefined */){
-	    var O      = Object(assertDefined(this))
-	      , that   = arguments[1]
-	      , self   = ES5Object(O)
-	      , f      = ctx(callbackfn, that, 3)
-	      , length = toLength(self.length)
-	      , index  = 0
-	      , result = isMap ? Array(length) : isFilter ? [] : undefined
-	      , val, res;
-	    for(;length > index; index++)if(noholes || index in self){
-	      val = self[index];
-	      res = f(val, index, O);
-	      if(type){
-	        if(isMap)result[index] = res;             // map
-	        else if(res)switch(type){
-	          case 3: return true;                    // some
-	          case 5: return val;                     // find
-	          case 6: return index;                   // findIndex
-	          case 2: result.push(val);               // filter
-	        } else if(isEvery)return false;           // every
-	      }
-	    }
-	    return isFindIndex ? -1 : isSome || isEvery ? isEvery : result;
-	  }
-	}
-	function createArrayContains(isContains){
-	  return function(el /*, fromIndex = 0 */){
-	    var O      = toObject(this)
-	      , length = toLength(O.length)
-	      , index  = toIndex(arguments[1], length);
-	    if(isContains && el != el){
-	      for(;length > index; index++)if(sameNaN(O[index]))return isContains || index;
-	    } else for(;length > index; index++)if(isContains || index in O){
-	      if(O[index] === el)return isContains || index;
-	    } return !isContains && -1;
-	  }
-	}
-	function generic(A, B){
-	  // strange IE quirks mode bug -> use typeof vs isFunction
-	  return typeof A == 'function' ? A : B;
-	}
-
-	// Math
-	var MAX_SAFE_INTEGER = 0x1fffffffffffff // pow(2, 53) - 1 == 9007199254740991
-	  , pow    = Math.pow
-	  , abs    = Math.abs
-	  , ceil   = Math.ceil
-	  , floor  = Math.floor
-	  , max    = Math.max
-	  , min    = Math.min
-	  , random = Math.random
-	  , trunc  = Math.trunc || function(it){
-	      return (it > 0 ? floor : ceil)(it);
-	    }
-	// 20.1.2.4 Number.isNaN(number)
-	function sameNaN(number){
-	  return number != number;
-	}
-	// 7.1.4 ToInteger
-	function toInteger(it){
-	  return isNaN(it) ? 0 : trunc(it);
-	}
-	// 7.1.15 ToLength
-	function toLength(it){
-	  return it > 0 ? min(toInteger(it), MAX_SAFE_INTEGER) : 0;
-	}
-	function toIndex(index, length){
-	  var index = toInteger(index);
-	  return index < 0 ? max(index + length, 0) : min(index, length);
-	}
-	function lz(num){
-	  return num > 9 ? num : '0' + num;
-	}
-
-	function createReplacer(regExp, replace, isStatic){
-	  var replacer = isObject(replace) ? function(part){
-	    return replace[part];
-	  } : replace;
-	  return function(it){
-	    return String(isStatic ? it : this).replace(regExp, replacer);
-	  }
-	}
-	function createPointAt(toString){
-	  return function(pos){
-	    var s = String(assertDefined(this))
-	      , i = toInteger(pos)
-	      , l = s.length
-	      , a, b;
-	    if(i < 0 || i >= l)return toString ? '' : undefined;
-	    a = s.charCodeAt(i);
-	    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-	      ? toString ? s.charAt(i) : a
-	      : toString ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-	  }
-	}
-
-	// Assertion & errors
-	var REDUCE_ERROR = 'Reduce of empty object with no initial value';
-	function assert(condition, msg1, msg2){
-	  if(!condition)throw TypeError(msg2 ? msg1 + msg2 : msg1);
-	}
-	function assertDefined(it){
-	  if(it == undefined)throw TypeError('Function called on null or undefined');
-	  return it;
-	}
-	function assertFunction(it){
-	  assert(isFunction(it), it, ' is not a function!');
-	  return it;
-	}
-	function assertObject(it){
-	  assert(isObject(it), it, ' is not an object!');
-	  return it;
-	}
-	function assertInstance(it, Constructor, name){
-	  assert(it instanceof Constructor, name, ": use the 'new' operator!");
-	}
-
-	// Property descriptors & Symbol
-	function descriptor(bitmap, value){
-	  return {
-	    enumerable  : !(bitmap & 1),
-	    configurable: !(bitmap & 2),
-	    writable    : !(bitmap & 4),
-	    value       : value
-	  }
-	}
-	function simpleSet(object, key, value){
-	  object[key] = value;
-	  return object;
-	}
-	function createDefiner(bitmap){
-	  return DESC ? function(object, key, value){
-	    return defineProperty(object, key, descriptor(bitmap, value));
-	  } : simpleSet;
-	}
-	function uid(key){
-	  return SYMBOL + '(' + key + ')_' + (++sid + random())[TO_STRING](36);
-	}
-	function getWellKnownSymbol(name, setter){
-	  return (Symbol && Symbol[name]) || (setter ? Symbol : safeSymbol)(SYMBOL + DOT + name);
-	}
-	// The engine works fine with descriptors? Thank's IE8 for his funny defineProperty.
-	var DESC = !!function(){
-	      try {
-	        return defineProperty({}, 'a', {get: function(){ return 2 }}).a == 2;
-	      } catch(e){}
-	    }()
-	  , sid    = 0
-	  , hidden = createDefiner(1)
-	  , set    = Symbol ? simpleSet : hidden
-	  , safeSymbol = Symbol || uid;
-	function assignHidden(target, src){
-	  for(var key in src)hidden(target, key, src[key]);
-	  return target;
-	}
-
-	var SYMBOL_UNSCOPABLES = getWellKnownSymbol('unscopables')
-	  , ArrayUnscopables   = ArrayProto[SYMBOL_UNSCOPABLES] || {}
-	  , SYMBOL_TAG         = getWellKnownSymbol(TO_STRING_TAG)
-	  , SYMBOL_SPECIES     = getWellKnownSymbol('species')
-	  , SYMBOL_ITERATOR;
-	function setSpecies(C){
-	  if(DESC && (framework || !isNative(C)))defineProperty(C, SYMBOL_SPECIES, {
-	    configurable: true,
-	    get: returnThis
-	  });
-	}
-
-	/******************************************************************************
-	 * Module : common.export                                                     *
-	 ******************************************************************************/
-
-	var NODE = cof(process) == PROCESS
-	  , core = {}
-	  , path = framework ? global : core
-	  , old  = global.core
-	  , exportGlobal
-	  // type bitmap
-	  , FORCED = 1
-	  , GLOBAL = 2
-	  , STATIC = 4
-	  , PROTO  = 8
-	  , BIND   = 16
-	  , WRAP   = 32;
-	function $define(type, name, source){
-	  var key, own, out, exp
-	    , isGlobal = type & GLOBAL
-	    , target   = isGlobal ? global : (type & STATIC)
-	        ? global[name] : (global[name] || ObjectProto)[PROTOTYPE]
-	    , exports  = isGlobal ? core : core[name] || (core[name] = {});
-	  if(isGlobal)source = name;
-	  for(key in source){
-	    // there is a similar native
-	    own = !(type & FORCED) && target && key in target
-	      && (!isFunction(target[key]) || isNative(target[key]));
-	    // export native or passed
-	    out = (own ? target : source)[key];
-	    // prevent global pollution for namespaces
-	    if(!framework && isGlobal && !isFunction(target[key]))exp = source[key];
-	    // bind timers to global for call from export context
-	    else if(type & BIND && own)exp = ctx(out, global);
-	    // wrap global constructors for prevent change them in library
-	    else if(type & WRAP && !framework && target[key] == out){
-	      exp = function(param){
-	        return this instanceof out ? new out(param) : out(param);
-	      }
-	      exp[PROTOTYPE] = out[PROTOTYPE];
-	    } else exp = type & PROTO && isFunction(out) ? ctx(call, out) : out;
-	    // extend global
-	    if(framework && target && !own){
-	      if(isGlobal)target[key] = out;
-	      else delete target[key] && hidden(target, key, out);
-	    }
-	    // export
-	    if(exports[key] != out)hidden(exports, key, exp);
-	  }
-	}
-	// CommonJS export
-	if(typeof module != 'undefined' && module.exports)module.exports = core;
-	// RequireJS export
-	else if(isFunction(define) && define.amd)define(function(){return core});
-	// Export to global object
-	else exportGlobal = true;
-	if(exportGlobal || framework){
-	  core.noConflict = function(){
-	    global.core = old;
-	    return core;
-	  }
-	  global.core = core;
-	}
-
-	/******************************************************************************
-	 * Module : common.iterators                                                  *
-	 ******************************************************************************/
-
-	SYMBOL_ITERATOR = getWellKnownSymbol(ITERATOR);
-	var ITER  = safeSymbol('iter')
-	  , KEY   = 1
-	  , VALUE = 2
-	  , Iterators = {}
-	  , IteratorPrototype = {}
-	    // Safari has byggy iterators w/o `next`
-	  , BUGGY_ITERATORS = 'keys' in ArrayProto && !('next' in [].keys());
-	// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-	setIterator(IteratorPrototype, returnThis);
-	function setIterator(O, value){
-	  hidden(O, SYMBOL_ITERATOR, value);
-	  // Add iterator for FF iterator protocol
-	  FF_ITERATOR in ArrayProto && hidden(O, FF_ITERATOR, value);
-	}
-	function createIterator(Constructor, NAME, next, proto){
-	  Constructor[PROTOTYPE] = create(proto || IteratorPrototype, {next: descriptor(1, next)});
-	  setToStringTag(Constructor, NAME + ' Iterator');
-	}
-	function defineIterator(Constructor, NAME, value, DEFAULT){
-	  var proto = Constructor[PROTOTYPE]
-	    , iter  = get(proto, SYMBOL_ITERATOR) || get(proto, FF_ITERATOR) || (DEFAULT && get(proto, DEFAULT)) || value;
-	  if(framework){
-	    // Define iterator
-	    setIterator(proto, iter);
-	    if(iter !== value){
-	      var iterProto = getPrototypeOf(iter.call(new Constructor));
-	      // Set @@toStringTag to native iterators
-	      setToStringTag(iterProto, NAME + ' Iterator', true);
-	      // FF fix
-	      has(proto, FF_ITERATOR) && setIterator(iterProto, returnThis);
-	    }
-	  }
-	  // Plug for library
-	  Iterators[NAME] = iter;
-	  // FF & v8 fix
-	  Iterators[NAME + ' Iterator'] = returnThis;
-	  return iter;
-	}
-	function defineStdIterators(Base, NAME, Constructor, next, DEFAULT, IS_SET){
-	  function createIter(kind){
-	    return function(){
-	      return new Constructor(this, kind);
-	    }
-	  }
-	  createIterator(Constructor, NAME, next);
-	  var entries = createIter(KEY+VALUE)
-	    , values  = createIter(VALUE);
-	  if(DEFAULT == VALUE)values = defineIterator(Base, NAME, values, 'values');
-	  else entries = defineIterator(Base, NAME, entries, 'entries');
-	  if(DEFAULT){
-	    $define(PROTO + FORCED * BUGGY_ITERATORS, NAME, {
-	      entries: entries,
-	      keys: IS_SET ? values : createIter(KEY),
-	      values: values
-	    });
-	  }
-	}
-	function iterResult(done, value){
-	  return {value: value, done: !!done};
-	}
-	function isIterable(it){
-	  var O      = Object(it)
-	    , Symbol = global[SYMBOL]
-	    , hasExt = (Symbol && Symbol[ITERATOR] || FF_ITERATOR) in O;
-	  return hasExt || SYMBOL_ITERATOR in O || has(Iterators, classof(O));
-	}
-	function getIterator(it){
-	  var Symbol  = global[SYMBOL]
-	    , ext     = it[Symbol && Symbol[ITERATOR] || FF_ITERATOR]
-	    , getIter = ext || it[SYMBOL_ITERATOR] || Iterators[classof(it)];
-	  return assertObject(getIter.call(it));
-	}
-	function stepCall(fn, value, entries){
-	  return entries ? invoke(fn, value) : fn(value);
-	}
-	function checkDangerIterClosing(fn){
-	  var danger = true;
-	  var O = {
-	    next: function(){ throw 1 },
-	    'return': function(){ danger = false }
-	  };
-	  O[SYMBOL_ITERATOR] = returnThis;
-	  try {
-	    fn(O);
-	  } catch(e){}
-	  return danger;
-	}
-	function closeIterator(iterator){
-	  var ret = iterator['return'];
-	  if(ret !== undefined)ret.call(iterator);
-	}
-	function safeIterClose(exec, iterator){
-	  try {
-	    exec(iterator);
-	  } catch(e){
-	    closeIterator(iterator);
-	    throw e;
-	  }
-	}
-	function forOf(iterable, entries, fn, that){
-	  safeIterClose(function(iterator){
-	    var f = ctx(fn, that, entries ? 2 : 1)
-	      , step;
-	    while(!(step = iterator.next()).done)if(stepCall(f, step.value, entries) === false){
-	      return closeIterator(iterator);
-	    }
-	  }, getIterator(iterable));
-	}
-
-	/******************************************************************************
-	 * Module : es6.symbol                                                        *
-	 ******************************************************************************/
-
-	// ECMAScript 6 symbols shim
-	!function(TAG, SymbolRegistry, AllSymbols, setter){
-	  // 19.4.1.1 Symbol([description])
-	  if(!isNative(Symbol)){
-	    Symbol = function(description){
-	      assert(!(this instanceof Symbol), SYMBOL + ' is not a ' + CONSTRUCTOR);
-	      var tag = uid(description)
-	        , sym = set(create(Symbol[PROTOTYPE]), TAG, tag);
-	      AllSymbols[tag] = sym;
-	      DESC && setter && defineProperty(ObjectProto, tag, {
-	        configurable: true,
-	        set: function(value){
-	          hidden(this, tag, value);
-	        }
-	      });
-	      return sym;
-	    }
-	    hidden(Symbol[PROTOTYPE], TO_STRING, function(){
-	      return this[TAG];
-	    });
-	  }
-	  $define(GLOBAL + WRAP, {Symbol: Symbol});
-	  
-	  var symbolStatics = {
-	    // 19.4.2.1 Symbol.for(key)
-	    'for': function(key){
-	      return has(SymbolRegistry, key += '')
-	        ? SymbolRegistry[key]
-	        : SymbolRegistry[key] = Symbol(key);
-	    },
-	    // 19.4.2.4 Symbol.iterator
-	    iterator: SYMBOL_ITERATOR || getWellKnownSymbol(ITERATOR),
-	    // 19.4.2.5 Symbol.keyFor(sym)
-	    keyFor: part.call(keyOf, SymbolRegistry),
-	    // 19.4.2.10 Symbol.species
-	    species: SYMBOL_SPECIES,
-	    // 19.4.2.13 Symbol.toStringTag
-	    toStringTag: SYMBOL_TAG = getWellKnownSymbol(TO_STRING_TAG, true),
-	    // 19.4.2.14 Symbol.unscopables
-	    unscopables: SYMBOL_UNSCOPABLES,
-	    pure: safeSymbol,
-	    set: set,
-	    useSetter: function(){setter = true},
-	    useSimple: function(){setter = false}
-	  };
-	  // 19.4.2.2 Symbol.hasInstance
-	  // 19.4.2.3 Symbol.isConcatSpreadable
-	  // 19.4.2.6 Symbol.match
-	  // 19.4.2.8 Symbol.replace
-	  // 19.4.2.9 Symbol.search
-	  // 19.4.2.11 Symbol.split
-	  // 19.4.2.12 Symbol.toPrimitive
-	  forEach.call(array('hasInstance,isConcatSpreadable,match,replace,search,split,toPrimitive'),
-	    function(it){
-	      symbolStatics[it] = getWellKnownSymbol(it);
-	    }
-	  );
-	  $define(STATIC, SYMBOL, symbolStatics);
-	  
-	  setToStringTag(Symbol, SYMBOL);
-	  
-	  $define(STATIC + FORCED * !isNative(Symbol), OBJECT, {
-	    // 19.1.2.7 Object.getOwnPropertyNames(O)
-	    getOwnPropertyNames: function(it){
-	      var names = getNames(toObject(it)), result = [], key, i = 0;
-	      while(names.length > i)has(AllSymbols, key = names[i++]) || result.push(key);
-	      return result;
-	    },
-	    // 19.1.2.8 Object.getOwnPropertySymbols(O)
-	    getOwnPropertySymbols: function(it){
-	      var names = getNames(toObject(it)), result = [], key, i = 0;
-	      while(names.length > i)has(AllSymbols, key = names[i++]) && result.push(AllSymbols[key]);
-	      return result;
-	    }
-	  });
-	  
-	  // 20.2.1.9 Math[@@toStringTag]
-	  setToStringTag(Math, MATH, true);
-	  // 24.3.3 JSON[@@toStringTag]
-	  setToStringTag(global.JSON, 'JSON', true);
-	}(safeSymbol('tag'), {}, {}, true);
-
-	/******************************************************************************
-	 * Module : es6.object.statics                                                *
-	 ******************************************************************************/
-
-	!function(){
-	  var objectStatic = {
-	    // 19.1.3.1 Object.assign(target, source)
-	    assign: assign,
-	    // 19.1.3.10 Object.is(value1, value2)
-	    is: function(x, y){
-	      return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
-	    }
-	  };
-	  // 19.1.3.19 Object.setPrototypeOf(O, proto)
-	  // Works with __proto__ only. Old v8 can't works with null proto objects.
-	  '__proto__' in ObjectProto && function(buggy, set){
-	    try {
-	      set = ctx(call, getOwnDescriptor(ObjectProto, '__proto__').set, 2);
-	      set({}, ArrayProto);
-	    } catch(e){ buggy = true }
-	    objectStatic.setPrototypeOf = setPrototypeOf = setPrototypeOf || function(O, proto){
-	      assertObject(O);
-	      assert(proto === null || isObject(proto), proto, ": can't set as prototype!");
-	      if(buggy)O.__proto__ = proto;
-	      else set(O, proto);
-	      return O;
-	    }
-	  }();
-	  $define(STATIC, OBJECT, objectStatic);
-	}();
-
-	/******************************************************************************
-	 * Module : es6.object.statics-accept-primitives                              *
-	 ******************************************************************************/
-
-	!function(){
-	  // Object static methods accept primitives
-	  function wrapObjectMethod(key, MODE){
-	    var fn  = Object[key]
-	      , exp = core[OBJECT][key]
-	      , f   = 0
-	      , o   = {};
-	    if(!exp || isNative(exp)){
-	      o[key] = MODE == 1 ? function(it){
-	        return isObject(it) ? fn(it) : it;
-	      } : MODE == 2 ? function(it){
-	        return isObject(it) ? fn(it) : true;
-	      } : MODE == 3 ? function(it){
-	        return isObject(it) ? fn(it) : false;
-	      } : MODE == 4 ? function(it, key){
-	        return fn(toObject(it), key);
-	      } : function(it){
-	        return fn(toObject(it));
-	      };
-	      try { fn(DOT) }
-	      catch(e){ f = 1 }
-	      $define(STATIC + FORCED * f, OBJECT, o);
-	    }
-	  }
-	  wrapObjectMethod('freeze', 1);
-	  wrapObjectMethod('seal', 1);
-	  wrapObjectMethod('preventExtensions', 1);
-	  wrapObjectMethod('isFrozen', 2);
-	  wrapObjectMethod('isSealed', 2);
-	  wrapObjectMethod('isExtensible', 3);
-	  wrapObjectMethod('getOwnPropertyDescriptor', 4);
-	  wrapObjectMethod('getPrototypeOf');
-	  wrapObjectMethod('keys');
-	  wrapObjectMethod('getOwnPropertyNames');
-	}();
-
-	/******************************************************************************
-	 * Module : es6.number.statics                                                *
-	 ******************************************************************************/
-
-	!function(isInteger){
-	  $define(STATIC, NUMBER, {
-	    // 20.1.2.1 Number.EPSILON
-	    EPSILON: pow(2, -52),
-	    // 20.1.2.2 Number.isFinite(number)
-	    isFinite: function(it){
-	      return typeof it == 'number' && isFinite(it);
-	    },
-	    // 20.1.2.3 Number.isInteger(number)
-	    isInteger: isInteger,
-	    // 20.1.2.4 Number.isNaN(number)
-	    isNaN: sameNaN,
-	    // 20.1.2.5 Number.isSafeInteger(number)
-	    isSafeInteger: function(number){
-	      return isInteger(number) && abs(number) <= MAX_SAFE_INTEGER;
-	    },
-	    // 20.1.2.6 Number.MAX_SAFE_INTEGER
-	    MAX_SAFE_INTEGER: MAX_SAFE_INTEGER,
-	    // 20.1.2.10 Number.MIN_SAFE_INTEGER
-	    MIN_SAFE_INTEGER: -MAX_SAFE_INTEGER,
-	    // 20.1.2.12 Number.parseFloat(string)
-	    parseFloat: parseFloat,
-	    // 20.1.2.13 Number.parseInt(string, radix)
-	    parseInt: parseInt
-	  });
-	// 20.1.2.3 Number.isInteger(number)
-	}(Number.isInteger || function(it){
-	  return !isObject(it) && isFinite(it) && floor(it) === it;
-	});
-
-	/******************************************************************************
-	 * Module : es6.math                                                          *
-	 ******************************************************************************/
-
-	// ECMAScript 6 shim
-	!function(){
-	  // 20.2.2.28 Math.sign(x)
-	  var E    = Math.E
-	    , exp  = Math.exp
-	    , log  = Math.log
-	    , sqrt = Math.sqrt
-	    , sign = Math.sign || function(x){
-	        return (x = +x) == 0 || x != x ? x : x < 0 ? -1 : 1;
-	      };
-	  
-	  // 20.2.2.5 Math.asinh(x)
-	  function asinh(x){
-	    return !isFinite(x = +x) || x == 0 ? x : x < 0 ? -asinh(-x) : log(x + sqrt(x * x + 1));
-	  }
-	  // 20.2.2.14 Math.expm1(x)
-	  function expm1(x){
-	    return (x = +x) == 0 ? x : x > -1e-6 && x < 1e-6 ? x + x * x / 2 : exp(x) - 1;
-	  }
-	    
-	  $define(STATIC, MATH, {
-	    // 20.2.2.3 Math.acosh(x)
-	    acosh: function(x){
-	      return (x = +x) < 1 ? NaN : isFinite(x) ? log(x / E + sqrt(x + 1) * sqrt(x - 1) / E) + 1 : x;
-	    },
-	    // 20.2.2.5 Math.asinh(x)
-	    asinh: asinh,
-	    // 20.2.2.7 Math.atanh(x)
-	    atanh: function(x){
-	      return (x = +x) == 0 ? x : log((1 + x) / (1 - x)) / 2;
-	    },
-	    // 20.2.2.9 Math.cbrt(x)
-	    cbrt: function(x){
-	      return sign(x = +x) * pow(abs(x), 1 / 3);
-	    },
-	    // 20.2.2.11 Math.clz32(x)
-	    clz32: function(x){
-	      return (x >>>= 0) ? 32 - x[TO_STRING](2).length : 32;
-	    },
-	    // 20.2.2.12 Math.cosh(x)
-	    cosh: function(x){
-	      return (exp(x = +x) + exp(-x)) / 2;
-	    },
-	    // 20.2.2.14 Math.expm1(x)
-	    expm1: expm1,
-	    // 20.2.2.16 Math.fround(x)
-	    // TODO: fallback for IE9-
-	    fround: function(x){
-	      return new Float32Array([x])[0];
-	    },
-	    // 20.2.2.17 Math.hypot([value1[, value2[, … ]]])
-	    hypot: function(value1, value2){
-	      var sum  = 0
-	        , len1 = arguments.length
-	        , len2 = len1
-	        , args = Array(len1)
-	        , larg = -Infinity
-	        , arg;
-	      while(len1--){
-	        arg = args[len1] = +arguments[len1];
-	        if(arg == Infinity || arg == -Infinity)return Infinity;
-	        if(arg > larg)larg = arg;
-	      }
-	      larg = arg || 1;
-	      while(len2--)sum += pow(args[len2] / larg, 2);
-	      return larg * sqrt(sum);
-	    },
-	    // 20.2.2.18 Math.imul(x, y)
-	    imul: function(x, y){
-	      var UInt16 = 0xffff
-	        , xn = +x
-	        , yn = +y
-	        , xl = UInt16 & xn
-	        , yl = UInt16 & yn;
-	      return 0 | xl * yl + ((UInt16 & xn >>> 16) * yl + xl * (UInt16 & yn >>> 16) << 16 >>> 0);
-	    },
-	    // 20.2.2.20 Math.log1p(x)
-	    log1p: function(x){
-	      return (x = +x) > -1e-8 && x < 1e-8 ? x - x * x / 2 : log(1 + x);
-	    },
-	    // 20.2.2.21 Math.log10(x)
-	    log10: function(x){
-	      return log(x) / Math.LN10;
-	    },
-	    // 20.2.2.22 Math.log2(x)
-	    log2: function(x){
-	      return log(x) / Math.LN2;
-	    },
-	    // 20.2.2.28 Math.sign(x)
-	    sign: sign,
-	    // 20.2.2.30 Math.sinh(x)
-	    sinh: function(x){
-	      return (abs(x = +x) < 1) ? (expm1(x) - expm1(-x)) / 2 : (exp(x - 1) - exp(-x - 1)) * (E / 2);
-	    },
-	    // 20.2.2.33 Math.tanh(x)
-	    tanh: function(x){
-	      var a = expm1(x = +x)
-	        , b = expm1(-x);
-	      return a == Infinity ? 1 : b == Infinity ? -1 : (a - b) / (exp(x) + exp(-x));
-	    },
-	    // 20.2.2.34 Math.trunc(x)
-	    trunc: trunc
-	  });
-	}();
-
-	/******************************************************************************
-	 * Module : es6.string                                                        *
-	 ******************************************************************************/
-
-	!function(fromCharCode){
-	  function assertNotRegExp(it){
-	    if(cof(it) == REGEXP)throw TypeError();
-	  }
-	  
-	  $define(STATIC, STRING, {
-	    // 21.1.2.2 String.fromCodePoint(...codePoints)
-	    fromCodePoint: function(x){
-	      var res = []
-	        , len = arguments.length
-	        , i   = 0
-	        , code
-	      while(len > i){
-	        code = +arguments[i++];
-	        if(toIndex(code, 0x10ffff) !== code)throw RangeError(code + ' is not a valid code point');
-	        res.push(code < 0x10000
-	          ? fromCharCode(code)
-	          : fromCharCode(((code -= 0x10000) >> 10) + 0xd800, code % 0x400 + 0xdc00)
-	        );
-	      } return res.join('');
-	    },
-	    // 21.1.2.4 String.raw(callSite, ...substitutions)
-	    raw: function(callSite){
-	      var raw = toObject(callSite.raw)
-	        , len = toLength(raw.length)
-	        , sln = arguments.length
-	        , res = []
-	        , i   = 0;
-	      while(len > i){
-	        res.push(String(raw[i++]));
-	        if(i < sln)res.push(String(arguments[i]));
-	      } return res.join('');
-	    }
-	  });
-	  
-	  $define(PROTO, STRING, {
-	    // 21.1.3.3 String.prototype.codePointAt(pos)
-	    codePointAt: createPointAt(false),
-	    // 21.1.3.6 String.prototype.endsWith(searchString [, endPosition])
-	    endsWith: function(searchString /*, endPosition = @length */){
-	      assertNotRegExp(searchString);
-	      var that = String(assertDefined(this))
-	        , endPosition = arguments[1]
-	        , len = toLength(that.length)
-	        , end = endPosition === undefined ? len : min(toLength(endPosition), len);
-	      searchString += '';
-	      return that.slice(end - searchString.length, end) === searchString;
-	    },
-	    // 21.1.3.7 String.prototype.includes(searchString, position = 0)
-	    includes: function(searchString /*, position = 0 */){
-	      assertNotRegExp(searchString);
-	      return !!~String(assertDefined(this)).indexOf(searchString, arguments[1]);
-	    },
-	    // 21.1.3.13 String.prototype.repeat(count)
-	    repeat: function(count){
-	      var str = String(assertDefined(this))
-	        , res = ''
-	        , n   = toInteger(count);
-	      if(0 > n || n == Infinity)throw RangeError("Count can't be negative");
-	      for(;n > 0; (n >>>= 1) && (str += str))if(n & 1)res += str;
-	      return res;
-	    },
-	    // 21.1.3.18 String.prototype.startsWith(searchString [, position ])
-	    startsWith: function(searchString /*, position = 0 */){
-	      assertNotRegExp(searchString);
-	      var that  = String(assertDefined(this))
-	        , index = toLength(min(arguments[1], that.length));
-	      searchString += '';
-	      return that.slice(index, index + searchString.length) === searchString;
-	    }
-	  });
-	}(String.fromCharCode);
-
-	/******************************************************************************
-	 * Module : es6.array.statics                                                 *
-	 ******************************************************************************/
-
-	!function(){
-	  $define(STATIC + FORCED * checkDangerIterClosing(Array.from), ARRAY, {
-	    // 22.1.2.1 Array.from(arrayLike, mapfn = undefined, thisArg = undefined)
-	    from: function(arrayLike/*, mapfn = undefined, thisArg = undefined*/){
-	      var O       = Object(assertDefined(arrayLike))
-	        , mapfn   = arguments[1]
-	        , mapping = mapfn !== undefined
-	        , f       = mapping ? ctx(mapfn, arguments[2], 2) : undefined
-	        , index   = 0
-	        , length, result, step;
-	      if(isIterable(O)){
-	        result = new (generic(this, Array));
-	        safeIterClose(function(iterator){
-	          for(; !(step = iterator.next()).done; index++){
-	            result[index] = mapping ? f(step.value, index) : step.value;
-	          }
-	        }, getIterator(O));
-	      } else {
-	        result = new (generic(this, Array))(length = toLength(O.length));
-	        for(; length > index; index++){
-	          result[index] = mapping ? f(O[index], index) : O[index];
-	        }
-	      }
-	      result.length = index;
-	      return result;
-	    }
-	  });
-	  
-	  $define(STATIC, ARRAY, {
-	    // 22.1.2.3 Array.of( ...items)
-	    of: function(/* ...args */){
-	      var index  = 0
-	        , length = arguments.length
-	        , result = new (generic(this, Array))(length);
-	      while(length > index)result[index] = arguments[index++];
-	      result.length = length;
-	      return result;
-	    }
-	  });
-	  
-	  setSpecies(Array);
-	}();
-
-	/******************************************************************************
-	 * Module : es6.array.prototype                                               *
-	 ******************************************************************************/
-
-	!function(){
-	  $define(PROTO, ARRAY, {
-	    // 22.1.3.3 Array.prototype.copyWithin(target, start, end = this.length)
-	    copyWithin: function(target /* = 0 */, start /* = 0, end = @length */){
-	      var O     = Object(assertDefined(this))
-	        , len   = toLength(O.length)
-	        , to    = toIndex(target, len)
-	        , from  = toIndex(start, len)
-	        , end   = arguments[2]
-	        , fin   = end === undefined ? len : toIndex(end, len)
-	        , count = min(fin - from, len - to)
-	        , inc   = 1;
-	      if(from < to && to < from + count){
-	        inc  = -1;
-	        from = from + count - 1;
-	        to   = to + count - 1;
-	      }
-	      while(count-- > 0){
-	        if(from in O)O[to] = O[from];
-	        else delete O[to];
-	        to += inc;
-	        from += inc;
-	      } return O;
-	    },
-	    // 22.1.3.6 Array.prototype.fill(value, start = 0, end = this.length)
-	    fill: function(value /*, start = 0, end = @length */){
-	      var O      = Object(assertDefined(this))
-	        , length = toLength(O.length)
-	        , index  = toIndex(arguments[1], length)
-	        , end    = arguments[2]
-	        , endPos = end === undefined ? length : toIndex(end, length);
-	      while(endPos > index)O[index++] = value;
-	      return O;
-	    },
-	    // 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
-	    find: createArrayMethod(5),
-	    // 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
-	    findIndex: createArrayMethod(6)
-	  });
-	  
-	  if(framework){
-	    // 22.1.3.31 Array.prototype[@@unscopables]
-	    forEach.call(array('find,findIndex,fill,copyWithin,entries,keys,values'), function(it){
-	      ArrayUnscopables[it] = true;
-	    });
-	    SYMBOL_UNSCOPABLES in ArrayProto || hidden(ArrayProto, SYMBOL_UNSCOPABLES, ArrayUnscopables);
-	  }
-	}();
-
-	/******************************************************************************
-	 * Module : es6.iterators                                                     *
-	 ******************************************************************************/
-
-	!function(at){
-	  // 22.1.3.4 Array.prototype.entries()
-	  // 22.1.3.13 Array.prototype.keys()
-	  // 22.1.3.29 Array.prototype.values()
-	  // 22.1.3.30 Array.prototype[@@iterator]()
-	  defineStdIterators(Array, ARRAY, function(iterated, kind){
-	    set(this, ITER, {o: toObject(iterated), i: 0, k: kind});
-	  // 22.1.5.2.1 %ArrayIteratorPrototype%.next()
-	  }, function(){
-	    var iter  = this[ITER]
-	      , O     = iter.o
-	      , kind  = iter.k
-	      , index = iter.i++;
-	    if(!O || index >= O.length){
-	      iter.o = undefined;
-	      return iterResult(1);
-	    }
-	    if(kind == KEY)  return iterResult(0, index);
-	    if(kind == VALUE)return iterResult(0, O[index]);
-	                     return iterResult(0, [index, O[index]]);
-	  }, VALUE);
-	  
-	  // argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
-	  Iterators[ARGUMENTS] = Iterators[ARRAY];
-	  
-	  // 21.1.3.27 String.prototype[@@iterator]()
-	  defineStdIterators(String, STRING, function(iterated){
-	    set(this, ITER, {o: String(iterated), i: 0});
-	  // 21.1.5.2.1 %StringIteratorPrototype%.next()
-	  }, function(){
-	    var iter  = this[ITER]
-	      , O     = iter.o
-	      , index = iter.i
-	      , point;
-	    if(index >= O.length)return iterResult(1);
-	    point = at.call(O, index);
-	    iter.i += point.length;
-	    return iterResult(0, point);
-	  });
-	}(createPointAt(true));
-
-	/******************************************************************************
-	 * Module : web.immediate                                                     *
-	 ******************************************************************************/
-
-	// setImmediate shim
-	// Node.js 0.9+ & IE10+ has setImmediate, else:
-	isFunction(setImmediate) && isFunction(clearImmediate) || function(ONREADYSTATECHANGE){
-	  var postMessage      = global.postMessage
-	    , addEventListener = global.addEventListener
-	    , MessageChannel   = global.MessageChannel
-	    , counter          = 0
-	    , queue            = {}
-	    , defer, channel, port;
-	  setImmediate = function(fn){
-	    var args = [], i = 1;
-	    while(arguments.length > i)args.push(arguments[i++]);
-	    queue[++counter] = function(){
-	      invoke(isFunction(fn) ? fn : Function(fn), args);
-	    }
-	    defer(counter);
-	    return counter;
-	  }
-	  clearImmediate = function(id){
-	    delete queue[id];
-	  }
-	  function run(id){
-	    if(has(queue, id)){
-	      var fn = queue[id];
-	      delete queue[id];
-	      fn();
-	    }
-	  }
-	  function listner(event){
-	    run(event.data);
-	  }
-	  // Node.js 0.8-
-	  if(NODE){
-	    defer = function(id){
-	      nextTick(part.call(run, id));
-	    }
-	  // Modern browsers, skip implementation for WebWorkers
-	  // IE8 has postMessage, but it's sync & typeof its postMessage is object
-	  } else if(addEventListener && isFunction(postMessage) && !global.importScripts){
-	    defer = function(id){
-	      postMessage(id, '*');
-	    }
-	    addEventListener('message', listner, false);
-	  // WebWorkers
-	  } else if(isFunction(MessageChannel)){
-	    channel = new MessageChannel;
-	    port    = channel.port2;
-	    channel.port1.onmessage = listner;
-	    defer = ctx(port.postMessage, port, 1);
-	  // IE8-
-	  } else if(document && ONREADYSTATECHANGE in document[CREATE_ELEMENT]('script')){
-	    defer = function(id){
-	      html.appendChild(document[CREATE_ELEMENT]('script'))[ONREADYSTATECHANGE] = function(){
-	        html.removeChild(this);
-	        run(id);
-	      }
-	    }
-	  // Rest old browsers
-	  } else {
-	    defer = function(id){
-	      setTimeout(run, 0, id);
-	    }
-	  }
-	}('onreadystatechange');
-	$define(GLOBAL + BIND, {
-	  setImmediate:   setImmediate,
-	  clearImmediate: clearImmediate
-	});
-
-	/******************************************************************************
-	 * Module : es6.promise                                                       *
-	 ******************************************************************************/
-
-	// ES6 promises shim
-	// Based on https://github.com/getify/native-promise-only/
-	!function(Promise, test){
-	  isFunction(Promise) && isFunction(Promise.resolve)
-	  && Promise.resolve(test = new Promise(function(){})) == test
-	  || function(asap, RECORD){
-	    function isThenable(it){
-	      var then;
-	      if(isObject(it))then = it.then;
-	      return isFunction(then) ? then : false;
-	    }
-	    function handledRejectionOrHasOnRejected(promise){
-	      var record = promise[RECORD]
-	        , chain  = record.c
-	        , i      = 0
-	        , react;
-	      if(record.h)return true;
-	      while(chain.length > i){
-	        react = chain[i++];
-	        if(react.fail || handledRejectionOrHasOnRejected(react.P))return true;
-	      }
-	    }
-	    function notify(record, reject){
-	      var chain = record.c;
-	      if(reject || chain.length)asap(function(){
-	        var promise = record.p
-	          , value   = record.v
-	          , ok      = record.s == 1
-	          , i       = 0;
-	        if(reject && !handledRejectionOrHasOnRejected(promise)){
-	          setTimeout(function(){
-	            if(!handledRejectionOrHasOnRejected(promise)){
-	              if(NODE){
-	                if(!process.emit('unhandledRejection', value, promise)){
-	                  // default node.js behavior
-	                }
-	              } else if(isFunction(console.error)){
-	                console.error('Unhandled promise rejection', value);
-	              }
-	            }
-	          }, 1e3);
-	        } else while(chain.length > i)!function(react){
-	          var cb = ok ? react.ok : react.fail
-	            , ret, then;
-	          try {
-	            if(cb){
-	              if(!ok)record.h = true;
-	              ret = cb === true ? value : cb(value);
-	              if(ret === react.P){
-	                react.rej(TypeError(PROMISE + '-chain cycle'));
-	              } else if(then = isThenable(ret)){
-	                then.call(ret, react.res, react.rej);
-	              } else react.res(ret);
-	            } else react.rej(value);
-	          } catch(err){
-	            react.rej(err);
-	          }
-	        }(chain[i++]);
-	        chain.length = 0;
-	      });
-	    }
-	    function resolve(value){
-	      var record = this
-	        , then, wrapper;
-	      if(record.d)return;
-	      record.d = true;
-	      record = record.r || record; // unwrap
-	      try {
-	        if(then = isThenable(value)){
-	          wrapper = {r: record, d: false}; // wrap
-	          then.call(value, ctx(resolve, wrapper, 1), ctx(reject, wrapper, 1));
-	        } else {
-	          record.v = value;
-	          record.s = 1;
-	          notify(record);
-	        }
-	      } catch(err){
-	        reject.call(wrapper || {r: record, d: false}, err); // wrap
-	      }
-	    }
-	    function reject(value){
-	      var record = this;
-	      if(record.d)return;
-	      record.d = true;
-	      record = record.r || record; // unwrap
-	      record.v = value;
-	      record.s = 2;
-	      notify(record, true);
-	    }
-	    function getConstructor(C){
-	      var S = assertObject(C)[SYMBOL_SPECIES];
-	      return S != undefined ? S : C;
-	    }
-	    // 25.4.3.1 Promise(executor)
-	    Promise = function(executor){
-	      assertFunction(executor);
-	      assertInstance(this, Promise, PROMISE);
-	      var record = {
-	        p: this,      // promise
-	        c: [],        // chain
-	        s: 0,         // state
-	        d: false,     // done
-	        v: undefined, // value
-	        h: false      // handled rejection
-	      };
-	      hidden(this, RECORD, record);
-	      try {
-	        executor(ctx(resolve, record, 1), ctx(reject, record, 1));
-	      } catch(err){
-	        reject.call(record, err);
-	      }
-	    }
-	    assignHidden(Promise[PROTOTYPE], {
-	      // 25.4.5.3 Promise.prototype.then(onFulfilled, onRejected)
-	      then: function(onFulfilled, onRejected){
-	        var S = assertObject(assertObject(this)[CONSTRUCTOR])[SYMBOL_SPECIES];
-	        var react = {
-	          ok:   isFunction(onFulfilled) ? onFulfilled : true,
-	          fail: isFunction(onRejected)  ? onRejected  : false
-	        } , P = react.P = new (S != undefined ? S : Promise)(function(resolve, reject){
-	          react.res = assertFunction(resolve);
-	          react.rej = assertFunction(reject);
-	        }), record = this[RECORD];
-	        record.c.push(react);
-	        record.s && notify(record);
-	        return P;
-	      },
-	      // 25.4.5.1 Promise.prototype.catch(onRejected)
-	      'catch': function(onRejected){
-	        return this.then(undefined, onRejected);
-	      }
-	    });
-	    assignHidden(Promise, {
-	      // 25.4.4.1 Promise.all(iterable)
-	      all: function(iterable){
-	        var Promise = getConstructor(this)
-	          , values  = [];
-	        return new Promise(function(resolve, reject){
-	          forOf(iterable, false, push, values);
-	          var remaining = values.length
-	            , results   = Array(remaining);
-	          if(remaining)forEach.call(values, function(promise, index){
-	            Promise.resolve(promise).then(function(value){
-	              results[index] = value;
-	              --remaining || resolve(results);
-	            }, reject);
-	          });
-	          else resolve(results);
-	        });
-	      },
-	      // 25.4.4.4 Promise.race(iterable)
-	      race: function(iterable){
-	        var Promise = getConstructor(this);
-	        return new Promise(function(resolve, reject){
-	          forOf(iterable, false, function(promise){
-	            Promise.resolve(promise).then(resolve, reject);
-	          });
-	        });
-	      },
-	      // 25.4.4.5 Promise.reject(r)
-	      reject: function(r){
-	        return new (getConstructor(this))(function(resolve, reject){
-	          reject(r);
-	        });
-	      },
-	      // 25.4.4.6 Promise.resolve(x)
-	      resolve: function(x){
-	        return isObject(x) && RECORD in x && getPrototypeOf(x) === this[PROTOTYPE]
-	          ? x : new (getConstructor(this))(function(resolve, reject){
-	            resolve(x);
-	          });
-	      }
-	    });
-	  }(nextTick || setImmediate, safeSymbol('record'));
-	  setToStringTag(Promise, PROMISE);
-	  setSpecies(Promise);
-	  $define(GLOBAL + FORCED * !isNative(Promise), {Promise: Promise});
-	}(global[PROMISE]);
-
-	/******************************************************************************
-	 * Module : es6.collections                                                   *
-	 ******************************************************************************/
-
-	// ECMAScript 6 collections shim
-	!function(){
-	  var UID   = safeSymbol('uid')
-	    , O1    = safeSymbol('O1')
-	    , WEAK  = safeSymbol('weak')
-	    , LEAK  = safeSymbol('leak')
-	    , LAST  = safeSymbol('last')
-	    , FIRST = safeSymbol('first')
-	    , SIZE  = DESC ? safeSymbol('size') : 'size'
-	    , uid   = 0
-	    , tmp   = {};
-	  
-	  function getCollection(C, NAME, methods, commonMethods, isMap, isWeak){
-	    var ADDER = isMap ? 'set' : 'add'
-	      , proto = C && C[PROTOTYPE]
-	      , O     = {};
-	    function initFromIterable(that, iterable){
-	      if(iterable != undefined)forOf(iterable, isMap, that[ADDER], that);
-	      return that;
-	    }
-	    function fixSVZ(key, chain){
-	      var method = proto[key];
-	      if(framework)proto[key] = function(a, b){
-	        var result = method.call(this, a === 0 ? 0 : a, b);
-	        return chain ? this : result;
-	      };
-	    }
-	    if(!isNative(C) || !(isWeak || (!BUGGY_ITERATORS && has(proto, FOR_EACH) && has(proto, 'entries')))){
-	      // create collection constructor
-	      C = isWeak
-	        ? function(iterable){
-	            assertInstance(this, C, NAME);
-	            set(this, UID, uid++);
-	            initFromIterable(this, iterable);
-	          }
-	        : function(iterable){
-	            var that = this;
-	            assertInstance(that, C, NAME);
-	            set(that, O1, create(null));
-	            set(that, SIZE, 0);
-	            set(that, LAST, undefined);
-	            set(that, FIRST, undefined);
-	            initFromIterable(that, iterable);
-	          };
-	      assignHidden(assignHidden(C[PROTOTYPE], methods), commonMethods);
-	      isWeak || !DESC || defineProperty(C[PROTOTYPE], 'size', {get: function(){
-	        return assertDefined(this[SIZE]);
-	      }});
-	    } else {
-	      var Native = C
-	        , inst   = new C
-	        , chain  = inst[ADDER](isWeak ? {} : -0, 1)
-	        , buggyZero;
-	      // wrap to init collections from iterable
-	      if(checkDangerIterClosing(function(O){ new C(O) })){
-	        C = function(iterable){
-	          assertInstance(this, C, NAME);
-	          return initFromIterable(new Native, iterable);
-	        }
-	        C[PROTOTYPE] = proto;
-	        if(framework)proto[CONSTRUCTOR] = C;
-	      }
-	      isWeak || inst[FOR_EACH](function(val, key){
-	        buggyZero = 1 / key === -Infinity;
-	      });
-	      // fix converting -0 key to +0
-	      if(buggyZero){
-	        fixSVZ('delete');
-	        fixSVZ('has');
-	        isMap && fixSVZ('get');
-	      }
-	      // + fix .add & .set for chaining
-	      if(buggyZero || chain !== inst)fixSVZ(ADDER, true);
-	    }
-	    setToStringTag(C, NAME);
-	    setSpecies(C);
-	    
-	    O[NAME] = C;
-	    $define(GLOBAL + WRAP + FORCED * !isNative(C), O);
-	    
-	    // add .keys, .values, .entries, [@@iterator]
-	    // 23.1.3.4, 23.1.3.8, 23.1.3.11, 23.1.3.12, 23.2.3.5, 23.2.3.8, 23.2.3.10, 23.2.3.11
-	    isWeak || defineStdIterators(C, NAME, function(iterated, kind){
-	      set(this, ITER, {o: iterated, k: kind});
-	    }, function(){
-	      var iter  = this[ITER]
-	        , kind  = iter.k
-	        , entry = iter.l;
-	      // revert to the last existing entry
-	      while(entry && entry.r)entry = entry.p;
-	      // get next entry
-	      if(!iter.o || !(iter.l = entry = entry ? entry.n : iter.o[FIRST])){
-	        // or finish the iteration
-	        iter.o = undefined;
-	        return iterResult(1);
-	      }
-	      // return step by kind
-	      if(kind == KEY)  return iterResult(0, entry.k);
-	      if(kind == VALUE)return iterResult(0, entry.v);
-	                       return iterResult(0, [entry.k, entry.v]);   
-	    }, isMap ? KEY+VALUE : VALUE, !isMap);
-	    
-	    return C;
-	  }
-	  
-	  function fastKey(it, create){
-	    // return primitive with prefix
-	    if(!isObject(it))return (typeof it == 'string' ? 'S' : 'P') + it;
-	    // can't set id to frozen object
-	    if(isFrozen(it))return 'F';
-	    if(!has(it, UID)){
-	      // not necessary to add id
-	      if(!create)return 'E';
-	      // add missing object id
-	      hidden(it, UID, ++uid);
-	    // return object id with prefix
-	    } return 'O' + it[UID];
-	  }
-	  function getEntry(that, key){
-	    // fast case
-	    var index = fastKey(key), entry;
-	    if(index != 'F')return that[O1][index];
-	    // frozen object case
-	    for(entry = that[FIRST]; entry; entry = entry.n){
-	      if(entry.k == key)return entry;
-	    }
-	  }
-	  function def(that, key, value){
-	    var entry = getEntry(that, key)
-	      , prev, index;
-	    // change existing entry
-	    if(entry)entry.v = value;
-	    // create new entry
-	    else {
-	      that[LAST] = entry = {
-	        i: index = fastKey(key, true), // <- index
-	        k: key,                        // <- key
-	        v: value,                      // <- value
-	        p: prev = that[LAST],          // <- previous entry
-	        n: undefined,                  // <- next entry
-	        r: false                       // <- removed
-	      };
-	      if(!that[FIRST])that[FIRST] = entry;
-	      if(prev)prev.n = entry;
-	      that[SIZE]++;
-	      // add to index
-	      if(index != 'F')that[O1][index] = entry;
-	    } return that;
-	  }
-
-	  var collectionMethods = {
-	    // 23.1.3.1 Map.prototype.clear()
-	    // 23.2.3.2 Set.prototype.clear()
-	    clear: function(){
-	      for(var that = this, data = that[O1], entry = that[FIRST]; entry; entry = entry.n){
-	        entry.r = true;
-	        if(entry.p)entry.p = entry.p.n = undefined;
-	        delete data[entry.i];
-	      }
-	      that[FIRST] = that[LAST] = undefined;
-	      that[SIZE] = 0;
-	    },
-	    // 23.1.3.3 Map.prototype.delete(key)
-	    // 23.2.3.4 Set.prototype.delete(value)
-	    'delete': function(key){
-	      var that  = this
-	        , entry = getEntry(that, key);
-	      if(entry){
-	        var next = entry.n
-	          , prev = entry.p;
-	        delete that[O1][entry.i];
-	        entry.r = true;
-	        if(prev)prev.n = next;
-	        if(next)next.p = prev;
-	        if(that[FIRST] == entry)that[FIRST] = next;
-	        if(that[LAST] == entry)that[LAST] = prev;
-	        that[SIZE]--;
-	      } return !!entry;
-	    },
-	    // 23.2.3.6 Set.prototype.forEach(callbackfn, thisArg = undefined)
-	    // 23.1.3.5 Map.prototype.forEach(callbackfn, thisArg = undefined)
-	    forEach: function(callbackfn /*, that = undefined */){
-	      var f = ctx(callbackfn, arguments[1], 3)
-	        , entry;
-	      while(entry = entry ? entry.n : this[FIRST]){
-	        f(entry.v, entry.k, this);
-	        // revert to the last existing entry
-	        while(entry && entry.r)entry = entry.p;
-	      }
-	    },
-	    // 23.1.3.7 Map.prototype.has(key)
-	    // 23.2.3.7 Set.prototype.has(value)
-	    has: function(key){
-	      return !!getEntry(this, key);
-	    }
-	  }
-	  
-	  // 23.1 Map Objects
-	  Map = getCollection(Map, MAP, {
-	    // 23.1.3.6 Map.prototype.get(key)
-	    get: function(key){
-	      var entry = getEntry(this, key);
-	      return entry && entry.v;
-	    },
-	    // 23.1.3.9 Map.prototype.set(key, value)
-	    set: function(key, value){
-	      return def(this, key === 0 ? 0 : key, value);
-	    }
-	  }, collectionMethods, true);
-	  
-	  // 23.2 Set Objects
-	  Set = getCollection(Set, SET, {
-	    // 23.2.3.1 Set.prototype.add(value)
-	    add: function(value){
-	      return def(this, value = value === 0 ? 0 : value, value);
-	    }
-	  }, collectionMethods);
-	  
-	  function defWeak(that, key, value){
-	    if(isFrozen(assertObject(key)))leakStore(that).set(key, value);
-	    else {
-	      has(key, WEAK) || hidden(key, WEAK, {});
-	      key[WEAK][that[UID]] = value;
-	    } return that;
-	  }
-	  function leakStore(that){
-	    return that[LEAK] || hidden(that, LEAK, new Map)[LEAK];
-	  }
-	  
-	  var weakMethods = {
-	    // 23.3.3.2 WeakMap.prototype.delete(key)
-	    // 23.4.3.3 WeakSet.prototype.delete(value)
-	    'delete': function(key){
-	      if(!isObject(key))return false;
-	      if(isFrozen(key))return leakStore(this)['delete'](key);
-	      return has(key, WEAK) && has(key[WEAK], this[UID]) && delete key[WEAK][this[UID]];
-	    },
-	    // 23.3.3.4 WeakMap.prototype.has(key)
-	    // 23.4.3.4 WeakSet.prototype.has(value)
-	    has: function(key){
-	      if(!isObject(key))return false;
-	      if(isFrozen(key))return leakStore(this).has(key);
-	      return has(key, WEAK) && has(key[WEAK], this[UID]);
-	    }
-	  };
-	  
-	  // 23.3 WeakMap Objects
-	  WeakMap = getCollection(WeakMap, WEAKMAP, {
-	    // 23.3.3.3 WeakMap.prototype.get(key)
-	    get: function(key){
-	      if(isObject(key)){
-	        if(isFrozen(key))return leakStore(this).get(key);
-	        if(has(key, WEAK))return key[WEAK][this[UID]];
-	      }
-	    },
-	    // 23.3.3.5 WeakMap.prototype.set(key, value)
-	    set: function(key, value){
-	      return defWeak(this, key, value);
-	    }
-	  }, weakMethods, true, true);
-	  
-	  // IE11 WeakMap frozen keys fix
-	  if(framework && new WeakMap().set(Object.freeze(tmp), 7).get(tmp) != 7){
-	    forEach.call(array('delete,has,get,set'), function(key){
-	      var method = WeakMap[PROTOTYPE][key];
-	      WeakMap[PROTOTYPE][key] = function(a, b){
-	        // store frozen objects on leaky map
-	        if(isObject(a) && isFrozen(a)){
-	          var result = leakStore(this)[key](a, b);
-	          return key == 'set' ? this : result;
-	        // store all the rest on native weakmap
-	        } return method.call(this, a, b);
-	      };
-	    });
-	  }
-	  
-	  // 23.4 WeakSet Objects
-	  WeakSet = getCollection(WeakSet, WEAKSET, {
-	    // 23.4.3.1 WeakSet.prototype.add(value)
-	    add: function(value){
-	      return defWeak(this, value, true);
-	    }
-	  }, weakMethods, false, true);
-	}();
-
-	/******************************************************************************
-	 * Module : es6.reflect                                                       *
-	 ******************************************************************************/
-
-	!function(){
-	  function Enumerate(iterated){
-	    var keys = [], key;
-	    for(key in iterated)keys.push(key);
-	    set(this, ITER, {o: iterated, a: keys, i: 0});
-	  }
-	  createIterator(Enumerate, OBJECT, function(){
-	    var iter = this[ITER]
-	      , keys = iter.a
-	      , key;
-	    do {
-	      if(iter.i >= keys.length)return iterResult(1);
-	    } while(!((key = keys[iter.i++]) in iter.o));
-	    return iterResult(0, key);
-	  });
-	  
-	  function wrap(fn){
-	    return function(it){
-	      assertObject(it);
-	      try {
-	        return fn.apply(undefined, arguments), true;
-	      } catch(e){
-	        return false;
-	      }
-	    }
-	  }
-	  
-	  function reflectGet(target, propertyKey/*, receiver*/){
-	    var receiver = arguments.length < 3 ? target : arguments[2]
-	      , desc = getOwnDescriptor(assertObject(target), propertyKey), proto;
-	    if(desc)return has(desc, 'value')
-	      ? desc.value
-	      : desc.get === undefined
-	        ? undefined
-	        : desc.get.call(receiver);
-	    return isObject(proto = getPrototypeOf(target))
-	      ? reflectGet(proto, propertyKey, receiver)
-	      : undefined;
-	  }
-	  function reflectSet(target, propertyKey, V/*, receiver*/){
-	    var receiver = arguments.length < 4 ? target : arguments[3]
-	      , ownDesc  = getOwnDescriptor(assertObject(target), propertyKey)
-	      , existingDescriptor, proto;
-	    if(!ownDesc){
-	      if(isObject(proto = getPrototypeOf(target))){
-	        return reflectSet(proto, propertyKey, V, receiver);
-	      }
-	      ownDesc = descriptor(0);
-	    }
-	    if(has(ownDesc, 'value')){
-	      if(ownDesc.writable === false || !isObject(receiver))return false;
-	      existingDescriptor = getOwnDescriptor(receiver, propertyKey) || descriptor(0);
-	      existingDescriptor.value = V;
-	      return defineProperty(receiver, propertyKey, existingDescriptor), true;
-	    }
-	    return ownDesc.set === undefined
-	      ? false
-	      : (ownDesc.set.call(receiver, V), true);
-	  }
-	  var isExtensible = Object.isExtensible || returnIt;
-	  
-	  var reflect = {
-	    // 26.1.1 Reflect.apply(target, thisArgument, argumentsList)
-	    apply: ctx(call, apply, 3),
-	    // 26.1.2 Reflect.construct(target, argumentsList [, newTarget])
-	    construct: function(target, argumentsList /*, newTarget*/){
-	      var proto    = assertFunction(arguments.length < 3 ? target : arguments[2])[PROTOTYPE]
-	        , instance = create(isObject(proto) ? proto : ObjectProto)
-	        , result   = apply.call(target, instance, argumentsList);
-	      return isObject(result) ? result : instance;
-	    },
-	    // 26.1.3 Reflect.defineProperty(target, propertyKey, attributes)
-	    defineProperty: wrap(defineProperty),
-	    // 26.1.4 Reflect.deleteProperty(target, propertyKey)
-	    deleteProperty: function(target, propertyKey){
-	      var desc = getOwnDescriptor(assertObject(target), propertyKey);
-	      return desc && !desc.configurable ? false : delete target[propertyKey];
-	    },
-	    // 26.1.5 Reflect.enumerate(target)
-	    enumerate: function(target){
-	      return new Enumerate(assertObject(target));
-	    },
-	    // 26.1.6 Reflect.get(target, propertyKey [, receiver])
-	    get: reflectGet,
-	    // 26.1.7 Reflect.getOwnPropertyDescriptor(target, propertyKey)
-	    getOwnPropertyDescriptor: function(target, propertyKey){
-	      return getOwnDescriptor(assertObject(target), propertyKey);
-	    },
-	    // 26.1.8 Reflect.getPrototypeOf(target)
-	    getPrototypeOf: function(target){
-	      return getPrototypeOf(assertObject(target));
-	    },
-	    // 26.1.9 Reflect.has(target, propertyKey)
-	    has: function(target, propertyKey){
-	      return propertyKey in target;
-	    },
-	    // 26.1.10 Reflect.isExtensible(target)
-	    isExtensible: function(target){
-	      return !!isExtensible(assertObject(target));
-	    },
-	    // 26.1.11 Reflect.ownKeys(target)
-	    ownKeys: ownKeys,
-	    // 26.1.12 Reflect.preventExtensions(target)
-	    preventExtensions: wrap(Object.preventExtensions || returnIt),
-	    // 26.1.13 Reflect.set(target, propertyKey, V [, receiver])
-	    set: reflectSet
-	  }
-	  // 26.1.14 Reflect.setPrototypeOf(target, proto)
-	  if(setPrototypeOf)reflect.setPrototypeOf = function(target, proto){
-	    return setPrototypeOf(assertObject(target), proto), true;
-	  };
-	  
-	  $define(GLOBAL, {Reflect: {}});
-	  $define(STATIC, 'Reflect', reflect);
-	}();
-
-	/******************************************************************************
-	 * Module : es7.proposals                                                     *
-	 ******************************************************************************/
-
-	!function(){
-	  $define(PROTO, ARRAY, {
-	    // https://github.com/domenic/Array.prototype.includes
-	    includes: createArrayContains(true)
-	  });
-	  $define(PROTO, STRING, {
-	    // https://github.com/mathiasbynens/String.prototype.at
-	    at: createPointAt(true)
-	  });
-	  
-	  function createObjectToArray(isEntries){
-	    return function(object){
-	      var O      = toObject(object)
-	        , keys   = getKeys(object)
-	        , length = keys.length
-	        , i      = 0
-	        , result = Array(length)
-	        , key;
-	      if(isEntries)while(length > i)result[i] = [key = keys[i++], O[key]];
-	      else while(length > i)result[i] = O[keys[i++]];
-	      return result;
-	    }
-	  }
-	  $define(STATIC, OBJECT, {
-	    // https://gist.github.com/WebReflection/9353781
-	    getOwnPropertyDescriptors: function(object){
-	      var O      = toObject(object)
-	        , result = {};
-	      forEach.call(ownKeys(O), function(key){
-	        defineProperty(result, key, descriptor(0, getOwnDescriptor(O, key)));
-	      });
-	      return result;
-	    },
-	    // https://github.com/rwaldron/tc39-notes/blob/master/es6/2014-04/apr-9.md#51-objectentries-objectvalues
-	    values:  createObjectToArray(false),
-	    entries: createObjectToArray(true)
-	  });
-	  $define(STATIC, REGEXP, {
-	    // https://gist.github.com/kangax/9698100
-	    escape: createReplacer(/([\\\-[\]{}()*+?.,^$|])/g, '\\$1', true)
-	  });
-	}();
-
-	/******************************************************************************
-	 * Module : es7.abstract-refs                                                 *
-	 ******************************************************************************/
-
-	// https://github.com/zenparsing/es-abstract-refs
-	!function(REFERENCE){
-	  REFERENCE_GET = getWellKnownSymbol(REFERENCE+'Get', true);
-	  var REFERENCE_SET = getWellKnownSymbol(REFERENCE+SET, true)
-	    , REFERENCE_DELETE = getWellKnownSymbol(REFERENCE+'Delete', true);
-	  
-	  $define(STATIC, SYMBOL, {
-	    referenceGet: REFERENCE_GET,
-	    referenceSet: REFERENCE_SET,
-	    referenceDelete: REFERENCE_DELETE
-	  });
-	  
-	  hidden(FunctionProto, REFERENCE_GET, returnThis);
-	  
-	  function setMapMethods(Constructor){
-	    if(Constructor){
-	      var MapProto = Constructor[PROTOTYPE];
-	      hidden(MapProto, REFERENCE_GET, MapProto.get);
-	      hidden(MapProto, REFERENCE_SET, MapProto.set);
-	      hidden(MapProto, REFERENCE_DELETE, MapProto['delete']);
-	    }
-	  }
-	  setMapMethods(Map);
-	  setMapMethods(WeakMap);
-	}('reference');
-
-	/******************************************************************************
-	 * Module : core.dict                                                         *
-	 ******************************************************************************/
-
-	!function(DICT){
-	  Dict = function(iterable){
-	    var dict = create(null);
-	    if(iterable != undefined){
-	      if(isIterable(iterable)){
-	        forOf(iterable, true, function(key, value){
-	          dict[key] = value;
-	        });
-	      } else assign(dict, iterable);
-	    }
-	    return dict;
-	  }
-	  Dict[PROTOTYPE] = null;
-	  
-	  function DictIterator(iterated, kind){
-	    set(this, ITER, {o: toObject(iterated), a: getKeys(iterated), i: 0, k: kind});
-	  }
-	  createIterator(DictIterator, DICT, function(){
-	    var iter = this[ITER]
-	      , O    = iter.o
-	      , keys = iter.a
-	      , kind = iter.k
-	      , key;
-	    do {
-	      if(iter.i >= keys.length){
-	        iter.o = undefined;
-	        return iterResult(1);
-	      }
-	    } while(!has(O, key = keys[iter.i++]));
-	    if(kind == KEY)  return iterResult(0, key);
-	    if(kind == VALUE)return iterResult(0, O[key]);
-	                     return iterResult(0, [key, O[key]]);
-	  });
-	  function createDictIter(kind){
-	    return function(it){
-	      return new DictIterator(it, kind);
-	    }
-	  }
-	  
-	  /*
-	   * 0 -> forEach
-	   * 1 -> map
-	   * 2 -> filter
-	   * 3 -> some
-	   * 4 -> every
-	   * 5 -> find
-	   * 6 -> findKey
-	   * 7 -> mapPairs
-	   */
-	  function createDictMethod(type){
-	    var isMap    = type == 1
-	      , isEvery  = type == 4;
-	    return function(object, callbackfn, that /* = undefined */){
-	      var f      = ctx(callbackfn, that, 3)
-	        , O      = toObject(object)
-	        , result = isMap || type == 7 || type == 2 ? new (generic(this, Dict)) : undefined
-	        , key, val, res;
-	      for(key in O)if(has(O, key)){
-	        val = O[key];
-	        res = f(val, key, object);
-	        if(type){
-	          if(isMap)result[key] = res;             // map
-	          else if(res)switch(type){
-	            case 2: result[key] = val; break      // filter
-	            case 3: return true;                  // some
-	            case 5: return val;                   // find
-	            case 6: return key;                   // findKey
-	            case 7: result[res[0]] = res[1];      // mapPairs
-	          } else if(isEvery)return false;         // every
-	        }
-	      }
-	      return type == 3 || isEvery ? isEvery : result;
-	    }
-	  }
-	  function createDictReduce(isTurn){
-	    return function(object, mapfn, init){
-	      assertFunction(mapfn);
-	      var O      = toObject(object)
-	        , keys   = getKeys(O)
-	        , length = keys.length
-	        , i      = 0
-	        , memo, key, result;
-	      if(isTurn)memo = init == undefined ? new (generic(this, Dict)) : Object(init);
-	      else if(arguments.length < 3){
-	        assert(length, REDUCE_ERROR);
-	        memo = O[keys[i++]];
-	      } else memo = Object(init);
-	      while(length > i)if(has(O, key = keys[i++])){
-	        result = mapfn(memo, O[key], key, object);
-	        if(isTurn){
-	          if(result === false)break;
-	        } else memo = result;
-	      }
-	      return memo;
-	    }
-	  }
-	  var findKey = createDictMethod(6);
-	  function includes(object, el){
-	    return (el == el ? keyOf(object, el) : findKey(object, sameNaN)) !== undefined;
-	  }
-	  
-	  var dictMethods = {
-	    keys:    createDictIter(KEY),
-	    values:  createDictIter(VALUE),
-	    entries: createDictIter(KEY+VALUE),
-	    forEach: createDictMethod(0),
-	    map:     createDictMethod(1),
-	    filter:  createDictMethod(2),
-	    some:    createDictMethod(3),
-	    every:   createDictMethod(4),
-	    find:    createDictMethod(5),
-	    findKey: findKey,
-	    mapPairs:createDictMethod(7),
-	    reduce:  createDictReduce(false),
-	    turn:    createDictReduce(true),
-	    keyOf:   keyOf,
-	    includes:includes,
-	    // Has / get / set own property
-	    has: has,
-	    get: get,
-	    set: createDefiner(0),
-	    isDict: function(it){
-	      return isObject(it) && getPrototypeOf(it) === Dict[PROTOTYPE];
-	    }
-	  };
-	  
-	  if(REFERENCE_GET)for(var key in dictMethods)!function(fn){
-	    function method(){
-	      for(var args = [this], i = 0; i < arguments.length;)args.push(arguments[i++]);
-	      return invoke(fn, args);
-	    }
-	    fn[REFERENCE_GET] = function(){
-	      return method;
-	    }
-	  }(dictMethods[key]);
-	  
-	  $define(GLOBAL + FORCED, {Dict: assignHidden(Dict, dictMethods)});
-	}('Dict');
-
-	/******************************************************************************
-	 * Module : core.$for                                                         *
-	 ******************************************************************************/
-
-	!function(ENTRIES, FN){  
-	  function $for(iterable, entries){
-	    if(!(this instanceof $for))return new $for(iterable, entries);
-	    this[ITER]    = getIterator(iterable);
-	    this[ENTRIES] = !!entries;
-	  }
-	  
-	  createIterator($for, 'Wrapper', function(){
-	    return this[ITER].next();
-	  });
-	  var $forProto = $for[PROTOTYPE];
-	  setIterator($forProto, function(){
-	    return this[ITER]; // unwrap
-	  });
-	  
-	  function createChainIterator(next){
-	    function Iter(I, fn, that){
-	      this[ITER]    = getIterator(I);
-	      this[ENTRIES] = I[ENTRIES];
-	      this[FN]      = ctx(fn, that, I[ENTRIES] ? 2 : 1);
-	    }
-	    createIterator(Iter, 'Chain', next, $forProto);
-	    setIterator(Iter[PROTOTYPE], returnThis); // override $forProto iterator
-	    return Iter;
-	  }
-	  
-	  var MapIter = createChainIterator(function(){
-	    var step = this[ITER].next();
-	    return step.done ? step : iterResult(0, stepCall(this[FN], step.value, this[ENTRIES]));
-	  });
-	  
-	  var FilterIter = createChainIterator(function(){
-	    for(;;){
-	      var step = this[ITER].next();
-	      if(step.done || stepCall(this[FN], step.value, this[ENTRIES]))return step;
-	    }
-	  });
-	  
-	  assignHidden($forProto, {
-	    of: function(fn, that){
-	      forOf(this, this[ENTRIES], fn, that);
-	    },
-	    array: function(fn, that){
-	      var result = [];
-	      forOf(fn != undefined ? this.map(fn, that) : this, false, push, result);
-	      return result;
-	    },
-	    filter: function(fn, that){
-	      return new FilterIter(this, fn, that);
-	    },
-	    map: function(fn, that){
-	      return new MapIter(this, fn, that);
-	    }
-	  });
-	  
-	  $for.isIterable  = isIterable;
-	  $for.getIterator = getIterator;
-	  
-	  $define(GLOBAL + FORCED, {$for: $for});
-	}('entries', safeSymbol('fn'));
-
-	/******************************************************************************
-	 * Module : core.delay                                                        *
-	 ******************************************************************************/
-
-	// https://esdiscuss.org/topic/promise-returning-delay-function
-	$define(GLOBAL + FORCED, {
-	  delay: function(time){
-	    return new Promise(function(resolve){
-	      setTimeout(resolve, time, true);
-	    });
-	  }
-	});
-
-	/******************************************************************************
-	 * Module : core.binding                                                      *
-	 ******************************************************************************/
-
-	!function(_, toLocaleString){
-	  // Placeholder
-	  core._ = path._ = path._ || {};
-
-	  $define(PROTO + FORCED, FUNCTION, {
-	    part: part,
-	    only: function(numberArguments, that /* = @ */){
-	      var fn     = assertFunction(this)
-	        , n      = toLength(numberArguments)
-	        , isThat = arguments.length > 1;
-	      return function(/* ...args */){
-	        var length = min(n, arguments.length)
-	          , args   = Array(length)
-	          , i      = 0;
-	        while(length > i)args[i] = arguments[i++];
-	        return invoke(fn, args, isThat ? that : this);
-	      }
-	    }
-	  });
-	  
-	  function tie(key){
-	    var that  = this
-	      , bound = {};
-	    return hidden(that, _, function(key){
-	      if(key === undefined || !(key in that))return toLocaleString.call(that);
-	      return has(bound, key) ? bound[key] : (bound[key] = ctx(that[key], that, -1));
-	    })[_](key);
-	  }
-	  
-	  hidden(path._, TO_STRING, function(){
-	    return _;
-	  });
-	  
-	  hidden(ObjectProto, _, tie);
-	  DESC || hidden(ArrayProto, _, tie);
-	  // IE8- dirty hack - redefined toLocaleString is not enumerable
-	}(DESC ? uid('tie') : TO_LOCALE, ObjectProto[TO_LOCALE]);
-
-	/******************************************************************************
-	 * Module : core.object                                                       *
-	 ******************************************************************************/
-
-	!function(){
-	  function define(target, mixin){
-	    var keys   = ownKeys(toObject(mixin))
-	      , length = keys.length
-	      , i = 0, key;
-	    while(length > i)defineProperty(target, key = keys[i++], getOwnDescriptor(mixin, key));
-	    return target;
-	  };
-	  $define(STATIC + FORCED, OBJECT, {
-	    isObject: isObject,
-	    classof: classof,
-	    define: define,
-	    make: function(proto, mixin){
-	      return define(create(proto), mixin);
-	    }
-	  });
-	}();
-
-	/******************************************************************************
-	 * Module : core.array                                                        *
-	 ******************************************************************************/
-
-	$define(PROTO + FORCED, ARRAY, {
-	  turn: function(fn, target /* = [] */){
-	    assertFunction(fn);
-	    var memo   = target == undefined ? [] : Object(target)
-	      , O      = ES5Object(this)
-	      , length = toLength(O.length)
-	      , index  = 0;
-	    while(length > index)if(fn(memo, O[index], index++, this) === false)break;
-	    return memo;
-	  }
-	});
-	if(framework)ArrayUnscopables.turn = true;
-
-	/******************************************************************************
-	 * Module : core.number                                                       *
-	 ******************************************************************************/
-
-	!function(numberMethods){  
-	  function NumberIterator(iterated){
-	    set(this, ITER, {l: toLength(iterated), i: 0});
-	  }
-	  createIterator(NumberIterator, NUMBER, function(){
-	    var iter = this[ITER]
-	      , i    = iter.i++;
-	    return i < iter.l ? iterResult(0, i) : iterResult(1);
-	  });
-	  defineIterator(Number, NUMBER, function(){
-	    return new NumberIterator(this);
-	  });
-	  
-	  numberMethods.random = function(lim /* = 0 */){
-	    var a = +this
-	      , b = lim == undefined ? 0 : +lim
-	      , m = min(a, b);
-	    return random() * (max(a, b) - m) + m;
-	  };
-
-	  forEach.call(array(
-	      // ES3:
-	      'round,floor,ceil,abs,sin,asin,cos,acos,tan,atan,exp,sqrt,max,min,pow,atan2,' +
-	      // ES6:
-	      'acosh,asinh,atanh,cbrt,clz32,cosh,expm1,hypot,imul,log1p,log10,log2,sign,sinh,tanh,trunc'
-	    ), function(key){
-	      var fn = Math[key];
-	      if(fn)numberMethods[key] = function(/* ...args */){
-	        // ie9- dont support strict mode & convert `this` to object -> convert it to number
-	        var args = [+this]
-	          , i    = 0;
-	        while(arguments.length > i)args.push(arguments[i++]);
-	        return invoke(fn, args);
-	      }
-	    }
-	  );
-	  
-	  $define(PROTO + FORCED, NUMBER, numberMethods);
-	}({});
-
-	/******************************************************************************
-	 * Module : core.string                                                       *
-	 ******************************************************************************/
-
-	!function(){
-	  var escapeHTMLDict = {
-	    '&': '&amp;',
-	    '<': '&lt;',
-	    '>': '&gt;',
-	    '"': '&quot;',
-	    "'": '&apos;'
-	  }, unescapeHTMLDict = {}, key;
-	  for(key in escapeHTMLDict)unescapeHTMLDict[escapeHTMLDict[key]] = key;
-	  $define(PROTO + FORCED, STRING, {
-	    escapeHTML:   createReplacer(/[&<>"']/g, escapeHTMLDict),
-	    unescapeHTML: createReplacer(/&(?:amp|lt|gt|quot|apos);/g, unescapeHTMLDict)
-	  });
-	}();
-
-	/******************************************************************************
-	 * Module : core.date                                                         *
-	 ******************************************************************************/
-
-	!function(formatRegExp, flexioRegExp, locales, current, SECONDS, MINUTES, HOURS, MONTH, YEAR){
-	  function createFormat(prefix){
-	    return function(template, locale /* = current */){
-	      var that = this
-	        , dict = locales[has(locales, locale) ? locale : current];
-	      function get(unit){
-	        return that[prefix + unit]();
-	      }
-	      return String(template).replace(formatRegExp, function(part){
-	        switch(part){
-	          case 's'  : return get(SECONDS);                  // Seconds : 0-59
-	          case 'ss' : return lz(get(SECONDS));              // Seconds : 00-59
-	          case 'm'  : return get(MINUTES);                  // Minutes : 0-59
-	          case 'mm' : return lz(get(MINUTES));              // Minutes : 00-59
-	          case 'h'  : return get(HOURS);                    // Hours   : 0-23
-	          case 'hh' : return lz(get(HOURS));                // Hours   : 00-23
-	          case 'D'  : return get(DATE);                     // Date    : 1-31
-	          case 'DD' : return lz(get(DATE));                 // Date    : 01-31
-	          case 'W'  : return dict[0][get('Day')];           // Day     : Понедельник
-	          case 'N'  : return get(MONTH) + 1;                // Month   : 1-12
-	          case 'NN' : return lz(get(MONTH) + 1);            // Month   : 01-12
-	          case 'M'  : return dict[2][get(MONTH)];           // Month   : Январь
-	          case 'MM' : return dict[1][get(MONTH)];           // Month   : Января
-	          case 'Y'  : return get(YEAR);                     // Year    : 2014
-	          case 'YY' : return lz(get(YEAR) % 100);           // Year    : 14
-	        } return part;
-	      });
-	    }
-	  }
-	  function addLocale(lang, locale){
-	    function split(index){
-	      var result = [];
-	      forEach.call(array(locale.months), function(it){
-	        result.push(it.replace(flexioRegExp, '$' + index));
-	      });
-	      return result;
-	    }
-	    locales[lang] = [array(locale.weekdays), split(1), split(2)];
-	    return core;
-	  }
-	  $define(PROTO + FORCED, DATE, {
-	    format:    createFormat('get'),
-	    formatUTC: createFormat('getUTC')
-	  });
-	  addLocale(current, {
-	    weekdays: 'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
-	    months: 'January,February,March,April,May,June,July,August,September,October,November,December'
-	  });
-	  addLocale('ru', {
-	    weekdays: 'Воскресенье,Понедельник,Вторник,Среда,Четверг,Пятница,Суббота',
-	    months: 'Январ:я|ь,Феврал:я|ь,Март:а|,Апрел:я|ь,Ма:я|й,Июн:я|ь,' +
-	            'Июл:я|ь,Август:а|,Сентябр:я|ь,Октябр:я|ь,Ноябр:я|ь,Декабр:я|ь'
-	  });
-	  core.locale = function(locale){
-	    return has(locales, locale) ? current = locale : current;
-	  };
-	  core.addLocale = addLocale;
-	}(/\b\w\w?\b/g, /:(.*)\|(.*)$/, {}, 'en', 'Seconds', 'Minutes', 'Hours', 'Month', 'FullYear');
-
-	/******************************************************************************
-	 * Module : core.global                                                       *
-	 ******************************************************************************/
-
-	$define(GLOBAL + FORCED, {global: global});
-
-	/******************************************************************************
-	 * Module : js.array.statics                                                  *
-	 ******************************************************************************/
-
-	// JavaScript 1.6 / Strawman array statics shim
-	!function(arrayStatics){
-	  function setArrayStatics(keys, length){
-	    forEach.call(array(keys), function(key){
-	      if(key in ArrayProto)arrayStatics[key] = ctx(call, ArrayProto[key], length);
-	    });
-	  }
-	  setArrayStatics('pop,reverse,shift,keys,values,entries', 1);
-	  setArrayStatics('indexOf,every,some,forEach,map,filter,find,findIndex,includes', 3);
-	  setArrayStatics('join,slice,concat,push,splice,unshift,sort,lastIndexOf,' +
-	                  'reduce,reduceRight,copyWithin,fill,turn');
-	  $define(STATIC, ARRAY, arrayStatics);
-	}({});
-
-	/******************************************************************************
-	 * Module : web.dom.itarable                                                  *
-	 ******************************************************************************/
-
-	!function(NodeList){
-	  if(framework && NodeList && !(SYMBOL_ITERATOR in NodeList[PROTOTYPE])){
-	    hidden(NodeList[PROTOTYPE], SYMBOL_ITERATOR, Iterators[ARRAY]);
-	  }
-	  Iterators.NodeList = Iterators[ARRAY];
-	}(global.NodeList);
-
-	/******************************************************************************
-	 * Module : core.log                                                          *
-	 ******************************************************************************/
-
-	!function(log, enabled){
-	  // Methods from https://github.com/DeveloperToolsWG/console-object/blob/master/api.md
-	  forEach.call(array('assert,clear,count,debug,dir,dirxml,error,exception,' +
-	      'group,groupCollapsed,groupEnd,info,isIndependentlyComposed,log,' +
-	      'markTimeline,profile,profileEnd,table,time,timeEnd,timeline,' +
-	      'timelineEnd,timeStamp,trace,warn'), function(key){
-	    log[key] = function(){
-	      if(enabled && key in console)return apply.call(console[key], console, arguments);
-	    };
-	  });
-	  $define(GLOBAL + FORCED, {log: assign(log.log, log, {
-	    enable: function(){
-	      enabled = true;
-	    },
-	    disable: function(){
-	      enabled = false;
-	    }
-	  })});
-	}({}, true);
-	}(typeof self != 'undefined' && self.Math === Math ? self : Function('return this')(), false);
-	module.exports = { "default": module.exports, __esModule: true };
-
-
-/***/ }),
-/* 242 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	exports["default"] = function (obj) {
-	  return obj && obj.__esModule ? obj : {
-	    "default": obj
-	  };
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 243 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _defaults = __webpack_require__(240)["default"];
-
-	var _interopRequireWildcard = __webpack_require__(242)["default"];
+	var _defaults = function (obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(238)));
+
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(244)));
 
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(247)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(248)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(249)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(250)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(251)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(252)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(253)));
+
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(254)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(255)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(256)));
+
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(257)));
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(258)));
 
@@ -28842,45 +26790,23 @@ var StellarSdk =
 
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(261)));
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(262)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(263)));
-
 	_defaults(exports, _interopRequireWildcard(__webpack_require__(264)));
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(265)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(266)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(267)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(268)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(269)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(270)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(271)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(272)));
-
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(276)));
-
 /***/ }),
-/* 244 */
+/* 238 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(246).isNumber;
+	var isNumber = __webpack_require__(239).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Int = {
 
@@ -28918,19 +26844,7 @@ var StellarSdk =
 	includeIoMixin(Int);
 
 /***/ }),
-/* 245 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	exports["default"] = function (obj) {
-	  return obj && obj.__esModule ? obj["default"] : obj;
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 246 */
+/* 239 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/**
@@ -41288,16 +39202,16 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module), (function() { return this; }())))
 
 /***/ }),
-/* 247 */
+/* 240 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
 	module.exports = includeIoMixin;
 
-	var Cursor = __webpack_require__(248).Cursor;
+	var Cursor = __webpack_require__(241).Cursor;
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var extend = _lodash.extend;
 	var isFunction = _lodash.isFunction;
@@ -41363,29 +39277,29 @@ var StellarSdk =
 	    extend(obj.prototype, instanceMethods);
 	  }
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 248 */
+/* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _inherits = __webpack_require__(250)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var BaseCursor = _interopRequire(__webpack_require__(252));
+	var BaseCursor = _interopRequire(__webpack_require__(242));
 
-	var calculatePadding = __webpack_require__(253).calculatePadding;
+	var calculatePadding = __webpack_require__(243).calculatePadding;
 
 	var Cursor = exports.Cursor = (function (_BaseCursor) {
 	  function Cursor() {
@@ -41412,74 +39326,10 @@ var StellarSdk =
 
 	  return Cursor;
 	})(BaseCursor);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 249 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	exports["default"] = function (instance, Constructor) {
-	  if (!(instance instanceof Constructor)) {
-	    throw new TypeError("Cannot call a class as a function");
-	  }
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 250 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	exports["default"] = function (subClass, superClass) {
-	  if (typeof superClass !== "function" && superClass !== null) {
-	    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-	  }
-
-	  subClass.prototype = Object.create(superClass && superClass.prototype, {
-	    constructor: {
-	      value: subClass,
-	      enumerable: false,
-	      writable: true,
-	      configurable: true
-	    }
-	  });
-	  if (superClass) subClass.__proto__ = superClass;
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 251 */
-/***/ (function(module, exports) {
-
-	"use strict";
-
-	exports["default"] = (function () {
-	  function defineProperties(target, props) {
-	    for (var key in props) {
-	      var prop = props[key];
-	      prop.configurable = true;
-	      if (prop.value) prop.writable = true;
-	    }
-
-	    Object.defineProperties(target, props);
-	  }
-
-	  return function (Constructor, protoProps, staticProps) {
-	    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-	    if (staticProps) defineProperties(Constructor, staticProps);
-	    return Constructor;
-	  };
-	})();
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 252 */
+/* 242 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var Cursor = function(buffer)
@@ -41701,7 +39551,7 @@ var StellarSdk =
 			parent.call(this, buffer);
 		};
 
-		__webpack_require__(197).inherits(C, parent);
+		__webpack_require__(194).inherits(C, parent);
 
 		C.extend = parent.extend;
 		C.define = parent.define;
@@ -41727,10 +39577,10 @@ var StellarSdk =
 
 	module.exports = Cursor;
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 253 */
+/* 243 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -41741,7 +39591,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var all = __webpack_require__(246).all;
+	var all = __webpack_require__(239).all;
 
 	function calculatePadding(length) {
 	  switch (length % 4) {
@@ -41768,36 +39618,34 @@ var StellarSdk =
 	}
 
 /***/ }),
-/* 254 */
+/* 244 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _inherits = __webpack_require__(250)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _get = __webpack_require__(255)["default"];
+	var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc && desc.writable) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	var _core = __webpack_require__(241)["default"];
-
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Long = _interopRequire(__webpack_require__(256));
+	var Long = _interopRequire(__webpack_require__(245));
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Hyper = exports.Hyper = (function (_Long) {
 	  function Hyper(low, high) {
 	    _classCallCheck(this, Hyper);
 
-	    _get(_core.Object.getPrototypeOf(Hyper.prototype), "constructor", this).call(this, low, high, false);
+	    _get(Object.getPrototypeOf(Hyper.prototype), "constructor", this).call(this, low, high, false);
 	  }
 
 	  _inherits(Hyper, _Long);
@@ -41825,13 +39673,13 @@ var StellarSdk =
 	        if (!/^-?\d+$/.test(string)) {
 	          throw new Error("Invalid hyper string: " + string);
 	        }
-	        var result = _get(_core.Object.getPrototypeOf(Hyper), "fromString", this).call(this, string, false);
+	        var result = _get(Object.getPrototypeOf(Hyper), "fromString", this).call(this, string, false);
 	        return new this(result.low, result.high);
 	      }
 	    },
 	    fromBits: {
 	      value: function fromBits(low, high) {
-	        var result = _get(_core.Object.getPrototypeOf(Hyper), "fromBits", this).call(this, low, high, false);
+	        var result = _get(Object.getPrototypeOf(Hyper), "fromBits", this).call(this, low, high, false);
 	        return new this(result.low, result.high);
 	      }
 	    },
@@ -41851,55 +39699,7 @@ var StellarSdk =
 	Hyper.MIN_VALUE = new Hyper(Long.MIN_VALUE.low, Long.MIN_VALUE.high);
 
 /***/ }),
-/* 255 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _core = __webpack_require__(241)["default"];
-
-	exports["default"] = function get(_x, _x2, _x3) {
-	  var _again = true;
-
-	  _function: while (_again) {
-	    _again = false;
-	    var object = _x,
-	        property = _x2,
-	        receiver = _x3;
-	    desc = parent = getter = undefined;
-
-	    var desc = _core.Object.getOwnPropertyDescriptor(object, property);
-
-	    if (desc === undefined) {
-	      var parent = _core.Object.getPrototypeOf(object);
-
-	      if (parent === null) {
-	        return undefined;
-	      } else {
-	        _x = parent;
-	        _x2 = property;
-	        _x3 = receiver;
-	        _again = true;
-	        continue _function;
-	      }
-	    } else if ("value" in desc && desc.writable) {
-	      return desc.value;
-	    } else {
-	      var getter = desc.get;
-
-	      if (getter === undefined) {
-	        return undefined;
-	      }
-
-	      return getter.call(receiver);
-	    }
-	  }
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 256 */
+/* 245 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {/*
@@ -41926,7 +39726,7 @@ var StellarSdk =
 	 */
 	(function(global, factory) {
 
-	    /* AMD */ if ("function" === 'function' && __webpack_require__(257)["amd"])
+	    /* AMD */ if ("function" === 'function' && __webpack_require__(246)["amd"])
 	        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory), __WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ? (__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 	    /* CommonJS */ else if ("function" === 'function' && typeof module === "object" && module && module["exports"])
 	        module["exports"] = factory();
@@ -42985,27 +40785,27 @@ var StellarSdk =
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(67)(module)))
 
 /***/ }),
-/* 257 */
+/* 246 */
 /***/ (function(module, exports) {
 
 	module.exports = function() { throw new Error("define cannot be used indirect"); };
 
 
 /***/ }),
-/* 258 */
+/* 247 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(246).isNumber;
+	var isNumber = __webpack_require__(239).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var UnsignedInt = {
 
@@ -43047,36 +40847,34 @@ var StellarSdk =
 	includeIoMixin(UnsignedInt);
 
 /***/ }),
-/* 259 */
+/* 248 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _inherits = __webpack_require__(250)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _get = __webpack_require__(255)["default"];
+	var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc && desc.writable) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	var _core = __webpack_require__(241)["default"];
-
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Long = _interopRequire(__webpack_require__(256));
+	var Long = _interopRequire(__webpack_require__(245));
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var UnsignedHyper = exports.UnsignedHyper = (function (_Long) {
 	  function UnsignedHyper(low, high) {
 	    _classCallCheck(this, UnsignedHyper);
 
-	    _get(_core.Object.getPrototypeOf(UnsignedHyper.prototype), "constructor", this).call(this, low, high, true);
+	    _get(Object.getPrototypeOf(UnsignedHyper.prototype), "constructor", this).call(this, low, high, true);
 	  }
 
 	  _inherits(UnsignedHyper, _Long);
@@ -43104,13 +40902,13 @@ var StellarSdk =
 	        if (!/^\d+$/.test(string)) {
 	          throw new Error("Invalid hyper string: " + string);
 	        }
-	        var result = _get(_core.Object.getPrototypeOf(UnsignedHyper), "fromString", this).call(this, string, true);
+	        var result = _get(Object.getPrototypeOf(UnsignedHyper), "fromString", this).call(this, string, true);
 	        return new this(result.low, result.high);
 	      }
 	    },
 	    fromBits: {
 	      value: function fromBits(low, high) {
-	        var result = _get(_core.Object.getPrototypeOf(UnsignedHyper), "fromBits", this).call(this, low, high, true);
+	        var result = _get(Object.getPrototypeOf(UnsignedHyper), "fromBits", this).call(this, low, high, true);
 	        return new this(result.low, result.high);
 	      }
 	    },
@@ -43131,20 +40929,20 @@ var StellarSdk =
 	UnsignedHyper.MIN_VALUE = new UnsignedHyper(Long.MIN_VALUE.low, Long.MIN_VALUE.high);
 
 /***/ }),
-/* 260 */
+/* 249 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(246).isNumber;
+	var isNumber = __webpack_require__(239).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Float = {
 
@@ -43168,20 +40966,20 @@ var StellarSdk =
 	includeIoMixin(Float);
 
 /***/ }),
-/* 261 */
+/* 250 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isNumber = __webpack_require__(246).isNumber;
+	var isNumber = __webpack_require__(239).isNumber;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Double = {
 
@@ -43205,18 +41003,18 @@ var StellarSdk =
 	includeIoMixin(Double);
 
 /***/ }),
-/* 262 */
+/* 251 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Quadruple = {
 	  /* jshint unused: false */
@@ -43237,22 +41035,22 @@ var StellarSdk =
 	includeIoMixin(Quadruple);
 
 /***/ }),
-/* 263 */
+/* 252 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(244).Int;
+	var Int = __webpack_require__(238).Int;
 
-	var isBoolean = __webpack_require__(246).isBoolean;
+	var isBoolean = __webpack_require__(239).isBoolean;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Bool = {
 	  read: function read(io) {
@@ -43282,33 +41080,33 @@ var StellarSdk =
 	includeIoMixin(Bool);
 
 /***/ }),
-/* 264 */
+/* 253 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(244).Int;
+	var Int = __webpack_require__(238).Int;
 
-	var UnsignedInt = __webpack_require__(258).UnsignedInt;
+	var UnsignedInt = __webpack_require__(247).UnsignedInt;
 
-	var _util = __webpack_require__(253);
+	var _util = __webpack_require__(243);
 
 	var calculatePadding = _util.calculatePadding;
 	var slicePadding = _util.slicePadding;
 
-	var isString = __webpack_require__(246).isString;
+	var isString = __webpack_require__(239).isString;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var String = exports.String = (function () {
 	  function String() {
@@ -43363,30 +41161,30 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(String.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 265 */
+/* 254 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _util = __webpack_require__(253);
+	var _util = __webpack_require__(243);
 
 	var calculatePadding = _util.calculatePadding;
 	var slicePadding = _util.slicePadding;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Opaque = exports.Opaque = (function () {
 	  function Opaque(length) {
@@ -43424,34 +41222,34 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(Opaque.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 266 */
+/* 255 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(244).Int;
+	var Int = __webpack_require__(238).Int;
 
-	var UnsignedInt = __webpack_require__(258).UnsignedInt;
+	var UnsignedInt = __webpack_require__(247).UnsignedInt;
 
-	var _util = __webpack_require__(253);
+	var _util = __webpack_require__(243);
 
 	var calculatePadding = _util.calculatePadding;
 	var slicePadding = _util.slicePadding;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var VarOpaque = exports.VarOpaque = (function () {
 	  function VarOpaque() {
@@ -43496,32 +41294,32 @@ var StellarSdk =
 	})();
 
 	includeIoMixin(VarOpaque.prototype);
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 267 */
+/* 256 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var all = _lodash.all;
 	var each = _lodash.each;
 	var times = _lodash.times;
 	var isArray = _lodash.isArray;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Array = exports.Array = (function () {
 	  function Array(childType, length) {
@@ -43582,33 +41380,33 @@ var StellarSdk =
 	includeIoMixin(Array.prototype);
 
 /***/ }),
-/* 268 */
+/* 257 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(244).Int;
+	var Int = __webpack_require__(238).Int;
 
-	var UnsignedInt = __webpack_require__(258).UnsignedInt;
+	var UnsignedInt = __webpack_require__(247).UnsignedInt;
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var all = _lodash.all;
 	var each = _lodash.each;
 	var times = _lodash.times;
 	var isArray = _lodash.isArray;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var VarArray = exports.VarArray = (function () {
 	  function VarArray(childType) {
@@ -43678,29 +41476,29 @@ var StellarSdk =
 	includeIoMixin(VarArray.prototype);
 
 /***/ }),
-/* 269 */
+/* 258 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Bool = __webpack_require__(263).Bool;
+	var Bool = __webpack_require__(252).Bool;
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var isNull = _lodash.isNull;
 	var isUndefined = _lodash.isUndefined;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Option = exports.Option = (function () {
 	  function Option(childType) {
@@ -43748,20 +41546,20 @@ var StellarSdk =
 	includeIoMixin(Option.prototype);
 
 /***/ }),
-/* 270 */
+/* 259 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var isUndefined = __webpack_require__(246).isUndefined;
+	var isUndefined = __webpack_require__(239).isUndefined;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Void = {
 	  /* jshint unused: false */
@@ -43784,35 +41582,33 @@ var StellarSdk =
 	includeIoMixin(Void);
 
 /***/ }),
-/* 271 */
+/* 260 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc && desc.writable) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-	var _inherits = __webpack_require__(250)["default"];
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	var _get = __webpack_require__(255)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _core = __webpack_require__(241)["default"];
-
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var Int = __webpack_require__(244).Int;
+	var Int = __webpack_require__(238).Int;
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var each = _lodash.each;
 	var vals = _lodash.values;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Enum = exports.Enum = (function () {
 	  function Enum(name, value) {
@@ -43879,7 +41675,7 @@ var StellarSdk =
 
 	            _classCallCheck(this, _class);
 
-	            _get(_core.Object.getPrototypeOf(_class.prototype), "constructor", this).apply(this, args);
+	            _get(Object.getPrototypeOf(_class.prototype), "constructor", this).apply(this, args);
 	          };
 
 	          _inherits(_class, _Enum);
@@ -43891,7 +41687,7 @@ var StellarSdk =
 	        context.results[name] = ChildEnum;
 
 	        ChildEnum._members = {};
-	        ChildEnum._byValue = new _core.Map();
+	        ChildEnum._byValue = new Map();
 
 	        each(members, function (value, key) {
 	          var inst = new ChildEnum(key, value);
@@ -43913,39 +41709,37 @@ var StellarSdk =
 	includeIoMixin(Enum);
 
 /***/ }),
-/* 272 */
+/* 261 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 
-	var _inherits = __webpack_require__(250)["default"];
+	var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc && desc.writable) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-	var _get = __webpack_require__(255)["default"];
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	var _slicedToArray = __webpack_require__(273)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _core = __webpack_require__(241)["default"];
-
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var each = _lodash.each;
 	var map = _lodash.map;
 	var isUndefined = _lodash.isUndefined;
 	var zipObject = _lodash.zipObject;
 
-	var Reference = __webpack_require__(274).Reference;
+	var Reference = __webpack_require__(262).Reference;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Struct = exports.Struct = (function () {
 	  function Struct(attributes) {
@@ -44001,7 +41795,7 @@ var StellarSdk =
 
 	            _classCallCheck(this, _class);
 
-	            _get(_core.Object.getPrototypeOf(_class.prototype), "constructor", this).apply(this, args);
+	            _get(Object.getPrototypeOf(_class.prototype), "constructor", this).apply(this, args);
 	          };
 
 	          _inherits(_class, _Struct);
@@ -44055,57 +41849,29 @@ var StellarSdk =
 	}
 
 /***/ }),
-/* 273 */
+/* 262 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _core = __webpack_require__(241)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	exports["default"] = function (arr, i) {
-	  if (Array.isArray(arr)) {
-	    return arr;
-	  } else if (_core.$for.isIterable(Object(arr))) {
-	    var _arr = [];
+	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
 
-	    for (var _iterator = _core.$for.getIterator(arr), _step; !(_step = _iterator.next()).done;) {
-	      _arr.push(_step.value);
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	      if (i && _arr.length === i) break;
-	    }
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	    return _arr;
-	  } else {
-	    throw new TypeError("Invalid attempt to destructure non-iterable instance");
-	  }
-	};
-
-	exports.__esModule = true;
-
-/***/ }),
-/* 274 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	"use strict";
-
-	var _classCallCheck = __webpack_require__(249)["default"];
-
-	var _createClass = __webpack_require__(251)["default"];
-
-	var _inherits = __webpack_require__(250)["default"];
-
-	var _interopRequireWildcard = __webpack_require__(242)["default"];
-
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	exports.config = config;
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var XDR = _interopRequireWildcard(__webpack_require__(243));
+	var XDR = _interopRequireWildcard(__webpack_require__(237));
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var isUndefined = _lodash.isUndefined;
 	var isPlainObject = _lodash.isPlainObject;
@@ -44114,7 +41880,7 @@ var StellarSdk =
 	var map = _lodash.map;
 	var pick = _lodash.pick;
 
-	var sequencify = _interopRequire(__webpack_require__(275));
+	var sequencify = _interopRequire(__webpack_require__(263));
 
 	// types is the root
 	var types = {};
@@ -44452,7 +42218,7 @@ var StellarSdk =
 	})();
 
 /***/ }),
-/* 275 */
+/* 263 */
 /***/ (function(module, exports) {
 
 	/*jshint node:true */
@@ -44504,40 +42270,38 @@ var StellarSdk =
 
 
 /***/ }),
-/* 276 */
+/* 264 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 
-	var _classCallCheck = __webpack_require__(249)["default"];
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
-	var _createClass = __webpack_require__(251)["default"];
+	var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 
-	var _inherits = __webpack_require__(250)["default"];
+	var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc && desc.writable) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-	var _get = __webpack_require__(255)["default"];
+	var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
 
-	var _slicedToArray = __webpack_require__(273)["default"];
+	var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var _core = __webpack_require__(241)["default"];
-
-	var _interopRequire = __webpack_require__(245)["default"];
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
 
-	var _lodash = __webpack_require__(246);
+	var _lodash = __webpack_require__(239);
 
 	var each = _lodash.each;
 	var isUndefined = _lodash.isUndefined;
 	var isString = _lodash.isString;
 
-	var Void = __webpack_require__(270).Void;
+	var Void = __webpack_require__(259).Void;
 
-	var Reference = __webpack_require__(274).Reference;
+	var Reference = __webpack_require__(262).Reference;
 
-	var includeIoMixin = _interopRequire(__webpack_require__(247));
+	var includeIoMixin = _interopRequire(__webpack_require__(240));
 
 	var Union = exports.Union = (function () {
 	  function Union(aSwitch, value) {
@@ -44644,7 +42408,7 @@ var StellarSdk =
 
 	            _classCallCheck(this, _class);
 
-	            _get(_core.Object.getPrototypeOf(_class.prototype), "constructor", this).apply(this, args);
+	            _get(Object.getPrototypeOf(_class.prototype), "constructor", this).apply(this, args);
 	          };
 
 	          _inherits(_class, _Union);
@@ -44661,7 +42425,7 @@ var StellarSdk =
 	          ChildUnion._switchOn = config.switchOn;
 	        }
 
-	        ChildUnion._switches = new _core.Map();
+	        ChildUnion._switches = new Map();
 	        ChildUnion._arms = {};
 
 	        each(config.arms, function (value, name) {
@@ -44733,7 +42497,7 @@ var StellarSdk =
 	includeIoMixin(Union);
 
 /***/ }),
-/* 277 */
+/* 265 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -44743,7 +42507,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var sha256 = __webpack_require__(278).sha256;
+	var sha256 = __webpack_require__(266).sha256;
 
 	function hash(data) {
 	  var hasher = new sha256();
@@ -44752,7 +42516,7 @@ var StellarSdk =
 	}
 
 /***/ }),
-/* 278 */
+/* 266 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function SHA (algorithm) {
@@ -44764,16 +42528,16 @@ var StellarSdk =
 	  return new Algorithm()
 	}
 
-	exports.sha = __webpack_require__(279)
-	exports.sha1 = __webpack_require__(281)
-	exports.sha224 = __webpack_require__(282)
-	exports.sha256 = __webpack_require__(283)
-	exports.sha384 = __webpack_require__(284)
-	exports.sha512 = __webpack_require__(285)
+	exports.sha = __webpack_require__(267)
+	exports.sha1 = __webpack_require__(269)
+	exports.sha224 = __webpack_require__(270)
+	exports.sha256 = __webpack_require__(271)
+	exports.sha384 = __webpack_require__(272)
+	exports.sha512 = __webpack_require__(273)
 
 
 /***/ }),
-/* 279 */
+/* 267 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/*
@@ -44784,9 +42548,9 @@ var StellarSdk =
 	 * operation was added.
 	 */
 
-	var inherits = __webpack_require__(175)
-	var Hash = __webpack_require__(280)
-	var Buffer = __webpack_require__(181).Buffer
+	var inherits = __webpack_require__(171)
+	var Hash = __webpack_require__(268)
+	var Buffer = __webpack_require__(177).Buffer
 
 	var K = [
 	  0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -44873,10 +42637,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 280 */
+/* 268 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var Buffer = __webpack_require__(181).Buffer
+	var Buffer = __webpack_require__(177).Buffer
 
 	// prototype class for hash functions
 	function Hash (blockSize, finalSize) {
@@ -44939,7 +42703,7 @@ var StellarSdk =
 
 	  // uint64
 	  } else {
-	    var lowBits = bits & 0xffffffff
+	    var lowBits = (bits & 0xffffffff) >>> 0
 	    var highBits = (bits - lowBits) / 0x100000000
 
 	    this._block.writeUInt32BE(highBits, this._blockSize - 8)
@@ -44960,7 +42724,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 281 */
+/* 269 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/*
@@ -44972,9 +42736,9 @@ var StellarSdk =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(175)
-	var Hash = __webpack_require__(280)
-	var Buffer = __webpack_require__(181).Buffer
+	var inherits = __webpack_require__(171)
+	var Hash = __webpack_require__(268)
+	var Buffer = __webpack_require__(177).Buffer
 
 	var K = [
 	  0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -45065,7 +42829,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 282 */
+/* 270 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -45076,10 +42840,10 @@ var StellarSdk =
 	 *
 	 */
 
-	var inherits = __webpack_require__(175)
-	var Sha256 = __webpack_require__(283)
-	var Hash = __webpack_require__(280)
-	var Buffer = __webpack_require__(181).Buffer
+	var inherits = __webpack_require__(171)
+	var Sha256 = __webpack_require__(271)
+	var Hash = __webpack_require__(268)
+	var Buffer = __webpack_require__(177).Buffer
 
 	var W = new Array(64)
 
@@ -45124,7 +42888,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 283 */
+/* 271 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/**
@@ -45135,9 +42899,9 @@ var StellarSdk =
 	 *
 	 */
 
-	var inherits = __webpack_require__(175)
-	var Hash = __webpack_require__(280)
-	var Buffer = __webpack_require__(181).Buffer
+	var inherits = __webpack_require__(171)
+	var Hash = __webpack_require__(268)
+	var Buffer = __webpack_require__(177).Buffer
 
 	var K = [
 	  0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -45265,13 +43029,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 284 */
+/* 272 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(175)
-	var SHA512 = __webpack_require__(285)
-	var Hash = __webpack_require__(280)
-	var Buffer = __webpack_require__(181).Buffer
+	var inherits = __webpack_require__(171)
+	var SHA512 = __webpack_require__(273)
+	var Hash = __webpack_require__(268)
+	var Buffer = __webpack_require__(177).Buffer
 
 	var W = new Array(160)
 
@@ -45328,12 +43092,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 285 */
+/* 273 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(175)
-	var Hash = __webpack_require__(280)
-	var Buffer = __webpack_require__(181).Buffer
+	var inherits = __webpack_require__(171)
+	var Hash = __webpack_require__(268)
+	var Buffer = __webpack_require__(177).Buffer
 
 	var K = [
 	  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -45594,7 +43358,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 286 */
+/* 274 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -45668,7 +43432,7 @@ var StellarSdk =
 	    (function () {
 	      // fallback to tweetnacl.js if we're in the browser or
 	      // if there was a failure installing ed25519
-	      var nacl = __webpack_require__(287);
+	      var nacl = __webpack_require__(275);
 
 	      actualMethods.sign = function (data, secretKey) {
 	        data = new Buffer(data);
@@ -45693,10 +43457,10 @@ var StellarSdk =
 
 	  return ed25519Used;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 287 */
+/* 275 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	(function(nacl) {
@@ -48075,7 +45839,7 @@ var StellarSdk =
 	    });
 	  } else if (true) {
 	    // Node.js.
-	    crypto = __webpack_require__(288);
+	    crypto = __webpack_require__(276);
 	    if (crypto && crypto.randomBytes) {
 	      nacl.setPRNG(function(x, n) {
 	        var i, v = crypto.randomBytes(n);
@@ -48090,13 +45854,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 288 */
+/* 276 */
 /***/ (function(module, exports) {
 
 	/* (ignored) */
 
 /***/ }),
-/* 289 */
+/* 277 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48113,20 +45877,20 @@ var StellarSdk =
 	  value: true
 	});
 
-	var Network = __webpack_require__(290).Network;
+	var Network = __webpack_require__(278).Network;
 
-	var _signing = __webpack_require__(286);
+	var _signing = __webpack_require__(274);
 
 	var sign = _signing.sign;
 	var verify = _signing.verify;
 
-	var base58 = _interopRequireWildcard(__webpack_require__(291));
+	var base58 = _interopRequireWildcard(__webpack_require__(279));
 
-	var StrKey = __webpack_require__(295).StrKey;
+	var StrKey = __webpack_require__(283).StrKey;
 
-	var xdr = _interopRequire(__webpack_require__(238));
+	var xdr = _interopRequire(__webpack_require__(235));
 
-	var nacl = _interopRequire(__webpack_require__(287));
+	var nacl = _interopRequire(__webpack_require__(275));
 
 	/**
 	 * `Keypair` represents public (and secret) keys of the account.
@@ -48408,10 +46172,10 @@ var StellarSdk =
 
 	  return Keypair;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 290 */
+/* 278 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -48424,7 +46188,7 @@ var StellarSdk =
 		value: true
 	});
 
-	var hash = __webpack_require__(277).hash;
+	var hash = __webpack_require__(265).hash;
 
 	/**
 	 * Contains passphrases for common networks:
@@ -48542,7 +46306,7 @@ var StellarSdk =
 	})();
 
 /***/ }),
-/* 291 */
+/* 279 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48554,13 +46318,13 @@ var StellarSdk =
 	  value: true
 	});
 
-	var bs58 = _interopRequire(__webpack_require__(292));
+	var bs58 = _interopRequire(__webpack_require__(280));
 
-	var isUndefined = _interopRequire(__webpack_require__(293));
+	var isUndefined = _interopRequire(__webpack_require__(281));
 
-	var isNull = _interopRequire(__webpack_require__(294));
+	var isNull = _interopRequire(__webpack_require__(282));
 
-	var hash = __webpack_require__(277).hash;
+	var hash = __webpack_require__(265).hash;
 
 	var versionBytes = {
 	  accountId: 0, // decimal 0
@@ -48621,10 +46385,10 @@ var StellarSdk =
 	  return true;
 	}
 	// decimal 33
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 292 */
+/* 280 */
 /***/ (function(module, exports) {
 
 	// vendored from http://cryptocoinjs.com/modules/misc/bs58/
@@ -48682,7 +46446,7 @@ var StellarSdk =
 	module.exports = { decode: decode };
 
 /***/ }),
-/* 293 */
+/* 281 */
 /***/ (function(module, exports) {
 
 	/**
@@ -48710,7 +46474,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 294 */
+/* 282 */
 /***/ (function(module, exports) {
 
 	/**
@@ -48738,7 +46502,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 295 */
+/* 283 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -48755,17 +46519,17 @@ var StellarSdk =
 	  value: true
 	});
 
-	var base32 = _interopRequire(__webpack_require__(296));
+	var base32 = _interopRequire(__webpack_require__(284));
 
-	var crc = _interopRequire(__webpack_require__(297));
+	var crc = _interopRequire(__webpack_require__(285));
 
-	var contains = _interopRequire(__webpack_require__(311));
+	var contains = _interopRequire(__webpack_require__(299));
 
-	var isUndefined = _interopRequire(__webpack_require__(293));
+	var isUndefined = _interopRequire(__webpack_require__(281));
 
-	var isNull = _interopRequire(__webpack_require__(294));
+	var isNull = _interopRequire(__webpack_require__(282));
 
-	var isString = _interopRequire(__webpack_require__(316));
+	var isString = _interopRequire(__webpack_require__(304));
 
 	var versionBytes = {
 	  ed25519PublicKey: 6 << 3, // G
@@ -49003,10 +46767,10 @@ var StellarSdk =
 
 	  return true;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 296 */
+/* 284 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -49324,38 +47088,38 @@ var StellarSdk =
 
 
 /***/ }),
-/* 297 */
+/* 285 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	module.exports = {
-	  crc1: __webpack_require__(298),
-	  crc8: __webpack_require__(301),
-	  crc81wire: __webpack_require__(302),
-	  crc16: __webpack_require__(303),
-	  crc16ccitt: __webpack_require__(304),
-	  crc16modbus: __webpack_require__(305),
-	  crc16xmodem: __webpack_require__(306),
-	  crc16kermit: __webpack_require__(307),
-	  crc24: __webpack_require__(308),
-	  crc32: __webpack_require__(309),
-	  crcjam: __webpack_require__(310)
+	  crc1: __webpack_require__(286),
+	  crc8: __webpack_require__(289),
+	  crc81wire: __webpack_require__(290),
+	  crc16: __webpack_require__(291),
+	  crc16ccitt: __webpack_require__(292),
+	  crc16modbus: __webpack_require__(293),
+	  crc16xmodem: __webpack_require__(294),
+	  crc16kermit: __webpack_require__(295),
+	  crc24: __webpack_require__(296),
+	  crc32: __webpack_require__(297),
+	  crcjam: __webpack_require__(298)
 	};
 
 /***/ }),
-/* 298 */
+/* 286 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49377,7 +47141,7 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 299 */
+/* 287 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -49386,7 +47150,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
 	var createBuffer = _buffer.Buffer.from && _buffer.Buffer.alloc && _buffer.Buffer.allocUnsafe && _buffer.Buffer.allocUnsafeSlow ? _buffer.Buffer.from
 
@@ -49398,7 +47162,7 @@ var StellarSdk =
 	exports.default = createBuffer;
 
 /***/ }),
-/* 300 */
+/* 288 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -49419,18 +47183,18 @@ var StellarSdk =
 	};
 
 /***/ }),
-/* 301 */
+/* 289 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49455,18 +47219,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 302 */
+/* 290 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49491,18 +47255,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 303 */
+/* 291 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49527,18 +47291,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 304 */
+/* 292 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49563,18 +47327,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 305 */
+/* 293 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49599,18 +47363,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 306 */
+/* 294 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49639,18 +47403,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 307 */
+/* 295 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49675,18 +47439,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 308 */
+/* 296 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49711,18 +47475,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 309 */
+/* 297 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49747,18 +47511,18 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 310 */
+/* 298 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _buffer = __webpack_require__(170);
+	var _buffer = __webpack_require__(166);
 
-	var _create_buffer = __webpack_require__(299);
+	var _create_buffer = __webpack_require__(287);
 
 	var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-	var _define_crc = __webpack_require__(300);
+	var _define_crc = __webpack_require__(288);
 
 	var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -49785,14 +47549,14 @@ var StellarSdk =
 	});
 
 /***/ }),
-/* 311 */
+/* 299 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(312),
+	var baseIndexOf = __webpack_require__(300),
 	    isArrayLike = __webpack_require__(79),
-	    isString = __webpack_require__(316),
-	    toInteger = __webpack_require__(317),
-	    values = __webpack_require__(321);
+	    isString = __webpack_require__(304),
+	    toInteger = __webpack_require__(305),
+	    values = __webpack_require__(309);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -49844,12 +47608,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 312 */
+/* 300 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseFindIndex = __webpack_require__(313),
-	    baseIsNaN = __webpack_require__(314),
-	    strictIndexOf = __webpack_require__(315);
+	var baseFindIndex = __webpack_require__(301),
+	    baseIsNaN = __webpack_require__(302),
+	    strictIndexOf = __webpack_require__(303);
 
 	/**
 	 * The base implementation of `_.indexOf` without `fromIndex` bounds checks.
@@ -49870,7 +47634,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 313 */
+/* 301 */
 /***/ (function(module, exports) {
 
 	/**
@@ -49900,7 +47664,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 314 */
+/* 302 */
 /***/ (function(module, exports) {
 
 	/**
@@ -49918,7 +47682,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 315 */
+/* 303 */
 /***/ (function(module, exports) {
 
 	/**
@@ -49947,7 +47711,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 316 */
+/* 304 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var baseGetTag = __webpack_require__(27),
@@ -49983,10 +47747,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 317 */
+/* 305 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var toFinite = __webpack_require__(318);
+	var toFinite = __webpack_require__(306);
 
 	/**
 	 * Converts `value` to an integer.
@@ -50025,10 +47789,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 318 */
+/* 306 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var toNumber = __webpack_require__(319);
+	var toNumber = __webpack_require__(307);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0,
@@ -50073,11 +47837,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 319 */
+/* 307 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(33),
-	    isSymbol = __webpack_require__(320);
+	    isSymbol = __webpack_require__(308);
 
 	/** Used as references for various `Number` constants. */
 	var NAN = 0 / 0;
@@ -50145,7 +47909,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 320 */
+/* 308 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var baseGetTag = __webpack_require__(27),
@@ -50180,10 +47944,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 321 */
+/* 309 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseValues = __webpack_require__(322),
+	var baseValues = __webpack_require__(310),
 	    keys = __webpack_require__(59);
 
 	/**
@@ -50220,10 +47984,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 322 */
+/* 310 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(323);
+	var arrayMap = __webpack_require__(311);
 
 	/**
 	 * The base implementation of `_.values` and `_.valuesIn` which creates an
@@ -50245,7 +48009,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 323 */
+/* 311 */
 /***/ (function(module, exports) {
 
 	/**
@@ -50272,7 +48036,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 324 */
+/* 312 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -50287,26 +48051,26 @@ var StellarSdk =
 	  value: true
 	});
 
-	var _index = __webpack_require__(237);
+	var _index = __webpack_require__(234);
 
 	var xdr = _index.xdr;
 	var hash = _index.hash;
 
-	var StrKey = __webpack_require__(295).StrKey;
+	var StrKey = __webpack_require__(283).StrKey;
 
-	var Operation = __webpack_require__(325).Operation;
+	var Operation = __webpack_require__(313).Operation;
 
-	var Network = __webpack_require__(290).Network;
+	var Network = __webpack_require__(278).Network;
 
-	var Memo = __webpack_require__(349).Memo;
+	var Memo = __webpack_require__(337).Memo;
 
-	var map = _interopRequire(__webpack_require__(350));
+	var map = _interopRequire(__webpack_require__(338));
 
-	var each = _interopRequire(__webpack_require__(382));
+	var each = _interopRequire(__webpack_require__(372));
 
-	var isString = _interopRequire(__webpack_require__(316));
+	var isString = _interopRequire(__webpack_require__(304));
 
-	var crypto = _interopRequire(__webpack_require__(383));
+	var crypto = _interopRequire(__webpack_require__(373));
 
 	var MIN_LEDGER = 0;
 	var MAX_LEDGER = 4294967295; // max uint32
@@ -50468,10 +48232,10 @@ var StellarSdk =
 
 	  return Transaction;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 325 */
+/* 313 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -50486,38 +48250,38 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(238));
+	var xdr = _interopRequire(__webpack_require__(235));
 
-	var Keypair = __webpack_require__(289).Keypair;
+	var Keypair = __webpack_require__(277).Keypair;
 
-	var _jsXdr = __webpack_require__(239);
+	var _jsXdr = __webpack_require__(236);
 
 	var UnsignedHyper = _jsXdr.UnsignedHyper;
 	var Hyper = _jsXdr.Hyper;
 
-	var hash = __webpack_require__(277).hash;
+	var hash = __webpack_require__(265).hash;
 
-	var StrKey = __webpack_require__(295).StrKey;
+	var StrKey = __webpack_require__(283).StrKey;
 
-	var Asset = __webpack_require__(326).Asset;
+	var Asset = __webpack_require__(314).Asset;
 
-	var BigNumber = _interopRequire(__webpack_require__(344));
+	var BigNumber = _interopRequire(__webpack_require__(332));
 
-	var best_r = __webpack_require__(345).best_r;
+	var best_r = __webpack_require__(333).best_r;
 
-	var padEnd = _interopRequire(__webpack_require__(327));
+	var padEnd = _interopRequire(__webpack_require__(315));
 
-	var trimEnd = _interopRequire(__webpack_require__(342));
+	var trimEnd = _interopRequire(__webpack_require__(330));
 
-	var isEmpty = _interopRequire(__webpack_require__(346));
+	var isEmpty = _interopRequire(__webpack_require__(334));
 
-	var isUndefined = _interopRequire(__webpack_require__(293));
+	var isUndefined = _interopRequire(__webpack_require__(281));
 
-	var isString = _interopRequire(__webpack_require__(316));
+	var isString = _interopRequire(__webpack_require__(304));
 
-	var isNumber = _interopRequire(__webpack_require__(347));
+	var isNumber = _interopRequire(__webpack_require__(335));
 
-	var isFinite = _interopRequire(__webpack_require__(348));
+	var isFinite = _interopRequire(__webpack_require__(336));
 
 	var ONE = 10000000;
 	var MAX_INT64 = "9223372036854775807";
@@ -50895,7 +48659,7 @@ var StellarSdk =
 	       * @param {Asset} opts.selling - What you're selling.
 	       * @param {Asset} opts.buying - What you're buying.
 	       * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
-	       * @param {number|string|BigNumber|Object} opts.price - The exchange rate ratio (selling / buying)
+	       * @param {number|string|BigNumber|Object} opts.price - Price of 1 unit of `selling` in terms of `buying`.
 	       * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
 	       * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
 	       * @param {number|string} [opts.offerId ]- If `0`, will create a new offer (default). Otherwise, edits an exisiting offer.
@@ -50943,7 +48707,7 @@ var StellarSdk =
 	       * @param {Asset} opts.selling - What you're selling.
 	       * @param {Asset} opts.buying - What you're buying.
 	       * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
-	       * @param {number|string|BigNumber|Object} opts.price - The exchange rate ratio (selling / buying)
+	       * @param {number|string|BigNumber|Object} opts.price - Price of 1 unit of `selling` in terms of `buying`.
 	       * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
 	       * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
 	       * @param {string} [opts.source] - The source account (defaults to transaction source).
@@ -51337,10 +49101,10 @@ var StellarSdk =
 
 	  return Operation;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 326 */
+/* 314 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -51355,21 +49119,21 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(238));
+	var xdr = _interopRequire(__webpack_require__(235));
 
-	var Keypair = __webpack_require__(289).Keypair;
+	var Keypair = __webpack_require__(277).Keypair;
 
-	var StrKey = __webpack_require__(295).StrKey;
+	var StrKey = __webpack_require__(283).StrKey;
 
 	var clone = _interopRequire(__webpack_require__(7));
 
-	var padEnd = _interopRequire(__webpack_require__(327));
+	var padEnd = _interopRequire(__webpack_require__(315));
 
-	var trimEnd = _interopRequire(__webpack_require__(342));
+	var trimEnd = _interopRequire(__webpack_require__(330));
 
 	/**
 	 * Asset class represents an asset, either the native asset (`XLM`)
-	 * or a asset code / issuer account ID pair.
+	 * or an asset code / issuer account ID pair.
 	 *
 	 * An asset code describes an asset code and issuer pair. In the case of the native
 	 * asset XLM, the issuer will be null.
@@ -51550,13 +49314,13 @@ var StellarSdk =
 	})();
 
 /***/ }),
-/* 327 */
+/* 315 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var createPadding = __webpack_require__(328),
-	    stringSize = __webpack_require__(334),
-	    toInteger = __webpack_require__(317),
-	    toString = __webpack_require__(341);
+	var createPadding = __webpack_require__(316),
+	    stringSize = __webpack_require__(322),
+	    toInteger = __webpack_require__(305),
+	    toString = __webpack_require__(329);
 
 	/**
 	 * Pads `string` on the right side if it's shorter than `length`. Padding
@@ -51595,15 +49359,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 328 */
+/* 316 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseRepeat = __webpack_require__(329),
-	    baseToString = __webpack_require__(330),
-	    castSlice = __webpack_require__(331),
-	    hasUnicode = __webpack_require__(333),
-	    stringSize = __webpack_require__(334),
-	    stringToArray = __webpack_require__(338);
+	var baseRepeat = __webpack_require__(317),
+	    baseToString = __webpack_require__(318),
+	    castSlice = __webpack_require__(319),
+	    hasUnicode = __webpack_require__(321),
+	    stringSize = __webpack_require__(322),
+	    stringToArray = __webpack_require__(326);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeCeil = Math.ceil;
@@ -51634,7 +49398,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 329 */
+/* 317 */
 /***/ (function(module, exports) {
 
 	/** Used as references for various `Number` constants. */
@@ -51675,13 +49439,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 330 */
+/* 318 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28),
-	    arrayMap = __webpack_require__(323),
+	    arrayMap = __webpack_require__(311),
 	    isArray = __webpack_require__(65),
-	    isSymbol = __webpack_require__(320);
+	    isSymbol = __webpack_require__(308);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -51718,10 +49482,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 331 */
+/* 319 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseSlice = __webpack_require__(332);
+	var baseSlice = __webpack_require__(320);
 
 	/**
 	 * Casts `array` to a slice if it's needed.
@@ -51742,7 +49506,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 332 */
+/* 320 */
 /***/ (function(module, exports) {
 
 	/**
@@ -51779,7 +49543,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 333 */
+/* 321 */
 /***/ (function(module, exports) {
 
 	/** Used to compose unicode character classes. */
@@ -51811,12 +49575,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 334 */
+/* 322 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var asciiSize = __webpack_require__(335),
-	    hasUnicode = __webpack_require__(333),
-	    unicodeSize = __webpack_require__(337);
+	var asciiSize = __webpack_require__(323),
+	    hasUnicode = __webpack_require__(321),
+	    unicodeSize = __webpack_require__(325);
 
 	/**
 	 * Gets the number of symbols in `string`.
@@ -51835,10 +49599,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 335 */
+/* 323 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(336);
+	var baseProperty = __webpack_require__(324);
 
 	/**
 	 * Gets the size of an ASCII `string`.
@@ -51853,7 +49617,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 336 */
+/* 324 */
 /***/ (function(module, exports) {
 
 	/**
@@ -51873,7 +49637,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 337 */
+/* 325 */
 /***/ (function(module, exports) {
 
 	/** Used to compose unicode character classes. */
@@ -51923,12 +49687,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 338 */
+/* 326 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var asciiToArray = __webpack_require__(339),
-	    hasUnicode = __webpack_require__(333),
-	    unicodeToArray = __webpack_require__(340);
+	var asciiToArray = __webpack_require__(327),
+	    hasUnicode = __webpack_require__(321),
+	    unicodeToArray = __webpack_require__(328);
 
 	/**
 	 * Converts `string` to an array.
@@ -51947,7 +49711,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 339 */
+/* 327 */
 /***/ (function(module, exports) {
 
 	/**
@@ -51965,7 +49729,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 340 */
+/* 328 */
 /***/ (function(module, exports) {
 
 	/** Used to compose unicode character classes. */
@@ -52011,10 +49775,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 341 */
+/* 329 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(330);
+	var baseToString = __webpack_require__(318);
 
 	/**
 	 * Converts `value` to a string. An empty string is returned for `null`
@@ -52045,14 +49809,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 342 */
+/* 330 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseToString = __webpack_require__(330),
-	    castSlice = __webpack_require__(331),
-	    charsEndIndex = __webpack_require__(343),
-	    stringToArray = __webpack_require__(338),
-	    toString = __webpack_require__(341);
+	var baseToString = __webpack_require__(318),
+	    castSlice = __webpack_require__(319),
+	    charsEndIndex = __webpack_require__(331),
+	    stringToArray = __webpack_require__(326),
+	    toString = __webpack_require__(329);
 
 	/** Used to match leading and trailing whitespace. */
 	var reTrimEnd = /\s+$/;
@@ -52094,10 +49858,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 343 */
+/* 331 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseIndexOf = __webpack_require__(312);
+	var baseIndexOf = __webpack_require__(300);
 
 	/**
 	 * Used by `_.trim` and `_.trimEnd` to get the index of the last string symbol
@@ -52119,7 +49883,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 344 */
+/* 332 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v4.1.0 https://github.com/MikeMcl/bignumber.js/LICENCE */
@@ -54859,7 +52623,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 345 */
+/* 333 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -54880,7 +52644,7 @@ var StellarSdk =
 	  value: true
 	});
 
-	var BigNumber = _interopRequire(__webpack_require__(344));
+	var BigNumber = _interopRequire(__webpack_require__(332));
 
 	var MAX_INT = (1 << 31 >>> 0) - 1;
 	function best_r(number) {
@@ -54921,7 +52685,7 @@ var StellarSdk =
 	}
 
 /***/ }),
-/* 346 */
+/* 334 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var baseKeys = __webpack_require__(75),
@@ -55004,7 +52768,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 347 */
+/* 335 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var baseGetTag = __webpack_require__(27),
@@ -55048,7 +52812,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 348 */
+/* 336 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var root = __webpack_require__(29);
@@ -55090,7 +52854,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 349 */
+/* 337 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -55105,19 +52869,19 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(238));
+	var xdr = _interopRequire(__webpack_require__(235));
 
-	var isUndefined = _interopRequire(__webpack_require__(293));
+	var isUndefined = _interopRequire(__webpack_require__(281));
 
-	var isNull = _interopRequire(__webpack_require__(294));
+	var isNull = _interopRequire(__webpack_require__(282));
 
-	var isString = _interopRequire(__webpack_require__(316));
+	var isString = _interopRequire(__webpack_require__(304));
 
 	var clone = _interopRequire(__webpack_require__(7));
 
-	var UnsignedHyper = __webpack_require__(239).UnsignedHyper;
+	var UnsignedHyper = __webpack_require__(236).UnsignedHyper;
 
-	var BigNumber = _interopRequire(__webpack_require__(344));
+	var BigNumber = _interopRequire(__webpack_require__(332));
 
 	/**
 	 * Type of {@link Memo}.
@@ -55430,15 +53194,15 @@ var StellarSdk =
 
 	  return Memo;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 350 */
+/* 338 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var arrayMap = __webpack_require__(323),
-	    baseIteratee = __webpack_require__(351),
-	    baseMap = __webpack_require__(381),
+	var arrayMap = __webpack_require__(311),
+	    baseIteratee = __webpack_require__(339),
+	    baseMap = __webpack_require__(371),
 	    isArray = __webpack_require__(65);
 
 	/**
@@ -55492,14 +53256,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 351 */
+/* 339 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseMatches = __webpack_require__(352),
-	    baseMatchesProperty = __webpack_require__(367),
-	    identity = __webpack_require__(129),
+	var baseMatches = __webpack_require__(340),
+	    baseMatchesProperty = __webpack_require__(357),
+	    identity = __webpack_require__(126),
 	    isArray = __webpack_require__(65),
-	    property = __webpack_require__(379);
+	    property = __webpack_require__(369);
 
 	/**
 	 * The base implementation of `_.iteratee`.
@@ -55529,12 +53293,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 352 */
+/* 340 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseIsMatch = __webpack_require__(353),
-	    getMatchData = __webpack_require__(364),
-	    matchesStrictComparable = __webpack_require__(366);
+	var baseIsMatch = __webpack_require__(341),
+	    getMatchData = __webpack_require__(354),
+	    matchesStrictComparable = __webpack_require__(356);
 
 	/**
 	 * The base implementation of `_.matches` which doesn't clone `source`.
@@ -55557,11 +53321,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 353 */
+/* 341 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(9),
-	    baseIsEqual = __webpack_require__(354);
+	    baseIsEqual = __webpack_require__(342);
 
 	/** Used to compose bitmasks for value comparisons. */
 	var COMPARE_PARTIAL_FLAG = 1,
@@ -55625,10 +53389,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 354 */
+/* 342 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseIsEqualDeep = __webpack_require__(355),
+	var baseIsEqualDeep = __webpack_require__(343),
 	    isObjectLike = __webpack_require__(64);
 
 	/**
@@ -55659,13 +53423,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 355 */
+/* 343 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Stack = __webpack_require__(9),
-	    equalArrays = __webpack_require__(356),
-	    equalByTag = __webpack_require__(362),
-	    equalObjects = __webpack_require__(363),
+	    equalArrays = __webpack_require__(344),
+	    equalByTag = __webpack_require__(350),
+	    equalObjects = __webpack_require__(353),
 	    getTag = __webpack_require__(97),
 	    isArray = __webpack_require__(65),
 	    isBuffer = __webpack_require__(66),
@@ -55748,12 +53512,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 356 */
+/* 344 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var SetCache = __webpack_require__(357),
-	    arraySome = __webpack_require__(360),
-	    cacheHas = __webpack_require__(361);
+	var SetCache = __webpack_require__(345),
+	    arraySome = __webpack_require__(348),
+	    cacheHas = __webpack_require__(349);
 
 	/** Used to compose bitmasks for value comparisons. */
 	var COMPARE_PARTIAL_FLAG = 1,
@@ -55837,12 +53601,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 357 */
+/* 345 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var MapCache = __webpack_require__(38),
-	    setCacheAdd = __webpack_require__(358),
-	    setCacheHas = __webpack_require__(359);
+	    setCacheAdd = __webpack_require__(346),
+	    setCacheHas = __webpack_require__(347);
 
 	/**
 	 *
@@ -55870,7 +53634,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 358 */
+/* 346 */
 /***/ (function(module, exports) {
 
 	/** Used to stand-in for `undefined` hash values. */
@@ -55895,7 +53659,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 359 */
+/* 347 */
 /***/ (function(module, exports) {
 
 	/**
@@ -55915,7 +53679,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 360 */
+/* 348 */
 /***/ (function(module, exports) {
 
 	/**
@@ -55944,7 +53708,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 361 */
+/* 349 */
 /***/ (function(module, exports) {
 
 	/**
@@ -55963,15 +53727,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 362 */
+/* 350 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28),
 	    Uint8Array = __webpack_require__(105),
 	    eq = __webpack_require__(14),
-	    equalArrays = __webpack_require__(356),
-	    mapToArray = __webpack_require__(110),
-	    setToArray = __webpack_require__(114);
+	    equalArrays = __webpack_require__(344),
+	    mapToArray = __webpack_require__(351),
+	    setToArray = __webpack_require__(352);
 
 	/** Used to compose bitmasks for value comparisons. */
 	var COMPARE_PARTIAL_FLAG = 1,
@@ -56081,7 +53845,55 @@ var StellarSdk =
 
 
 /***/ }),
-/* 363 */
+/* 351 */
+/***/ (function(module, exports) {
+
+	/**
+	 * Converts `map` to its key-value pairs.
+	 *
+	 * @private
+	 * @param {Object} map The map to convert.
+	 * @returns {Array} Returns the key-value pairs.
+	 */
+	function mapToArray(map) {
+	  var index = -1,
+	      result = Array(map.size);
+
+	  map.forEach(function(value, key) {
+	    result[++index] = [key, value];
+	  });
+	  return result;
+	}
+
+	module.exports = mapToArray;
+
+
+/***/ }),
+/* 352 */
+/***/ (function(module, exports) {
+
+	/**
+	 * Converts `set` to an array of its values.
+	 *
+	 * @private
+	 * @param {Object} set The set to convert.
+	 * @returns {Array} Returns the values.
+	 */
+	function setToArray(set) {
+	  var index = -1,
+	      result = Array(set.size);
+
+	  set.forEach(function(value) {
+	    result[++index] = value;
+	  });
+	  return result;
+	}
+
+	module.exports = setToArray;
+
+
+/***/ }),
+/* 353 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var getAllKeys = __webpack_require__(94);
@@ -56176,10 +53988,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 364 */
+/* 354 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var isStrictComparable = __webpack_require__(365),
+	var isStrictComparable = __webpack_require__(355),
 	    keys = __webpack_require__(59);
 
 	/**
@@ -56206,7 +54018,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 365 */
+/* 355 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var isObject = __webpack_require__(33);
@@ -56227,7 +54039,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 366 */
+/* 356 */
 /***/ (function(module, exports) {
 
 	/**
@@ -56253,16 +54065,16 @@ var StellarSdk =
 
 
 /***/ }),
-/* 367 */
+/* 357 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseIsEqual = __webpack_require__(354),
-	    get = __webpack_require__(368),
-	    hasIn = __webpack_require__(376),
-	    isKey = __webpack_require__(371),
-	    isStrictComparable = __webpack_require__(365),
-	    matchesStrictComparable = __webpack_require__(366),
-	    toKey = __webpack_require__(375);
+	var baseIsEqual = __webpack_require__(342),
+	    get = __webpack_require__(358),
+	    hasIn = __webpack_require__(366),
+	    isKey = __webpack_require__(361),
+	    isStrictComparable = __webpack_require__(355),
+	    matchesStrictComparable = __webpack_require__(356),
+	    toKey = __webpack_require__(365);
 
 	/** Used to compose bitmasks for value comparisons. */
 	var COMPARE_PARTIAL_FLAG = 1,
@@ -56292,10 +54104,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 368 */
+/* 358 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(369);
+	var baseGet = __webpack_require__(359);
 
 	/**
 	 * Gets the value at `path` of `object`. If the resolved value is
@@ -56331,11 +54143,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 369 */
+/* 359 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var castPath = __webpack_require__(370),
-	    toKey = __webpack_require__(375);
+	var castPath = __webpack_require__(360),
+	    toKey = __webpack_require__(365);
 
 	/**
 	 * The base implementation of `_.get` without support for default values.
@@ -56361,13 +54173,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 370 */
+/* 360 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(65),
-	    isKey = __webpack_require__(371),
-	    stringToPath = __webpack_require__(372),
-	    toString = __webpack_require__(341);
+	    isKey = __webpack_require__(361),
+	    stringToPath = __webpack_require__(362),
+	    toString = __webpack_require__(329);
 
 	/**
 	 * Casts `value` to a path array if it's not one.
@@ -56388,11 +54200,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 371 */
+/* 361 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var isArray = __webpack_require__(65),
-	    isSymbol = __webpack_require__(320);
+	    isSymbol = __webpack_require__(308);
 
 	/** Used to match property names within property paths. */
 	var reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/,
@@ -56423,14 +54235,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 372 */
+/* 362 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var memoizeCapped = __webpack_require__(373);
+	var memoizeCapped = __webpack_require__(363);
 
 	/** Used to match property names within property paths. */
-	var reLeadingDot = /^\./,
-	    rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
+	var rePropName = /[^.[\]]+|\[(?:(-?\d+(?:\.\d+)?)|(["'])((?:(?!\2)[^\\]|\\.)*?)\2)\]|(?=(?:\.|\[\])(?:\.|\[\]|$))/g;
 
 	/** Used to match backslashes in property paths. */
 	var reEscapeChar = /\\(\\)?/g;
@@ -56444,11 +54255,11 @@ var StellarSdk =
 	 */
 	var stringToPath = memoizeCapped(function(string) {
 	  var result = [];
-	  if (reLeadingDot.test(string)) {
+	  if (string.charCodeAt(0) === 46 /* . */) {
 	    result.push('');
 	  }
-	  string.replace(rePropName, function(match, number, quote, string) {
-	    result.push(quote ? string.replace(reEscapeChar, '$1') : (number || match));
+	  string.replace(rePropName, function(match, number, quote, subString) {
+	    result.push(quote ? subString.replace(reEscapeChar, '$1') : (number || match));
 	  });
 	  return result;
 	});
@@ -56457,10 +54268,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 373 */
+/* 363 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var memoize = __webpack_require__(374);
+	var memoize = __webpack_require__(364);
 
 	/** Used as the maximum memoize cache size. */
 	var MAX_MEMOIZE_SIZE = 500;
@@ -56489,7 +54300,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 374 */
+/* 364 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var MapCache = __webpack_require__(38);
@@ -56568,10 +54379,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 375 */
+/* 365 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var isSymbol = __webpack_require__(320);
+	var isSymbol = __webpack_require__(308);
 
 	/** Used as references for various `Number` constants. */
 	var INFINITY = 1 / 0;
@@ -56595,11 +54406,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 376 */
+/* 366 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseHasIn = __webpack_require__(377),
-	    hasPath = __webpack_require__(378);
+	var baseHasIn = __webpack_require__(367),
+	    hasPath = __webpack_require__(368);
 
 	/**
 	 * Checks if `path` is a direct or inherited property of `object`.
@@ -56635,7 +54446,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 377 */
+/* 367 */
 /***/ (function(module, exports) {
 
 	/**
@@ -56654,15 +54465,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 378 */
+/* 368 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var castPath = __webpack_require__(370),
+	var castPath = __webpack_require__(360),
 	    isArguments = __webpack_require__(62),
 	    isArray = __webpack_require__(65),
 	    isIndex = __webpack_require__(69),
 	    isLength = __webpack_require__(72),
-	    toKey = __webpack_require__(375);
+	    toKey = __webpack_require__(365);
 
 	/**
 	 * Checks if `path` exists on `object`.
@@ -56699,13 +54510,13 @@ var StellarSdk =
 
 
 /***/ }),
-/* 379 */
+/* 369 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseProperty = __webpack_require__(336),
-	    basePropertyDeep = __webpack_require__(380),
-	    isKey = __webpack_require__(371),
-	    toKey = __webpack_require__(375);
+	var baseProperty = __webpack_require__(324),
+	    basePropertyDeep = __webpack_require__(370),
+	    isKey = __webpack_require__(361),
+	    toKey = __webpack_require__(365);
 
 	/**
 	 * Creates a function that returns the value at `path` of a given object.
@@ -56737,10 +54548,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 380 */
+/* 370 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(369);
+	var baseGet = __webpack_require__(359);
 
 	/**
 	 * A specialized version of `baseProperty` which supports deep paths.
@@ -56759,10 +54570,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 381 */
+/* 371 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseEach = __webpack_require__(123),
+	var baseEach = __webpack_require__(120),
 	    isArrayLike = __webpack_require__(79);
 
 	/**
@@ -56787,17 +54598,17 @@ var StellarSdk =
 
 
 /***/ }),
-/* 382 */
+/* 372 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(122);
+	module.exports = __webpack_require__(119);
 
 
 /***/ }),
-/* 383 */
+/* 373 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(384)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(374)
 
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -56808,9 +54619,9 @@ var StellarSdk =
 	    ].join('\n'))
 	}
 
-	exports.createHash = __webpack_require__(386)
+	exports.createHash = __webpack_require__(376)
 
-	exports.createHmac = __webpack_require__(395)
+	exports.createHmac = __webpack_require__(385)
 
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -56831,10 +54642,10 @@ var StellarSdk =
 	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
 	}
 
-	var p = __webpack_require__(396)(exports)
+	var p = __webpack_require__(386)(exports)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
-	__webpack_require__(398)(exports, module.exports);
+	__webpack_require__(388)(exports, module.exports);
 
 	// the least I can do is make error messages for the rest of the node.js/crypto api.
 	each(['createCredentials'
@@ -56847,16 +54658,16 @@ var StellarSdk =
 	  }
 	})
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 384 */
+/* 374 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(385)
+	    g.crypto || g.msCrypto || __webpack_require__(375)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -56880,22 +54691,22 @@ var StellarSdk =
 	  }
 	}())
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 385 */
+/* 375 */
 /***/ (function(module, exports) {
 
 	/* (ignored) */
 
 /***/ }),
-/* 386 */
+/* 376 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(387)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(377)
 
-	var md5 = toConstructor(__webpack_require__(392))
-	var rmd160 = toConstructor(__webpack_require__(394))
+	var md5 = toConstructor(__webpack_require__(382))
+	var rmd160 = toConstructor(__webpack_require__(384))
 
 	function toConstructor (fn) {
 	  return function () {
@@ -56923,10 +54734,10 @@ var StellarSdk =
 	  return createHash(alg)
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 387 */
+/* 377 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -56935,16 +54746,16 @@ var StellarSdk =
 	  return new Alg()
 	}
 
-	var Buffer = __webpack_require__(170).Buffer
-	var Hash   = __webpack_require__(388)(Buffer)
+	var Buffer = __webpack_require__(166).Buffer
+	var Hash   = __webpack_require__(378)(Buffer)
 
-	exports.sha1 = __webpack_require__(389)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(390)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(391)(Buffer, Hash)
+	exports.sha1 = __webpack_require__(379)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(380)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(381)(Buffer, Hash)
 
 
 /***/ }),
-/* 388 */
+/* 378 */
 /***/ (function(module, exports) {
 
 	module.exports = function (Buffer) {
@@ -57027,7 +54838,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 389 */
+/* 379 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/*
@@ -57039,7 +54850,7 @@ var StellarSdk =
 	 * See http://pajhome.org.uk/crypt/md5 for details.
 	 */
 
-	var inherits = __webpack_require__(197).inherits
+	var inherits = __webpack_require__(194).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -57171,7 +54982,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 390 */
+/* 380 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	
@@ -57183,7 +54994,7 @@ var StellarSdk =
 	 *
 	 */
 
-	var inherits = __webpack_require__(197).inherits
+	var inherits = __webpack_require__(194).inherits
 
 	module.exports = function (Buffer, Hash) {
 
@@ -57324,10 +55135,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 391 */
+/* 381 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var inherits = __webpack_require__(197).inherits
+	var inherits = __webpack_require__(194).inherits
 
 	module.exports = function (Buffer, Hash) {
 	  var K = [
@@ -57574,7 +55385,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 392 */
+/* 382 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/*
@@ -57586,7 +55397,7 @@ var StellarSdk =
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(393);
+	var helpers = __webpack_require__(383);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -57735,7 +55546,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 393 */
+/* 383 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -57773,10 +55584,10 @@ var StellarSdk =
 
 	module.exports = { hash: hash };
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 394 */
+/* 384 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -57985,13 +55796,13 @@ var StellarSdk =
 
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 395 */
+/* 385 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(386)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(376)
 
 	var zeroBuffer = new Buffer(128)
 	zeroBuffer.fill(0)
@@ -58035,13 +55846,13 @@ var StellarSdk =
 	}
 
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 396 */
+/* 386 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var pbkdf2Export = __webpack_require__(397)
+	var pbkdf2Export = __webpack_require__(387)
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {}
@@ -58056,7 +55867,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 397 */
+/* 387 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -58144,21 +55955,21 @@ var StellarSdk =
 	  }
 	}
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 398 */
+/* 388 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {};
-	  var ciphers = __webpack_require__(399)(crypto);
+	  var ciphers = __webpack_require__(389)(crypto);
 	  exports.createCipher = ciphers.createCipher;
 	  exports.createCipheriv = ciphers.createCipheriv;
-	  var deciphers = __webpack_require__(416)(crypto);
+	  var deciphers = __webpack_require__(406)(crypto);
 	  exports.createDecipher = deciphers.createDecipher;
 	  exports.createDecipheriv = deciphers.createDecipheriv;
-	  var modes = __webpack_require__(407);
+	  var modes = __webpack_require__(397);
 	  function listCiphers () {
 	    return Object.keys(modes);
 	  }
@@ -58168,15 +55979,15 @@ var StellarSdk =
 
 
 /***/ }),
-/* 399 */
+/* 389 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(400);
-	var Transform = __webpack_require__(401);
-	var inherits = __webpack_require__(175);
-	var modes = __webpack_require__(407);
-	var ebtk = __webpack_require__(408);
-	var StreamCipher = __webpack_require__(409);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(390);
+	var Transform = __webpack_require__(391);
+	var inherits = __webpack_require__(171);
+	var modes = __webpack_require__(397);
+	var ebtk = __webpack_require__(398);
+	var StreamCipher = __webpack_require__(399);
 	inherits(Cipher, Transform);
 	function Cipher(mode, key, iv) {
 	  if (!(this instanceof Cipher)) {
@@ -58237,11 +56048,11 @@ var StellarSdk =
 	  return out;
 	};
 	var modelist = {
-	  ECB: __webpack_require__(410),
-	  CBC: __webpack_require__(411),
-	  CFB: __webpack_require__(413),
-	  OFB: __webpack_require__(414),
-	  CTR: __webpack_require__(415)
+	  ECB: __webpack_require__(400),
+	  CBC: __webpack_require__(401),
+	  CFB: __webpack_require__(403),
+	  OFB: __webpack_require__(404),
+	  CTR: __webpack_require__(405)
 	};
 	module.exports = function (crypto) {
 	  function createCipheriv(suite, password, iv) {
@@ -58280,10 +56091,10 @@ var StellarSdk =
 	  };
 	};
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 400 */
+/* 390 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var uint_max = Math.pow(2, 32);
@@ -58482,14 +56293,14 @@ var StellarSdk =
 
 
 	  exports.AES = AES;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 401 */
+/* 391 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(402).Transform;
-	var inherits = __webpack_require__(175);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(392).Transform;
+	var inherits = __webpack_require__(171);
 
 	module.exports = CipherBase;
 	inherits(CipherBase, Transform);
@@ -58520,10 +56331,10 @@ var StellarSdk =
 	  }
 	  return outData;
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 402 */
+/* 392 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -58549,15 +56360,15 @@ var StellarSdk =
 
 	module.exports = Stream;
 
-	var EE = __webpack_require__(166).EventEmitter;
-	var inherits = __webpack_require__(175);
+	var EE = __webpack_require__(162).EventEmitter;
+	var inherits = __webpack_require__(171);
 
 	inherits(Stream, EE);
-	Stream.Readable = __webpack_require__(177);
-	Stream.Writable = __webpack_require__(403);
-	Stream.Duplex = __webpack_require__(404);
-	Stream.Transform = __webpack_require__(405);
-	Stream.PassThrough = __webpack_require__(406);
+	Stream.Readable = __webpack_require__(173);
+	Stream.Writable = __webpack_require__(393);
+	Stream.Duplex = __webpack_require__(394);
+	Stream.Transform = __webpack_require__(395);
+	Stream.PassThrough = __webpack_require__(396);
 
 	// Backwards-compat with node 0.4.x
 	Stream.Stream = Stream;
@@ -58656,35 +56467,35 @@ var StellarSdk =
 
 
 /***/ }),
-/* 403 */
+/* 393 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(187);
+	module.exports = __webpack_require__(184);
 
 
 /***/ }),
-/* 404 */
+/* 394 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(186);
+	module.exports = __webpack_require__(183);
 
 
 /***/ }),
-/* 405 */
+/* 395 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(177).Transform
+	module.exports = __webpack_require__(173).Transform
 
 
 /***/ }),
-/* 406 */
+/* 396 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(177).PassThrough
+	module.exports = __webpack_require__(173).PassThrough
 
 
 /***/ }),
-/* 407 */
+/* 397 */
 /***/ (function(module, exports) {
 
 	exports['aes-128-ecb'] = {
@@ -58797,7 +56608,7 @@ var StellarSdk =
 	};
 
 /***/ }),
-/* 408 */
+/* 398 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -58857,15 +56668,15 @@ var StellarSdk =
 	    iv: iv
 	  };
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 409 */
+/* 399 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(400);
-	var Transform = __webpack_require__(401);
-	var inherits = __webpack_require__(175);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(390);
+	var Transform = __webpack_require__(391);
+	var inherits = __webpack_require__(171);
 
 	inherits(StreamCipher, Transform);
 	module.exports = StreamCipher;
@@ -58889,10 +56700,10 @@ var StellarSdk =
 	  this._cipher.scrub();
 	  next();
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 410 */
+/* 400 */
 /***/ (function(module, exports) {
 
 	exports.encrypt = function (self, block) {
@@ -58903,10 +56714,10 @@ var StellarSdk =
 	};
 
 /***/ }),
-/* 411 */
+/* 401 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var xor = __webpack_require__(412);
+	var xor = __webpack_require__(402);
 	exports.encrypt = function (self, block) {
 	  var data = xor(block, self._prev);
 	  self._prev = self._cipher.encryptBlock(data);
@@ -58920,7 +56731,7 @@ var StellarSdk =
 	};
 
 /***/ }),
-/* 412 */
+/* 402 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = xor;
@@ -58933,13 +56744,13 @@ var StellarSdk =
 	  }
 	  return out;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 413 */
+/* 403 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(412);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(402);
 	exports.encrypt = function (self, data, decrypt) {
 	  var out = new Buffer('');
 	  var len;
@@ -58966,13 +56777,13 @@ var StellarSdk =
 	  self._prev = Buffer.concat([self._prev, decrypt?data:out]);
 	  return out;
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 414 */
+/* 404 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(412);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(402);
 	function getBlock(self) {
 	  self._prev = self._cipher.encryptBlock(self._prev);
 	  return self._prev;
@@ -58985,13 +56796,13 @@ var StellarSdk =
 	  self._cache = self._cache.slice(chunk.length);
 	  return xor(chunk, pad);
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 415 */
+/* 405 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(412);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(402);
 	function getBlock(self) {
 	  var out = self._cipher.encryptBlock(self._prev);
 	  incr32(self._prev);
@@ -59019,18 +56830,18 @@ var StellarSdk =
 	    }
 	  }
 	}
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 416 */
+/* 406 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(400);
-	var Transform = __webpack_require__(401);
-	var inherits = __webpack_require__(175);
-	var modes = __webpack_require__(407);
-	var StreamCipher = __webpack_require__(409);
-	var ebtk = __webpack_require__(408);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(390);
+	var Transform = __webpack_require__(391);
+	var inherits = __webpack_require__(171);
+	var modes = __webpack_require__(397);
+	var StreamCipher = __webpack_require__(399);
+	var ebtk = __webpack_require__(398);
 
 	inherits(Decipher, Transform);
 	function Decipher(mode, key, iv) {
@@ -59098,11 +56909,11 @@ var StellarSdk =
 	}
 
 	var modelist = {
-	  ECB: __webpack_require__(410),
-	  CBC: __webpack_require__(411),
-	  CFB: __webpack_require__(413),
-	  OFB: __webpack_require__(414),
-	  CTR: __webpack_require__(415)
+	  ECB: __webpack_require__(400),
+	  CBC: __webpack_require__(401),
+	  CFB: __webpack_require__(403),
+	  OFB: __webpack_require__(404),
+	  CTR: __webpack_require__(405)
 	};
 
 	module.exports = function (crypto) {
@@ -59143,10 +56954,10 @@ var StellarSdk =
 	  };
 	};
 
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(170).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(166).Buffer))
 
 /***/ }),
-/* 417 */
+/* 407 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59161,29 +56972,29 @@ var StellarSdk =
 	  value: true
 	});
 
-	var xdr = _interopRequire(__webpack_require__(238));
+	var xdr = _interopRequire(__webpack_require__(235));
 
-	var UnsignedHyper = __webpack_require__(239).UnsignedHyper;
+	var UnsignedHyper = __webpack_require__(236).UnsignedHyper;
 
-	var hash = __webpack_require__(277).hash;
+	var hash = __webpack_require__(265).hash;
 
-	var Keypair = __webpack_require__(289).Keypair;
+	var Keypair = __webpack_require__(277).Keypair;
 
-	var Account = __webpack_require__(418).Account;
+	var Account = __webpack_require__(408).Account;
 
-	var Operation = __webpack_require__(325).Operation;
+	var Operation = __webpack_require__(313).Operation;
 
-	var Transaction = __webpack_require__(324).Transaction;
+	var Transaction = __webpack_require__(312).Transaction;
 
-	var Memo = __webpack_require__(349).Memo;
+	var Memo = __webpack_require__(337).Memo;
 
-	var BigNumber = _interopRequire(__webpack_require__(344));
+	var BigNumber = _interopRequire(__webpack_require__(332));
 
 	var clone = _interopRequire(__webpack_require__(7));
 
-	var map = _interopRequire(__webpack_require__(350));
+	var map = _interopRequire(__webpack_require__(338));
 
-	var isUndefined = _interopRequire(__webpack_require__(293));
+	var isUndefined = _interopRequire(__webpack_require__(281));
 
 	var BASE_FEE = 100; // Stroops
 	var MIN_LEDGER = 0;
@@ -59320,7 +57131,7 @@ var StellarSdk =
 	})();
 
 /***/ }),
-/* 418 */
+/* 408 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59335,18 +57146,18 @@ var StellarSdk =
 	  value: true
 	});
 
-	var BigNumber = _interopRequire(__webpack_require__(344));
+	var BigNumber = _interopRequire(__webpack_require__(332));
 
-	var isString = _interopRequire(__webpack_require__(316));
+	var isString = _interopRequire(__webpack_require__(304));
 
-	var Keypair = __webpack_require__(289).Keypair;
+	var Keypair = __webpack_require__(277).Keypair;
 
-	var StrKey = __webpack_require__(295).StrKey;
+	var StrKey = __webpack_require__(283).StrKey;
 
 	/**
 	 * Create a new Account object.
 	 *
-	 * `Account` represents a single account in Stellar network and it's sequence number.
+	 * `Account` represents a single account in Stellar network and its sequence number.
 	 * Account tracks the sequence number as it is used by {@link TransactionBuilder}.
 	 * See [Accounts](https://stellar.org/developers/learn/concepts/accounts.html) for more information about how
 	 * accounts work in Stellar.
@@ -59407,11 +57218,11 @@ var StellarSdk =
 	})();
 
 /***/ }),
-/* 419 */
+/* 409 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseFor = __webpack_require__(125),
-	    castFunction = __webpack_require__(128),
+	var baseFor = __webpack_require__(122),
+	    castFunction = __webpack_require__(125),
 	    keysIn = __webpack_require__(81);
 
 	/**
@@ -59452,7 +57263,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 420 */
+/* 410 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59469,7 +57280,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var LedgerCallBuilder = (function (_CallBuilder) {
 	    _inherits(LedgerCallBuilder, _CallBuilder);
@@ -59511,7 +57322,7 @@ var StellarSdk =
 	exports.LedgerCallBuilder = LedgerCallBuilder;
 
 /***/ }),
-/* 421 */
+/* 411 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59528,7 +57339,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var TransactionCallBuilder = (function (_CallBuilder) {
 	    _inherits(TransactionCallBuilder, _CallBuilder);
@@ -59600,7 +57411,7 @@ var StellarSdk =
 	exports.TransactionCallBuilder = TransactionCallBuilder;
 
 /***/ }),
-/* 422 */
+/* 412 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59617,7 +57428,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var OperationCallBuilder = (function (_CallBuilder) {
 	    _inherits(OperationCallBuilder, _CallBuilder);
@@ -59704,7 +57515,7 @@ var StellarSdk =
 	exports.OperationCallBuilder = OperationCallBuilder;
 
 /***/ }),
-/* 423 */
+/* 413 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59719,9 +57530,9 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
-	var _orderbook_call_builder = __webpack_require__(424);
+	var _orderbook_call_builder = __webpack_require__(414);
 
 	var _errors = __webpack_require__(5);
 
@@ -59759,7 +57570,7 @@ var StellarSdk =
 	exports.OfferCallBuilder = OfferCallBuilder;
 
 /***/ }),
-/* 424 */
+/* 414 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59774,7 +57585,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	/**
 	 * Creates a new {@link OrderbookCallBuilder} pointed to server defined by serverUrl.
@@ -59816,7 +57627,7 @@ var StellarSdk =
 	exports.OrderbookCallBuilder = OrderbookCallBuilder;
 
 /***/ }),
-/* 425 */
+/* 415 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -59833,7 +57644,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	/**
 	 * Creates a new {@link TradesCallBuilder} pointed to server defined by serverUrl.
@@ -59899,7 +57710,7 @@ var StellarSdk =
 	exports.TradesCallBuilder = TradesCallBuilder;
 
 /***/ }),
-/* 426 */
+/* 416 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59914,7 +57725,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	/**
 	 * The Stellar Network allows payments to be made across assets through path payments. A path payment specifies a
@@ -59967,7 +57778,7 @@ var StellarSdk =
 	exports.PathCallBuilder = PathCallBuilder;
 
 /***/ }),
-/* 427 */
+/* 417 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -59984,7 +57795,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var PaymentCallBuilder = (function (_CallBuilder) {
 	    _inherits(PaymentCallBuilder, _CallBuilder);
@@ -60056,7 +57867,7 @@ var StellarSdk =
 	exports.PaymentCallBuilder = PaymentCallBuilder;
 
 /***/ }),
-/* 428 */
+/* 418 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60073,7 +57884,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	/**
 	 * @class EffectCallBuilder
@@ -60164,7 +57975,7 @@ var StellarSdk =
 	exports.EffectCallBuilder = EffectCallBuilder;
 
 /***/ }),
-/* 429 */
+/* 419 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60179,7 +57990,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var FriendbotBuilder = (function (_CallBuilder) {
 	    _inherits(FriendbotBuilder, _CallBuilder);
@@ -60198,7 +58009,7 @@ var StellarSdk =
 	exports.FriendbotBuilder = FriendbotBuilder;
 
 /***/ }),
-/* 430 */
+/* 420 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60215,7 +58026,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	/**
 	 * Creates a new {@link AssetsCallBuilder} pointed to server defined by serverUrl.
@@ -60268,7 +58079,7 @@ var StellarSdk =
 	exports.AssetsCallBuilder = AssetsCallBuilder;
 
 /***/ }),
-/* 431 */
+/* 421 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -60285,11 +58096,11 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _call_builder = __webpack_require__(121);
+	var _call_builder = __webpack_require__(118);
 
 	var _errors = __webpack_require__(5);
 
-	var allowedResolutions = [300000, 900000, 3600000, 86400000, 604800000];
+	var allowedResolutions = [60000, 300000, 900000, 3600000, 86400000, 604800000];
 
 	/**
 	 * Trade Aggregations facilitate efficient gathering of historical trade data
@@ -60299,7 +58110,7 @@ var StellarSdk =
 	 * @param {Asset} counter counter asset
 	 * @param {long} start_time lower time boundary represented as millis since epoch
 	 * @param {long} end_time upper time boundary represented as millis since epoch
-	 * @param {long} resolution segment duration as millis since epoch. *Supported values are 5 minutes (300000), 15 minutes (900000), 1 hour (3600000), 1 day (86400000) and 1 week (604800000).
+	 * @param {long} resolution segment duration as millis since epoch. *Supported values are 1 minute (60000), 5 minutes (300000), 15 minutes (900000), 1 hour (3600000), 1 day (86400000) and 1 week (604800000).
 	 * @returns {OrderbookCallBuilder}
 	 */
 
@@ -60365,7 +58176,7 @@ var StellarSdk =
 	exports.TradeAggregationCallBuilder = TradeAggregationCallBuilder;
 
 /***/ }),
-/* 432 */
+/* 422 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -60382,33 +58193,33 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _axios = __webpack_require__(135);
+	var _axios = __webpack_require__(132);
 
 	var _axios2 = _interopRequireDefault(_axios);
 
-	var _urijs = __webpack_require__(130);
+	var _urijs = __webpack_require__(127);
 
 	var _urijs2 = _interopRequireDefault(_urijs);
 
-	var _bluebird = __webpack_require__(200);
+	var _bluebird = __webpack_require__(197);
 
 	var _bluebird2 = _interopRequireDefault(_bluebird);
 
-	var _lodashIsString = __webpack_require__(316);
+	var _lodashIsString = __webpack_require__(304);
 
 	var _lodashIsString2 = _interopRequireDefault(_lodashIsString);
 
-	var _lodashPick = __webpack_require__(433);
+	var _lodashPick = __webpack_require__(423);
 
 	var _lodashPick2 = _interopRequireDefault(_lodashPick);
 
 	var _config = __webpack_require__(6);
 
-	var _stellarBase = __webpack_require__(237);
+	var _stellarBase = __webpack_require__(234);
 
 	var _errors = __webpack_require__(5);
 
-	var _stellar_toml_resolver = __webpack_require__(447);
+	var _stellar_toml_resolver = __webpack_require__(437);
 
 	// FEDERATION_RESPONSE_MAX_SIZE is the maximum size of response from a federation server
 	var FEDERATION_RESPONSE_MAX_SIZE = 100 * 1024;
@@ -60581,7 +58392,7 @@ var StellarSdk =
 	     * ```js
 	     * StellarSdk.FederationServer.createForDomain('acme.com')
 	     *   .then(federationServer => {
-	     *     // federationServer.forAddress('bob').then(...)
+	     *     // federationServer.resolveAddress('bob').then(...)
 	     *   })
 	     *   .catch(error => {
 	     *     // stellar.toml does not exist or it does not contain information about federation server.
@@ -60613,11 +58424,11 @@ var StellarSdk =
 	exports.FederationServer = FederationServer;
 
 /***/ }),
-/* 433 */
+/* 423 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var basePick = __webpack_require__(434),
-	    flatRest = __webpack_require__(437);
+	var basePick = __webpack_require__(424),
+	    flatRest = __webpack_require__(427);
 
 	/**
 	 * Creates an object composed of the picked `object` properties.
@@ -60644,11 +58455,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 434 */
+/* 424 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var basePickBy = __webpack_require__(435),
-	    hasIn = __webpack_require__(376);
+	var basePickBy = __webpack_require__(425),
+	    hasIn = __webpack_require__(366);
 
 	/**
 	 * The base implementation of `_.pick` without support for individual
@@ -60669,12 +58480,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 435 */
+/* 425 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseGet = __webpack_require__(369),
-	    baseSet = __webpack_require__(436),
-	    castPath = __webpack_require__(370);
+	var baseGet = __webpack_require__(359),
+	    baseSet = __webpack_require__(426),
+	    castPath = __webpack_require__(360);
 
 	/**
 	 * The base implementation of  `_.pickBy` without support for iteratee shorthands.
@@ -60705,14 +58516,14 @@ var StellarSdk =
 
 
 /***/ }),
-/* 436 */
+/* 426 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var assignValue = __webpack_require__(54),
-	    castPath = __webpack_require__(370),
+	    castPath = __webpack_require__(360),
 	    isIndex = __webpack_require__(69),
 	    isObject = __webpack_require__(33),
-	    toKey = __webpack_require__(375);
+	    toKey = __webpack_require__(365);
 
 	/**
 	 * The base implementation of `_.set`.
@@ -60758,12 +58569,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 437 */
+/* 427 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var flatten = __webpack_require__(438),
-	    overRest = __webpack_require__(441),
-	    setToString = __webpack_require__(443);
+	var flatten = __webpack_require__(428),
+	    overRest = __webpack_require__(431),
+	    setToString = __webpack_require__(433);
 
 	/**
 	 * A specialized version of `baseRest` which flattens the rest array.
@@ -60780,10 +58591,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 438 */
+/* 428 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseFlatten = __webpack_require__(439);
+	var baseFlatten = __webpack_require__(429);
 
 	/**
 	 * Flattens `array` a single level deep.
@@ -60808,11 +58619,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 439 */
+/* 429 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var arrayPush = __webpack_require__(92),
-	    isFlattenable = __webpack_require__(440);
+	    isFlattenable = __webpack_require__(430);
 
 	/**
 	 * The base implementation of `_.flatten` with support for restricting flattening.
@@ -60852,7 +58663,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 440 */
+/* 430 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var Symbol = __webpack_require__(28),
@@ -60878,10 +58689,10 @@ var StellarSdk =
 
 
 /***/ }),
-/* 441 */
+/* 431 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var apply = __webpack_require__(442);
+	var apply = __webpack_require__(432);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
 	var nativeMax = Math.max;
@@ -60920,7 +58731,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 442 */
+/* 432 */
 /***/ (function(module, exports) {
 
 	/**
@@ -60947,11 +58758,11 @@ var StellarSdk =
 
 
 /***/ }),
-/* 443 */
+/* 433 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseSetToString = __webpack_require__(444),
-	    shortOut = __webpack_require__(446);
+	var baseSetToString = __webpack_require__(434),
+	    shortOut = __webpack_require__(436);
 
 	/**
 	 * Sets the `toString` method of `func` to return `string`.
@@ -60967,12 +58778,12 @@ var StellarSdk =
 
 
 /***/ }),
-/* 444 */
+/* 434 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var constant = __webpack_require__(445),
+	var constant = __webpack_require__(435),
 	    defineProperty = __webpack_require__(56),
-	    identity = __webpack_require__(129);
+	    identity = __webpack_require__(126);
 
 	/**
 	 * The base implementation of `setToString` without support for hot loop shorting.
@@ -60995,7 +58806,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 445 */
+/* 435 */
 /***/ (function(module, exports) {
 
 	/**
@@ -61027,7 +58838,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 446 */
+/* 436 */
 /***/ (function(module, exports) {
 
 	/** Used to detect hot functions by number of calls within a span of milliseconds. */
@@ -61070,7 +58881,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 447 */
+/* 437 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -61085,15 +58896,15 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _axios = __webpack_require__(135);
+	var _axios = __webpack_require__(132);
 
 	var _axios2 = _interopRequireDefault(_axios);
 
-	var _bluebird = __webpack_require__(200);
+	var _bluebird = __webpack_require__(197);
 
 	var _bluebird2 = _interopRequireDefault(_bluebird);
 
-	var _toml = __webpack_require__(448);
+	var _toml = __webpack_require__(438);
 
 	var _toml2 = _interopRequireDefault(_toml);
 
@@ -61168,11 +58979,11 @@ var StellarSdk =
 	exports.StellarTomlResolver = StellarTomlResolver;
 
 /***/ }),
-/* 448 */
+/* 438 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var parser = __webpack_require__(449);
-	var compiler = __webpack_require__(450);
+	var parser = __webpack_require__(439);
+	var compiler = __webpack_require__(440);
 
 	module.exports = {
 	  parse: function(input) {
@@ -61183,7 +58994,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 449 */
+/* 439 */
 /***/ (function(module, exports) {
 
 	module.exports = (function() {
@@ -65030,7 +62841,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 450 */
+/* 440 */
 /***/ (function(module, exports) {
 
 	"use strict";
