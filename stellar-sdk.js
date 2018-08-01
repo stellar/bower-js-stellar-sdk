@@ -96,7 +96,7 @@
 	  }
 	});
 
-	var _federation_server = __webpack_require__(415);
+	var _federation_server = __webpack_require__(427);
 
 	Object.defineProperty(exports, "FederationServer", {
 	  enumerable: true,
@@ -111,7 +111,7 @@
 	  }
 	});
 
-	var _stellar_toml_resolver = __webpack_require__(416);
+	var _stellar_toml_resolver = __webpack_require__(428);
 
 	Object.defineProperty(exports, "StellarTomlResolver", {
 	  enumerable: true,
@@ -137,7 +137,7 @@
 	    }
 	  });
 	});
-	__webpack_require__(420).polyfill();
+	__webpack_require__(432).polyfill();
 
 	// stellar-sdk classes to expose
 
@@ -3706,29 +3706,29 @@
 
 	var _config = __webpack_require__(3);
 
-	var _ledger_call_builder = __webpack_require__(403);
+	var _ledger_call_builder = __webpack_require__(415);
 
-	var _transaction_call_builder = __webpack_require__(404);
+	var _transaction_call_builder = __webpack_require__(416);
 
-	var _operation_call_builder = __webpack_require__(405);
+	var _operation_call_builder = __webpack_require__(417);
 
-	var _offer_call_builder = __webpack_require__(406);
+	var _offer_call_builder = __webpack_require__(418);
 
-	var _orderbook_call_builder = __webpack_require__(407);
+	var _orderbook_call_builder = __webpack_require__(419);
 
-	var _trades_call_builder = __webpack_require__(408);
+	var _trades_call_builder = __webpack_require__(420);
 
-	var _path_call_builder = __webpack_require__(409);
+	var _path_call_builder = __webpack_require__(421);
 
-	var _payment_call_builder = __webpack_require__(410);
+	var _payment_call_builder = __webpack_require__(422);
 
-	var _effect_call_builder = __webpack_require__(411);
+	var _effect_call_builder = __webpack_require__(423);
 
-	var _friendbot_builder = __webpack_require__(412);
+	var _friendbot_builder = __webpack_require__(424);
 
-	var _assets_call_builder = __webpack_require__(413);
+	var _assets_call_builder = __webpack_require__(425);
 
-	var _trade_aggregation_call_builder = __webpack_require__(414);
+	var _trade_aggregation_call_builder = __webpack_require__(426);
 
 	var _stellarBase = __webpack_require__(203);
 
@@ -19869,7 +19869,7 @@
 
 	var _stellarBase = __webpack_require__(203);
 
-	var _forIn = __webpack_require__(402);
+	var _forIn = __webpack_require__(414);
 
 	var _forIn2 = _interopRequireDefault(_forIn);
 
@@ -19971,7 +19971,7 @@
 	exports.UnsignedHyper = _jsXdr.UnsignedHyper;
 	exports.Hyper = _jsXdr.Hyper;
 	exports.Transaction = __webpack_require__(340).Transaction;
-	exports.TransactionBuilder = __webpack_require__(400).TransactionBuilder;
+	exports.TransactionBuilder = __webpack_require__(412).TransactionBuilder;
 	exports.Asset = __webpack_require__(342).Asset;
 
 	var _operation = __webpack_require__(341);
@@ -19981,9 +19981,9 @@
 	exports.AuthRevocableFlag = _operation.AuthRevocableFlag;
 	exports.AuthImmutableFlag = _operation.AuthImmutableFlag;
 
-	_defaults(exports, _interopRequireWildcard(__webpack_require__(365)));
+	_defaults(exports, _interopRequireWildcard(__webpack_require__(377)));
 
-	exports.Account = __webpack_require__(401).Account;
+	exports.Account = __webpack_require__(413).Account;
 
 	var _network = __webpack_require__(320);
 
@@ -31220,7 +31220,7 @@
 
 	var Network = __webpack_require__(320).Network;
 
-	var Memo = __webpack_require__(365).Memo;
+	var Memo = __webpack_require__(377).Memo;
 
 	var map = _interopRequire(__webpack_require__(293));
 
@@ -31228,7 +31228,7 @@
 
 	var isString = _interopRequire(__webpack_require__(275));
 
-	var crypto = _interopRequire(__webpack_require__(366));
+	var crypto = _interopRequire(__webpack_require__(378));
 
 	var MIN_LEDGER = 0;
 	var MAX_LEDGER = 4294967295; // max uint32
@@ -31396,7 +31396,9 @@
 /* 341 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
+	"use strict";
+
+	var _interopRequireWildcard = function (obj) { return obj && obj.__esModule ? obj : { "default": obj }; };
 
 	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
@@ -31412,14 +31414,11 @@
 
 	var Keypair = __webpack_require__(319).Keypair;
 
-	var _jsXdr = __webpack_require__(205);
-
-	var UnsignedHyper = _jsXdr.UnsignedHyper;
-	var Hyper = _jsXdr.Hyper;
-
 	var hash = __webpack_require__(307).hash;
 
 	var StrKey = __webpack_require__(324).StrKey;
+
+	var Hyper = __webpack_require__(205).Hyper;
 
 	var Asset = __webpack_require__(342).Asset;
 
@@ -31427,11 +31426,7 @@
 
 	var best_r = __webpack_require__(362).best_r;
 
-	var padEnd = _interopRequire(__webpack_require__(343));
-
 	var trimEnd = _interopRequire(__webpack_require__(355));
-
-	var isEmpty = _interopRequire(__webpack_require__(363));
 
 	var isUndefined = _interopRequire(__webpack_require__(287));
 
@@ -31439,7 +31434,9 @@
 
 	var isNumber = _interopRequire(__webpack_require__(208));
 
-	var isFinite = _interopRequire(__webpack_require__(364));
+	var isFinite = _interopRequire(__webpack_require__(363));
+
+	var ops = _interopRequireWildcard(__webpack_require__(364));
 
 	var ONE = 10000000;
 	var MAX_INT64 = "9223372036854775807";
@@ -31494,518 +31491,6 @@
 	  }
 
 	  _createClass(Operation, null, {
-	    createAccount: {
-	      /**
-	       * Create and fund a non existent account.
-	       * @param {object} opts
-	       * @param {string} opts.destination - Destination account ID to create an account for.
-	       * @param {string} opts.startingBalance - Amount in XLM the account should be funded for. Must be greater
-	       *                                   than the [reserve balance amount](https://www.stellar.org/developers/learn/concepts/fees.html).
-	       * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
-	       * @returns {xdr.CreateAccountOp}
-	       */
-
-	      value: function createAccount(opts) {
-	        if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
-	          throw new Error("destination is invalid");
-	        }
-	        if (!this.isValidAmount(opts.startingBalance)) {
-	          throw new TypeError(Operation.constructAmountRequirementsError("startingBalance"));
-	        }
-	        var attributes = {};
-	        attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
-	        attributes.startingBalance = this._toXDRAmount(opts.startingBalance);
-	        var createAccount = new xdr.CreateAccountOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.createAccount(createAccount);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    payment: {
-
-	      /**
-	       * Create a payment operation.
-	       * @param {object} opts
-	       * @param {string} opts.destination - The destination account ID.
-	       * @param {Asset} opts.asset - The asset to send.
-	       * @param {string} opts.amount - The amount to send.
-	       * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
-	       * @returns {xdr.PaymentOp}
-	       */
-
-	      value: function payment(opts) {
-	        if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
-	          throw new Error("destination is invalid");
-	        }
-	        if (!opts.asset) {
-	          throw new Error("Must provide an asset for a payment operation");
-	        }
-	        if (!this.isValidAmount(opts.amount)) {
-	          throw new TypeError(Operation.constructAmountRequirementsError("amount"));
-	        }
-
-	        var attributes = {};
-	        attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
-	        attributes.asset = opts.asset.toXDRObject();
-	        attributes.amount = this._toXDRAmount(opts.amount);
-	        var payment = new xdr.PaymentOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.payment(payment);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    pathPayment: {
-
-	      /**
-	       * Returns a XDR PaymentOp. A "payment" operation send the specified amount to the
-	       * destination account, optionally through a path. XLM payments create the destination
-	       * account if it does not exist.
-	       * @param {object} opts
-	       * @param {Asset} opts.sendAsset - The asset to pay with.
-	       * @param {string} opts.sendMax - The maximum amount of sendAsset to send.
-	       * @param {string} opts.destination - The destination account to send to.
-	       * @param {Asset} opts.destAsset - The asset the destination will receive.
-	       * @param {string} opts.destAmount - The amount the destination receives.
-	       * @param {Asset[]} opts.path - An array of Asset objects to use as the path.
-	       * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
-	       * @returns {xdr.PathPaymentOp}
-	       */
-
-	      value: function pathPayment(opts) {
-	        switch (true) {
-	          case !opts.sendAsset:
-	            throw new Error("Must specify a send asset");
-	          case !this.isValidAmount(opts.sendMax):
-	            throw new TypeError(Operation.constructAmountRequirementsError("sendMax"));
-	          case !StrKey.isValidEd25519PublicKey(opts.destination):
-	            throw new Error("destination is invalid");
-	          case !opts.destAsset:
-	            throw new Error("Must provide a destAsset for a payment operation");
-	          case !this.isValidAmount(opts.destAmount):
-	            throw new TypeError(Operation.constructAmountRequirementsError("destAmount"));
-	        }
-
-	        var attributes = {};
-	        attributes.sendAsset = opts.sendAsset.toXDRObject();
-	        attributes.sendMax = this._toXDRAmount(opts.sendMax);
-	        attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
-	        attributes.destAsset = opts.destAsset.toXDRObject();
-	        attributes.destAmount = this._toXDRAmount(opts.destAmount);
-
-	        var path = opts.path ? opts.path : [];
-	        attributes.path = path.map(function (x) {
-	          return x.toXDRObject();
-	        });
-
-	        var payment = new xdr.PathPaymentOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.pathPayment(payment);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    changeTrust: {
-
-	      /**
-	       * Returns an XDR ChangeTrustOp. A "change trust" operation adds, removes, or updates a
-	       * trust line for a given asset from the source account to another. The issuer being
-	       * trusted and the asset code are in the given Asset object.
-	       * @param {object} opts
-	       * @param {Asset} opts.asset - The asset for the trust line.
-	       * @param {string} [opts.limit] - The limit for the asset, defaults to max int64.
-	       *                                If the limit is set to "0" it deletes the trustline.
-	       * @param {string} [opts.source] - The source account (defaults to transaction source).
-	       * @returns {xdr.ChangeTrustOp}
-	       */
-
-	      value: function changeTrust(opts) {
-	        var attributes = {};
-	        attributes.line = opts.asset.toXDRObject();
-	        if (!isUndefined(opts.limit) && !this.isValidAmount(opts.limit, true)) {
-	          throw new TypeError(Operation.constructAmountRequirementsError("limit"));
-	        }
-
-	        if (opts.limit) {
-	          attributes.limit = this._toXDRAmount(opts.limit);
-	        } else {
-	          attributes.limit = Hyper.fromString(new BigNumber(MAX_INT64).toString());
-	        }
-
-	        if (opts.source) {
-	          attributes.source = opts.source.masterKeypair;
-	        }
-	        var changeTrustOP = new xdr.ChangeTrustOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.changeTrust(changeTrustOP);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    allowTrust: {
-
-	      /**
-	       * Returns an XDR AllowTrustOp. An "allow trust" operation authorizes another
-	       * account to hold your account's credit for a given asset.
-	       * @param {object} opts
-	       * @param {string} opts.trustor - The trusting account (the one being authorized)
-	       * @param {string} opts.assetCode - The asset code being authorized.
-	       * @param {boolean} opts.authorize - True to authorize the line, false to deauthorize.
-	       * @param {string} [opts.source] - The source account (defaults to transaction source).
-	       * @returns {xdr.AllowTrustOp}
-	       */
-
-	      value: function allowTrust(opts) {
-	        if (!StrKey.isValidEd25519PublicKey(opts.trustor)) {
-	          throw new Error("trustor is invalid");
-	        }
-	        var attributes = {};
-	        attributes.trustor = Keypair.fromPublicKey(opts.trustor).xdrAccountId();
-	        if (opts.assetCode.length <= 4) {
-	          var code = padEnd(opts.assetCode, 4, "\u0000");
-	          attributes.asset = xdr.AllowTrustOpAsset.assetTypeCreditAlphanum4(code);
-	        } else if (opts.assetCode.length <= 12) {
-	          var code = padEnd(opts.assetCode, 12, "\u0000");
-	          attributes.asset = xdr.AllowTrustOpAsset.assetTypeCreditAlphanum12(code);
-	        } else {
-	          throw new Error("Asset code must be 12 characters at max.");
-	        }
-	        attributes.authorize = opts.authorize;
-	        var allowTrustOp = new xdr.AllowTrustOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.allowTrust(allowTrustOp);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    setOptions: {
-
-	      /**
-	       * Returns an XDR SetOptionsOp. A "set options" operations set or clear account flags,
-	       * set the account's inflation destination, and/or add new signers to the account.
-	       * The flags used in `opts.clearFlags` and `opts.setFlags` can be the following:
-	       *   - `{@link AuthRequiredFlag}`
-	       *   - `{@link AuthRevocableFlag}`
-	       *   - `{@link AuthImmutableFlag}`
-	       *
-	       * It's possible to set/clear multiple flags at once using logical or.
-	       * @param {object} opts
-	       * @param {string} [opts.inflationDest] - Set this account ID as the account's inflation destination.
-	       * @param {(number|string)} [opts.clearFlags] - Bitmap integer for which account flags to clear.
-	       * @param {(number|string)} [opts.setFlags] - Bitmap integer for which account flags to set.
-	       * @param {number|string} [opts.masterWeight] - The master key weight.
-	       * @param {number|string} [opts.lowThreshold] - The sum weight for the low threshold.
-	       * @param {number|string} [opts.medThreshold] - The sum weight for the medium threshold.
-	       * @param {number|string} [opts.highThreshold] - The sum weight for the high threshold.
-	       * @param {object} [opts.signer] - Add or remove a signer from the account. The signer is
-	       *                                 deleted if the weight is 0. Only one of `ed25519PublicKey`, `sha256Hash`, `preAuthTx` should be defined.
-	       * @param {string} [opts.signer.ed25519PublicKey] - The ed25519 public key of the signer.
-	       * @param {Buffer|string} [opts.signer.sha256Hash] - sha256 hash (Buffer or hex string) of preimage that will unlock funds. Preimage should be used as signature of future transaction.
-	       * @param {Buffer|string} [opts.signer.preAuthTx] - Hash (Buffer or hex string) of transaction that will unlock funds.
-	       * @param {number|string} [opts.signer.weight] - The weight of the new signer (0 to delete or 1-255)
-	       * @param {string} [opts.homeDomain] - sets the home domain used for reverse federation lookup.
-	       * @param {string} [opts.source] - The source account (defaults to transaction source).
-	       * @returns {xdr.SetOptionsOp}
-	       * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
-	       */
-
-	      value: function setOptions(opts) {
-	        var attributes = {};
-
-	        if (opts.inflationDest) {
-	          if (!StrKey.isValidEd25519PublicKey(opts.inflationDest)) {
-	            throw new Error("inflationDest is invalid");
-	          }
-	          attributes.inflationDest = Keypair.fromPublicKey(opts.inflationDest).xdrAccountId();
-	        }
-
-	        var weightCheckFunction = function (value, name) {
-	          if (value >= 0 && value <= 255) {
-	            return true;
-	          } else {
-	            throw new Error("" + name + " value must be between 0 and 255");
-	          }
-	        };
-
-	        attributes.clearFlags = this._checkUnsignedIntValue("clearFlags", opts.clearFlags);
-	        attributes.setFlags = this._checkUnsignedIntValue("setFlags", opts.setFlags);
-	        attributes.masterWeight = this._checkUnsignedIntValue("masterWeight", opts.masterWeight, weightCheckFunction);
-	        attributes.lowThreshold = this._checkUnsignedIntValue("lowThreshold", opts.lowThreshold, weightCheckFunction);
-	        attributes.medThreshold = this._checkUnsignedIntValue("medThreshold", opts.medThreshold, weightCheckFunction);
-	        attributes.highThreshold = this._checkUnsignedIntValue("highThreshold", opts.highThreshold, weightCheckFunction);
-
-	        if (!isUndefined(opts.homeDomain) && !isString(opts.homeDomain)) {
-	          throw new TypeError("homeDomain argument must be of type String");
-	        }
-	        attributes.homeDomain = opts.homeDomain;
-
-	        if (opts.signer) {
-	          var weight = this._checkUnsignedIntValue("signer.weight", opts.signer.weight, weightCheckFunction);
-	          var key = undefined;
-
-	          var setValues = 0;
-
-	          if (opts.signer.ed25519PublicKey) {
-	            if (!StrKey.isValidEd25519PublicKey(opts.signer.ed25519PublicKey)) {
-	              throw new Error("signer.ed25519PublicKey is invalid.");
-	            }
-	            var rawKey = StrKey.decodeEd25519PublicKey(opts.signer.ed25519PublicKey);
-	            key = new xdr.SignerKey.signerKeyTypeEd25519(rawKey);
-	            setValues++;
-	          }
-
-	          if (opts.signer.preAuthTx) {
-	            if (isString(opts.signer.preAuthTx)) {
-	              opts.signer.preAuthTx = Buffer.from(opts.signer.preAuthTx, "hex");
-	            }
-
-	            if (!(Buffer.isBuffer(opts.signer.preAuthTx) && opts.signer.preAuthTx.length == 32)) {
-	              throw new Error("signer.preAuthTx must be 32 bytes Buffer.");
-	            }
-	            key = new xdr.SignerKey.signerKeyTypePreAuthTx(opts.signer.preAuthTx);
-	            setValues++;
-	          }
-
-	          if (opts.signer.sha256Hash) {
-	            if (isString(opts.signer.sha256Hash)) {
-	              opts.signer.sha256Hash = Buffer.from(opts.signer.sha256Hash, "hex");
-	            }
-
-	            if (!(Buffer.isBuffer(opts.signer.sha256Hash) && opts.signer.sha256Hash.length == 32)) {
-	              throw new Error("signer.sha256Hash must be 32 bytes Buffer.");
-	            }
-	            key = new xdr.SignerKey.signerKeyTypeHashX(opts.signer.sha256Hash);
-	            setValues++;
-	          }
-
-	          if (setValues != 1) {
-	            throw new Error("Signer object must contain exactly one of signer.ed25519PublicKey, signer.sha256Hash, signer.preAuthTx.");
-	          }
-
-	          attributes.signer = new xdr.Signer({ key: key, weight: weight });
-	        }
-
-	        var setOptionsOp = new xdr.SetOptionsOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.setOption(setOptionsOp);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    manageOffer: {
-
-	      /**
-	       * Returns a XDR ManageOfferOp. A "manage offer" operation creates, updates, or
-	       * deletes an offer.
-	       * @param {object} opts
-	       * @param {Asset} opts.selling - What you're selling.
-	       * @param {Asset} opts.buying - What you're buying.
-	       * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
-	       * @param {number|string|BigNumber|Object} opts.price - Price of 1 unit of `selling` in terms of `buying`.
-	       * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
-	       * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
-	       * @param {number|string} [opts.offerId ]- If `0`, will create a new offer (default). Otherwise, edits an exisiting offer.
-	       * @param {string} [opts.source] - The source account (defaults to transaction source).
-	       * @throws {Error} Throws `Error` when the best rational approximation of `price` cannot be found.
-	       * @returns {xdr.ManageOfferOp}
-	       */
-
-	      value: function manageOffer(opts) {
-	        var attributes = {};
-	        attributes.selling = opts.selling.toXDRObject();
-	        attributes.buying = opts.buying.toXDRObject();
-	        if (!this.isValidAmount(opts.amount, true)) {
-	          throw new TypeError(Operation.constructAmountRequirementsError("amount"));
-	        }
-	        attributes.amount = this._toXDRAmount(opts.amount);
-	        if (isUndefined(opts.price)) {
-	          throw new TypeError("price argument is required");
-	        }
-	        attributes.price = this._toXDRPrice(opts.price);
-
-	        if (!isUndefined(opts.offerId)) {
-	          opts.offerId = opts.offerId.toString();
-	        } else {
-	          opts.offerId = "0";
-	        }
-	        attributes.offerId = UnsignedHyper.fromString(opts.offerId);
-	        var manageOfferOp = new xdr.ManageOfferOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.manageOffer(manageOfferOp);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    createPassiveOffer: {
-
-	      /**
-	       * Returns a XDR CreatePasiveOfferOp. A "create passive offer" operation creates an
-	       * offer that won't consume a counter offer that exactly matches this offer. This is
-	       * useful for offers just used as 1:1 exchanges for path payments. Use manage offer
-	       * to manage this offer after using this operation to create it.
-	       * @param {object} opts
-	       * @param {Asset} opts.selling - What you're selling.
-	       * @param {Asset} opts.buying - What you're buying.
-	       * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
-	       * @param {number|string|BigNumber|Object} opts.price - Price of 1 unit of `selling` in terms of `buying`.
-	       * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
-	       * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
-	       * @param {string} [opts.source] - The source account (defaults to transaction source).
-	       * @throws {Error} Throws `Error` when the best rational approximation of `price` cannot be found.
-	       * @returns {xdr.CreatePassiveOfferOp}
-	       */
-
-	      value: function createPassiveOffer(opts) {
-	        var attributes = {};
-	        attributes.selling = opts.selling.toXDRObject();
-	        attributes.buying = opts.buying.toXDRObject();
-	        if (!this.isValidAmount(opts.amount)) {
-	          throw new TypeError(Operation.constructAmountRequirementsError("amount"));
-	        }
-	        attributes.amount = this._toXDRAmount(opts.amount);
-	        if (isUndefined(opts.price)) {
-	          throw new TypeError("price argument is required");
-	        }
-	        attributes.price = this._toXDRPrice(opts.price);
-	        var createPassiveOfferOp = new xdr.CreatePassiveOfferOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.createPassiveOffer(createPassiveOfferOp);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    accountMerge: {
-
-	      /**
-	       * Transfers native balance to destination account.
-	       * @param {object} opts
-	       * @param {string} opts.destination - Destination to merge the source account into.
-	       * @param {string} [opts.source] - The source account (defaults to transaction source).
-	       * @returns {xdr.AccountMergeOp}
-	       */
-
-	      value: function accountMerge(opts) {
-	        var opAttributes = {};
-	        if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
-	          throw new Error("destination is invalid");
-	        }
-	        opAttributes.body = xdr.OperationBody.accountMerge(Keypair.fromPublicKey(opts.destination).xdrAccountId());
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    inflation: {
-
-	      /**
-	       * This operation generates the inflation.
-	       * @param {object} [opts]
-	       * @param {string} [opts.source] - The optional source account.
-	       * @returns {xdr.InflationOp}
-	       */
-
-	      value: function inflation() {
-	        var opts = arguments[0] === undefined ? {} : arguments[0];
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.inflation();
-	        this.setSourceAccount(opAttributes, opts);
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    manageData: {
-
-	      /**
-	       * This operation adds data entry to the ledger.
-	       * @param {object} opts
-	       * @param {string} opts.name - The name of the data entry.
-	       * @param {string|Buffer} opts.value - The value of the data entry.
-	       * @param {string} [opts.source] - The optional source account.
-	       * @returns {xdr.ManageDataOp}
-	       */
-
-	      value: function manageData(opts) {
-	        var attributes = {};
-
-	        if (!(isString(opts.name) && opts.name.length <= 64)) {
-	          throw new Error("name must be a string, up to 64 characters");
-	        }
-	        attributes.dataName = opts.name;
-
-	        if (!isString(opts.value) && !Buffer.isBuffer(opts.value) && opts.value !== null) {
-	          throw new Error("value must be a string, Buffer or null");
-	        }
-
-	        if (isString(opts.value)) {
-	          attributes.dataValue = Buffer.from(opts.value);
-	        } else {
-	          attributes.dataValue = opts.value;
-	        }
-
-	        if (attributes.dataValue !== null && attributes.dataValue.length > 64) {
-	          throw new Error("value cannot be longer that 64 bytes");
-	        }
-
-	        var manageDataOp = new xdr.ManageDataOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.manageDatum(manageDataOp);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
-	    bumpSequence: {
-
-	      /**
-	       * This operation bumps sequence number.
-	       * @param {object} opts
-	       * @param {string} opts.bumpTo - Sequence number to bump to.
-	       * @param {string} [opts.source] - The optional source account.
-	       * @returns {xdr.BumpSequenceOp}
-	       */
-
-	      value: function bumpSequence(opts) {
-	        var attributes = {};
-
-	        if (!isString(opts.bumpTo)) {
-	          throw new Error("bumpTo must be a string");
-	        }
-
-	        try {
-	          new BigNumber(opts.bumpTo);
-	        } catch (e) {
-	          throw new Error("bumpTo must be a stringified number");
-	        }
-
-	        attributes.bumpTo = Hyper.fromString(opts.bumpTo);
-
-	        var bumpSequenceOp = new xdr.BumpSequenceOp(attributes);
-
-	        var opAttributes = {};
-	        opAttributes.body = xdr.OperationBody.bumpSequence(bumpSequenceOp);
-	        this.setSourceAccount(opAttributes, opts);
-
-	        return new xdr.Operation(opAttributes);
-	      }
-	    },
 	    setSourceAccount: {
 	      value: function setSourceAccount(opAttributes, opts) {
 	        if (opts.source) {
@@ -32275,7 +31760,20 @@
 
 	  return Operation;
 	})();
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
+
+	// Attach all imported operations as static methods on the Operation class
+	Operation.accountMerge = ops.accountMerge;
+	Operation.allowTrust = ops.allowTrust;
+	Operation.bumpSequence = ops.bumpSequence;
+	Operation.changeTrust = ops.changeTrust;
+	Operation.createAccount = ops.createAccount;
+	Operation.createPassiveOffer = ops.createPassiveOffer;
+	Operation.inflation = ops.inflation;
+	Operation.manageData = ops.manageData;
+	Operation.manageOffer = ops.manageOffer;
+	Operation.pathPayment = ops.pathPayment;
+	Operation.payment = ops.payment;
+	Operation.setOptions = ops.setOptions;
 
 /***/ }),
 /* 342 */
@@ -35866,89 +35364,6 @@
 /* 363 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var baseKeys = __webpack_require__(72),
-	    getTag = __webpack_require__(94),
-	    isArguments = __webpack_require__(59),
-	    isArray = __webpack_require__(62),
-	    isArrayLike = __webpack_require__(76),
-	    isBuffer = __webpack_require__(63),
-	    isPrototype = __webpack_require__(73),
-	    isTypedArray = __webpack_require__(67);
-
-	/** `Object#toString` result references. */
-	var mapTag = '[object Map]',
-	    setTag = '[object Set]';
-
-	/** Used for built-in method references. */
-	var objectProto = Object.prototype;
-
-	/** Used to check objects for own properties. */
-	var hasOwnProperty = objectProto.hasOwnProperty;
-
-	/**
-	 * Checks if `value` is an empty object, collection, map, or set.
-	 *
-	 * Objects are considered empty if they have no own enumerable string keyed
-	 * properties.
-	 *
-	 * Array-like values such as `arguments` objects, arrays, buffers, strings, or
-	 * jQuery-like collections are considered empty if they have a `length` of `0`.
-	 * Similarly, maps and sets are considered empty if they have a `size` of `0`.
-	 *
-	 * @static
-	 * @memberOf _
-	 * @since 0.1.0
-	 * @category Lang
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is empty, else `false`.
-	 * @example
-	 *
-	 * _.isEmpty(null);
-	 * // => true
-	 *
-	 * _.isEmpty(true);
-	 * // => true
-	 *
-	 * _.isEmpty(1);
-	 * // => true
-	 *
-	 * _.isEmpty([1, 2, 3]);
-	 * // => false
-	 *
-	 * _.isEmpty({ 'a': 1 });
-	 * // => false
-	 */
-	function isEmpty(value) {
-	  if (value == null) {
-	    return true;
-	  }
-	  if (isArrayLike(value) &&
-	      (isArray(value) || typeof value == 'string' || typeof value.splice == 'function' ||
-	        isBuffer(value) || isTypedArray(value) || isArguments(value))) {
-	    return !value.length;
-	  }
-	  var tag = getTag(value);
-	  if (tag == mapTag || tag == setTag) {
-	    return !value.size;
-	  }
-	  if (isPrototype(value)) {
-	    return !baseKeys(value).length;
-	  }
-	  for (var key in value) {
-	    if (hasOwnProperty.call(value, key)) {
-	      return false;
-	    }
-	  }
-	  return true;
-	}
-
-	module.exports = isEmpty;
-
-
-/***/ }),
-/* 364 */
-/***/ (function(module, exports, __webpack_require__) {
-
 	var root = __webpack_require__(26);
 
 	/* Built-in method references for those with the same name as other `lodash` methods. */
@@ -35988,7 +35403,786 @@
 
 
 /***/ }),
+/* 364 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.accountMerge = __webpack_require__(365).accountMerge;
+	exports.allowTrust = __webpack_require__(366).allowTrust;
+	exports.bumpSequence = __webpack_require__(367).bumpSequence;
+	exports.changeTrust = __webpack_require__(368).changeTrust;
+	exports.createAccount = __webpack_require__(369).createAccount;
+	exports.createPassiveOffer = __webpack_require__(370).createPassiveOffer;
+	exports.inflation = __webpack_require__(371).inflation;
+	exports.manageData = __webpack_require__(372).manageData;
+	exports.manageOffer = __webpack_require__(373).manageOffer;
+	exports.pathPayment = __webpack_require__(374).pathPayment;
+	exports.payment = __webpack_require__(375).payment;
+	exports.setOptions = __webpack_require__(376).setOptions;
+
+/***/ }),
 /* 365 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var StrKey = __webpack_require__(324).StrKey;
+
+	/**
+	 * Transfers native balance to destination account.
+	 * @function
+	 * @alias Operation.accountMerge
+	 * @param {object} opts
+	 * @param {string} opts.destination - Destination to merge the source account into.
+	 * @param {string} [opts.source] - The source account (defaults to transaction source).
+	 * @returns {xdr.AccountMergeOp}
+	 */
+	var accountMerge = function accountMerge(opts) {
+	  var opAttributes = {};
+	  if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
+	    throw new Error("destination is invalid");
+	  }
+	  opAttributes.body = xdr.OperationBody.accountMerge(Keypair.fromPublicKey(opts.destination).xdrAccountId());
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.accountMerge = accountMerge;
+
+/***/ }),
+/* 366 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var StrKey = __webpack_require__(324).StrKey;
+
+	var padEnd = _interopRequire(__webpack_require__(343));
+
+	/**
+	 * Returns an XDR AllowTrustOp. An "allow trust" operation authorizes another
+	 * account to hold your account's credit for a given asset.
+	 * @function
+	 * @alias Operation.allowTrust
+	 * @param {object} opts
+	 * @param {string} opts.trustor - The trusting account (the one being authorized)
+	 * @param {string} opts.assetCode - The asset code being authorized.
+	 * @param {boolean} opts.authorize - True to authorize the line, false to deauthorize.
+	 * @param {string} [opts.source] - The source account (defaults to transaction source).
+	 * @returns {xdr.AllowTrustOp}
+	 */
+	var allowTrust = function allowTrust(opts) {
+	  if (!StrKey.isValidEd25519PublicKey(opts.trustor)) {
+	    throw new Error("trustor is invalid");
+	  }
+	  var attributes = {};
+	  attributes.trustor = Keypair.fromPublicKey(opts.trustor).xdrAccountId();
+	  if (opts.assetCode.length <= 4) {
+	    var code = padEnd(opts.assetCode, 4, "\u0000");
+	    attributes.asset = xdr.AllowTrustOpAsset.assetTypeCreditAlphanum4(code);
+	  } else if (opts.assetCode.length <= 12) {
+	    var code = padEnd(opts.assetCode, 12, "\u0000");
+	    attributes.asset = xdr.AllowTrustOpAsset.assetTypeCreditAlphanum12(code);
+	  } else {
+	    throw new Error("Asset code must be 12 characters at max.");
+	  }
+	  attributes.authorize = opts.authorize;
+	  var allowTrustOp = new xdr.AllowTrustOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.allowTrust(allowTrustOp);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.allowTrust = allowTrust;
+
+/***/ }),
+/* 367 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Hyper = __webpack_require__(205).Hyper;
+
+	var BigNumber = _interopRequire(__webpack_require__(361));
+
+	var isString = _interopRequire(__webpack_require__(275));
+
+	/**
+	 * This operation bumps sequence number.
+	 * @function
+	 * @alias Operation.bumpSequence
+	 * @param {object} opts
+	 * @param {string} opts.bumpTo - Sequence number to bump to.
+	 * @param {string} [opts.source] - The optional source account.
+	 * @returns {xdr.BumpSequenceOp}
+	 */
+	var bumpSequence = function bumpSequence(opts) {
+	  var attributes = {};
+
+	  if (!isString(opts.bumpTo)) {
+	    throw new Error("bumpTo must be a string");
+	  }
+
+	  try {
+	    new BigNumber(opts.bumpTo);
+	  } catch (e) {
+	    throw new Error("bumpTo must be a stringified number");
+	  }
+
+	  attributes.bumpTo = Hyper.fromString(opts.bumpTo);
+
+	  var bumpSequenceOp = new xdr.BumpSequenceOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.bumpSequence(bumpSequenceOp);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.bumpSequence = bumpSequence;
+
+/***/ }),
+/* 368 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var isUndefined = _interopRequire(__webpack_require__(287));
+
+	var Hyper = __webpack_require__(205).Hyper;
+
+	var BigNumber = _interopRequire(__webpack_require__(361));
+
+	var MAX_INT64 = "9223372036854775807";
+
+	/**
+	 * Returns an XDR ChangeTrustOp. A "change trust" operation adds, removes, or updates a
+	 * trust line for a given asset from the source account to another. The issuer being
+	 * trusted and the asset code are in the given Asset object.
+	 * @function
+	 * @alias Operation.changeTrust
+	 * @param {object} opts
+	 * @param {Asset} opts.asset - The asset for the trust line.
+	 * @param {string} [opts.limit] - The limit for the asset, defaults to max int64.
+	 *                                If the limit is set to "0" it deletes the trustline.
+	 * @param {string} [opts.source] - The source account (defaults to transaction source).
+	 * @returns {xdr.ChangeTrustOp}
+	 */
+	var changeTrust = function changeTrust(opts) {
+	  var attributes = {};
+	  attributes.line = opts.asset.toXDRObject();
+	  if (!isUndefined(opts.limit) && !this.isValidAmount(opts.limit, true)) {
+	    throw new TypeError(this.constructAmountRequirementsError("limit"));
+	  }
+
+	  if (opts.limit) {
+	    attributes.limit = this._toXDRAmount(opts.limit);
+	  } else {
+	    attributes.limit = Hyper.fromString(new BigNumber(MAX_INT64).toString());
+	  }
+
+	  if (opts.source) {
+	    attributes.source = opts.source.masterKeypair;
+	  }
+	  var changeTrustOP = new xdr.ChangeTrustOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.changeTrust(changeTrustOP);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.changeTrust = changeTrust;
+
+/***/ }),
+/* 369 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var StrKey = __webpack_require__(324).StrKey;
+
+	/**
+	 * Create and fund a non existent account.
+	 * @function
+	 * @alias Operation.createAccount
+	 * @param {object} opts
+	 * @param {string} opts.destination - Destination account ID to create an account for.
+	 * @param {string} opts.startingBalance - Amount in XLM the account should be funded for. Must be greater
+	 *                                   than the [reserve balance amount](https://www.stellar.org/developers/learn/concepts/fees.html).
+	 * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
+	 * @returns {xdr.CreateAccountOp}
+	 */
+	var createAccount = (function (_createAccount) {
+	  var _createAccountWrapper = function createAccount(_x) {
+	    return _createAccount.apply(this, arguments);
+	  };
+
+	  _createAccountWrapper.toString = function () {
+	    return _createAccount.toString();
+	  };
+
+	  return _createAccountWrapper;
+	})(function (opts) {
+	  if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
+	    throw new Error("destination is invalid");
+	  }
+	  if (!this.isValidAmount(opts.startingBalance)) {
+	    throw new TypeError(this.constructAmountRequirementsError("startingBalance"));
+	  }
+	  var attributes = {};
+	  attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
+	  attributes.startingBalance = this._toXDRAmount(opts.startingBalance);
+	  var createAccount = new xdr.CreateAccountOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.createAccount(createAccount);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	});
+	exports.createAccount = createAccount;
+
+/***/ }),
+/* 370 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var isUndefined = _interopRequire(__webpack_require__(287));
+
+	/**
+	 * Returns a XDR CreatePasiveOfferOp. A "create passive offer" operation creates an
+	 * offer that won't consume a counter offer that exactly matches this offer. This is
+	 * useful for offers just used as 1:1 exchanges for path payments. Use manage offer
+	 * to manage this offer after using this operation to create it.
+	 * @function
+	 * @alias Operation.createPassiveOffer
+	 * @param {object} opts
+	 * @param {Asset} opts.selling - What you're selling.
+	 * @param {Asset} opts.buying - What you're buying.
+	 * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
+	 * @param {number|string|BigNumber|Object} opts.price - Price of 1 unit of `selling` in terms of `buying`.
+	 * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
+	 * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
+	 * @param {string} [opts.source] - The source account (defaults to transaction source).
+	 * @throws {Error} Throws `Error` when the best rational approximation of `price` cannot be found.
+	 * @returns {xdr.CreatePassiveOfferOp}
+	 */
+	var createPassiveOffer = function createPassiveOffer(opts) {
+	  var attributes = {};
+	  attributes.selling = opts.selling.toXDRObject();
+	  attributes.buying = opts.buying.toXDRObject();
+	  if (!this.isValidAmount(opts.amount)) {
+	    throw new TypeError(this.constructAmountRequirementsError("amount"));
+	  }
+	  attributes.amount = this._toXDRAmount(opts.amount);
+	  if (isUndefined(opts.price)) {
+	    throw new TypeError("price argument is required");
+	  }
+	  attributes.price = this._toXDRPrice(opts.price);
+	  var createPassiveOfferOp = new xdr.CreatePassiveOfferOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.createPassiveOffer(createPassiveOfferOp);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.createPassiveOffer = createPassiveOffer;
+
+/***/ }),
+/* 371 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	/**
+	  * This operation generates the inflation.
+	  * @function
+	  * @alias Operation.inflation
+	  * @param {object} [opts]
+	  * @param {string} [opts.source] - The optional source account.
+	  * @returns {xdr.InflationOp}
+	  */
+	var inflation = function inflation() {
+	  var opts = arguments[0] === undefined ? {} : arguments[0];
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.inflation();
+	  this.setSourceAccount(opAttributes, opts);
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.inflation = inflation;
+
+/***/ }),
+/* 372 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var isString = _interopRequire(__webpack_require__(275));
+
+	/**
+	 * This operation adds data entry to the ledger.
+	 * @function
+	 * @alias Operation.manageData
+	 * @param {object} opts
+	 * @param {string} opts.name - The name of the data entry.
+	 * @param {string|Buffer} opts.value - The value of the data entry.
+	 * @param {string} [opts.source] - The optional source account.
+	 * @returns {xdr.ManageDataOp}
+	 */
+	var manageData = function manageData(opts) {
+	  var attributes = {};
+
+	  if (!(isString(opts.name) && opts.name.length <= 64)) {
+	    throw new Error("name must be a string, up to 64 characters");
+	  }
+	  attributes.dataName = opts.name;
+
+	  if (!isString(opts.value) && !Buffer.isBuffer(opts.value) && opts.value !== null) {
+	    throw new Error("value must be a string, Buffer or null");
+	  }
+
+	  if (isString(opts.value)) {
+	    attributes.dataValue = Buffer.from(opts.value);
+	  } else {
+	    attributes.dataValue = opts.value;
+	  }
+
+	  if (attributes.dataValue !== null && attributes.dataValue.length > 64) {
+	    throw new Error("value cannot be longer that 64 bytes");
+	  }
+
+	  var manageDataOp = new xdr.ManageDataOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.manageDatum(manageDataOp);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.manageData = manageData;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
+
+/***/ }),
+/* 373 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var isUndefined = _interopRequire(__webpack_require__(287));
+
+	var UnsignedHyper = __webpack_require__(205).UnsignedHyper;
+
+	/**
+	 * Returns a XDR ManageOfferOp. A "manage offer" operation creates, updates, or
+	 * deletes an offer.
+	 * @function
+	 * @alias Operation.manageOffer
+	 * @param {object} opts
+	 * @param {Asset} opts.selling - What you're selling.
+	 * @param {Asset} opts.buying - What you're buying.
+	 * @param {string} opts.amount - The total amount you're selling. If 0, deletes the offer.
+	 * @param {number|string|BigNumber|Object} opts.price - Price of 1 unit of `selling` in terms of `buying`.
+	 * @param {number} opts.price.n - If `opts.price` is an object: the price numerator
+	 * @param {number} opts.price.d - If `opts.price` is an object: the price denominator
+	 * @param {number|string} [opts.offerId ] - If `0`, will create a new offer (default). Otherwise, edits an exisiting offer.
+	 * @param {string} [opts.source] - The source account (defaults to transaction source).
+	 * @throws {Error} Throws `Error` when the best rational approximation of `price` cannot be found.
+	 * @returns {xdr.ManageOfferOp}
+	 */
+	var manageOffer = function manageOffer(opts) {
+	  var attributes = {};
+	  attributes.selling = opts.selling.toXDRObject();
+	  attributes.buying = opts.buying.toXDRObject();
+	  if (!this.isValidAmount(opts.amount, true)) {
+	    throw new TypeError(this.constructAmountRequirementsError("amount"));
+	  }
+	  attributes.amount = this._toXDRAmount(opts.amount);
+	  if (isUndefined(opts.price)) {
+	    throw new TypeError("price argument is required");
+	  }
+	  attributes.price = this._toXDRPrice(opts.price);
+
+	  if (!isUndefined(opts.offerId)) {
+	    opts.offerId = opts.offerId.toString();
+	  } else {
+	    opts.offerId = "0";
+	  }
+	  attributes.offerId = UnsignedHyper.fromString(opts.offerId);
+	  var manageOfferOp = new xdr.ManageOfferOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.manageOffer(manageOfferOp);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.manageOffer = manageOffer;
+
+/***/ }),
+/* 374 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var StrKey = __webpack_require__(324).StrKey;
+
+	/**
+	 * Returns a XDR PaymentOp. A "payment" operation send the specified amount to the
+	 * destination account, optionally through a path. XLM payments create the destination
+	 * account if it does not exist.
+	 * @function
+	 * @alias Operation.pathPayment
+	 * @param {object} opts
+	 * @param {Asset} opts.sendAsset - The asset to pay with.
+	 * @param {string} opts.sendMax - The maximum amount of sendAsset to send.
+	 * @param {string} opts.destination - The destination account to send to.
+	 * @param {Asset} opts.destAsset - The asset the destination will receive.
+	 * @param {string} opts.destAmount - The amount the destination receives.
+	 * @param {Asset[]} opts.path - An array of Asset objects to use as the path.
+	 * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
+	 * @returns {xdr.PathPaymentOp}
+	 */
+	var pathPayment = function pathPayment(opts) {
+	  switch (true) {
+	    case !opts.sendAsset:
+	      throw new Error("Must specify a send asset");
+	    case !this.isValidAmount(opts.sendMax):
+	      throw new TypeError(this.constructAmountRequirementsError("sendMax"));
+	    case !StrKey.isValidEd25519PublicKey(opts.destination):
+	      throw new Error("destination is invalid");
+	    case !opts.destAsset:
+	      throw new Error("Must provide a destAsset for a payment operation");
+	    case !this.isValidAmount(opts.destAmount):
+	      throw new TypeError(this.constructAmountRequirementsError("destAmount"));
+	  }
+
+	  var attributes = {};
+	  attributes.sendAsset = opts.sendAsset.toXDRObject();
+	  attributes.sendMax = this._toXDRAmount(opts.sendMax);
+	  attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
+	  attributes.destAsset = opts.destAsset.toXDRObject();
+	  attributes.destAmount = this._toXDRAmount(opts.destAmount);
+
+	  var path = opts.path ? opts.path : [];
+	  attributes.path = path.map(function (x) {
+	    return x.toXDRObject();
+	  });
+
+	  var payment = new xdr.PathPaymentOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.pathPayment(payment);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.pathPayment = pathPayment;
+
+/***/ }),
+/* 375 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var StrKey = __webpack_require__(324).StrKey;
+
+	/**
+	 * Create a payment operation.
+	 * @function
+	 * @alias Operation.payment
+	 * @param {object} opts
+	 * @param {string} opts.destination - The destination account ID.
+	 * @param {Asset} opts.asset - The asset to send.
+	 * @param {string} opts.amount - The amount to send.
+	 * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
+	 * @returns {xdr.PaymentOp}
+	 */
+	var payment = (function (_payment) {
+	  var _paymentWrapper = function payment(_x) {
+	    return _payment.apply(this, arguments);
+	  };
+
+	  _paymentWrapper.toString = function () {
+	    return _payment.toString();
+	  };
+
+	  return _paymentWrapper;
+	})(function (opts) {
+	  if (!StrKey.isValidEd25519PublicKey(opts.destination)) {
+	    throw new Error("destination is invalid");
+	  }
+	  if (!opts.asset) {
+	    throw new Error("Must provide an asset for a payment operation");
+	  }
+	  if (!this.isValidAmount(opts.amount)) {
+	    throw new TypeError(this.constructAmountRequirementsError("amount"));
+	  }
+
+	  var attributes = {};
+	  attributes.destination = Keypair.fromPublicKey(opts.destination).xdrAccountId();
+	  attributes.asset = opts.asset.toXDRObject();
+	  attributes.amount = this._toXDRAmount(opts.amount);
+	  var payment = new xdr.PaymentOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.payment(payment);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	});
+	exports.payment = payment;
+
+/***/ }),
+/* 376 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
+
+	var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var xdr = _interopRequire(__webpack_require__(204));
+
+	var Keypair = __webpack_require__(319).Keypair;
+
+	var StrKey = __webpack_require__(324).StrKey;
+
+	var isUndefined = _interopRequire(__webpack_require__(287));
+
+	var isString = _interopRequire(__webpack_require__(275));
+
+	/**
+	 * Returns an XDR SetOptionsOp. A "set options" operations set or clear account flags,
+	 * set the account's inflation destination, and/or add new signers to the account.
+	 * The flags used in `opts.clearFlags` and `opts.setFlags` can be the following:
+	 *   - `{@link AuthRequiredFlag}`
+	 *   - `{@link AuthRevocableFlag}`
+	 *   - `{@link AuthImmutableFlag}`
+	 *
+	 * It's possible to set/clear multiple flags at once using logical or.
+	 * @function
+	 * @alias Operation.setOptions
+	 * @param {object} opts
+	 * @param {string} [opts.inflationDest] - Set this account ID as the account's inflation destination.
+	 * @param {(number|string)} [opts.clearFlags] - Bitmap integer for which account flags to clear.
+	 * @param {(number|string)} [opts.setFlags] - Bitmap integer for which account flags to set.
+	 * @param {number|string} [opts.masterWeight] - The master key weight.
+	 * @param {number|string} [opts.lowThreshold] - The sum weight for the low threshold.
+	 * @param {number|string} [opts.medThreshold] - The sum weight for the medium threshold.
+	 * @param {number|string} [opts.highThreshold] - The sum weight for the high threshold.
+	 * @param {object} [opts.signer] - Add or remove a signer from the account. The signer is
+	 *                                 deleted if the weight is 0. Only one of `ed25519PublicKey`, `sha256Hash`, `preAuthTx` should be defined.
+	 * @param {string} [opts.signer.ed25519PublicKey] - The ed25519 public key of the signer.
+	 * @param {Buffer|string} [opts.signer.sha256Hash] - sha256 hash (Buffer or hex string) of preimage that will unlock funds. Preimage should be used as signature of future transaction.
+	 * @param {Buffer|string} [opts.signer.preAuthTx] - Hash (Buffer or hex string) of transaction that will unlock funds.
+	 * @param {number|string} [opts.signer.weight] - The weight of the new signer (0 to delete or 1-255)
+	 * @param {string} [opts.homeDomain] - sets the home domain used for reverse federation lookup.
+	 * @param {string} [opts.source] - The source account (defaults to transaction source).
+	 * @returns {xdr.SetOptionsOp}
+	 * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
+	 */
+	var setOptions = function setOptions(opts) {
+	  var attributes = {};
+
+	  if (opts.inflationDest) {
+	    if (!StrKey.isValidEd25519PublicKey(opts.inflationDest)) {
+	      throw new Error("inflationDest is invalid");
+	    }
+	    attributes.inflationDest = Keypair.fromPublicKey(opts.inflationDest).xdrAccountId();
+	  }
+
+	  var weightCheckFunction = function (value, name) {
+	    if (value >= 0 && value <= 255) {
+	      return true;
+	    } else {
+	      throw new Error("" + name + " value must be between 0 and 255");
+	    }
+	  };
+
+	  attributes.clearFlags = this._checkUnsignedIntValue("clearFlags", opts.clearFlags);
+	  attributes.setFlags = this._checkUnsignedIntValue("setFlags", opts.setFlags);
+	  attributes.masterWeight = this._checkUnsignedIntValue("masterWeight", opts.masterWeight, weightCheckFunction);
+	  attributes.lowThreshold = this._checkUnsignedIntValue("lowThreshold", opts.lowThreshold, weightCheckFunction);
+	  attributes.medThreshold = this._checkUnsignedIntValue("medThreshold", opts.medThreshold, weightCheckFunction);
+	  attributes.highThreshold = this._checkUnsignedIntValue("highThreshold", opts.highThreshold, weightCheckFunction);
+
+	  if (!isUndefined(opts.homeDomain) && !isString(opts.homeDomain)) {
+	    throw new TypeError("homeDomain argument must be of type String");
+	  }
+	  attributes.homeDomain = opts.homeDomain;
+
+	  if (opts.signer) {
+	    var weight = this._checkUnsignedIntValue("signer.weight", opts.signer.weight, weightCheckFunction);
+	    var key = undefined;
+
+	    var setValues = 0;
+
+	    if (opts.signer.ed25519PublicKey) {
+	      if (!StrKey.isValidEd25519PublicKey(opts.signer.ed25519PublicKey)) {
+	        throw new Error("signer.ed25519PublicKey is invalid.");
+	      }
+	      var rawKey = StrKey.decodeEd25519PublicKey(opts.signer.ed25519PublicKey);
+	      key = new xdr.SignerKey.signerKeyTypeEd25519(rawKey);
+	      setValues++;
+	    }
+
+	    if (opts.signer.preAuthTx) {
+	      if (isString(opts.signer.preAuthTx)) {
+	        opts.signer.preAuthTx = Buffer.from(opts.signer.preAuthTx, "hex");
+	      }
+
+	      if (!(Buffer.isBuffer(opts.signer.preAuthTx) && opts.signer.preAuthTx.length == 32)) {
+	        throw new Error("signer.preAuthTx must be 32 bytes Buffer.");
+	      }
+	      key = new xdr.SignerKey.signerKeyTypePreAuthTx(opts.signer.preAuthTx);
+	      setValues++;
+	    }
+
+	    if (opts.signer.sha256Hash) {
+	      if (isString(opts.signer.sha256Hash)) {
+	        opts.signer.sha256Hash = Buffer.from(opts.signer.sha256Hash, "hex");
+	      }
+
+	      if (!(Buffer.isBuffer(opts.signer.sha256Hash) && opts.signer.sha256Hash.length == 32)) {
+	        throw new Error("signer.sha256Hash must be 32 bytes Buffer.");
+	      }
+	      key = new xdr.SignerKey.signerKeyTypeHashX(opts.signer.sha256Hash);
+	      setValues++;
+	    }
+
+	    if (setValues != 1) {
+	      throw new Error("Signer object must contain exactly one of signer.ed25519PublicKey, signer.sha256Hash, signer.preAuthTx.");
+	    }
+
+	    attributes.signer = new xdr.Signer({ key: key, weight: weight });
+	  }
+
+	  var setOptionsOp = new xdr.SetOptionsOp(attributes);
+
+	  var opAttributes = {};
+	  opAttributes.body = xdr.OperationBody.setOption(setOptionsOp);
+	  this.setSourceAccount(opAttributes, opts);
+
+	  return new xdr.Operation(opAttributes);
+	};
+	exports.setOptions = setOptions;
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
+
+/***/ }),
+/* 377 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {"use strict";
@@ -36331,10 +36525,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 366 */
+/* 378 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(367)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var rng = __webpack_require__(379)
 
 	function error () {
 	  var m = [].slice.call(arguments).join(' ')
@@ -36345,9 +36539,9 @@
 	    ].join('\n'))
 	}
 
-	exports.createHash = __webpack_require__(369)
+	exports.createHash = __webpack_require__(381)
 
-	exports.createHmac = __webpack_require__(378)
+	exports.createHmac = __webpack_require__(390)
 
 	exports.randomBytes = function(size, callback) {
 	  if (callback && callback.call) {
@@ -36368,10 +36562,10 @@
 	  return ['sha1', 'sha256', 'sha512', 'md5', 'rmd160']
 	}
 
-	var p = __webpack_require__(379)(exports)
+	var p = __webpack_require__(391)(exports)
 	exports.pbkdf2 = p.pbkdf2
 	exports.pbkdf2Sync = p.pbkdf2Sync
-	__webpack_require__(381)(exports, module.exports);
+	__webpack_require__(393)(exports, module.exports);
 
 	// the least I can do is make error messages for the rest of the node.js/crypto api.
 	each(['createCredentials'
@@ -36387,13 +36581,13 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 367 */
+/* 379 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, Buffer) {(function() {
 	  var g = ('undefined' === typeof window ? global : window) || {}
 	  _crypto = (
-	    g.crypto || g.msCrypto || __webpack_require__(368)
+	    g.crypto || g.msCrypto || __webpack_require__(380)
 	  )
 	  module.exports = function(size) {
 	    // Modern Browsers
@@ -36420,19 +36614,19 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 368 */
+/* 380 */
 /***/ (function(module, exports) {
 
 	/* (ignored) */
 
 /***/ }),
-/* 369 */
+/* 381 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(370)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(382)
 
-	var md5 = toConstructor(__webpack_require__(375))
-	var rmd160 = toConstructor(__webpack_require__(377))
+	var md5 = toConstructor(__webpack_require__(387))
+	var rmd160 = toConstructor(__webpack_require__(389))
 
 	function toConstructor (fn) {
 	  return function () {
@@ -36463,7 +36657,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 370 */
+/* 382 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var exports = module.exports = function (alg) {
@@ -36473,15 +36667,15 @@
 	}
 
 	var Buffer = __webpack_require__(171).Buffer
-	var Hash   = __webpack_require__(371)(Buffer)
+	var Hash   = __webpack_require__(383)(Buffer)
 
-	exports.sha1 = __webpack_require__(372)(Buffer, Hash)
-	exports.sha256 = __webpack_require__(373)(Buffer, Hash)
-	exports.sha512 = __webpack_require__(374)(Buffer, Hash)
+	exports.sha1 = __webpack_require__(384)(Buffer, Hash)
+	exports.sha256 = __webpack_require__(385)(Buffer, Hash)
+	exports.sha512 = __webpack_require__(386)(Buffer, Hash)
 
 
 /***/ }),
-/* 371 */
+/* 383 */
 /***/ (function(module, exports) {
 
 	module.exports = function (Buffer) {
@@ -36564,7 +36758,7 @@
 
 
 /***/ }),
-/* 372 */
+/* 384 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/*
@@ -36708,7 +36902,7 @@
 
 
 /***/ }),
-/* 373 */
+/* 385 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	
@@ -36861,7 +37055,7 @@
 
 
 /***/ }),
-/* 374 */
+/* 386 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var inherits = __webpack_require__(200).inherits
@@ -37111,7 +37305,7 @@
 
 
 /***/ }),
-/* 375 */
+/* 387 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/*
@@ -37123,7 +37317,7 @@
 	 * See http://pajhome.org.uk/crypt/md5 for more info.
 	 */
 
-	var helpers = __webpack_require__(376);
+	var helpers = __webpack_require__(388);
 
 	/*
 	 * Calculate the MD5 of an array of little-endian words, and a bit length
@@ -37272,7 +37466,7 @@
 
 
 /***/ }),
-/* 376 */
+/* 388 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var intSize = 4;
@@ -37313,7 +37507,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 377 */
+/* 389 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -37525,10 +37719,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 378 */
+/* 390 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(369)
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var createHash = __webpack_require__(381)
 
 	var zeroBuffer = new Buffer(128)
 	zeroBuffer.fill(0)
@@ -37575,10 +37769,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 379 */
+/* 391 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var pbkdf2Export = __webpack_require__(380)
+	var pbkdf2Export = __webpack_require__(392)
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {}
@@ -37593,7 +37787,7 @@
 
 
 /***/ }),
-/* 380 */
+/* 392 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = function(crypto) {
@@ -37684,18 +37878,18 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 381 */
+/* 393 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = function (crypto, exports) {
 	  exports = exports || {};
-	  var ciphers = __webpack_require__(382)(crypto);
+	  var ciphers = __webpack_require__(394)(crypto);
 	  exports.createCipher = ciphers.createCipher;
 	  exports.createCipheriv = ciphers.createCipheriv;
-	  var deciphers = __webpack_require__(399)(crypto);
+	  var deciphers = __webpack_require__(411)(crypto);
 	  exports.createDecipher = deciphers.createDecipher;
 	  exports.createDecipheriv = deciphers.createDecipheriv;
-	  var modes = __webpack_require__(390);
+	  var modes = __webpack_require__(402);
 	  function listCiphers () {
 	    return Object.keys(modes);
 	  }
@@ -37705,15 +37899,15 @@
 
 
 /***/ }),
-/* 382 */
+/* 394 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(383);
-	var Transform = __webpack_require__(384);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(395);
+	var Transform = __webpack_require__(396);
 	var inherits = __webpack_require__(176);
-	var modes = __webpack_require__(390);
-	var ebtk = __webpack_require__(391);
-	var StreamCipher = __webpack_require__(392);
+	var modes = __webpack_require__(402);
+	var ebtk = __webpack_require__(403);
+	var StreamCipher = __webpack_require__(404);
 	inherits(Cipher, Transform);
 	function Cipher(mode, key, iv) {
 	  if (!(this instanceof Cipher)) {
@@ -37774,11 +37968,11 @@
 	  return out;
 	};
 	var modelist = {
-	  ECB: __webpack_require__(393),
-	  CBC: __webpack_require__(394),
-	  CFB: __webpack_require__(396),
-	  OFB: __webpack_require__(397),
-	  CTR: __webpack_require__(398)
+	  ECB: __webpack_require__(405),
+	  CBC: __webpack_require__(406),
+	  CFB: __webpack_require__(408),
+	  OFB: __webpack_require__(409),
+	  CTR: __webpack_require__(410)
 	};
 	module.exports = function (crypto) {
 	  function createCipheriv(suite, password, iv) {
@@ -37820,7 +38014,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 383 */
+/* 395 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {var uint_max = Math.pow(2, 32);
@@ -38022,10 +38216,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 384 */
+/* 396 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(385).Transform;
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var Transform = __webpack_require__(397).Transform;
 	var inherits = __webpack_require__(176);
 
 	module.exports = CipherBase;
@@ -38060,7 +38254,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 385 */
+/* 397 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -38091,10 +38285,10 @@
 
 	inherits(Stream, EE);
 	Stream.Readable = __webpack_require__(178);
-	Stream.Writable = __webpack_require__(386);
-	Stream.Duplex = __webpack_require__(387);
-	Stream.Transform = __webpack_require__(388);
-	Stream.PassThrough = __webpack_require__(389);
+	Stream.Writable = __webpack_require__(398);
+	Stream.Duplex = __webpack_require__(399);
+	Stream.Transform = __webpack_require__(400);
+	Stream.PassThrough = __webpack_require__(401);
 
 	// Backwards-compat with node 0.4.x
 	Stream.Stream = Stream;
@@ -38193,35 +38387,35 @@
 
 
 /***/ }),
-/* 386 */
+/* 398 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(190);
 
 
 /***/ }),
-/* 387 */
+/* 399 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(189);
 
 
 /***/ }),
-/* 388 */
+/* 400 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(178).Transform
 
 
 /***/ }),
-/* 389 */
+/* 401 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	module.exports = __webpack_require__(178).PassThrough
 
 
 /***/ }),
-/* 390 */
+/* 402 */
 /***/ (function(module, exports) {
 
 	exports['aes-128-ecb'] = {
@@ -38334,7 +38528,7 @@
 	};
 
 /***/ }),
-/* 391 */
+/* 403 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {
@@ -38397,11 +38591,11 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 392 */
+/* 404 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(383);
-	var Transform = __webpack_require__(384);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(395);
+	var Transform = __webpack_require__(396);
 	var inherits = __webpack_require__(176);
 
 	inherits(StreamCipher, Transform);
@@ -38429,7 +38623,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 393 */
+/* 405 */
 /***/ (function(module, exports) {
 
 	exports.encrypt = function (self, block) {
@@ -38440,10 +38634,10 @@
 	};
 
 /***/ }),
-/* 394 */
+/* 406 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var xor = __webpack_require__(395);
+	var xor = __webpack_require__(407);
 	exports.encrypt = function (self, block) {
 	  var data = xor(block, self._prev);
 	  self._prev = self._cipher.encryptBlock(data);
@@ -38457,7 +38651,7 @@
 	};
 
 /***/ }),
-/* 395 */
+/* 407 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {module.exports = xor;
@@ -38473,10 +38667,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 396 */
+/* 408 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(395);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(407);
 	exports.encrypt = function (self, data, decrypt) {
 	  var out = new Buffer('');
 	  var len;
@@ -38506,10 +38700,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 397 */
+/* 409 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(395);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(407);
 	function getBlock(self) {
 	  self._prev = self._cipher.encryptBlock(self._prev);
 	  return self._prev;
@@ -38525,10 +38719,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 398 */
+/* 410 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(395);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var xor = __webpack_require__(407);
 	function getBlock(self) {
 	  var out = self._cipher.encryptBlock(self._prev);
 	  incr32(self._prev);
@@ -38559,15 +38753,15 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 399 */
+/* 411 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(383);
-	var Transform = __webpack_require__(384);
+	/* WEBPACK VAR INJECTION */(function(Buffer) {var aes = __webpack_require__(395);
+	var Transform = __webpack_require__(396);
 	var inherits = __webpack_require__(176);
-	var modes = __webpack_require__(390);
-	var StreamCipher = __webpack_require__(392);
-	var ebtk = __webpack_require__(391);
+	var modes = __webpack_require__(402);
+	var StreamCipher = __webpack_require__(404);
+	var ebtk = __webpack_require__(403);
 
 	inherits(Decipher, Transform);
 	function Decipher(mode, key, iv) {
@@ -38635,11 +38829,11 @@
 	}
 
 	var modelist = {
-	  ECB: __webpack_require__(393),
-	  CBC: __webpack_require__(394),
-	  CFB: __webpack_require__(396),
-	  OFB: __webpack_require__(397),
-	  CTR: __webpack_require__(398)
+	  ECB: __webpack_require__(405),
+	  CBC: __webpack_require__(406),
+	  CFB: __webpack_require__(408),
+	  OFB: __webpack_require__(409),
+	  CTR: __webpack_require__(410)
 	};
 
 	module.exports = function (crypto) {
@@ -38683,7 +38877,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(171).Buffer))
 
 /***/ }),
-/* 400 */
+/* 412 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -38706,13 +38900,13 @@
 
 	var Keypair = __webpack_require__(319).Keypair;
 
-	var Account = __webpack_require__(401).Account;
+	var Account = __webpack_require__(413).Account;
 
 	var Operation = __webpack_require__(341).Operation;
 
 	var Transaction = __webpack_require__(340).Transaction;
 
-	var Memo = __webpack_require__(365).Memo;
+	var Memo = __webpack_require__(377).Memo;
 
 	var BigNumber = _interopRequire(__webpack_require__(361));
 
@@ -38857,7 +39051,7 @@
 	})();
 
 /***/ }),
-/* 401 */
+/* 413 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -38944,7 +39138,7 @@
 	})();
 
 /***/ }),
-/* 402 */
+/* 414 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var baseFor = __webpack_require__(119),
@@ -38989,7 +39183,7 @@
 
 
 /***/ }),
-/* 403 */
+/* 415 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39050,7 +39244,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 404 */
+/* 416 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39143,7 +39337,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 405 */
+/* 417 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39252,7 +39446,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 406 */
+/* 418 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -39264,7 +39458,7 @@
 
 	var _call_builder = __webpack_require__(115);
 
-	var _orderbook_call_builder = __webpack_require__(407);
+	var _orderbook_call_builder = __webpack_require__(419);
 
 	var _errors = __webpack_require__(2);
 
@@ -39310,7 +39504,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 407 */
+/* 419 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -39367,7 +39561,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 408 */
+/* 420 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -39469,7 +39663,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 409 */
+/* 421 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39538,7 +39732,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 410 */
+/* 422 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39630,7 +39824,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 411 */
+/* 423 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39739,7 +39933,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 412 */
+/* 424 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -39774,7 +39968,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 413 */
+/* 425 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -39847,7 +40041,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 414 */
+/* 426 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -39949,7 +40143,7 @@
 	}(_call_builder.CallBuilder);
 
 /***/ }),
-/* 415 */
+/* 427 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -39985,7 +40179,7 @@
 
 	var _errors = __webpack_require__(2);
 
-	var _stellar_toml_resolver = __webpack_require__(416);
+	var _stellar_toml_resolver = __webpack_require__(428);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -40205,7 +40399,7 @@
 	}();
 
 /***/ }),
-/* 416 */
+/* 428 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -40221,7 +40415,7 @@
 
 	var _axios2 = _interopRequireDefault(_axios);
 
-	var _toml = __webpack_require__(417);
+	var _toml = __webpack_require__(429);
 
 	var _toml2 = _interopRequireDefault(_toml);
 
@@ -40305,11 +40499,11 @@
 	}();
 
 /***/ }),
-/* 417 */
+/* 429 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var parser = __webpack_require__(418);
-	var compiler = __webpack_require__(419);
+	var parser = __webpack_require__(430);
+	var compiler = __webpack_require__(431);
 
 	module.exports = {
 	  parse: function(input) {
@@ -40320,7 +40514,7 @@
 
 
 /***/ }),
-/* 418 */
+/* 430 */
 /***/ (function(module, exports) {
 
 	module.exports = (function() {
@@ -44167,7 +44361,7 @@
 
 
 /***/ }),
-/* 419 */
+/* 431 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -44368,7 +44562,7 @@
 
 
 /***/ }),
-/* 420 */
+/* 432 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, global) {/*!
