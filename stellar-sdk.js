@@ -4344,7 +4344,7 @@
 	    }
 
 	    /**
-	     * Adds `cursor` parameter to the current call. Returns the CallBuilder object on which this method has been called.
+	     * Sets `cursor` parameter for the current call. Returns the CallBuilder object on which this method has been called.
 	     * @see [Paging](https://www.stellar.org/developers/horizon/learn/paging.html)
 	     * @param {string} cursor A cursor is a value that points to a specific location in a collection of resources.
 	     */
@@ -4352,12 +4352,12 @@
 	  }, {
 	    key: "cursor",
 	    value: function cursor(_cursor) {
-	      this.url.addQuery("cursor", _cursor);
+	      this.url.setQuery("cursor", _cursor);
 	      return this;
 	    }
 
 	    /**
-	     * Adds `limit` parameter to the current call. Returns the CallBuilder object on which this method has been called.
+	     * Sets `limit` parameter for the current call. Returns the CallBuilder object on which this method has been called.
 	     * @see [Paging](https://www.stellar.org/developers/horizon/learn/paging.html)
 	     * @param {number} number Number of records the server should return.
 	     */
@@ -4365,19 +4365,19 @@
 	  }, {
 	    key: "limit",
 	    value: function limit(number) {
-	      this.url.addQuery("limit", number);
+	      this.url.setQuery("limit", number);
 	      return this;
 	    }
 
 	    /**
-	     * Adds `order` parameter to the current call. Returns the CallBuilder object on which this method has been called.
+	     * Sets `order` parameter for the current call. Returns the CallBuilder object on which this method has been called.
 	     * @param {"asc"|"desc"} direction
 	     */
 
 	  }, {
 	    key: "order",
 	    value: function order(direction) {
-	      this.url.addQuery("order", direction);
+	      this.url.setQuery("order", direction);
 	      return this;
 	    }
 	  }]);
@@ -20202,9 +20202,9 @@
 	      case "raw":
 	        buffer = input;break;
 	      case "hex":
-	        buffer = new Buffer(input, "hex");break;
+	        buffer = Buffer.from(input, "hex");break;
 	      case "base64":
-	        buffer = new Buffer(input, "base64");break;
+	        buffer = Buffer.from(input, "base64");break;
 	      default:
 	        throw new Error("Invalid format " + format + ", must be \"raw\", \"hex\", \"base64\"");
 	    }
@@ -20281,8 +20281,7 @@
 	    writeBufferPadded: {
 	      value: function writeBufferPadded(buffer) {
 	        var padding = calculatePadding(buffer.length);
-	        var paddingBuffer = new Buffer(padding);
-	        paddingBuffer.fill(0);
+	        var paddingBuffer = Buffer.alloc(padding);
 
 	        return this.copyFrom(new Cursor(buffer)).copyFrom(new Cursor(paddingBuffer));
 	      }
@@ -24080,7 +24079,7 @@
 	        if (!isString(value)) {
 	          throw new Error("XDR Write Error: " + value + " is not a string,");
 	        }
-	        var buffer = new Buffer(value, "utf8");
+	        var buffer = Buffer.from(value, "utf8");
 
 	        Int.write(buffer.length, io);
 	        io.writeBufferPadded(buffer);
@@ -24091,7 +24090,7 @@
 	        if (!isString(value)) {
 	          return false;
 	        }
-	        var buffer = new Buffer(value, "utf8");
+	        var buffer = Buffer.from(value, "utf8");
 	        return buffer.length <= this._maxLength;
 	      }
 	    }
@@ -24923,6 +24922,17 @@
 	        return result;
 	      }
 	    },
+	    fromValue: {
+	      value: function fromValue(value) {
+	        var result = this._byValue.get(value);
+
+	        if (!result) {
+	          throw new Error("" + value + " is not a value of any member of " + this.enumName);
+	        }
+
+	        return result;
+	      }
+	    },
 	    create: {
 	      value: function create(context, name, members) {
 	        var ChildEnum = (function (_Enum) {
@@ -25328,10 +25338,9 @@
 
 	var pick = _interopRequire(__webpack_require__(298));
 
-	// types is the root
-	var types = {};
-
 	function config(fn) {
+	  var types = arguments[1] === undefined ? {} : arguments[1];
+
 	  if (fn) {
 	    var builder = new TypeBuilder(types);
 	    fn(builder);
@@ -39541,18 +39550,18 @@
 
 	        _this.url.segment('order_book');
 	        if (!selling.isNative()) {
-	            _this.url.addQuery("selling_asset_type", selling.getAssetType());
-	            _this.url.addQuery("selling_asset_code", selling.getCode());
-	            _this.url.addQuery("selling_asset_issuer", selling.getIssuer());
+	            _this.url.setQuery("selling_asset_type", selling.getAssetType());
+	            _this.url.setQuery("selling_asset_code", selling.getCode());
+	            _this.url.setQuery("selling_asset_issuer", selling.getIssuer());
 	        } else {
-	            _this.url.addQuery("selling_asset_type", 'native');
+	            _this.url.setQuery("selling_asset_type", 'native');
 	        }
 	        if (!buying.isNative()) {
-	            _this.url.addQuery("buying_asset_type", buying.getAssetType());
-	            _this.url.addQuery("buying_asset_code", buying.getCode());
-	            _this.url.addQuery("buying_asset_issuer", buying.getIssuer());
+	            _this.url.setQuery("buying_asset_type", buying.getAssetType());
+	            _this.url.setQuery("buying_asset_code", buying.getCode());
+	            _this.url.setQuery("buying_asset_issuer", buying.getIssuer());
 	        } else {
-	            _this.url.addQuery("buying_asset_type", 'native');
+	            _this.url.setQuery("buying_asset_type", 'native');
 	        }
 	        return _this;
 	    }
@@ -39615,18 +39624,18 @@
 	        key: "forAssetPair",
 	        value: function forAssetPair(base, counter) {
 	            if (!base.isNative()) {
-	                this.url.addQuery("base_asset_type", base.getAssetType());
-	                this.url.addQuery("base_asset_code", base.getCode());
-	                this.url.addQuery("base_asset_issuer", base.getIssuer());
+	                this.url.setQuery("base_asset_type", base.getAssetType());
+	                this.url.setQuery("base_asset_code", base.getCode());
+	                this.url.setQuery("base_asset_issuer", base.getIssuer());
 	            } else {
-	                this.url.addQuery("base_asset_type", 'native');
+	                this.url.setQuery("base_asset_type", 'native');
 	            }
 	            if (!counter.isNative()) {
-	                this.url.addQuery("counter_asset_type", counter.getAssetType());
-	                this.url.addQuery("counter_asset_code", counter.getCode());
-	                this.url.addQuery("counter_asset_issuer", counter.getIssuer());
+	                this.url.setQuery("counter_asset_type", counter.getAssetType());
+	                this.url.setQuery("counter_asset_code", counter.getCode());
+	                this.url.setQuery("counter_asset_issuer", counter.getIssuer());
 	            } else {
-	                this.url.addQuery("counter_asset_type", 'native');
+	                this.url.setQuery("counter_asset_type", 'native');
 	            }
 	            return this;
 	        }
@@ -39640,7 +39649,7 @@
 	    }, {
 	        key: "forOffer",
 	        value: function forOffer(offerId) {
-	            this.url.addQuery("offer_id", offerId);
+	            this.url.setQuery("offer_id", offerId);
 	            return this;
 	        }
 
@@ -39714,16 +39723,16 @@
 	        var _this = _possibleConstructorReturn(this, (PathCallBuilder.__proto__ || Object.getPrototypeOf(PathCallBuilder)).call(this, serverUrl));
 
 	        _this.url.segment('paths');
-	        _this.url.addQuery('destination_account', destination);
-	        _this.url.addQuery('source_account', source);
-	        _this.url.addQuery('destination_amount', destinationAmount);
+	        _this.url.setQuery('destination_account', destination);
+	        _this.url.setQuery('source_account', source);
+	        _this.url.setQuery('destination_amount', destinationAmount);
 
 	        if (!destinationAsset.isNative()) {
-	            _this.url.addQuery('destination_asset_type', destinationAsset.getAssetType());
-	            _this.url.addQuery('destination_asset_code', destinationAsset.getCode());
-	            _this.url.addQuery('destination_asset_issuer', destinationAsset.getIssuer());
+	            _this.url.setQuery('destination_asset_type', destinationAsset.getAssetType());
+	            _this.url.setQuery('destination_asset_code', destinationAsset.getCode());
+	            _this.url.setQuery('destination_asset_issuer', destinationAsset.getIssuer());
 	        } else {
-	            _this.url.addQuery('destination_asset_type', 'native');
+	            _this.url.setQuery('destination_asset_type', 'native');
 	        }
 	        return _this;
 	    }
@@ -39960,7 +39969,7 @@
 	        var _this = _possibleConstructorReturn(this, (FriendbotBuilder.__proto__ || Object.getPrototypeOf(FriendbotBuilder)).call(this, url));
 
 	        _this.url.segment('friendbot');
-	        _this.url.addQuery("addr", address);
+	        _this.url.setQuery("addr", address);
 	        return _this;
 	    }
 
@@ -40019,7 +40028,7 @@
 	    _createClass(AssetsCallBuilder, [{
 	        key: "forCode",
 	        value: function forCode(value) {
-	            this.url.addQuery("asset_code", value);
+	            this.url.setQuery("asset_code", value);
 	            return this;
 	        }
 
@@ -40032,7 +40041,7 @@
 	    }, {
 	        key: "forIssuer",
 	        value: function forIssuer(value) {
-	            this.url.addQuery("asset_issuer", value);
+	            this.url.setQuery("asset_issuer", value);
 	            return this;
 	        }
 	    }]);
@@ -40090,29 +40099,29 @@
 
 	        _this.url.segment('trade_aggregations');
 	        if (!base.isNative()) {
-	            _this.url.addQuery("base_asset_type", base.getAssetType());
-	            _this.url.addQuery("base_asset_code", base.getCode());
-	            _this.url.addQuery("base_asset_issuer", base.getIssuer());
+	            _this.url.setQuery("base_asset_type", base.getAssetType());
+	            _this.url.setQuery("base_asset_code", base.getCode());
+	            _this.url.setQuery("base_asset_issuer", base.getIssuer());
 	        } else {
-	            _this.url.addQuery("base_asset_type", 'native');
+	            _this.url.setQuery("base_asset_type", 'native');
 	        }
 	        if (!counter.isNative()) {
-	            _this.url.addQuery("counter_asset_type", counter.getAssetType());
-	            _this.url.addQuery("counter_asset_code", counter.getCode());
-	            _this.url.addQuery("counter_asset_issuer", counter.getIssuer());
+	            _this.url.setQuery("counter_asset_type", counter.getAssetType());
+	            _this.url.setQuery("counter_asset_code", counter.getCode());
+	            _this.url.setQuery("counter_asset_issuer", counter.getIssuer());
 	        } else {
-	            _this.url.addQuery("counter_asset_type", 'native');
+	            _this.url.setQuery("counter_asset_type", 'native');
 	        }
 	        if (typeof start_time === 'undefined' || typeof end_time === 'undefined') {
 	            throw new _errors.BadRequestError("Invalid time bounds", [start_time, end_time]);
 	        } else {
-	            _this.url.addQuery("start_time", start_time);
-	            _this.url.addQuery("end_time", end_time);
+	            _this.url.setQuery("start_time", start_time);
+	            _this.url.setQuery("end_time", end_time);
 	        }
 	        if (!_this.isValidResolution(resolution)) {
 	            throw new _errors.BadRequestError("Invalid resolution", resolution);
 	        } else {
-	            _this.url.addQuery("resolution", resolution);
+	            _this.url.setQuery("resolution", resolution);
 	        }
 
 	        return _this;
