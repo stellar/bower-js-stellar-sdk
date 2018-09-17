@@ -24045,6 +24045,8 @@
 
 	var isString = _interopRequire(__webpack_require__(275));
 
+	var isArray = _interopRequire(__webpack_require__(62));
+
 	var includeIoMixin = _interopRequire(__webpack_require__(209));
 
 	var String = exports.String = (function () {
@@ -24067,7 +24069,12 @@
 	        var padding = calculatePadding(length);
 	        var result = io.slice(length);
 	        slicePadding(io, padding);
-	        return result.buffer().toString("utf8");
+	        return result.buffer();
+	      }
+	    },
+	    readString: {
+	      value: function readString(io) {
+	        return this.read(io).toString("utf8");
 	      }
 	    },
 	    write: {
@@ -24076,10 +24083,12 @@
 	          throw new Error("XDR Write Error: Got " + value.length + " bytes," + ("max allows is " + this._maxLength));
 	        }
 
-	        if (!isString(value)) {
-	          throw new Error("XDR Write Error: " + value + " is not a string,");
+	        var buffer = undefined;
+	        if (isString(value)) {
+	          buffer = Buffer.from(value, "utf8");
+	        } else {
+	          buffer = Buffer.from(value);
 	        }
-	        var buffer = Buffer.from(value, "utf8");
 
 	        Int.write(buffer.length, io);
 	        io.writeBufferPadded(buffer);
@@ -24087,10 +24096,14 @@
 	    },
 	    isValid: {
 	      value: function isValid(value) {
-	        if (!isString(value)) {
+	        var buffer = undefined;
+	        if (isString(value)) {
+	          buffer = Buffer.from(value, "utf8");
+	        } else if (isArray(value) || Buffer.isBuffer(value)) {
+	          buffer = Buffer.from(value);
+	        } else {
 	          return false;
 	        }
-	        var buffer = Buffer.from(value, "utf8");
 	        return buffer.length <= this._maxLength;
 	      }
 	    }
@@ -31579,7 +31592,8 @@
 	            result.lowThreshold = attrs.lowThreshold();
 	            result.medThreshold = attrs.medThreshold();
 	            result.highThreshold = attrs.highThreshold();
-	            result.homeDomain = attrs.homeDomain();
+	            // home_domain is checked by iscntrl in stellar-core
+	            result.homeDomain = attrs.homeDomain() ? attrs.homeDomain().toString("ascii") : null;
 
 	            if (attrs.signer()) {
 	              var signer = {};
@@ -31617,7 +31631,8 @@
 	            break;
 	          case "manageDatum":
 	            result.type = "manageData";
-	            result.name = attrs.dataName();
+	            // manage_data.name is checked by iscntrl in stellar-core
+	            result.name = attrs.dataName().toString("ascii");
 	            result.value = attrs.dataValue();
 	            break;
 	          case "inflation":
@@ -36305,8 +36320,9 @@
 	      /**
 	       * Contains memo value:
 	       * * `null` for `MemoNone`,
-	       * * `string` for `MemoID`, `MemoText`,
-	       * * `Buffer` for `MemoHash`, `MemoReturn`
+	       * * `string` for `MemoID`,
+	       * * `Buffer` for `MemoText` after decoding using `fromXDRObject`, original value otherwise,
+	       * * `Buffer` for `MemoHash`, `MemoReturn`.
 	       */
 
 	      get: function () {
@@ -36378,11 +36394,8 @@
 	    },
 	    _validateTextValue: {
 	      value: function _validateTextValue(value) {
-	        if (!isString(value)) {
-	          throw new Error("Expects string type got " + typeof value);
-	        }
-	        if (Buffer.byteLength(value, "utf8") > 28) {
-	          throw new Error("Text should be <= 28 bytes. Got " + Buffer.byteLength(value, "utf8"));
+	        if (!xdr.Memo.armTypeForArm("text").isValid(value)) {
+	          throw new Error("Expects string, array or buffer, max 28 bytes");
 	        }
 	      }
 	    },
