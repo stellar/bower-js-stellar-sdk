@@ -291,13 +291,13 @@
 	 * ```
 	 * import {Config} from 'stellar-sdk';
 	 * Config.setAllowHttp(true);
-	 * Config.setTimout(5000);
+	 * Config.setTimeout(5000);
 	 * ```
 	 *
 	 * Usage browser:
 	 * ```
 	 * StellarSdk.Config.setAllowHttp(true);
-	 * StellarSdk.Config.setTimout(5000);
+	 * StellarSdk.Config.setTimeout(5000);
 	 * ```
 	 * @static
 	 */
@@ -3984,14 +3984,15 @@
 	         * @param {long} start_time lower time boundary represented as millis since epoch
 	         * @param {long} end_time upper time boundary represented as millis since epoch
 	         * @param {long} resolution segment duration as millis since epoch. *Supported values are 5 minutes (300000), 15 minutes (900000), 1 hour (3600000), 1 day (86400000) and 1 week (604800000).
+	         * @param {long} offset segments can be offset using this parameter. Expressed in milliseconds. *Can only be used if the resolution is greater than 1 hour. Value must be in whole hours, less than the provided resolution, and less than 24 hours.
 	         * Returns new {@link TradeAggregationCallBuilder} object configured with the current Horizon server configuration.
 	         * @returns {TradeAggregationCallBuilder}
 	         */
 
 	    }, {
 	        key: "tradeAggregation",
-	        value: function tradeAggregation(base, counter, start_time, end_time, resolution) {
-	            return new _trade_aggregation_call_builder.TradeAggregationCallBuilder(URI(this.serverURL), base, counter, start_time, end_time, resolution);
+	        value: function tradeAggregation(base, counter, start_time, end_time, resolution, offset) {
+	            return new _trade_aggregation_call_builder.TradeAggregationCallBuilder(URI(this.serverURL), base, counter, start_time, end_time, resolution, offset);
 	        }
 	    }]);
 
@@ -19971,7 +19972,11 @@
 	exports.UnsignedHyper = _jsXdr.UnsignedHyper;
 	exports.Hyper = _jsXdr.Hyper;
 	exports.Transaction = __webpack_require__(340).Transaction;
-	exports.TransactionBuilder = __webpack_require__(412).TransactionBuilder;
+
+	var _transaction_builder = __webpack_require__(412);
+
+	exports.TransactionBuilder = _transaction_builder.TransactionBuilder;
+	exports.TimeoutInfinite = _transaction_builder.TimeoutInfinite;
 	exports.Asset = __webpack_require__(342).Asset;
 
 	var _operation = __webpack_require__(341);
@@ -31252,9 +31257,6 @@
 
 	var crypto = _interopRequire(__webpack_require__(378));
 
-	var MIN_LEDGER = 0;
-	var MAX_LEDGER = 4294967295; // max uint32
-
 	/**
 	 * A new Transaction object is created from a transaction envelope or via {@link TransactionBuilder}.
 	 * Once a Transaction has been created from an envelope, its attributes and operations
@@ -31593,7 +31595,7 @@
 	            result.medThreshold = attrs.medThreshold();
 	            result.highThreshold = attrs.highThreshold();
 	            // home_domain is checked by iscntrl in stellar-core
-	            result.homeDomain = attrs.homeDomain() ? attrs.homeDomain().toString("ascii") : null;
+	            result.homeDomain = attrs.homeDomain() !== undefined ? attrs.homeDomain().toString("ascii") : undefined;
 
 	            if (attrs.signer()) {
 	              var signer = {};
@@ -38939,9 +38941,15 @@
 	var isUndefined = _interopRequire(__webpack_require__(287));
 
 	var BASE_FEE = 100; // Stroops
-	var MIN_LEDGER = 0;
-	var MAX_LEDGER = 4294967295; // max uint32
 
+	/**
+	 * @constant
+	 * @see {@link TransactionBuilder#setTimeout}
+	 * @see [Timeout](https://www.stellar.org/developers/horizon/reference/endpoints/transactions-create.html#timeout)
+	 */
+	var TimeoutInfinite = 0;
+
+	exports.TimeoutInfinite = TimeoutInfinite;
 	/**
 	 * <p>Transaction builder helps constructs a new `{@link Transaction}` using the given {@link Account}
 	 * as the transaction's "source account". The transaction will use the current sequence
@@ -38971,6 +38979,7 @@
 	        amount: "100"
 	        asset: Asset.native()
 	    }) // <- sends 100 XLM to destinationB
+	 *   .setTimeout(30)
 	 *   .build();
 	 *
 	 * transaction.sign(sourceKeypair);
@@ -38999,9 +39008,7 @@
 	    this.baseFee = isUndefined(opts.fee) ? BASE_FEE : opts.fee;
 	    this.timebounds = clone(opts.timebounds);
 	    this.memo = opts.memo || Memo.none();
-
-	    // the signed base64 form of the transaction to be sent to Horizon
-	    this.blob = null;
+	    this.timeoutSet = false;
 	  }
 
 	  _createClass(TransactionBuilder, {
@@ -39031,6 +39038,48 @@
 	        return this;
 	      }
 	    },
+	    setTimeout: {
+
+	      /**
+	       * Because of the distributed nature of the Stellar network it is possible that the status of your transaction
+	       * will be determined after a long time if the network is highly congested.
+	       * If you want to be sure to receive the status of the transaction within a given period you should set the
+	       * {@link TimeBounds} with <code>maxTime</code> on the transaction (this is what <code>setTimeout</code> does
+	       * internally; if there's <code>minTime</code> set but no <code>maxTime</code> it will be added).
+	       * Call to <code>TransactionBuilder.setTimeout</code> is required if Transaction does not have <code>max_time</code> set.
+	       * If you don't want to set timeout, use <code>{@link TimeoutInfinite}</code>. In general you should set
+	       * <code>{@link TimeoutInfinite}</code> only in smart contracts.
+	       *
+	       * Please note that Horizon may still return <code>504 Gateway Timeout</code> error, even for short timeouts.
+	       * In such case you need to resubmit the same transaction again without making any changes to receive a status.
+	       * This method is using the machine system time (UTC), make sure it is set correctly.
+	       * @param {timeout} Timeout in seconds.
+	       * @return {TransactionBuilder}
+	       * @see TimeoutInfinite
+	       */
+
+	      value: function setTimeout(timeout) {
+	        if (this.timebounds != null && this.timebounds.maxTime > 0) {
+	          throw new Error("TimeBounds.max_time has been already set - setting timeout would overwrite it.");
+	        }
+
+	        if (timeout < 0) {
+	          throw new Error("timeout cannot be negative");
+	        }
+
+	        this.timeoutSet = true;
+	        if (timeout > 0) {
+	          var timeoutTimestamp = Math.floor(Date.now() / 1000) + timeout;
+	          if (this.timebounds == null) {
+	            this.timebounds = { minTime: 0, maxTime: timeoutTimestamp };
+	          } else {
+	            this.timebounds = { minTime: this.timebounds.minTime, maxTime: timeoutTimestamp };
+	          }
+	        }
+
+	        return this;
+	      }
+	    },
 	    build: {
 
 	      /**
@@ -39040,6 +39089,11 @@
 	       */
 
 	      value: function build() {
+	        // Ensure setTimeout called or maxTime is set
+	        if ((this.timebounds == null || this.timebounds != null && this.timebounds.maxTime == 0) && !this.timeoutSet) {
+	          throw new Error("TimeBounds has to be set or you must call setTimeout(TimeoutInfinite).");
+	        }
+
 	        var sequenceNumber = new BigNumber(this.source.sequenceNumber()).add(1);
 
 	        var attrs = {
@@ -40100,12 +40154,13 @@
 	 * @param {long} start_time lower time boundary represented as millis since epoch
 	 * @param {long} end_time upper time boundary represented as millis since epoch
 	 * @param {long} resolution segment duration as millis since epoch. *Supported values are 1 minute (60000), 5 minutes (300000), 15 minutes (900000), 1 hour (3600000), 1 day (86400000) and 1 week (604800000).
+	 * @param {long} offset segments can be offset using this parameter. Expressed in milliseconds. *Can only be used if the resolution is greater than 1 hour. Value must be in whole hours, less than the provided resolution, and less than 24 hours.
 	 */
 
 	var TradeAggregationCallBuilder = exports.TradeAggregationCallBuilder = function (_CallBuilder) {
 	    _inherits(TradeAggregationCallBuilder, _CallBuilder);
 
-	    function TradeAggregationCallBuilder(serverUrl, base, counter, start_time, end_time, resolution) {
+	    function TradeAggregationCallBuilder(serverUrl, base, counter, start_time, end_time, resolution, offset) {
 	        _classCallCheck(this, TradeAggregationCallBuilder);
 
 	        var _this = _possibleConstructorReturn(this, (TradeAggregationCallBuilder.__proto__ || Object.getPrototypeOf(TradeAggregationCallBuilder)).call(this, serverUrl));
@@ -40136,6 +40191,11 @@
 	        } else {
 	            _this.url.setQuery("resolution", resolution);
 	        }
+	        if (!_this.isValidOffset(offset, resolution)) {
+	            throw new _errors.BadRequestError("Invalid offset", offset);
+	        } else {
+	            _this.url.setQuery("offset", offset);
+	        }
 
 	        return _this;
 	    }
@@ -40158,6 +40218,19 @@
 	                }
 	            }
 	            return found;
+	        }
+
+	        /**
+	        * @private
+	        * @param {long} offset
+	        * @param {long} resolution
+	        */
+
+	    }, {
+	        key: "isValidOffset",
+	        value: function isValidOffset(offset, resolution) {
+	            var hour = 3600000;
+	            return !(offset > resolution || offset > 24 * hour || offset % hour !== 0);
 	        }
 	    }]);
 
