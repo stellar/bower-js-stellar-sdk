@@ -3771,7 +3771,7 @@ var StellarSdk =
 	}
 
 	/**
-	 * Server handles the network connection to a [Horizon](https://www.stellar.org/developers/horizon/learn/index.html)
+	 * Server handles the network connection to a [Horizon](https://www.stellar.org/developers/horizon/reference/)
 	 * instance and exposes an interface for requests to that instance.
 	 * @constructor
 	 * @param {string} serverURL Horizon Server URL (ex. `https://horizon-testnet.stellar.org`).
@@ -3881,7 +3881,7 @@ var StellarSdk =
 
 	    /**
 	     * Fetch the operation fee stats endpoint.
-	     * @see [Operation Fee Stats](https://www.stellar.org/developers/horizon/reference/operation-fee-stats.html)
+	     * @see [Operation Fee Stats](https://www.stellar.org/developers/horizon/reference/endpoints/fee-stats.html)
 	     * @returns {Promise} Promise that resolves to the fee stats returned by Horizon.
 	     */
 
@@ -3983,7 +3983,7 @@ var StellarSdk =
 	     * * If `wasPartiallyFilled` is true, you can tell the user that `amountBought`
 	     * or `amountSold` have already been transferred.
 	     *
-	     * @see [Post Transaction](https://www.stellar.org/developers/horizon/reference/transactions-create.html)
+	     * @see [Post Transaction](https://www.stellar.org/developers/horizon/reference/endpoints/transactions-create.html)
 	     * @param {Transaction} transaction - The transaction to submit.
 	     * @returns {Promise} Promise that resolves or rejects with response from horizon.
 	     */
@@ -39370,7 +39370,7 @@ var StellarSdk =
 	 * Creates a new {@link AccountCallBuilder} pointed to server defined by serverUrl.
 	 * Do not create this object directly, use {@link Server#accounts}.
 	 *
-	 * @see [All Accounts](https://www.stellar.org/developers/horizon/reference/accounts-all.html)
+	 * @see [All Accounts](https://www.stellar.org/developers/horizon/reference/resources/account.html)
 	 * @class AccountCallBuilder
 	 * @extends CallBuilder
 	 * @constructor
@@ -39393,7 +39393,7 @@ var StellarSdk =
 	   * Returns information and links relating to a single account.
 	   * The balances section in the returned JSON will also list all the trust lines this account has set up.
 	   *
-	   * @see [Account Details](https://www.stellar.org/developers/horizon/reference/accounts-single.html)
+	   * @see [Account Details](https://www.stellar.org/developers/horizon/reference/endpoints/accounts-single.html)
 	   * @param {string} id For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
 	   * @returns {AccountCallBuilder} current AccountCallBuilder instance
 	   */
@@ -39517,7 +39517,7 @@ var StellarSdk =
 	    /**
 	     * Creates an EventSource that listens for incoming messages from the server. To stop listening for new
 	     * events call the function returned by this method.
-	     * @see [Horizon Response Format](https://www.stellar.org/developers/horizon/learn/responses.html)
+	     * @see [Horizon Response Format](https://www.stellar.org/developers/horizon/reference/responses.html)
 	     * @see [MDN EventSource](https://developer.mozilla.org/en-US/docs/Web/API/EventSource)
 	     * @param {object} [options] EventSource options.
 	     * @param {function} [options.onmessage] Callback function to handle incoming messages.
@@ -39738,7 +39738,7 @@ var StellarSdk =
 
 	    /**
 	     * Sets `cursor` parameter for the current call. Returns the CallBuilder object on which this method has been called.
-	     * @see [Paging](https://www.stellar.org/developers/horizon/learn/paging.html)
+	     * @see [Paging](https://www.stellar.org/developers/horizon/reference/paging.html)
 	     * @param {string} cursor A cursor is a value that points to a specific location in a collection of resources.
 	     * @returns {object} current CallBuilder instance
 	     */
@@ -39752,7 +39752,7 @@ var StellarSdk =
 
 	    /**
 	     * Sets `limit` parameter for the current call. Returns the CallBuilder object on which this method has been called.
-	     * @see [Paging](https://www.stellar.org/developers/horizon/learn/paging.html)
+	     * @see [Paging](https://www.stellar.org/developers/horizon/reference/paging.html)
 	     * @param {number} number Number of records the server should return.
 	     * @returns {object} current CallBuilder instance
 	     */
@@ -41950,7 +41950,7 @@ var StellarSdk =
 /* 552 */
 /***/ (function(module, exports) {
 
-	module.exports = {"name":"stellar-sdk","version":"0.15.0","description":"stellar-sdk is a library for working with the Stellar Horizon server.","main":"lib/index.js","scripts":{"test":"babel-node ./node_modules/.bin/gulp test","docs":"jsdoc -c .jsdoc.json --verbose","preversion":"gulp test","version":"gulp build","postversion":"git push && git push --tags","prettier-all":"prettier --write **/*.js"},"husky":{"hooks":{"pre-commit":"lint-staged"}},"lint-staged":{"**/*.{js,json}":["prettier --write","git add"],"**/*.js":["eslint --fix --max-warnings 0","git add"]},"keywords":["stellar"],"repository":{"type":"git","url":"https://github.com/stellar/js-stellar-sdk.git"},"engines":{"node":">=6.14.0"},"author":"Stellar Development Foundation <hello@stellar.org>","license":"Apache-2.0","bugs":{"url":"https://github.com/stellar/js-stellar-sdk/issues"},"homepage":"https://github.com/stellar/js-stellar-sdk","devDependencies":{"axios-mock-adapter":"^1.16.0","babel-cli":"^6.26.0","babel-core":"~6.26.3","babel-eslint":"^10.0.1","babel-istanbul":"^0.12.2","babel-loader":"~6.3.2","babel-plugin-transform-builtin-extend":"^1.1.2","babel-preset-es2015":"^6.24.1","babel-register":"^6.26.0","body-parser":"^1.12.2","chai":"^2.2.0","chai-as-promised":"^5.2.0","clear":"^0.1.0","coveralls":"3.0.2","eslint":"^5.12.1","eslint-config-airbnb-base":"^13.1.0","eslint-config-prettier":"^3.6.0","eslint-plugin-import":"^2.15.0","eslint-plugin-node":"^8.0.1","eslint-plugin-prefer-import":"^0.0.1","eslint-plugin-prettier":"^3.0.1","express":"^4.9.8","ghooks":"^0.3.0","gulp":"4.0.0","gulp-babel":"^6.1.3","gulp-coveralls":"^0.1.3","gulp-develop-server":"^0.5.2","gulp-eslint":"^5.0.0","gulp-git":"~0.5.3","gulp-insert":"^0.5.0","gulp-istanbul":"^1.1.3","gulp-load-plugins":"1.5.0","gulp-mocha":"6.0.0","gulp-plumber":"^1.0.0","gulp-rename":"~1.2.0","gulp-rimraf":"~0.1.0","gulp-uglify":"3.0.1","gulp-webpack":"^1.3.1","husky":"^1.3.1","isparta":"^4.1.1","istanbul":"^0.4.5","jsdoc":"3.5.5","json-loader":"^0.5.1","karma":"3.1.4","karma-chai":"^0.1.0","karma-chai-as-promised":"^0.1.2","karma-chrome-launcher":"^0.1.7","karma-firefox-launcher":"^0.1.4","karma-mocha":"^0.1.10","karma-phantomjs-launcher":"^1.0.4","karma-sauce-launcher":"^1.1.0","karma-sinon":"^1.0.4","karma-sinon-chai":"2.0.2","karma-webpack":"3.0.5","lint-staged":"7.3.0","minami":"^1.1.1","mocha":"5.2.0","prettier":"^1.16.1","run-sequence":"^1.0.2","sinon":"^1.14.1","sinon-chai":"^2.7.0","webpack":"^1.13.2","webpack-bundle-analyzer":"2.13.1"},"dependencies":{"axios":"^0.18.0","bignumber.js":"^4.0.0","detect-node":"^2.0.4","es6-promise":"^4.2.4","eventsource":"^1.0.7","lodash":"^4.17.11","stellar-base":"^0.13.0","toml":"^2.3.0","urijs":"^1.19.1"}}
+	module.exports = {"name":"stellar-sdk","version":"0.15.1","description":"stellar-sdk is a library for working with the Stellar Horizon server.","main":"./lib/index.js","types":"./types/index.d.ts","scripts":{"test":"babel-node ./node_modules/.bin/gulp test","docs":"jsdoc -c .jsdoc.json --verbose","dtslint":"dtslint types","preversion":"gulp test","version":"gulp build","postversion":"git push && git push --tags","prettier-all":"prettier --write **/*.js"},"husky":{"hooks":{"pre-commit":"lint-staged"}},"lint-staged":{"**/*.{js,json}":["prettier --write","git add"],"**/*.js":["eslint --fix --max-warnings 0","git add"]},"keywords":["stellar"],"repository":{"type":"git","url":"https://github.com/stellar/js-stellar-sdk.git"},"engines":{"node":">=6.14.0"},"author":"Stellar Development Foundation <hello@stellar.org>","license":"Apache-2.0","bugs":{"url":"https://github.com/stellar/js-stellar-sdk/issues"},"homepage":"https://github.com/stellar/js-stellar-sdk","devDependencies":{"@types/node":"^11.13.0","@types/stellar-base":"^0.10.2","axios-mock-adapter":"^1.16.0","babel-cli":"^6.26.0","babel-core":"~6.26.3","babel-eslint":"^10.0.1","babel-istanbul":"^0.12.2","babel-loader":"~6.3.2","babel-plugin-transform-builtin-extend":"^1.1.2","babel-preset-es2015":"^6.24.1","babel-register":"^6.26.0","body-parser":"^1.12.2","chai":"^2.2.0","chai-as-promised":"^5.2.0","clear":"^0.1.0","coveralls":"3.0.2","dtslint":"^0.6.0","eslint":"^5.12.1","eslint-config-airbnb-base":"^13.1.0","eslint-config-prettier":"^3.6.0","eslint-plugin-import":"^2.15.0","eslint-plugin-node":"^8.0.1","eslint-plugin-prefer-import":"^0.0.1","eslint-plugin-prettier":"^3.0.1","express":"^4.9.8","ghooks":"^0.3.0","gulp":"4.0.0","gulp-babel":"^6.1.3","gulp-coveralls":"^0.1.3","gulp-develop-server":"^0.5.2","gulp-eslint":"^5.0.0","gulp-git":"~0.5.3","gulp-insert":"^0.5.0","gulp-istanbul":"^1.1.3","gulp-load-plugins":"1.5.0","gulp-mocha":"6.0.0","gulp-plumber":"^1.0.0","gulp-rename":"~1.2.0","gulp-rimraf":"~0.1.0","gulp-uglify":"3.0.1","gulp-webpack":"^1.3.1","husky":"^1.3.1","isparta":"^4.1.1","istanbul":"^0.4.5","jsdoc":"3.5.5","json-loader":"^0.5.1","karma":"3.1.4","karma-chai":"^0.1.0","karma-chai-as-promised":"^0.1.2","karma-chrome-launcher":"^0.1.7","karma-firefox-launcher":"^0.1.4","karma-mocha":"^0.1.10","karma-phantomjs-launcher":"^1.0.4","karma-sauce-launcher":"^1.1.0","karma-sinon":"^1.0.4","karma-sinon-chai":"2.0.2","karma-webpack":"3.0.5","lint-staged":"7.3.0","minami":"^1.1.1","mocha":"5.2.0","prettier":"^1.16.1","run-sequence":"^1.0.2","sinon":"^1.14.1","sinon-chai":"^2.7.0","webpack":"^1.13.2","webpack-bundle-analyzer":"2.13.1"},"dependencies":{"axios":"^0.18.0","bignumber.js":"^4.0.0","detect-node":"^2.0.4","es6-promise":"^4.2.4","eventsource":"^1.0.7","lodash":"^4.17.11","stellar-base":"^0.13.0","toml":"^2.3.0","urijs":"^1.19.1"}}
 
 /***/ }),
 /* 553 */
@@ -48824,7 +48824,7 @@ var StellarSdk =
 	 * The balances section in the returned JSON will also list all the trust lines this account has set up.
 	 * It also contains {@link Account} object and exposes it's methods so can be used in {@link TransactionBuilder}.
 	 *
-	 * @see [Account Details](https://www.stellar.org/developers/horizon/reference/accounts-single.html)
+	 * @see [Account Details](https://www.stellar.org/developers/horizon/reference/endpoints/accounts-single.html)
 	 * @param {string} response Response from horizon account endpoint.
 	 * @returns {AccountResponse} AccountResponse instance
 	 */
@@ -48950,7 +48950,7 @@ var StellarSdk =
 	 * Creates a new {@link LedgerCallBuilder} pointed to server defined by serverUrl.
 	 * Do not create this object directly, use {@link Server#ledgers}.
 	 *
-	 * @see [All Ledgers](https://www.stellar.org/developers/horizon/reference/ledgers-all.html)
+	 * @see [All Ledgers](https://www.stellar.org/developers/horizon/reference/endpoints/ledgers-all.html)
 	 * @constructor
 	 * @class LedgerCallBuilder
 	 * @extends CallBuilder
@@ -49013,7 +49013,7 @@ var StellarSdk =
 	 *
 	 * @class TransactionCallBuilder
 	 * @extends CallBuilder
-	 * @see [All Transactions](https://www.stellar.org/developers/horizon/reference/transactions-all.html)
+	 * @see [All Transactions](https://www.stellar.org/developers/horizon/reference/endpoints/transactions-all.html)
 	 * @constructor
 	 * @param {string} serverUrl Horizon server URL.
 	 */
@@ -49031,7 +49031,7 @@ var StellarSdk =
 
 	  /**
 	   * The transaction details endpoint provides information on a single transaction. The transaction hash provided in the hash argument specifies which transaction to load.
-	   * @see [Transaction Details](https://www.stellar.org/developers/horizon/reference/transactions-single.html)
+	   * @see [Transaction Details](https://www.stellar.org/developers/horizon/reference/endpoints/transactions-single.html)
 	   * @param {string} transactionId Transaction ID
 	   * @returns {TransactionCallBuilder} current TransactionCallBuilder instance
 	   */
@@ -49046,7 +49046,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all transactions that affected a given account.
-	     * @see [Transactions for Account](https://www.stellar.org/developers/horizon/reference/transactions-for-account.html)
+	     * @see [Transactions for Account](https://www.stellar.org/developers/horizon/reference/endpoints/transactions-for-account.html)
 	     * @param {string} accountId For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
 	     * @returns {TransactionCallBuilder} current TransactionCallBuilder instance
 	     */
@@ -49060,7 +49060,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all transactions in a given ledger.
-	     * @see [Transactions for Ledger](https://www.stellar.org/developers/horizon/reference/transactions-for-ledger.html)
+	     * @see [Transactions for Ledger](https://www.stellar.org/developers/horizon/reference/endpoints/transactions-for-ledger.html)
 	     * @param {number|string} sequence Ledger sequence
 	     * @returns {TransactionCallBuilder} current TransactionCallBuilder instance
 	     */
@@ -49117,7 +49117,7 @@ var StellarSdk =
 	 * Creates a new {@link OperationCallBuilder} pointed to server defined by serverUrl.
 	 * Do not create this object directly, use {@link Server#operations}.
 	 *
-	 * @see [All Operations](https://www.stellar.org/developers/horizon/reference/operations-all.html)
+	 * @see [All Operations](https://www.stellar.org/developers/horizon/reference/endpoints/operations-all.html)
 	 * @class OperationCallBuilder
 	 * @constructor
 	 * @extends CallBuilder
@@ -49138,7 +49138,7 @@ var StellarSdk =
 	  /**
 	   * The operation details endpoint provides information on a single operation. The operation ID provided in the id
 	   * argument specifies which operation to load.
-	   * @see [Operation Details](https://www.stellar.org/developers/horizon/reference/operations-single.html)
+	   * @see [Operation Details](https://www.stellar.org/developers/horizon/reference/endpoints/operations-single.html)
 	   * @param {number} operationId Operation ID
 	   * @returns {OperationCallBuilder} this OperationCallBuilder instance
 	   */
@@ -49153,7 +49153,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all operations that were included in valid transactions that affected a particular account.
-	     * @see [Operations for Account](https://www.stellar.org/developers/horizon/reference/operations-for-account.html)
+	     * @see [Operations for Account](https://www.stellar.org/developers/horizon/reference/endpoints/operations-for-account.html)
 	     * @param {string} accountId For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
 	     * @returns {OperationCallBuilder} this OperationCallBuilder instance
 	     */
@@ -49168,7 +49168,7 @@ var StellarSdk =
 	    /**
 	     * This endpoint returns all operations that occurred in a given ledger.
 	     *
-	     * @see [Operations for Ledger](https://www.stellar.org/developers/horizon/reference/operations-for-ledger.html)
+	     * @see [Operations for Ledger](https://www.stellar.org/developers/horizon/reference/endpoints/operations-for-ledger.html)
 	     * @param {number|string} sequence Ledger sequence
 	     * @returns {OperationCallBuilder} this OperationCallBuilder instance
 	     */
@@ -49182,7 +49182,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all operations that are part of a given transaction.
-	     * @see [Operations for Transaction](https://www.stellar.org/developers/horizon/reference/operations-for-transaction.html)
+	     * @see [Operations for Transaction](https://www.stellar.org/developers/horizon/reference/endpoints/operations-for-transaction.html)
 	     * @param {string} transactionId Transaction ID
 	     * @returns {OperationCallBuilder} this OperationCallBuilder instance
 	     */
@@ -49237,7 +49237,7 @@ var StellarSdk =
 	 * Creates a new {@link OfferCallBuilder} pointed to server defined by serverUrl.
 	 * Do not create this object directly, use {@link Server#offers}.
 	 *
-	 * @see [Offers for Account](https://www.stellar.org/developers/horizon/reference/offers-for-account.html)
+	 * @see [Offers for Account](https://www.stellar.org/developers/horizon/reference/endpoints/offers-for-account.html)
 	 * @class OfferCallBuilder
 	 * @constructor
 	 * @extends CallBuilder
@@ -49291,7 +49291,7 @@ var StellarSdk =
 	 * Creates a new {@link OrderbookCallBuilder} pointed to server defined by serverUrl.
 	 *
 	 * Do not create this object directly, use {@link Server#orderbook}.
-	 * @see [Orderbook Details](https://www.stellar.org/developers/horizon/reference/orderbook-details.html)
+	 * @see [Orderbook Details](https://www.stellar.org/developers/horizon/reference/endpoints/orderbook-details.html)
 	 * @param {string} serverUrl serverUrl Horizon server URL.
 	 * @param {Asset} selling Asset being sold
 	 * @param {Asset} buying Asset being bought
@@ -49411,7 +49411,7 @@ var StellarSdk =
 
 	    /**
 	     * Filter trades for a specific account
-	     * @see [Trades for Account](https://www.stellar.org/developers/horizon/reference/trades-for-account.html)
+	     * @see [Trades for Account](https://www.stellar.org/developers/horizon/reference/endpoints/trades-for-account.html)
 	     * @param {string} accountId For example: `GBYTR4MC5JAX4ALGUBJD7EIKZVM7CUGWKXIUJMRSMK573XH2O7VAK3SR`
 	     * @returns {TradesCallBuilder} current TradesCallBuilder instance
 	     */
@@ -49462,7 +49462,7 @@ var StellarSdk =
 	 * used to determine if there a given path can satisfy a payment of the desired amount.
 	 *
 	 * Do not create this object directly, use {@link Server#paths}.
-	 * @see [Find Payment Paths](https://www.stellar.org/developers/horizon/reference/path-finding.html)
+	 * @see [Find Payment Paths](https://www.stellar.org/developers/horizon/reference/endpoints/path-finding.html)
 	 * @extends CallBuilder
 	 * @param {string} serverUrl Horizon server URL.
 	 * @param {string} source The sender's account ID. Any returned path must use a source that the sender can hold.
@@ -49524,7 +49524,7 @@ var StellarSdk =
 	   * Creates a new {@link PaymentCallBuilder} pointed to server defined by serverUrl.
 	   *
 	   * Do not create this object directly, use {@link Server#payments}.
-	   * @see [All Payments](https://www.stellar.org/developers/horizon/reference/payments-all.html)
+	   * @see [All Payments](https://www.stellar.org/developers/horizon/reference/endpoints/payments-all.html)
 	   * @constructor
 	   * @extends CallBuilder
 	   * @param {string} serverUrl Horizon server URL.
@@ -49540,7 +49540,7 @@ var StellarSdk =
 
 	  /**
 	   * This endpoint responds with a collection of Payment operations where the given account was either the sender or receiver.
-	   * @see [Payments for Account](https://www.stellar.org/developers/horizon/reference/payments-for-account.html)
+	   * @see [Payments for Account](https://www.stellar.org/developers/horizon/reference/endpoints/payments-for-account.html)
 	   * @param {string} accountId For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
 	   * @returns {PaymentCallBuilder} this PaymentCallBuilder instance
 	   */
@@ -49555,7 +49555,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all payment operations that are part of a valid transactions in a given ledger.
-	     * @see [Payments for Ledger](https://www.stellar.org/developers/horizon/reference/payments-for-ledger.html)
+	     * @see [Payments for Ledger](https://www.stellar.org/developers/horizon/reference/endpoints/payments-for-ledger.html)
 	     * @param {number|string} sequence Ledger sequence
 	     * @returns {PaymentCallBuilder} this PaymentCallBuilder instance
 	     */
@@ -49569,7 +49569,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all payment operations that are part of a given transaction.
-	     * @see [Payments for Transaction](https://www.stellar.org/developers/horizon/reference/payments-for-transaction.html)
+	     * @see [Payments for Transaction](https://www.stellar.org/developers/horizon/reference/endpoints/payments-for-transaction.html)
 	     * @param {string} transactionId Transaction ID
 	     * @returns {PaymentCallBuilder} this PaymentCallBuilder instance
 	     */
@@ -49612,7 +49612,7 @@ var StellarSdk =
 	 *
 	 * @class EffectCallBuilder
 	 * @extends CallBuilder
-	 * @see [All Effects](https://www.stellar.org/developers/horizon/reference/effects-all.html)
+	 * @see [All Effects](https://www.stellar.org/developers/horizon/reference/endpoints/effects-all.html)
 	 * @constructor
 	 * @param {string} serverUrl Horizon server URL.
 	 */
@@ -49630,7 +49630,7 @@ var StellarSdk =
 
 	  /**
 	   * This endpoint represents all effects that changed a given account. It will return relevant effects from the creation of the account to the current ledger.
-	   * @see [Effects for Account](https://www.stellar.org/developers/horizon/reference/effects-for-account.html)
+	   * @see [Effects for Account](https://www.stellar.org/developers/horizon/reference/endpoints/effects-for-account.html)
 	   * @param {string} accountId For example: `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
 	   * @returns {EffectCallBuilder} this EffectCallBuilder instance
 	   */
@@ -49647,7 +49647,7 @@ var StellarSdk =
 	     * Effects are the specific ways that the ledger was changed by any operation.
 	     *
 	     * This endpoint represents all effects that occurred in the given ledger.
-	     * @see [Effects for Ledger](https://www.stellar.org/developers/horizon/reference/effects-for-ledger.html)
+	     * @see [Effects for Ledger](https://www.stellar.org/developers/horizon/reference/endpoints/effects-for-ledger.html)
 	     * @param {number|string} sequence Ledger sequence
 	     * @returns {EffectCallBuilder} this EffectCallBuilder instance
 	     */
@@ -49661,7 +49661,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all effects that occurred as a result of a given transaction.
-	     * @see [Effects for Transaction](https://www.stellar.org/developers/horizon/reference/effects-for-transaction.html)
+	     * @see [Effects for Transaction](https://www.stellar.org/developers/horizon/reference/endpoints/effects-for-transaction.html)
 	     * @param {string} transactionId Transaction ID
 	     * @returns {EffectCallBuilder} this EffectCallBuilder instance
 	     */
@@ -49675,7 +49675,7 @@ var StellarSdk =
 
 	    /**
 	     * This endpoint represents all effects that occurred as a result of a given operation.
-	     * @see [Effects for Operation](https://www.stellar.org/developers/horizon/reference/effects-for-operation.html)
+	     * @see [Effects for Operation](https://www.stellar.org/developers/horizon/reference/endpoints/effects-for-operation.html)
 	     * @param {number} operationId Operation ID
 	     * @returns {EffectCallBuilder} this EffectCallBuilder instance
 	     */
@@ -49961,7 +49961,7 @@ var StellarSdk =
 
 	/**
 	 * FederationServer handles a network connection to a
-	 * [federation server](https://www.stellar.org/developers/learn/concepts/federation.html)
+	 * [federation server](https://www.stellar.org/developers/guides/concepts/federation.html)
 	 * instance and exposes an interface for requests to that instance.
 	 * @constructor
 	 * @param {string} serverURL The federation server URL (ex. `https://acme.com/federation`).
@@ -50020,8 +50020,8 @@ var StellarSdk =
 	   *  });
 	   * ```
 	   *
-	   * @see <a href="https://www.stellar.org/developers/learn/concepts/federation.html" target="_blank">Federation doc</a>
-	   * @see <a href="https://www.stellar.org/developers/learn/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
+	   * @see <a href="https://www.stellar.org/developers/guides/concepts/federation.html" target="_blank">Federation doc</a>
+	   * @see <a href="https://www.stellar.org/developers/guides/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
 	   * @param {string} value Stellar Address (ex. `bob*stellar.org`)
 	   * @param {object} [opts] Options object
 	   * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments!
@@ -50039,7 +50039,7 @@ var StellarSdk =
 
 	    /**
 	     * Get the federation record if the user was found for a given Stellar address
-	     * @see <a href="https://www.stellar.org/developers/learn/concepts/federation.html" target="_blank">Federation doc</a>
+	     * @see <a href="https://www.stellar.org/developers/guides/concepts/federation.html" target="_blank">Federation doc</a>
 	     * @param {string} address Stellar address (ex. `bob*stellar.org`). If `FederationServer` was instantiated with `domain` param only username (ex. `bob`) can be passed.
 	     * @returns {Promise} Promise that resolves to the federation record
 	     */
@@ -50057,7 +50057,7 @@ var StellarSdk =
 
 	    /**
 	     * Given an account ID, get their federation record if the user was found
-	     * @see <a href="https://www.stellar.org/developers/learn/concepts/federation.html" target="_blank">Federation doc</a>
+	     * @see <a href="https://www.stellar.org/developers/guides/concepts/federation.html" target="_blank">Federation doc</a>
 	     * @param {string} accountId Account ID (ex. `GBYNR2QJXLBCBTRN44MRORCMI4YO7FZPFBCNOKTOBCAAFC7KC3LNPRYS`)
 	     * @returns {Promise} A promise that resolves to the federation record
 	     */
@@ -50071,7 +50071,7 @@ var StellarSdk =
 
 	    /**
 	     * Given a transactionId, get the federation record if the sender of the transaction was found
-	     * @see <a href="https://www.stellar.org/developers/learn/concepts/federation.html" target="_blank">Federation doc</a>
+	     * @see <a href="https://www.stellar.org/developers/guides/concepts/federation.html" target="_blank">Federation doc</a>
 	     * @param {string} transactionId Transaction ID (ex. `3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889`)
 	     * @returns {Promise} A promise that resolves to the federation record
 	     */
@@ -50135,7 +50135,7 @@ var StellarSdk =
 
 	    /**
 	     * Creates a `FederationServer` instance based on information from
-	     * [stellar.toml](https://www.stellar.org/developers/learn/concepts/stellar-toml.html)
+	     * [stellar.toml](https://www.stellar.org/developers/guides/concepts/stellar-toml.html)
 	     * file for a given domain.
 	     *
 	     * If `stellar.toml` file does not exist for a given domain or it does not
@@ -50149,7 +50149,7 @@ var StellarSdk =
 	     *     // stellar.toml does not exist or it does not contain information about federation server.
 	     *   });
 	     * ```
-	     * @see <a href="https://www.stellar.org/developers/learn/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
+	     * @see <a href="https://www.stellar.org/developers/guides/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
 	     * @param {string} domain Domain to get federation server for
 	     * @param {object} [opts] Options object
 	     * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments!
@@ -50227,7 +50227,7 @@ var StellarSdk =
 	     *     // stellar.toml does not exist or is invalid
 	     *   });
 	     * ```
-	     * @see <a href="https://www.stellar.org/developers/learn/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
+	     * @see <a href="https://www.stellar.org/developers/guides/concepts/stellar-toml.html" target="_blank">Stellar.toml doc</a>
 	     * @param {string} domain Domain to get stellar.toml file for
 	     * @param {object} [opts] Options object
 	     * @param {boolean} [opts.allowHttp] - Allow connecting to http servers, default: `false`. This must be set to false in production deployments!
