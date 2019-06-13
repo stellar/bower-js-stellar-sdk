@@ -13142,7 +13142,7 @@ Duplex.prototype._destroy = function (err, cb) {
 /* 46 */
 /***/ (function(module) {
 
-module.exports = {"a":"2.0.0-beta.1"};
+module.exports = {"a":"2.0.0-beta.2"};
 
 /***/ }),
 /* 47 */
@@ -31564,8 +31564,8 @@ __webpack_require__.r(__webpack_exports__);
 var _package_json__WEBPACK_IMPORTED_MODULE_0___namespace = /*#__PURE__*/__webpack_require__.t(46, 1);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "version", function() { return _package_json__WEBPACK_IMPORTED_MODULE_0__["a"]; });
 
-/* harmony import */ var _horizon_api__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(124);
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Horizon", function() { return _horizon_api__WEBPACK_IMPORTED_MODULE_1__["a"]; });
+/* harmony import */ var _horizon_api_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(124);
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Horizon", function() { return _horizon_api_types__WEBPACK_IMPORTED_MODULE_1__["a"]; });
 
 /* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "NetworkError", function() { return _errors__WEBPACK_IMPORTED_MODULE_2__["c"]; });
