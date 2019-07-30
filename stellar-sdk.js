@@ -5736,15 +5736,19 @@ var tslib_1 = __webpack_require__(1);
 var detect_node_1 = tslib_1.__importDefault(__webpack_require__(563));
 var urijs_1 = tslib_1.__importDefault(__webpack_require__(43));
 var URITemplate_1 = tslib_1.__importDefault(__webpack_require__(564));
-var errors_1 = __webpack_require__(42);
+var errors_1 = __webpack_require__(38);
 var horizon_axios_client_1 = tslib_1.__importDefault(__webpack_require__(128));
 var version = __webpack_require__(89).version;
 var EventSource;
-if (detect_node_1.default) {
+var anyGlobal = global;
+if (anyGlobal.EventSource) {
+    EventSource = anyGlobal.EventSource;
+}
+else if (detect_node_1.default) {
     EventSource = __webpack_require__(581);
 }
 else {
-    EventSource = global.window.EventSource;
+    EventSource = anyGlobal.window.EventSource;
 }
 var CallBuilder = (function () {
     function CallBuilder(serverUrl) {
@@ -5785,30 +5789,34 @@ var CallBuilder = (function () {
                 }
             }
             createTimeout();
-            es.onmessage = function (message) {
-                var result = message.data
-                    ? _this._parseRecord(JSON.parse(message.data))
-                    : message;
-                if (result.paging_token) {
-                    _this.url.setQuery("cursor", result.paging_token);
-                }
-                clearTimeout(timeout);
-                createTimeout();
-                if (typeof options.onmessage !== "undefined") {
-                    options.onmessage(result);
-                }
-            };
-            es.onerror = function (error) {
-                if (options.onerror && error instanceof MessageEvent) {
-                    options.onerror(error);
-                }
-            };
+            if (es) {
+                es.onmessage = function (message) {
+                    var result = message.data
+                        ? _this._parseRecord(JSON.parse(message.data))
+                        : message;
+                    if (result.paging_token) {
+                        _this.url.setQuery("cursor", result.paging_token);
+                    }
+                    clearTimeout(timeout);
+                    createTimeout();
+                    if (typeof options.onmessage !== "undefined") {
+                        options.onmessage(result);
+                    }
+                };
+                es.onerror = function (error) {
+                    if (options.onerror && error instanceof MessageEvent) {
+                        options.onerror(error);
+                    }
+                };
+            }
             return es;
         };
         createEventSource();
         return function close() {
             clearTimeout(timeout);
-            es.close();
+            if (es) {
+                es.close();
+            }
         };
     };
     CallBuilder.prototype.cursor = function (cursor) {
@@ -10572,6 +10580,90 @@ module.exports = getNative;
 /* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var NetworkError = (function (_super) {
+    tslib_1.__extends(NetworkError, _super);
+    function NetworkError(message, response) {
+        var _newTarget = this.constructor;
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, message) || this;
+        _this.__proto__ = trueProto;
+        _this.constructor = NetworkError;
+        _this.response = response;
+        return _this;
+    }
+    NetworkError.prototype.getResponse = function () {
+        return this.response;
+    };
+    return NetworkError;
+}(Error));
+exports.NetworkError = NetworkError;
+var NotFoundError = (function (_super) {
+    tslib_1.__extends(NotFoundError, _super);
+    function NotFoundError(message, response) {
+        var _newTarget = this.constructor;
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, message, response) || this;
+        _this.__proto__ = trueProto;
+        _this.constructor = NotFoundError;
+        return _this;
+    }
+    return NotFoundError;
+}(NetworkError));
+exports.NotFoundError = NotFoundError;
+var BadRequestError = (function (_super) {
+    tslib_1.__extends(BadRequestError, _super);
+    function BadRequestError(message, response) {
+        var _newTarget = this.constructor;
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, message, response) || this;
+        _this.__proto__ = trueProto;
+        _this.constructor = BadRequestError;
+        return _this;
+    }
+    return BadRequestError;
+}(NetworkError));
+exports.BadRequestError = BadRequestError;
+var BadResponseError = (function (_super) {
+    tslib_1.__extends(BadResponseError, _super);
+    function BadResponseError(message, response) {
+        var _newTarget = this.constructor;
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, message, response) || this;
+        _this.__proto__ = trueProto;
+        _this.constructor = BadResponseError;
+        return _this;
+    }
+    return BadResponseError;
+}(NetworkError));
+exports.BadResponseError = BadResponseError;
+var InvalidSep10ChallengeError = (function (_super) {
+    tslib_1.__extends(InvalidSep10ChallengeError, _super);
+    function InvalidSep10ChallengeError(message) {
+        var _newTarget = this.constructor;
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, message) || this;
+        _this.__proto__ = trueProto;
+        _this.constructor = InvalidSep10ChallengeError;
+        return _this;
+    }
+    return InvalidSep10ChallengeError;
+}(Error));
+exports.InvalidSep10ChallengeError = InvalidSep10ChallengeError;
+
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
 var Buffer = __webpack_require__(10).Buffer
 
 // prototype class for hash functions
@@ -10656,7 +10748,7 @@ module.exports = Hash
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10710,7 +10802,7 @@ Int.MIN_VALUE = -Math.pow(2, 31);
 (0, _ioMixin2.default)(Int);
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports) {
 
 /**
@@ -10747,80 +10839,10 @@ module.exports = isObject;
 
 
 /***/ }),
-/* 41 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(388);
-
-
-/***/ }),
 /* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var tslib_1 = __webpack_require__(1);
-var NetworkError = (function (_super) {
-    tslib_1.__extends(NetworkError, _super);
-    function NetworkError(message, response) {
-        var _newTarget = this.constructor;
-        var _this = this;
-        var trueProto = _newTarget.prototype;
-        _this = _super.call(this, message) || this;
-        _this.__proto__ = trueProto;
-        _this.constructor = NetworkError;
-        _this.response = response;
-        return _this;
-    }
-    NetworkError.prototype.getResponse = function () {
-        return this.response;
-    };
-    return NetworkError;
-}(Error));
-exports.NetworkError = NetworkError;
-var NotFoundError = (function (_super) {
-    tslib_1.__extends(NotFoundError, _super);
-    function NotFoundError(message, response) {
-        var _newTarget = this.constructor;
-        var _this = this;
-        var trueProto = _newTarget.prototype;
-        _this = _super.call(this, message, response) || this;
-        _this.__proto__ = trueProto;
-        _this.constructor = NotFoundError;
-        return _this;
-    }
-    return NotFoundError;
-}(NetworkError));
-exports.NotFoundError = NotFoundError;
-var BadRequestError = (function (_super) {
-    tslib_1.__extends(BadRequestError, _super);
-    function BadRequestError(message, response) {
-        var _newTarget = this.constructor;
-        var _this = this;
-        var trueProto = _newTarget.prototype;
-        _this = _super.call(this, message, response) || this;
-        _this.__proto__ = trueProto;
-        _this.constructor = BadRequestError;
-        return _this;
-    }
-    return BadRequestError;
-}(NetworkError));
-exports.BadRequestError = BadRequestError;
-var BadResponseError = (function (_super) {
-    tslib_1.__extends(BadResponseError, _super);
-    function BadResponseError(message, response) {
-        var _newTarget = this.constructor;
-        var _this = this;
-        var trueProto = _newTarget.prototype;
-        _this = _super.call(this, message, response) || this;
-        _this.__proto__ = trueProto;
-        _this.constructor = BadResponseError;
-        return _this;
-    }
-    return BadResponseError;
-}(NetworkError));
-exports.BadResponseError = BadResponseError;
+module.exports = __webpack_require__(388);
 
 
 /***/ }),
@@ -14748,7 +14770,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 89 */
 /***/ (function(module) {
 
-module.exports = {"name":"stellar-sdk","version":"2.1.1","description":"stellar-sdk is a library for working with the Stellar Horizon server.","main":"./lib/index.js","types":"./lib/index.d.ts","scripts":{"prepare":"gulp build","test":"babel-node ./node_modules/.bin/gulp test","build:docs":"gulp build:docs","docs":"yarn build:docs && jsdoc -c .jsdoc.json","dtslint":"dtslint test/types","preversion":"gulp test","version":"gulp build","postversion":"git push && git push --tags","prettier-all":"prettier --write **/*.{js,ts}"},"husky":{"hooks":{"pre-commit":"lint-staged"}},"prettier":"@stellar/prettier-config","lint-staged":{"lib/*.{js,json}":["prettier --write","git add"],"lib/*.js":["eslint --fix --max-warnings 0","git add"],"**/*.ts":["prettier --write","tslint --fix","git add"]},"keywords":["stellar"],"repository":{"type":"git","url":"https://github.com/stellar/js-stellar-sdk.git"},"engines":{"node":">=6.14.0"},"author":"Stellar Development Foundation <hello@stellar.org>","license":"Apache-2.0","bugs":{"url":"https://github.com/stellar/js-stellar-sdk/issues"},"homepage":"https://github.com/stellar/js-stellar-sdk","devDependencies":{"@stellar/prettier-config":"^1.0.1","@stellar/tsconfig":"^1.0.1","@stellar/tslint-config":"^1.0.3","@types/detect-node":"^2.0.0","@types/lodash":"^4.14.130","axios-mock-adapter":"^1.16.0","babel-cli":"^6.26.0","babel-core":"~6.26.3","babel-eslint":"^10.0.1","babel-istanbul":"^0.12.2","babel-loader":"^7.0.0","babel-plugin-transform-builtin-extend":"^1.1.2","babel-preset-es2015":"^6.24.1","babel-register":"^6.26.0","body-parser":"^1.12.2","chai":"^2.2.0","chai-as-promised":"^5.2.0","clear":"^0.1.0","coveralls":"3.0.2","dtslint":"^0.6.0","eslint":"^5.12.1","eslint-config-airbnb-base":"^13.1.0","eslint-config-prettier":"^3.6.0","eslint-plugin-import":"^2.15.0","eslint-plugin-node":"^8.0.1","eslint-plugin-prefer-import":"^0.0.1","eslint-plugin-prettier":"^3.0.1","express":"^4.9.8","ghooks":"^0.3.0","gulp":"4.0.0","gulp-babel":"^6.1.3","gulp-coveralls":"^0.1.3","gulp-develop-server":"^0.5.2","gulp-eslint":"^5.0.0","gulp-git":"~0.5.3","gulp-insert":"^0.5.0","gulp-istanbul":"^1.1.3","gulp-load-plugins":"1.5.0","gulp-mocha":"6.0.0","gulp-plumber":"^1.0.0","gulp-rename":"~1.2.0","gulp-rimraf":"~0.1.0","gulp-tslint":"^8.1.4","gulp-webpack":"^1.3.1","husky":"^1.3.1","isparta":"^4.1.1","istanbul":"^0.4.5","jsdoc":"3.5.5","json-loader":"^0.5.1","karma":"3.1.4","karma-chai":"^0.1.0","karma-chai-as-promised":"^0.1.2","karma-chrome-launcher":"^0.1.7","karma-commonjs":"^1.0.0","karma-firefox-launcher":"^0.1.4","karma-mocha":"^0.1.10","karma-phantomjs-launcher":"^1.0.4","karma-sauce-launcher":"^1.1.0","karma-sinon":"^1.0.4","karma-sinon-chai":"2.0.2","karma-webpack":"3.0.5","lint-staged":"7.3.0","minami":"^1.1.1","mocha":"5.2.0","prettier":"^1.17.1","run-sequence":"^1.0.2","sinon":"^1.14.1","sinon-chai":"^2.7.0","terser-webpack-plugin":"^1.3.0","ts-loader":"^5.0.0","tslint":"^5.16.0","typescript":"^3.4.5","webpack":"^4.33.0","webpack-cli":"^3.3.3","webpack-stream":"^5.2.1"},"dependencies":{"@types/eventsource":"^1.1.2","@types/node":">= 8","@types/randombytes":"^2.0.0","@types/urijs":"^1.19.2","axios":"^0.19.0","bignumber.js":"^4.0.0","detect-node":"^2.0.4","es6-promise":"^4.2.4","eventsource":"^1.0.7","lodash":"^4.17.11","randombytes":"^2.1.0","stellar-base":"^1.0.3","toml":"^2.3.0","tslib":"^1.10.0","urijs":"^1.19.1","utility-types":"^3.7.0"}};
+module.exports = {"name":"stellar-sdk","version":"2.2.0","description":"stellar-sdk is a library for working with the Stellar Horizon server.","main":"./lib/index.js","types":"./lib/index.d.ts","scripts":{"prepare":"gulp build","test":"babel-node ./node_modules/.bin/gulp test","build:docs":"gulp build:docs","docs":"yarn build:docs && jsdoc -c .jsdoc.json","dtslint":"dtslint test/types","preversion":"gulp test","version":"gulp build","postversion":"git push && git push --tags","prettier-all":"prettier --write **/*.{js,ts}"},"husky":{"hooks":{"pre-commit":"lint-staged"}},"prettier":"@stellar/prettier-config","lint-staged":{"lib/*.{js,json}":["prettier --write","git add"],"lib/*.js":["eslint --fix --max-warnings 0","git add"],"**/*.ts":["prettier --write","tslint --fix","git add"]},"keywords":["stellar"],"repository":{"type":"git","url":"https://github.com/stellar/js-stellar-sdk.git"},"engines":{"node":">=6.14.0"},"author":"Stellar Development Foundation <hello@stellar.org>","license":"Apache-2.0","bugs":{"url":"https://github.com/stellar/js-stellar-sdk/issues"},"homepage":"https://github.com/stellar/js-stellar-sdk","devDependencies":{"@stellar/prettier-config":"^1.0.1","@stellar/tsconfig":"^1.0.1","@stellar/tslint-config":"^1.0.3","@types/detect-node":"^2.0.0","@types/lodash":"^4.14.130","axios-mock-adapter":"^1.16.0","babel-cli":"^6.26.0","babel-core":"~6.26.3","babel-eslint":"^10.0.1","babel-istanbul":"^0.12.2","babel-loader":"^7.0.0","babel-plugin-transform-builtin-extend":"^1.1.2","babel-preset-es2015":"^6.24.1","babel-register":"^6.26.0","body-parser":"^1.12.2","chai":"^2.2.0","chai-as-promised":"^5.2.0","clear":"^0.1.0","coveralls":"3.0.2","dtslint":"^0.6.0","eslint":"^5.12.1","eslint-config-airbnb-base":"^13.1.0","eslint-config-prettier":"^3.6.0","eslint-plugin-import":"^2.15.0","eslint-plugin-node":"^8.0.1","eslint-plugin-prefer-import":"^0.0.1","eslint-plugin-prettier":"^3.0.1","express":"^4.9.8","ghooks":"^0.3.0","gulp":"4.0.0","gulp-babel":"^6.1.3","gulp-coveralls":"^0.1.3","gulp-develop-server":"^0.5.2","gulp-eslint":"^5.0.0","gulp-git":"~0.5.3","gulp-insert":"^0.5.0","gulp-istanbul":"^1.1.3","gulp-load-plugins":"1.5.0","gulp-mocha":"6.0.0","gulp-plumber":"^1.0.0","gulp-rename":"~1.2.0","gulp-rimraf":"~0.1.0","gulp-tslint":"^8.1.4","gulp-webpack":"^1.3.1","husky":"^1.3.1","isparta":"^4.1.1","istanbul":"^0.4.5","jsdoc":"3.5.5","json-loader":"^0.5.1","karma":"3.1.4","karma-chai":"^0.1.0","karma-chai-as-promised":"^0.1.2","karma-chrome-launcher":"^0.1.7","karma-commonjs":"^1.0.0","karma-firefox-launcher":"^0.1.4","karma-mocha":"^0.1.10","karma-phantomjs-launcher":"^1.0.4","karma-sauce-launcher":"^1.1.0","karma-sinon":"^1.0.4","karma-sinon-chai":"2.0.2","karma-webpack":"3.0.5","lint-staged":"7.3.0","minami":"^1.1.1","mocha":"5.2.0","prettier":"^1.17.1","run-sequence":"^1.0.2","sinon":"^1.14.1","sinon-chai":"^2.7.0","terser-webpack-plugin":"^1.3.0","ts-loader":"^5.0.0","tslint":"^5.16.0","typescript":"^3.4.5","webpack":"^4.33.0","webpack-cli":"^3.3.3","webpack-stream":"^5.2.1"},"dependencies":{"@types/eventsource":"^1.1.2","@types/node":">= 8","@types/randombytes":"^2.0.0","@types/urijs":"^1.19.2","axios":"^0.19.0","bignumber.js":"^4.0.0","detect-node":"^2.0.4","es6-promise":"^4.2.4","eventsource":"^1.0.7","lodash":"^4.17.11","randombytes":"^2.1.0","stellar-base":"^1.0.3","toml":"^2.3.0","tslib":"^1.10.0","urijs":"^1.19.1","utility-types":"^3.7.0"}};
 
 /***/ }),
 /* 90 */
@@ -15089,7 +15111,7 @@ var Network = exports.Network = function () {
 /***/ (function(module, exports, __webpack_require__) {
 
 var baseGetTag = __webpack_require__(25),
-    isObject = __webpack_require__(40);
+    isObject = __webpack_require__(41);
 
 /** `Object#toString` result references. */
 var asyncTag = '[object AsyncFunction]',
@@ -15583,7 +15605,7 @@ var _isUndefined = __webpack_require__(49);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _each = __webpack_require__(41);
+var _each = __webpack_require__(42);
 
 var _each2 = _interopRequireDefault(_each);
 
@@ -17943,7 +17965,7 @@ module.exports = Array.isArray || function (arr) {
  */
 
 var inherits = __webpack_require__(7)
-var Hash = __webpack_require__(38)
+var Hash = __webpack_require__(39)
 var Buffer = __webpack_require__(10).Buffer
 
 var K = [
@@ -18076,7 +18098,7 @@ module.exports = Sha256
 /***/ (function(module, exports, __webpack_require__) {
 
 var inherits = __webpack_require__(7)
-var Hash = __webpack_require__(38)
+var Hash = __webpack_require__(39)
 var Buffer = __webpack_require__(10).Buffer
 
 var K = [
@@ -20876,7 +20898,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _int = __webpack_require__(39);
+var _int = __webpack_require__(40);
 
 Object.keys(_int).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
@@ -21190,7 +21212,7 @@ module.exports = toSource;
 var eq = __webpack_require__(65),
     isArrayLike = __webpack_require__(48),
     isIndex = __webpack_require__(100),
-    isObject = __webpack_require__(40);
+    isObject = __webpack_require__(41);
 
 /**
  * Checks if the given arguments are from an iteratee call.
@@ -22351,7 +22373,7 @@ module.exports = equalArrays;
 /* 158 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(40);
+var isObject = __webpack_require__(41);
 
 /**
  * Checks if `value` is suitable for strict equality comparisons, i.e. `===`.
@@ -23552,7 +23574,7 @@ var _isBoolean = __webpack_require__(383);
 
 var _isBoolean2 = _interopRequireDefault(_isBoolean);
 
-var _int = __webpack_require__(39);
+var _int = __webpack_require__(40);
 
 var _ioMixin = __webpack_require__(4);
 
@@ -30292,7 +30314,7 @@ var version = __webpack_require__(89).version;
 exports.version = version;
 tslib_1.__exportStar(__webpack_require__(244), exports);
 tslib_1.__exportStar(__webpack_require__(131), exports);
-tslib_1.__exportStar(__webpack_require__(42), exports);
+tslib_1.__exportStar(__webpack_require__(38), exports);
 var config_1 = __webpack_require__(86);
 exports.Config = config_1.Config;
 var server_1 = __webpack_require__(546);
@@ -31934,7 +31956,7 @@ exports.sha512 = __webpack_require__(137)
  */
 
 var inherits = __webpack_require__(7)
-var Hash = __webpack_require__(38)
+var Hash = __webpack_require__(39)
 var Buffer = __webpack_require__(10).Buffer
 
 var K = [
@@ -32283,7 +32305,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
  */
 
 var inherits = __webpack_require__(7)
-var Hash = __webpack_require__(38)
+var Hash = __webpack_require__(39)
 var Buffer = __webpack_require__(10).Buffer
 
 var K = [
@@ -32388,7 +32410,7 @@ module.exports = Sha1
 
 var inherits = __webpack_require__(7)
 var Sha256 = __webpack_require__(136)
-var Hash = __webpack_require__(38)
+var Hash = __webpack_require__(39)
 var Buffer = __webpack_require__(10).Buffer
 
 var W = new Array(64)
@@ -32439,7 +32461,7 @@ module.exports = Sha224
 
 var inherits = __webpack_require__(7)
 var SHA512 = __webpack_require__(137)
-var Hash = __webpack_require__(38)
+var Hash = __webpack_require__(39)
 var Buffer = __webpack_require__(10).Buffer
 
 var W = new Array(160)
@@ -33771,7 +33793,7 @@ module.exports = assignValue;
 
 var isFunction = __webpack_require__(98),
     isMasked = __webpack_require__(287),
-    isObject = __webpack_require__(40),
+    isObject = __webpack_require__(41),
     toSource = __webpack_require__(145);
 
 /**
@@ -34346,7 +34368,7 @@ module.exports = nodeUtil;
 /* 304 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(40),
+var isObject = __webpack_require__(41),
     isPrototype = __webpack_require__(152),
     nativeKeysIn = __webpack_require__(305);
 
@@ -37273,7 +37295,7 @@ var _isArray = __webpack_require__(5);
 
 var _isArray2 = _interopRequireDefault(_isArray);
 
-var _int = __webpack_require__(39);
+var _int = __webpack_require__(40);
 
 var _unsignedInt = __webpack_require__(75);
 
@@ -37427,7 +37449,7 @@ exports.VarOpaque = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _int = __webpack_require__(39);
+var _int = __webpack_require__(40);
 
 var _unsignedInt = __webpack_require__(75);
 
@@ -37503,7 +37525,7 @@ var _every = __webpack_require__(101);
 
 var _every2 = _interopRequireDefault(_every);
 
-var _each = __webpack_require__(41);
+var _each = __webpack_require__(42);
 
 var _each2 = _interopRequireDefault(_each);
 
@@ -37749,7 +37771,7 @@ module.exports = toFinite;
 /* 392 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(40),
+var isObject = __webpack_require__(41),
     isSymbol = __webpack_require__(73);
 
 /** Used as references for various `Number` constants. */
@@ -37835,7 +37857,7 @@ var _every = __webpack_require__(101);
 
 var _every2 = _interopRequireDefault(_every);
 
-var _each = __webpack_require__(41);
+var _each = __webpack_require__(42);
 
 var _each2 = _interopRequireDefault(_each);
 
@@ -37849,7 +37871,7 @@ var _isArray2 = _interopRequireDefault(_isArray);
 
 var _unsignedInt = __webpack_require__(75);
 
-var _int = __webpack_require__(39);
+var _int = __webpack_require__(40);
 
 var _ioMixin = __webpack_require__(4);
 
@@ -38049,7 +38071,7 @@ var _map = __webpack_require__(168);
 
 var _map2 = _interopRequireDefault(_map);
 
-var _each = __webpack_require__(41);
+var _each = __webpack_require__(42);
 
 var _each2 = _interopRequireDefault(_each);
 
@@ -38057,7 +38079,7 @@ var _values = __webpack_require__(427);
 
 var _values2 = _interopRequireDefault(_values);
 
-var _int = __webpack_require__(39);
+var _int = __webpack_require__(40);
 
 var _ioMixin = __webpack_require__(4);
 
@@ -39004,7 +39026,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _each = __webpack_require__(41);
+var _each = __webpack_require__(42);
 
 var _each2 = _interopRequireDefault(_each);
 
@@ -39273,7 +39295,7 @@ var _map = __webpack_require__(168);
 
 var _map2 = _interopRequireDefault(_map);
 
-var _each = __webpack_require__(41);
+var _each = __webpack_require__(42);
 
 var _each2 = _interopRequireDefault(_each);
 
@@ -44202,7 +44224,7 @@ var stellar_base_1 = __webpack_require__(31);
 var urijs_1 = tslib_1.__importDefault(__webpack_require__(43));
 var call_builder_1 = __webpack_require__(8);
 var config_1 = __webpack_require__(86);
-var errors_1 = __webpack_require__(42);
+var errors_1 = __webpack_require__(38);
 var account_call_builder_1 = __webpack_require__(603);
 var account_response_1 = __webpack_require__(131);
 var assets_call_builder_1 = __webpack_require__(604);
@@ -49466,7 +49488,7 @@ exports.LedgerCallBuilder = LedgerCallBuilder;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var call_builder_1 = __webpack_require__(8);
-var errors_1 = __webpack_require__(42);
+var errors_1 = __webpack_require__(38);
 var OfferCallBuilder = (function (_super) {
     tslib_1.__extends(OfferCallBuilder, _super);
     function OfferCallBuilder(serverUrl, resource) {
@@ -49648,7 +49670,7 @@ exports.PaymentCallBuilder = PaymentCallBuilder;
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var call_builder_1 = __webpack_require__(8);
-var errors_1 = __webpack_require__(42);
+var errors_1 = __webpack_require__(38);
 var allowedResolutions = [
     60000,
     300000,
@@ -49815,7 +49837,7 @@ var axios_1 = tslib_1.__importDefault(__webpack_require__(87));
 var stellar_base_1 = __webpack_require__(31);
 var urijs_1 = tslib_1.__importDefault(__webpack_require__(43));
 var config_1 = __webpack_require__(86);
-var errors_1 = __webpack_require__(42);
+var errors_1 = __webpack_require__(38);
 var stellar_toml_resolver_1 = __webpack_require__(240);
 exports.FEDERATION_RESPONSE_MAX_SIZE = 100 * 1024;
 var FederationServer = (function () {
@@ -54021,6 +54043,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var randombytes_1 = tslib_1.__importDefault(__webpack_require__(621));
 var stellar_base_1 = __webpack_require__(31);
+var errors_1 = __webpack_require__(38);
 var Utils;
 (function (Utils) {
     function buildChallengeTx(serverKeypair, clientAccountID, anchorName, timeout) {
@@ -54047,6 +54070,53 @@ var Utils;
             .toString();
     }
     Utils.buildChallengeTx = buildChallengeTx;
+    function verifyChallengeTx(challengeTx, serverAccountId) {
+        var transaction = new stellar_base_1.Transaction(challengeTx);
+        var sequence = Number.parseInt(transaction.sequence, 10);
+        if (sequence !== 0) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction sequence number should be zero");
+        }
+        if (transaction.source !== serverAccountId) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction source account is not equal to the server's account");
+        }
+        if (transaction.operations.length !== 1) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction should contain only one operation");
+        }
+        var operation = transaction.operations[0];
+        if (!operation.source) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction's operation should contain a source account");
+        }
+        if (operation.type !== "manageData") {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction's operation should be manageData");
+        }
+        if (!verifyTxSignedBy(transaction, serverAccountId)) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction is not signed by the server");
+        }
+        if (!verifyTxSignedBy(transaction, operation.source)) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction is not signed by the client");
+        }
+        if (!validateTimebounds(transaction)) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction has expired");
+        }
+        return true;
+    }
+    Utils.verifyChallengeTx = verifyChallengeTx;
+    function verifyTxSignedBy(transaction, accountId) {
+        var hashedSignatureBase = transaction.hash();
+        var keypair = stellar_base_1.Keypair.fromPublicKey(accountId);
+        return !!transaction.signatures.find(function (sig) {
+            return keypair.verify(hashedSignatureBase, sig.signature());
+        });
+    }
+    Utils.verifyTxSignedBy = verifyTxSignedBy;
+    function validateTimebounds(transaction) {
+        if (!transaction.timeBounds) {
+            return false;
+        }
+        var now = Math.floor(Date.now() / 1000);
+        var _a = transaction.timeBounds, minTime = _a.minTime, maxTime = _a.maxTime;
+        return (now >= Number.parseInt(minTime, 10) && now <= Number.parseInt(maxTime, 10));
+    }
 })(Utils = exports.Utils || (exports.Utils = {}));
 
 
