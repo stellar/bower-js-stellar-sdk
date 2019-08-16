@@ -5790,7 +5790,7 @@ var CallBuilder = (function () {
             }
             createTimeout();
             if (es) {
-                es.onmessage = function (message) {
+                var onMessage = function (message) {
                     var result = message.data
                         ? _this._parseRecord(JSON.parse(message.data))
                         : message;
@@ -5803,11 +5803,19 @@ var CallBuilder = (function () {
                         options.onmessage(result);
                     }
                 };
-                es.onerror = function (error) {
+                var onError = function (error) {
                     if (options.onerror) {
                         options.onerror(error);
                     }
                 };
+                if (es.addEventListener) {
+                    es.addEventListener("message", onMessage.bind(_this));
+                    es.addEventListener("error", onError.bind(_this));
+                }
+                else {
+                    es.onmessage = onMessage.bind(_this);
+                    es.onerror = onError.bind(_this);
+                }
             }
             return es;
         };
@@ -14925,7 +14933,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 91 */
 /***/ (function(module) {
 
-module.exports = {"name":"stellar-sdk","version":"2.2.3","description":"stellar-sdk is a library for working with the Stellar Horizon server.","main":"./lib/index.js","types":"./lib/index.d.ts","scripts":{"prepare":"gulp build","test":"babel-node ./node_modules/.bin/gulp test","build:docs":"gulp build:docs","docs":"yarn build:docs && jsdoc -c .jsdoc.json","dtslint":"dtslint test/types","preversion":"gulp test","version":"gulp build","postversion":"git push && git push --tags","prettier-all":"prettier --write **/*.{js,ts}"},"husky":{"hooks":{"pre-commit":"lint-staged"}},"prettier":"@stellar/prettier-config","lint-staged":{"lib/*.{js,json}":["prettier --write","git add"],"lib/*.js":["eslint --fix --max-warnings 0","git add"],"**/*.ts":["prettier --write","tslint --fix","git add"]},"keywords":["stellar"],"repository":{"type":"git","url":"https://github.com/stellar/js-stellar-sdk.git"},"engines":{"node":">=6.14.0"},"author":"Stellar Development Foundation <hello@stellar.org>","license":"Apache-2.0","bugs":{"url":"https://github.com/stellar/js-stellar-sdk/issues"},"homepage":"https://github.com/stellar/js-stellar-sdk","devDependencies":{"@stellar/prettier-config":"^1.0.1","@stellar/tsconfig":"^1.0.1","@stellar/tslint-config":"^1.0.3","@types/detect-node":"^2.0.0","@types/lodash":"^4.14.130","axios-mock-adapter":"^1.16.0","babel-cli":"^6.26.0","babel-core":"~6.26.3","babel-eslint":"^10.0.1","babel-istanbul":"^0.12.2","babel-loader":"^7.0.0","babel-plugin-transform-builtin-extend":"^1.1.2","babel-preset-es2015":"^6.24.1","babel-register":"^6.26.0","body-parser":"^1.12.2","chai":"^2.2.0","chai-as-promised":"^5.2.0","clear":"^0.1.0","coveralls":"3.0.2","dtslint":"^0.6.0","eslint":"^5.12.1","eslint-config-airbnb-base":"^13.1.0","eslint-config-prettier":"^3.6.0","eslint-plugin-import":"^2.15.0","eslint-plugin-node":"^8.0.1","eslint-plugin-prefer-import":"^0.0.1","eslint-plugin-prettier":"^3.0.1","express":"^4.9.8","ghooks":"^0.3.0","gulp":"4.0.0","gulp-babel":"^6.1.3","gulp-coveralls":"^0.1.3","gulp-develop-server":"^0.5.2","gulp-eslint":"^5.0.0","gulp-git":"~0.5.3","gulp-insert":"^0.5.0","gulp-istanbul":"^1.1.3","gulp-load-plugins":"1.5.0","gulp-mocha":"6.0.0","gulp-plumber":"^1.0.0","gulp-rename":"~1.2.0","gulp-rimraf":"~0.1.0","gulp-tslint":"^8.1.4","gulp-webpack":"^1.3.1","husky":"^1.3.1","isparta":"^4.1.1","istanbul":"^0.4.5","jsdoc":"3.5.5","json-loader":"^0.5.1","karma":"3.1.4","karma-chai":"^0.1.0","karma-chai-as-promised":"^0.1.2","karma-chrome-launcher":"^0.1.7","karma-commonjs":"^1.0.0","karma-firefox-launcher":"^0.1.4","karma-mocha":"^0.1.10","karma-phantomjs-launcher":"^1.0.4","karma-sauce-launcher":"^1.1.0","karma-sinon":"^1.0.4","karma-sinon-chai":"2.0.2","karma-webpack":"3.0.5","lint-staged":"7.3.0","minami":"^1.1.1","mocha":"5.2.0","prettier":"^1.17.1","run-sequence":"^1.0.2","sinon":"^1.14.1","sinon-chai":"^2.7.0","terser-webpack-plugin":"^1.3.0","ts-loader":"^5.0.0","tslint":"^5.16.0","typescript":"^3.4.5","webpack":"^4.33.0","webpack-cli":"^3.3.3","webpack-stream":"^5.2.1"},"dependencies":{"@types/eventsource":"^1.1.2","@types/node":">= 8","@types/randombytes":"^2.0.0","@types/urijs":"^1.19.2","axios":"^0.19.0","bignumber.js":"^4.0.0","detect-node":"^2.0.4","es6-promise":"^4.2.4","eventsource":"^1.0.7","lodash":"^4.17.11","randombytes":"^2.1.0","stellar-base":"^1.1.1","toml":"^2.3.0","tslib":"^1.10.0","urijs":"^1.19.1","utility-types":"^3.7.0"}};
+module.exports = {"name":"stellar-sdk","version":"2.3.0","description":"stellar-sdk is a library for working with the Stellar Horizon server.","main":"./lib/index.js","types":"./lib/index.d.ts","scripts":{"prepare":"gulp build","test":"babel-node ./node_modules/.bin/gulp test","build:docs":"gulp build:docs","docs":"yarn build:docs && jsdoc -c .jsdoc.json","dtslint":"dtslint test/types","preversion":"gulp test","version":"gulp build","postversion":"git push && git push --tags","prettier-all":"prettier --write **/*.{js,ts}"},"husky":{"hooks":{"pre-commit":"lint-staged"}},"prettier":"@stellar/prettier-config","lint-staged":{"lib/*.{js,json}":["prettier --write","git add"],"lib/*.js":["eslint --fix --max-warnings 0","git add"],"**/*.ts":["prettier --write","tslint --fix","git add"]},"keywords":["stellar"],"repository":{"type":"git","url":"https://github.com/stellar/js-stellar-sdk.git"},"engines":{"node":">=6.14.0"},"author":"Stellar Development Foundation <hello@stellar.org>","license":"Apache-2.0","bugs":{"url":"https://github.com/stellar/js-stellar-sdk/issues"},"homepage":"https://github.com/stellar/js-stellar-sdk","devDependencies":{"@stellar/prettier-config":"^1.0.1","@stellar/tsconfig":"^1.0.1","@stellar/tslint-config":"^1.0.3","@types/detect-node":"^2.0.0","@types/lodash":"^4.14.130","axios-mock-adapter":"^1.16.0","babel-cli":"^6.26.0","babel-core":"~6.26.3","babel-eslint":"^10.0.1","babel-istanbul":"^0.12.2","babel-loader":"^7.0.0","babel-plugin-transform-builtin-extend":"^1.1.2","babel-preset-es2015":"^6.24.1","babel-register":"^6.26.0","body-parser":"^1.12.2","chai":"^2.2.0","chai-as-promised":"^5.2.0","clear":"^0.1.0","coveralls":"3.0.2","dtslint":"^0.6.0","eslint":"^5.12.1","eslint-config-airbnb-base":"^13.1.0","eslint-config-prettier":"^3.6.0","eslint-plugin-import":"^2.15.0","eslint-plugin-node":"^8.0.1","eslint-plugin-prefer-import":"^0.0.1","eslint-plugin-prettier":"^3.0.1","express":"^4.9.8","ghooks":"^0.3.0","gulp":"4.0.0","gulp-babel":"^6.1.3","gulp-coveralls":"^0.1.3","gulp-develop-server":"^0.5.2","gulp-eslint":"^5.0.0","gulp-git":"~0.5.3","gulp-insert":"^0.5.0","gulp-istanbul":"^1.1.3","gulp-load-plugins":"1.5.0","gulp-mocha":"6.0.0","gulp-plumber":"^1.0.0","gulp-rename":"~1.2.0","gulp-rimraf":"~0.1.0","gulp-tslint":"^8.1.4","gulp-webpack":"^1.3.1","husky":"^1.3.1","isparta":"^4.1.1","istanbul":"^0.4.5","jsdoc":"3.5.5","json-loader":"^0.5.1","karma":"3.1.4","karma-chai":"^0.1.0","karma-chai-as-promised":"^0.1.2","karma-chrome-launcher":"^0.1.7","karma-commonjs":"^1.0.0","karma-firefox-launcher":"^0.1.4","karma-mocha":"^0.1.10","karma-phantomjs-launcher":"^1.0.4","karma-sauce-launcher":"^1.1.0","karma-sinon":"^1.0.4","karma-sinon-chai":"2.0.2","karma-webpack":"3.0.5","lint-staged":"7.3.0","minami":"^1.1.1","mocha":"5.2.0","prettier":"^1.17.1","run-sequence":"^1.0.2","sinon":"^1.14.1","sinon-chai":"^2.7.0","terser-webpack-plugin":"^1.3.0","ts-loader":"^5.0.0","tslint":"^5.16.0","typescript":"^3.4.5","webpack":"^4.33.0","webpack-cli":"^3.3.3","webpack-stream":"^5.2.1"},"dependencies":{"@types/eventsource":"^1.1.2","@types/node":">= 8","@types/randombytes":"^2.0.0","@types/urijs":"^1.19.2","axios":"^0.19.0","bignumber.js":"^4.0.0","detect-node":"^2.0.4","es6-promise":"^4.2.4","eventsource":"^1.0.7","lodash":"^4.17.11","randombytes":"^2.1.0","stellar-base":"^1.1.1","toml":"^2.3.0","tslib":"^1.10.0","urijs":"^1.19.1","utility-types":"^3.7.0"}};
 
 /***/ }),
 /* 92 */
@@ -44372,26 +44380,20 @@ var Server = (function () {
             var response;
             return tslib_1.__generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4, this.ledgers()
-                            .order("desc")
-                            .limit(1)
-                            .call()];
+                    case 0: return [4, this.feeStats()];
                     case 1:
                         response = _a.sent();
-                        if (response && response.records && response.records[0]) {
-                            return [2, response.records[0].base_fee_in_stroops || 100];
-                        }
-                        return [2, 100];
+                        return [2, parseInt(response.last_ledger_base_fee, 10) || 100];
                 }
             });
         });
     };
-    Server.prototype.operationFeeStats = function () {
+    Server.prototype.feeStats = function () {
         return tslib_1.__awaiter(this, void 0, void 0, function () {
             var cb;
             return tslib_1.__generator(this, function (_a) {
                 cb = new call_builder_1.CallBuilder(urijs_1.default(this.serverURL));
-                cb.filter.push(["operation_fee_stats"]);
+                cb.filter.push(["fee_stats"]);
                 return [2, cb.call()];
             });
         });
@@ -54162,9 +54164,6 @@ var Utils;
         }
         if (Buffer.from(operation.value.toString(), "base64").length !== 48) {
             throw new errors_1.InvalidSep10ChallengeError("The transaction's operation value should be a 64 bytes base64 random string");
-        }
-        if (operation.type !== "manageData") {
-            throw new errors_1.InvalidSep10ChallengeError("The transaction's operation should be manageData");
         }
         if (!verifyTxSignedBy(transaction, serverAccountId)) {
             throw new errors_1.InvalidSep10ChallengeError("The transaction is not signed by the server");
