@@ -5666,34 +5666,6 @@ module.exports = g;
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is `undefined`.
- *
- * @static
- * @since 0.1.0
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is `undefined`, else `false`.
- * @example
- *
- * _.isUndefined(void 0);
- * // => true
- *
- * _.isUndefined(null);
- * // => false
- */
-function isUndefined(value) {
-  return value === undefined;
-}
-
-module.exports = isUndefined;
-
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5952,6 +5924,34 @@ var CallBuilder = (function () {
 exports.CallBuilder = CallBuilder;
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+/**
+ * Checks if `value` is `undefined`.
+ *
+ * @static
+ * @since 0.1.0
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is `undefined`, else `false`.
+ * @example
+ *
+ * _.isUndefined(void 0);
+ * // => true
+ *
+ * _.isUndefined(null);
+ * // => false
+ */
+function isUndefined(value) {
+  return value === undefined;
+}
+
+module.exports = isUndefined;
+
 
 /***/ }),
 /* 8 */
@@ -6387,7 +6387,7 @@ var _crc = __webpack_require__(227);
 
 var _crc2 = _interopRequireDefault(_crc);
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -14472,7 +14472,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 74 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"3.0.1\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"dtslint\":\"dtslint test/types\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"engines\":{\"node\":\">=10.16.3\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"dtslint\":\"^0.6.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"6.0.0\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"4.3.0\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"1.3.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"5.2.0\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.2\",\"axios\":\"^0.19.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^2.0.1\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
+module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"3.1.0\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"dtslint\":\"dtslint test/types\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"engines\":{\"node\":\">=10.16.3\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"dtslint\":\"^0.6.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"6.0.0\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"4.3.0\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"1.3.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"5.2.0\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.2\",\"axios\":\"^0.19.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^2.0.1\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
 
 /***/ }),
 /* 75 */
@@ -15169,7 +15169,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 exports.config = config;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -15611,7 +15611,7 @@ exports.Memo = exports.MemoReturn = exports.MemoHash = exports.MemoText = export
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -23154,7 +23154,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.Void = undefined;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -23927,7 +23927,7 @@ var _trimEnd = __webpack_require__(167);
 
 var _trimEnd2 = _interopRequireDefault(_trimEnd);
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -29179,7 +29179,7 @@ function done(stream, er, data) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
 var axios_1 = tslib_1.__importDefault(__webpack_require__(72));
-var toml_1 = tslib_1.__importDefault(__webpack_require__(471));
+var toml_1 = tslib_1.__importDefault(__webpack_require__(473));
 var config_1 = __webpack_require__(71);
 exports.STELLAR_TOML_MAX_SIZE = 100 * 1024;
 var StellarTomlResolver = (function () {
@@ -29254,7 +29254,7 @@ var config_1 = __webpack_require__(71);
 exports.Config = config_1.Config;
 var server_1 = __webpack_require__(409);
 exports.Server = server_1.Server;
-var federation_server_1 = __webpack_require__(470);
+var federation_server_1 = __webpack_require__(472);
 exports.FederationServer = federation_server_1.FederationServer;
 exports.FEDERATION_RESPONSE_MAX_SIZE = federation_server_1.FEDERATION_RESPONSE_MAX_SIZE;
 var stellar_toml_resolver_1 = __webpack_require__(201);
@@ -29264,7 +29264,7 @@ var horizon_axios_client_1 = __webpack_require__(105);
 exports.HorizonAxiosClient = horizon_axios_client_1.default;
 exports.SERVER_TIME_MAP = horizon_axios_client_1.SERVER_TIME_MAP;
 exports.getCurrentServerTime = horizon_axios_client_1.getCurrentServerTime;
-tslib_1.__exportStar(__webpack_require__(474), exports);
+tslib_1.__exportStar(__webpack_require__(476), exports);
 tslib_1.__exportStar(__webpack_require__(34), exports);
 exports.default = module.exports;
 
@@ -30488,6 +30488,13 @@ var Horizon;
         OperationResponseTypeI[OperationResponseTypeI["manageData"] = 10] = "manageData";
         OperationResponseTypeI[OperationResponseTypeI["bumpSequence"] = 11] = "bumpSequence";
     })(OperationResponseTypeI = Horizon.OperationResponseTypeI || (Horizon.OperationResponseTypeI = {}));
+    var TransactionFailedResultCodes;
+    (function (TransactionFailedResultCodes) {
+        TransactionFailedResultCodes["TX_FAILED"] = "tx_failed";
+        TransactionFailedResultCodes["TX_BAD_SEQ"] = "tx_bad_seq";
+        TransactionFailedResultCodes["TX_BAD_AUTH"] = "tx_bad_auth";
+        TransactionFailedResultCodes["TX_BAD_AUTH_EXTRA"] = "tx_bad_auth_extra";
+    })(TransactionFailedResultCodes = Horizon.TransactionFailedResultCodes || (Horizon.TransactionFailedResultCodes = {}));
 })(Horizon = exports.Horizon || (exports.Horizon = {}));
 
 
@@ -31447,7 +31454,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.decodeBase58Check = decodeBase58Check;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -35902,7 +35909,7 @@ var _isNull = __webpack_require__(119);
 
 var _isNull2 = _interopRequireDefault(_isNull);
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -36943,7 +36950,7 @@ var _map = __webpack_require__(164);
 
 var _map2 = _interopRequireDefault(_map);
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -37149,7 +37156,7 @@ var _each = __webpack_require__(27);
 
 var _each2 = _interopRequireDefault(_each);
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -38783,7 +38790,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.changeTrust = changeTrust;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -39002,7 +39009,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.manageBuyOffer = manageBuyOffer;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -39204,7 +39211,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.setOptions = setOptions;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -39357,7 +39364,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.manageSellOffer = manageSellOffer;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -39427,7 +39434,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.createPassiveSellOffer = createPassiveSellOffer;
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -39502,7 +39509,7 @@ var _clone = __webpack_require__(70);
 
 var _clone2 = _interopRequireDefault(_clone);
 
-var _isUndefined = __webpack_require__(6);
+var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
@@ -39873,7 +39880,7 @@ var isEmpty_1 = tslib_1.__importDefault(__webpack_require__(410));
 var merge_1 = tslib_1.__importDefault(__webpack_require__(411));
 var stellar_base_1 = __webpack_require__(34);
 var urijs_1 = tslib_1.__importDefault(__webpack_require__(39));
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var config_1 = __webpack_require__(71);
 var errors_1 = __webpack_require__(32);
 var account_call_builder_1 = __webpack_require__(457);
@@ -39887,9 +39894,11 @@ var operation_call_builder_1 = __webpack_require__(463);
 var orderbook_call_builder_1 = __webpack_require__(464);
 var path_call_builder_1 = __webpack_require__(465);
 var payment_call_builder_1 = __webpack_require__(466);
-var trade_aggregation_call_builder_1 = __webpack_require__(467);
-var trades_call_builder_1 = __webpack_require__(468);
-var transaction_call_builder_1 = __webpack_require__(469);
+var strict_receive_path_call_builder_1 = __webpack_require__(467);
+var strict_send_path_call_builder_1 = __webpack_require__(468);
+var trade_aggregation_call_builder_1 = __webpack_require__(469);
+var trades_call_builder_1 = __webpack_require__(470);
+var transaction_call_builder_1 = __webpack_require__(471);
 var horizon_axios_client_1 = tslib_1.__importStar(__webpack_require__(105));
 exports.SUBMIT_TRANSACTION_TIMEOUT = 60 * 1000;
 var STROOPS_IN_LUMEN = 10000000;
@@ -40117,7 +40126,14 @@ var Server = (function () {
         return new operation_call_builder_1.OperationCallBuilder(urijs_1.default(this.serverURL));
     };
     Server.prototype.paths = function (source, destination, destinationAsset, destinationAmount) {
+        console.warn("`Server#paths` is deprecated. Please use `Server#strictReceivePaths`.");
         return new path_call_builder_1.PathCallBuilder(urijs_1.default(this.serverURL), source, destination, destinationAsset, destinationAmount);
+    };
+    Server.prototype.strictReceivePaths = function (source, destination, destinationAsset, destinationAmount) {
+        return new strict_receive_path_call_builder_1.StrictReceivePathCallBuilder(urijs_1.default(this.serverURL), source, destination, destinationAsset, destinationAmount);
+    };
+    Server.prototype.strictSendPaths = function (sourceAsset, sourceAmount, destination) {
+        return new strict_send_path_call_builder_1.StrictSendPathCallBuilder(urijs_1.default(this.serverURL), sourceAsset, sourceAmount, destination);
     };
     Server.prototype.payments = function () {
         return new payment_call_builder_1.PaymentCallBuilder(urijs_1.default(this.serverURL));
@@ -44744,7 +44760,7 @@ module.exports = {
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var AccountCallBuilder = (function (_super) {
     tslib_1.__extends(AccountCallBuilder, _super);
     function AccountCallBuilder(serverUrl) {
@@ -44769,7 +44785,7 @@ exports.AccountCallBuilder = AccountCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var AssetsCallBuilder = (function (_super) {
     tslib_1.__extends(AssetsCallBuilder, _super);
     function AssetsCallBuilder(serverUrl) {
@@ -44798,7 +44814,7 @@ exports.AssetsCallBuilder = AssetsCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var EffectCallBuilder = (function (_super) {
     tslib_1.__extends(EffectCallBuilder, _super);
     function EffectCallBuilder(serverUrl) {
@@ -44839,7 +44855,7 @@ exports.EffectCallBuilder = EffectCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var FriendbotBuilder = (function (_super) {
     tslib_1.__extends(FriendbotBuilder, _super);
     function FriendbotBuilder(serverUrl, address) {
@@ -44861,7 +44877,7 @@ exports.FriendbotBuilder = FriendbotBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var LedgerCallBuilder = (function (_super) {
     tslib_1.__extends(LedgerCallBuilder, _super);
     function LedgerCallBuilder(serverUrl) {
@@ -44886,7 +44902,7 @@ exports.LedgerCallBuilder = LedgerCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var errors_1 = __webpack_require__(32);
 var OfferCallBuilder = (function (_super) {
     tslib_1.__extends(OfferCallBuilder, _super);
@@ -44917,7 +44933,7 @@ exports.OfferCallBuilder = OfferCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var OperationCallBuilder = (function (_super) {
     tslib_1.__extends(OperationCallBuilder, _super);
     function OperationCallBuilder(serverUrl) {
@@ -44962,7 +44978,7 @@ exports.OperationCallBuilder = OperationCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var OrderbookCallBuilder = (function (_super) {
     tslib_1.__extends(OrderbookCallBuilder, _super);
     function OrderbookCallBuilder(serverUrl, selling, buying) {
@@ -44999,7 +45015,7 @@ exports.OrderbookCallBuilder = OrderbookCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var PathCallBuilder = (function (_super) {
     tslib_1.__extends(PathCallBuilder, _super);
     function PathCallBuilder(serverUrl, source, destination, destinationAsset, destinationAmount) {
@@ -45031,7 +45047,7 @@ exports.PathCallBuilder = PathCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var PaymentCallBuilder = (function (_super) {
     tslib_1.__extends(PaymentCallBuilder, _super);
     function PaymentCallBuilder(serverUrl) {
@@ -45068,7 +45084,96 @@ exports.PaymentCallBuilder = PaymentCallBuilder;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
+var StrictReceivePathCallBuilder = (function (_super) {
+    tslib_1.__extends(StrictReceivePathCallBuilder, _super);
+    function StrictReceivePathCallBuilder(serverUrl, source, destination, destinationAsset, destinationAmount) {
+        var _this = _super.call(this, serverUrl) || this;
+        _this.url.segment("paths/strict-receive");
+        _this.url.setQuery("destination_account", destination);
+        if (typeof source === "string") {
+            _this.url.setQuery("source_account", source);
+        }
+        else {
+            var assets = source
+                .map(function (asset) {
+                if (asset.isNative()) {
+                    return "native";
+                }
+                return asset.getCode() + ":" + asset.getIssuer();
+            })
+                .join(",");
+            _this.url.setQuery("source_assets", assets);
+        }
+        _this.url.setQuery("destination_amount", destinationAmount);
+        if (!destinationAsset.isNative()) {
+            _this.url.setQuery("destination_asset_type", destinationAsset.getAssetType());
+            _this.url.setQuery("destination_asset_code", destinationAsset.getCode());
+            _this.url.setQuery("destination_asset_issuer", destinationAsset.getIssuer());
+        }
+        else {
+            _this.url.setQuery("destination_asset_type", "native");
+        }
+        return _this;
+    }
+    return StrictReceivePathCallBuilder;
+}(call_builder_1.CallBuilder));
+exports.StrictReceivePathCallBuilder = StrictReceivePathCallBuilder;
+
+
+/***/ }),
+/* 468 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var call_builder_1 = __webpack_require__(6);
+var StrictSendPathCallBuilder = (function (_super) {
+    tslib_1.__extends(StrictSendPathCallBuilder, _super);
+    function StrictSendPathCallBuilder(serverUrl, sourceAsset, sourceAmount, destination) {
+        var _this = _super.call(this, serverUrl) || this;
+        _this.url.segment("paths/strict-send");
+        if (sourceAsset.isNative()) {
+            _this.url.setQuery("source_asset_type", "native");
+        }
+        else {
+            _this.url.setQuery("source_asset_type", sourceAsset.getAssetType());
+            _this.url.setQuery("source_asset_code", sourceAsset.getCode());
+            _this.url.setQuery("source_asset_issuer", sourceAsset.getIssuer());
+        }
+        _this.url.setQuery("source_amount", sourceAmount);
+        if (typeof destination === "string") {
+            _this.url.setQuery("destination_account", destination);
+        }
+        else {
+            var assets = destination
+                .map(function (asset) {
+                if (asset.isNative()) {
+                    return "native";
+                }
+                return asset.getCode() + ":" + asset.getIssuer();
+            })
+                .join(",");
+            _this.url.setQuery("destination_assets", assets);
+        }
+        return _this;
+    }
+    return StrictSendPathCallBuilder;
+}(call_builder_1.CallBuilder));
+exports.StrictSendPathCallBuilder = StrictSendPathCallBuilder;
+
+
+/***/ }),
+/* 469 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var tslib_1 = __webpack_require__(1);
+var call_builder_1 = __webpack_require__(6);
 var errors_1 = __webpack_require__(32);
 var allowedResolutions = [
     60000,
@@ -45139,14 +45244,14 @@ exports.TradeAggregationCallBuilder = TradeAggregationCallBuilder;
 
 
 /***/ }),
-/* 468 */
+/* 470 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var TradesCallBuilder = (function (_super) {
     tslib_1.__extends(TradesCallBuilder, _super);
     function TradesCallBuilder(serverUrl) {
@@ -45187,14 +45292,14 @@ exports.TradesCallBuilder = TradesCallBuilder;
 
 
 /***/ }),
-/* 469 */
+/* 471 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var call_builder_1 = __webpack_require__(7);
+var call_builder_1 = __webpack_require__(6);
 var TransactionCallBuilder = (function (_super) {
     tslib_1.__extends(TransactionCallBuilder, _super);
     function TransactionCallBuilder(serverUrl) {
@@ -45225,7 +45330,7 @@ exports.TransactionCallBuilder = TransactionCallBuilder;
 
 
 /***/ }),
-/* 470 */
+/* 472 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -45369,11 +45474,11 @@ exports.FederationServer = FederationServer;
 
 
 /***/ }),
-/* 471 */
+/* 473 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parser = __webpack_require__(472);
-var compiler = __webpack_require__(473);
+var parser = __webpack_require__(474);
+var compiler = __webpack_require__(475);
 
 module.exports = {
   parse: function(input) {
@@ -45384,7 +45489,7 @@ module.exports = {
 
 
 /***/ }),
-/* 472 */
+/* 474 */
 /***/ (function(module, exports) {
 
 module.exports = (function() {
@@ -49231,7 +49336,7 @@ module.exports = (function() {
 
 
 /***/ }),
-/* 473 */
+/* 475 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49433,14 +49538,14 @@ module.exports = {
 
 
 /***/ }),
-/* 474 */
+/* 476 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var tslib_1 = __webpack_require__(1);
-var randombytes_1 = tslib_1.__importDefault(__webpack_require__(475));
+var randombytes_1 = tslib_1.__importDefault(__webpack_require__(477));
 var stellar_base_1 = __webpack_require__(34);
 var errors_1 = __webpack_require__(32);
 var Utils;
@@ -49526,7 +49631,7 @@ var Utils;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 475 */
+/* 477 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
