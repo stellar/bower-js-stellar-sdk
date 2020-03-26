@@ -11159,6 +11159,23 @@ var InvalidSep10ChallengeError = (function (_super) {
     return InvalidSep10ChallengeError;
 }(Error));
 exports.InvalidSep10ChallengeError = InvalidSep10ChallengeError;
+var AccountRequiresMemoError = (function (_super) {
+    tslib_1.__extends(AccountRequiresMemoError, _super);
+    function AccountRequiresMemoError(message, accountId, operationIndex) {
+        var _newTarget = this.constructor;
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, message) || this;
+        _this.__proto__ = trueProto;
+        _this.constructor = AccountRequiresMemoError;
+        _this.name = "AccountRequiresMemoError";
+        _this.accountId = accountId;
+        _this.operationIndex = operationIndex;
+        return _this;
+    }
+    return AccountRequiresMemoError;
+}(Error));
+exports.AccountRequiresMemoError = AccountRequiresMemoError;
 
 
 /***/ }),
@@ -14821,7 +14838,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 74 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"4.0.2\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"dtslint\":\"dtslint test/types\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"dtslint\":\"^0.6.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"6.0.0\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"4.3.0\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"1.3.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"5.2.0\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"^0.19.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^2.1.4\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
+module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"4.1.0\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"dtslint\":\"dtslint test/types\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"dtslint\":\"^0.6.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"6.0.0\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"4.3.0\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"1.3.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"5.2.0\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"^0.19.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^2.1.4\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
 
 /***/ }),
 /* 75 */
@@ -40483,6 +40500,7 @@ var transaction_call_builder_1 = __webpack_require__(474);
 var horizon_axios_client_1 = tslib_1.__importStar(__webpack_require__(105));
 exports.SUBMIT_TRANSACTION_TIMEOUT = 60 * 1000;
 var STROOPS_IN_LUMEN = 10000000;
+var ACCOUNT_REQUIRES_MEMO = "MQ==";
 function _getAmountInLumens(amt) {
     return new bignumber_js_1.default(amt).div(STROOPS_IN_LUMEN).toString();
 }
@@ -40562,121 +40580,131 @@ var Server = (function () {
             });
         });
     };
-    Server.prototype.submitTransaction = function (transaction) {
+    Server.prototype.submitTransaction = function (transaction, opts) {
+        if (opts === void 0) { opts = { skipMemoRequiredCheck: false }; }
         return tslib_1.__awaiter(this, void 0, void 0, function () {
             var tx;
             return tslib_1.__generator(this, function (_a) {
-                tx = encodeURIComponent(transaction
-                    .toEnvelope()
-                    .toXDR()
-                    .toString("base64"));
-                return [2, horizon_axios_client_1.default.post(urijs_1.default(this.serverURL)
-                        .segment("transactions")
-                        .toString(), "tx=" + tx, { timeout: exports.SUBMIT_TRANSACTION_TIMEOUT })
-                        .then(function (response) {
-                        if (!response.data.result_xdr) {
-                            return response.data;
-                        }
-                        var responseXDR = stellar_base_1.xdr.TransactionResult
-                            .fromXDR(response.data.result_xdr, "base64");
-                        var results = responseXDR.result().value();
-                        var offerResults;
-                        var hasManageOffer;
-                        if (results.length) {
-                            offerResults = results
-                                .map(function (result, i) {
-                                if (result.value().switch().name !== "manageBuyOffer" &&
-                                    result.value().switch().name !== "manageSellOffer") {
-                                    return null;
+                switch (_a.label) {
+                    case 0:
+                        if (!!opts.skipMemoRequiredCheck) return [3, 2];
+                        return [4, this.checkMemoRequired(transaction)];
+                    case 1:
+                        _a.sent();
+                        _a.label = 2;
+                    case 2:
+                        tx = encodeURIComponent(transaction
+                            .toEnvelope()
+                            .toXDR()
+                            .toString("base64"));
+                        return [2, horizon_axios_client_1.default.post(urijs_1.default(this.serverURL)
+                                .segment("transactions")
+                                .toString(), "tx=" + tx, { timeout: exports.SUBMIT_TRANSACTION_TIMEOUT })
+                                .then(function (response) {
+                                if (!response.data.result_xdr) {
+                                    return response.data;
                                 }
-                                hasManageOffer = true;
-                                var amountBought = new bignumber_js_1.default(0);
-                                var amountSold = new bignumber_js_1.default(0);
-                                var offerSuccess = result
-                                    .value()
-                                    .value()
-                                    .success();
-                                var offersClaimed = offerSuccess
-                                    .offersClaimed()
-                                    .map(function (offerClaimed) {
-                                    var claimedOfferAmountBought = new bignumber_js_1.default(offerClaimed.amountBought().toString());
-                                    var claimedOfferAmountSold = new bignumber_js_1.default(offerClaimed.amountSold().toString());
-                                    amountBought = amountBought.add(claimedOfferAmountSold);
-                                    amountSold = amountSold.add(claimedOfferAmountBought);
-                                    var sold = stellar_base_1.Asset.fromOperation(offerClaimed.assetSold());
-                                    var bought = stellar_base_1.Asset.fromOperation(offerClaimed.assetBought());
-                                    var assetSold = {
-                                        type: sold.getAssetType(),
-                                        assetCode: sold.getCode(),
-                                        issuer: sold.getIssuer(),
-                                    };
-                                    var assetBought = {
-                                        type: bought.getAssetType(),
-                                        assetCode: bought.getCode(),
-                                        issuer: bought.getIssuer(),
-                                    };
-                                    return {
-                                        sellerId: stellar_base_1.StrKey.encodeEd25519PublicKey(offerClaimed.sellerId().ed25519()),
-                                        offerId: offerClaimed.offerId().toString(),
-                                        assetSold: assetSold,
-                                        amountSold: _getAmountInLumens(claimedOfferAmountSold),
-                                        assetBought: assetBought,
-                                        amountBought: _getAmountInLumens(claimedOfferAmountBought),
-                                    };
+                                var responseXDR = stellar_base_1.xdr.TransactionResult
+                                    .fromXDR(response.data.result_xdr, "base64");
+                                var results = responseXDR.result().value();
+                                var offerResults;
+                                var hasManageOffer;
+                                if (results.length) {
+                                    offerResults = results
+                                        .map(function (result, i) {
+                                        if (result.value().switch().name !== "manageBuyOffer" &&
+                                            result.value().switch().name !== "manageSellOffer") {
+                                            return null;
+                                        }
+                                        hasManageOffer = true;
+                                        var amountBought = new bignumber_js_1.default(0);
+                                        var amountSold = new bignumber_js_1.default(0);
+                                        var offerSuccess = result
+                                            .value()
+                                            .value()
+                                            .success();
+                                        var offersClaimed = offerSuccess
+                                            .offersClaimed()
+                                            .map(function (offerClaimed) {
+                                            var claimedOfferAmountBought = new bignumber_js_1.default(offerClaimed.amountBought().toString());
+                                            var claimedOfferAmountSold = new bignumber_js_1.default(offerClaimed.amountSold().toString());
+                                            amountBought = amountBought.add(claimedOfferAmountSold);
+                                            amountSold = amountSold.add(claimedOfferAmountBought);
+                                            var sold = stellar_base_1.Asset.fromOperation(offerClaimed.assetSold());
+                                            var bought = stellar_base_1.Asset.fromOperation(offerClaimed.assetBought());
+                                            var assetSold = {
+                                                type: sold.getAssetType(),
+                                                assetCode: sold.getCode(),
+                                                issuer: sold.getIssuer(),
+                                            };
+                                            var assetBought = {
+                                                type: bought.getAssetType(),
+                                                assetCode: bought.getCode(),
+                                                issuer: bought.getIssuer(),
+                                            };
+                                            return {
+                                                sellerId: stellar_base_1.StrKey.encodeEd25519PublicKey(offerClaimed.sellerId().ed25519()),
+                                                offerId: offerClaimed.offerId().toString(),
+                                                assetSold: assetSold,
+                                                amountSold: _getAmountInLumens(claimedOfferAmountSold),
+                                                assetBought: assetBought,
+                                                amountBought: _getAmountInLumens(claimedOfferAmountBought),
+                                            };
+                                        });
+                                        var effect = offerSuccess.offer().switch().name;
+                                        var currentOffer;
+                                        if (typeof offerSuccess.offer().value === "function" &&
+                                            offerSuccess.offer().value()) {
+                                            var offerXDR = offerSuccess.offer().value();
+                                            currentOffer = {
+                                                offerId: offerXDR.offerId().toString(),
+                                                selling: {},
+                                                buying: {},
+                                                amount: _getAmountInLumens(offerXDR.amount().toString()),
+                                                price: {
+                                                    n: offerXDR.price().n(),
+                                                    d: offerXDR.price().d(),
+                                                },
+                                            };
+                                            var selling = stellar_base_1.Asset.fromOperation(offerXDR.selling());
+                                            currentOffer.selling = {
+                                                type: selling.getAssetType(),
+                                                assetCode: selling.getCode(),
+                                                issuer: selling.getIssuer(),
+                                            };
+                                            var buying = stellar_base_1.Asset.fromOperation(offerXDR.buying());
+                                            currentOffer.buying = {
+                                                type: buying.getAssetType(),
+                                                assetCode: buying.getCode(),
+                                                issuer: buying.getIssuer(),
+                                            };
+                                        }
+                                        return {
+                                            offersClaimed: offersClaimed,
+                                            effect: effect,
+                                            operationIndex: i,
+                                            currentOffer: currentOffer,
+                                            amountBought: _getAmountInLumens(amountBought),
+                                            amountSold: _getAmountInLumens(amountSold),
+                                            isFullyOpen: !offersClaimed.length && effect !== "manageOfferDeleted",
+                                            wasPartiallyFilled: !!offersClaimed.length && effect !== "manageOfferDeleted",
+                                            wasImmediatelyFilled: !!offersClaimed.length && effect === "manageOfferDeleted",
+                                            wasImmediatelyDeleted: !offersClaimed.length && effect === "manageOfferDeleted",
+                                        };
+                                    })
+                                        .filter(function (result) { return !!result; });
+                                }
+                                return Object.assign({}, response.data, {
+                                    offerResults: hasManageOffer ? offerResults : undefined,
                                 });
-                                var effect = offerSuccess.offer().switch().name;
-                                var currentOffer;
-                                if (typeof offerSuccess.offer().value === "function" &&
-                                    offerSuccess.offer().value()) {
-                                    var offerXDR = offerSuccess.offer().value();
-                                    currentOffer = {
-                                        offerId: offerXDR.offerId().toString(),
-                                        selling: {},
-                                        buying: {},
-                                        amount: _getAmountInLumens(offerXDR.amount().toString()),
-                                        price: {
-                                            n: offerXDR.price().n(),
-                                            d: offerXDR.price().d(),
-                                        },
-                                    };
-                                    var selling = stellar_base_1.Asset.fromOperation(offerXDR.selling());
-                                    currentOffer.selling = {
-                                        type: selling.getAssetType(),
-                                        assetCode: selling.getCode(),
-                                        issuer: selling.getIssuer(),
-                                    };
-                                    var buying = stellar_base_1.Asset.fromOperation(offerXDR.buying());
-                                    currentOffer.buying = {
-                                        type: buying.getAssetType(),
-                                        assetCode: buying.getCode(),
-                                        issuer: buying.getIssuer(),
-                                    };
-                                }
-                                return {
-                                    offersClaimed: offersClaimed,
-                                    effect: effect,
-                                    operationIndex: i,
-                                    currentOffer: currentOffer,
-                                    amountBought: _getAmountInLumens(amountBought),
-                                    amountSold: _getAmountInLumens(amountSold),
-                                    isFullyOpen: !offersClaimed.length && effect !== "manageOfferDeleted",
-                                    wasPartiallyFilled: !!offersClaimed.length && effect !== "manageOfferDeleted",
-                                    wasImmediatelyFilled: !!offersClaimed.length && effect === "manageOfferDeleted",
-                                    wasImmediatelyDeleted: !offersClaimed.length && effect === "manageOfferDeleted",
-                                };
                             })
-                                .filter(function (result) { return !!result; });
-                        }
-                        return Object.assign({}, response.data, {
-                            offerResults: hasManageOffer ? offerResults : undefined,
-                        });
-                    })
-                        .catch(function (response) {
-                        if (response instanceof Error) {
-                            return Promise.reject(response);
-                        }
-                        return Promise.reject(new errors_1.BadResponseError("Transaction submission failed. Server responded: " + response.status + " " + response.statusText, response.data));
-                    })];
+                                .catch(function (response) {
+                                if (response instanceof Error) {
+                                    return Promise.reject(response);
+                                }
+                                return Promise.reject(new errors_1.BadResponseError("Transaction submission failed. Server responded: " + response.status + " " + response.statusText, response.data));
+                            })];
+                }
             });
         });
     };
@@ -40740,6 +40768,62 @@ var Server = (function () {
     };
     Server.prototype.tradeAggregation = function (base, counter, start_time, end_time, resolution, offset) {
         return new trade_aggregation_call_builder_1.TradeAggregationCallBuilder(urijs_1.default(this.serverURL), base, counter, start_time, end_time, resolution, offset);
+    };
+    Server.prototype.checkMemoRequired = function (transaction) {
+        return tslib_1.__awaiter(this, void 0, void 0, function () {
+            var destinations, i, operation, destination, account, e_1;
+            return tslib_1.__generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (transaction.memo.type !== "none") {
+                            return [2];
+                        }
+                        destinations = new Set();
+                        i = 0;
+                        _a.label = 1;
+                    case 1:
+                        if (!(i < transaction.operations.length)) return [3, 6];
+                        operation = transaction.operations[i];
+                        switch (operation.type) {
+                            case "payment":
+                            case "pathPaymentStrictReceive":
+                            case "pathPaymentStrictSend":
+                            case "accountMerge":
+                                break;
+                            default:
+                                return [3, 5];
+                        }
+                        destination = operation.destination;
+                        if (destinations.has(destination)) {
+                            return [3, 5];
+                        }
+                        destinations.add(destination);
+                        _a.label = 2;
+                    case 2:
+                        _a.trys.push([2, 4, , 5]);
+                        return [4, this.loadAccount(destination)];
+                    case 3:
+                        account = _a.sent();
+                        if (account.data_attr["config.memo_required"] === ACCOUNT_REQUIRES_MEMO) {
+                            throw new errors_1.AccountRequiresMemoError("account requires memo", destination, i);
+                        }
+                        return [3, 5];
+                    case 4:
+                        e_1 = _a.sent();
+                        if (e_1 instanceof errors_1.AccountRequiresMemoError) {
+                            throw e_1;
+                        }
+                        if (!(e_1 instanceof errors_1.NotFoundError)) {
+                            throw e_1;
+                        }
+                        return [3, 5];
+                    case 5:
+                        i++;
+                        return [3, 1];
+                    case 6: return [2];
+                }
+            });
+        });
     };
     return Server;
 }());
