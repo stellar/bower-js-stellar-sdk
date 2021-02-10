@@ -7052,7 +7052,7 @@ if (anyGlobal.EventSource) {
     EventSource = anyGlobal.EventSource;
 }
 else if (detect_node_1.default) {
-    EventSource = __webpack_require__(378);
+    EventSource = __webpack_require__(379);
 }
 else {
     EventSource = anyGlobal.window.EventSource;
@@ -7743,6 +7743,21 @@ function isObject(val) {
 }
 
 /**
+ * Determine if a value is a plain Object
+ *
+ * @param {Object} val The value to test
+ * @return {boolean} True if value is a plain Object, otherwise false
+ */
+function isPlainObject(val) {
+  if (toString.call(val) !== '[object Object]') {
+    return false;
+  }
+
+  var prototype = Object.getPrototypeOf(val);
+  return prototype === null || prototype === Object.prototype;
+}
+
+/**
  * Determine if a value is a Date
  *
  * @param {Object} val The value to test
@@ -7898,34 +7913,12 @@ function forEach(obj, fn) {
 function merge(/* obj1, obj2, obj3, ... */) {
   var result = {};
   function assignValue(val, key) {
-    if (typeof result[key] === 'object' && typeof val === 'object') {
+    if (isPlainObject(result[key]) && isPlainObject(val)) {
       result[key] = merge(result[key], val);
-    } else {
-      result[key] = val;
-    }
-  }
-
-  for (var i = 0, l = arguments.length; i < l; i++) {
-    forEach(arguments[i], assignValue);
-  }
-  return result;
-}
-
-/**
- * Function equal to merge with the difference being that no reference
- * to original objects is kept.
- *
- * @see merge
- * @param {Object} obj1 Object to merge
- * @returns {Object} Result of all merge properties
- */
-function deepMerge(/* obj1, obj2, obj3, ... */) {
-  var result = {};
-  function assignValue(val, key) {
-    if (typeof result[key] === 'object' && typeof val === 'object') {
-      result[key] = deepMerge(result[key], val);
-    } else if (typeof val === 'object') {
-      result[key] = deepMerge({}, val);
+    } else if (isPlainObject(val)) {
+      result[key] = merge({}, val);
+    } else if (isArray(val)) {
+      result[key] = val.slice();
     } else {
       result[key] = val;
     }
@@ -7956,6 +7949,19 @@ function extend(a, b, thisArg) {
   return a;
 }
 
+/**
+ * Remove byte order marker. This catches EF BB BF (the UTF-8 BOM)
+ *
+ * @param {string} content with BOM
+ * @return {string} content value without BOM
+ */
+function stripBOM(content) {
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.slice(1);
+  }
+  return content;
+}
+
 module.exports = {
   isArray: isArray,
   isArrayBuffer: isArrayBuffer,
@@ -7965,6 +7971,7 @@ module.exports = {
   isString: isString,
   isNumber: isNumber,
   isObject: isObject,
+  isPlainObject: isPlainObject,
   isUndefined: isUndefined,
   isDate: isDate,
   isFile: isFile,
@@ -7975,9 +7982,9 @@ module.exports = {
   isStandardBrowserEnv: isStandardBrowserEnv,
   forEach: forEach,
   merge: merge,
-  deepMerge: deepMerge,
   extend: extend,
-  trim: trim
+  trim: trim,
+  stripBOM: stripBOM
 };
 
 
@@ -15873,7 +15880,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 63 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"7.0.0\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"files\":[\"/types\",\"/lib\",\"/dist\"],\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"^4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"^7.0.2\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"^5.0.2\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"^2.0.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"^7.1.1\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"^0.19.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^4.0.0\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
+module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"8.0.0\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"files\":[\"/types\",\"/lib\",\"/dist\"],\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"^4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"^7.0.2\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"^5.0.2\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"^2.0.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"^7.1.1\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"0.21.1\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^4.0.3\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
 
 /***/ }),
 /* 64 */
@@ -17398,8 +17405,8 @@ exports.getCurrentServerTime = getCurrentServerTime;
 
 
 
-var punycode = __webpack_require__(383);
-var util = __webpack_require__(384);
+var punycode = __webpack_require__(384);
+var util = __webpack_require__(385);
 
 exports.parse = urlParse;
 exports.resolve = urlResolve;
@@ -17474,7 +17481,7 @@ var protocolPattern = /^([a-z0-9.+-]+:)/i,
       'gopher:': true,
       'file:': true
     },
-    querystring = __webpack_require__(385);
+    querystring = __webpack_require__(386);
 
 function urlParse(url, parseQueryString, slashesDenoteHost) {
   if (url && util.isObject(url) && url instanceof Url) return url;
@@ -27003,7 +27010,6 @@ var utils = __webpack_require__(10);
 
 function encode(val) {
   return encodeURIComponent(val).
-    replace(/%40/gi, '@').
     replace(/%3A/gi, ':').
     replace(/%24/g, '$').
     replace(/%2C/gi, ',').
@@ -27163,6 +27169,7 @@ var defaults = {
   xsrfHeaderName: 'X-XSRF-TOKEN',
 
   maxContentLength: -1,
+  maxBodyLength: -1,
 
   validateStatus: function validateStatus(status) {
     return status >= 200 && status < 300;
@@ -27196,10 +27203,11 @@ module.exports = defaults;
 
 var utils = __webpack_require__(10);
 var settle = __webpack_require__(368);
+var cookies = __webpack_require__(370);
 var buildURL = __webpack_require__(149);
-var buildFullPath = __webpack_require__(370);
-var parseHeaders = __webpack_require__(373);
-var isURLSameOrigin = __webpack_require__(374);
+var buildFullPath = __webpack_require__(371);
+var parseHeaders = __webpack_require__(374);
+var isURLSameOrigin = __webpack_require__(375);
 var createError = __webpack_require__(153);
 
 module.exports = function xhrAdapter(config) {
@@ -27216,7 +27224,7 @@ module.exports = function xhrAdapter(config) {
     // HTTP basic authentication
     if (config.auth) {
       var username = config.auth.username || '';
-      var password = config.auth.password || '';
+      var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
       requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
     }
 
@@ -27297,8 +27305,6 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(375);
-
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
         cookies.read(config.xsrfCookieName) :
@@ -27364,7 +27370,7 @@ module.exports = function xhrAdapter(config) {
       });
     }
 
-    if (requestData === undefined) {
+    if (!requestData) {
       requestData = null;
     }
 
@@ -27421,59 +27427,73 @@ module.exports = function mergeConfig(config1, config2) {
   config2 = config2 || {};
   var config = {};
 
-  var valueFromConfig2Keys = ['url', 'method', 'params', 'data'];
-  var mergeDeepPropertiesKeys = ['headers', 'auth', 'proxy'];
+  var valueFromConfig2Keys = ['url', 'method', 'data'];
+  var mergeDeepPropertiesKeys = ['headers', 'auth', 'proxy', 'params'];
   var defaultToConfig2Keys = [
-    'baseURL', 'url', 'transformRequest', 'transformResponse', 'paramsSerializer',
-    'timeout', 'withCredentials', 'adapter', 'responseType', 'xsrfCookieName',
-    'xsrfHeaderName', 'onUploadProgress', 'onDownloadProgress',
-    'maxContentLength', 'validateStatus', 'maxRedirects', 'httpAgent',
-    'httpsAgent', 'cancelToken', 'socketPath'
+    'baseURL', 'transformRequest', 'transformResponse', 'paramsSerializer',
+    'timeout', 'timeoutMessage', 'withCredentials', 'adapter', 'responseType', 'xsrfCookieName',
+    'xsrfHeaderName', 'onUploadProgress', 'onDownloadProgress', 'decompress',
+    'maxContentLength', 'maxBodyLength', 'maxRedirects', 'transport', 'httpAgent',
+    'httpsAgent', 'cancelToken', 'socketPath', 'responseEncoding'
   ];
+  var directMergeKeys = ['validateStatus'];
+
+  function getMergedValue(target, source) {
+    if (utils.isPlainObject(target) && utils.isPlainObject(source)) {
+      return utils.merge(target, source);
+    } else if (utils.isPlainObject(source)) {
+      return utils.merge({}, source);
+    } else if (utils.isArray(source)) {
+      return source.slice();
+    }
+    return source;
+  }
+
+  function mergeDeepProperties(prop) {
+    if (!utils.isUndefined(config2[prop])) {
+      config[prop] = getMergedValue(config1[prop], config2[prop]);
+    } else if (!utils.isUndefined(config1[prop])) {
+      config[prop] = getMergedValue(undefined, config1[prop]);
+    }
+  }
 
   utils.forEach(valueFromConfig2Keys, function valueFromConfig2(prop) {
-    if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
+    if (!utils.isUndefined(config2[prop])) {
+      config[prop] = getMergedValue(undefined, config2[prop]);
     }
   });
 
-  utils.forEach(mergeDeepPropertiesKeys, function mergeDeepProperties(prop) {
-    if (utils.isObject(config2[prop])) {
-      config[prop] = utils.deepMerge(config1[prop], config2[prop]);
-    } else if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
-    } else if (utils.isObject(config1[prop])) {
-      config[prop] = utils.deepMerge(config1[prop]);
-    } else if (typeof config1[prop] !== 'undefined') {
-      config[prop] = config1[prop];
-    }
-  });
+  utils.forEach(mergeDeepPropertiesKeys, mergeDeepProperties);
 
   utils.forEach(defaultToConfig2Keys, function defaultToConfig2(prop) {
-    if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
-    } else if (typeof config1[prop] !== 'undefined') {
-      config[prop] = config1[prop];
+    if (!utils.isUndefined(config2[prop])) {
+      config[prop] = getMergedValue(undefined, config2[prop]);
+    } else if (!utils.isUndefined(config1[prop])) {
+      config[prop] = getMergedValue(undefined, config1[prop]);
+    }
+  });
+
+  utils.forEach(directMergeKeys, function merge(prop) {
+    if (prop in config2) {
+      config[prop] = getMergedValue(config1[prop], config2[prop]);
+    } else if (prop in config1) {
+      config[prop] = getMergedValue(undefined, config1[prop]);
     }
   });
 
   var axiosKeys = valueFromConfig2Keys
     .concat(mergeDeepPropertiesKeys)
-    .concat(defaultToConfig2Keys);
+    .concat(defaultToConfig2Keys)
+    .concat(directMergeKeys);
 
   var otherKeys = Object
-    .keys(config2)
+    .keys(config1)
+    .concat(Object.keys(config2))
     .filter(function filterAxiosKeys(key) {
       return axiosKeys.indexOf(key) === -1;
     });
 
-  utils.forEach(otherKeys, function otherKeysDefaultToConfig2(prop) {
-    if (typeof config2[prop] !== 'undefined') {
-      config[prop] = config2[prop];
-    } else if (typeof config1[prop] !== 'undefined') {
-      config[prop] = config1[prop];
-    }
-  });
+  utils.forEach(otherKeys, mergeDeepProperties);
 
   return config;
 };
@@ -27509,10 +27529,10 @@ module.exports = Cancel;
 /* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(389)
+/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(390)
 var response = __webpack_require__(158)
-var extend = __webpack_require__(398)
-var statusCodes = __webpack_require__(399)
+var extend = __webpack_require__(399)
+var statusCodes = __webpack_require__(400)
 var url = __webpack_require__(88)
 
 var http = exports
@@ -27917,7 +27937,7 @@ exports.Readable = exports;
 exports.Writable = __webpack_require__(163);
 exports.Duplex = __webpack_require__(35);
 exports.Transform = __webpack_require__(165);
-exports.PassThrough = __webpack_require__(396);
+exports.PassThrough = __webpack_require__(397);
 
 
 /***/ }),
@@ -27996,7 +28016,7 @@ util.inherits = __webpack_require__(8);
 /*</replacement>*/
 
 /*<replacement>*/
-var debugUtil = __webpack_require__(390);
+var debugUtil = __webpack_require__(391);
 var debug = void 0;
 if (debugUtil && debugUtil.debuglog) {
   debug = debugUtil.debuglog('stream');
@@ -28005,7 +28025,7 @@ if (debugUtil && debugUtil.debuglog) {
 }
 /*</replacement>*/
 
-var BufferList = __webpack_require__(391);
+var BufferList = __webpack_require__(392);
 var destroyImpl = __webpack_require__(162);
 var StringDecoder;
 
@@ -29110,7 +29130,7 @@ util.inherits = __webpack_require__(8);
 
 /*<replacement>*/
 var internalUtil = {
-  deprecate: __webpack_require__(395)
+  deprecate: __webpack_require__(396)
 };
 /*</replacement>*/
 
@@ -29725,7 +29745,7 @@ Writable.prototype._destroy = function (err, cb) {
   this.end();
   cb(err);
 };
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12), __webpack_require__(393).setImmediate, __webpack_require__(5)))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12), __webpack_require__(394).setImmediate, __webpack_require__(5)))
 
 /***/ }),
 /* 164 */
@@ -30259,7 +30279,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StellarTomlResolver = exports.STELLAR_TOML_MAX_SIZE = void 0;
 var tslib_1 = __webpack_require__(2);
 var axios_1 = tslib_1.__importDefault(__webpack_require__(61));
-var toml_1 = tslib_1.__importDefault(__webpack_require__(416));
+var toml_1 = tslib_1.__importDefault(__webpack_require__(417));
 var config_1 = __webpack_require__(60);
 exports.STELLAR_TOML_MAX_SIZE = 100 * 1024;
 var CancelToken = axios_1.default.CancelToken;
@@ -30343,7 +30363,7 @@ var config_1 = __webpack_require__(60);
 Object.defineProperty(exports, "Config", { enumerable: true, get: function () { return config_1.Config; } });
 var server_1 = __webpack_require__(352);
 Object.defineProperty(exports, "Server", { enumerable: true, get: function () { return server_1.Server; } });
-var federation_server_1 = __webpack_require__(415);
+var federation_server_1 = __webpack_require__(416);
 Object.defineProperty(exports, "FederationServer", { enumerable: true, get: function () { return federation_server_1.FederationServer; } });
 Object.defineProperty(exports, "FEDERATION_RESPONSE_MAX_SIZE", { enumerable: true, get: function () { return federation_server_1.FEDERATION_RESPONSE_MAX_SIZE; } });
 var stellar_toml_resolver_1 = __webpack_require__(166);
@@ -30353,7 +30373,7 @@ var horizon_axios_client_1 = __webpack_require__(87);
 Object.defineProperty(exports, "HorizonAxiosClient", { enumerable: true, get: function () { return horizon_axios_client_1.default; } });
 Object.defineProperty(exports, "SERVER_TIME_MAP", { enumerable: true, get: function () { return horizon_axios_client_1.SERVER_TIME_MAP; } });
 Object.defineProperty(exports, "getCurrentServerTime", { enumerable: true, get: function () { return horizon_axios_client_1.getCurrentServerTime; } });
-tslib_1.__exportStar(__webpack_require__(419), exports);
+tslib_1.__exportStar(__webpack_require__(420), exports);
 tslib_1.__exportStar(__webpack_require__(27), exports);
 exports.default = module.exports;
 
@@ -39741,8 +39761,8 @@ function createAccount(opts) {
   if (!_strkey.StrKey.isValidEd25519PublicKey(opts.destination)) {
     throw new Error('destination is invalid');
   }
-  if (!this.isValidAmount(opts.startingBalance)) {
-    throw new TypeError(this.constructAmountRequirementsError('startingBalance'));
+  if (!this.isValidAmount(opts.startingBalance, true)) {
+    throw new TypeError('startingBalance must be of type String, represent a non-negative number and have at most 7 digits after the decimal');
   }
   var attributes = {};
   attributes.destination = _keypair.Keypair.fromPublicKey(opts.destination).xdrAccountId();
@@ -41319,22 +41339,22 @@ var urijs_1 = tslib_1.__importDefault(__webpack_require__(34));
 var call_builder_1 = __webpack_require__(6);
 var config_1 = __webpack_require__(60);
 var errors_1 = __webpack_require__(33);
-var account_call_builder_1 = __webpack_require__(400);
+var account_call_builder_1 = __webpack_require__(401);
 var account_response_1 = __webpack_require__(91);
-var assets_call_builder_1 = __webpack_require__(401);
-var claimable_balances_call_builder_1 = __webpack_require__(402);
-var effect_call_builder_1 = __webpack_require__(403);
-var friendbot_builder_1 = __webpack_require__(404);
-var ledger_call_builder_1 = __webpack_require__(405);
-var offer_call_builder_1 = __webpack_require__(406);
-var operation_call_builder_1 = __webpack_require__(407);
-var orderbook_call_builder_1 = __webpack_require__(408);
-var payment_call_builder_1 = __webpack_require__(409);
-var strict_receive_path_call_builder_1 = __webpack_require__(410);
-var strict_send_path_call_builder_1 = __webpack_require__(411);
-var trade_aggregation_call_builder_1 = __webpack_require__(412);
-var trades_call_builder_1 = __webpack_require__(413);
-var transaction_call_builder_1 = __webpack_require__(414);
+var assets_call_builder_1 = __webpack_require__(402);
+var claimable_balances_call_builder_1 = __webpack_require__(403);
+var effect_call_builder_1 = __webpack_require__(404);
+var friendbot_builder_1 = __webpack_require__(405);
+var ledger_call_builder_1 = __webpack_require__(406);
+var offer_call_builder_1 = __webpack_require__(407);
+var operation_call_builder_1 = __webpack_require__(408);
+var orderbook_call_builder_1 = __webpack_require__(409);
+var payment_call_builder_1 = __webpack_require__(410);
+var strict_receive_path_call_builder_1 = __webpack_require__(411);
+var strict_send_path_call_builder_1 = __webpack_require__(412);
+var trade_aggregation_call_builder_1 = __webpack_require__(413);
+var trades_call_builder_1 = __webpack_require__(414);
+var transaction_call_builder_1 = __webpack_require__(415);
 var horizon_axios_client_1 = tslib_1.__importStar(__webpack_require__(87));
 exports.SUBMIT_TRANSACTION_TIMEOUT = 60 * 1000;
 var STROOPS_IN_LUMEN = 10000000;
@@ -42678,6 +42698,9 @@ axios.all = function all(promises) {
 };
 axios.spread = __webpack_require__(377);
 
+// Expose isAxiosError
+axios.isAxiosError = __webpack_require__(378);
+
 module.exports = axios;
 
 // Allow use of default import syntax in TypeScript
@@ -42764,9 +42787,10 @@ Axios.prototype.getUri = function getUri(config) {
 utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
   /*eslint func-names:0*/
   Axios.prototype[method] = function(url, config) {
-    return this.request(utils.merge(config || {}, {
+    return this.request(mergeConfig(config || {}, {
       method: method,
-      url: url
+      url: url,
+      data: (config || {}).data
     }));
   };
 });
@@ -42774,7 +42798,7 @@ utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData
 utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
   /*eslint func-names:0*/
   Axios.prototype[method] = function(url, data, config) {
-    return this.request(utils.merge(config || {}, {
+    return this.request(mergeConfig(config || {}, {
       method: method,
       url: url,
       data: data
@@ -42994,7 +43018,7 @@ var createError = __webpack_require__(153);
  */
 module.exports = function settle(resolve, reject, response) {
   var validateStatus = response.config.validateStatus;
-  if (!validateStatus || validateStatus(response.status)) {
+  if (!response.status || !validateStatus || validateStatus(response.status)) {
     resolve(response);
   } else {
     reject(createError(
@@ -43035,7 +43059,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
   error.response = response;
   error.isAxiosError = true;
 
-  error.toJSON = function() {
+  error.toJSON = function toJSON() {
     return {
       // Standard
       message: this.message,
@@ -43064,8 +43088,68 @@ module.exports = function enhanceError(error, config, code, request, response) {
 "use strict";
 
 
-var isAbsoluteURL = __webpack_require__(371);
-var combineURLs = __webpack_require__(372);
+var utils = __webpack_require__(10);
+
+module.exports = (
+  utils.isStandardBrowserEnv() ?
+
+  // Standard browser envs support document.cookie
+    (function standardBrowserEnv() {
+      return {
+        write: function write(name, value, expires, path, domain, secure) {
+          var cookie = [];
+          cookie.push(name + '=' + encodeURIComponent(value));
+
+          if (utils.isNumber(expires)) {
+            cookie.push('expires=' + new Date(expires).toGMTString());
+          }
+
+          if (utils.isString(path)) {
+            cookie.push('path=' + path);
+          }
+
+          if (utils.isString(domain)) {
+            cookie.push('domain=' + domain);
+          }
+
+          if (secure === true) {
+            cookie.push('secure');
+          }
+
+          document.cookie = cookie.join('; ');
+        },
+
+        read: function read(name) {
+          var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+          return (match ? decodeURIComponent(match[3]) : null);
+        },
+
+        remove: function remove(name) {
+          this.write(name, '', Date.now() - 86400000);
+        }
+      };
+    })() :
+
+  // Non standard browser env (web workers, react-native) lack needed support.
+    (function nonStandardBrowserEnv() {
+      return {
+        write: function write() {},
+        read: function read() { return null; },
+        remove: function remove() {}
+      };
+    })()
+);
+
+
+/***/ }),
+/* 371 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var isAbsoluteURL = __webpack_require__(372);
+var combineURLs = __webpack_require__(373);
 
 /**
  * Creates a new URL by combining the baseURL with the requestedURL,
@@ -43085,7 +43169,7 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
 
 
 /***/ }),
-/* 371 */
+/* 372 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -43106,7 +43190,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 372 */
+/* 373 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -43127,7 +43211,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 373 */
+/* 374 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -43187,7 +43271,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 374 */
+/* 375 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -43256,66 +43340,6 @@ module.exports = (
     (function nonStandardBrowserEnv() {
       return function isURLSameOrigin() {
         return true;
-      };
-    })()
-);
-
-
-/***/ }),
-/* 375 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var utils = __webpack_require__(10);
-
-module.exports = (
-  utils.isStandardBrowserEnv() ?
-
-  // Standard browser envs support document.cookie
-    (function standardBrowserEnv() {
-      return {
-        write: function write(name, value, expires, path, domain, secure) {
-          var cookie = [];
-          cookie.push(name + '=' + encodeURIComponent(value));
-
-          if (utils.isNumber(expires)) {
-            cookie.push('expires=' + new Date(expires).toGMTString());
-          }
-
-          if (utils.isString(path)) {
-            cookie.push('path=' + path);
-          }
-
-          if (utils.isString(domain)) {
-            cookie.push('domain=' + domain);
-          }
-
-          if (secure === true) {
-            cookie.push('secure');
-          }
-
-          document.cookie = cookie.join('; ');
-        },
-
-        read: function read(name) {
-          var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
-          return (match ? decodeURIComponent(match[3]) : null);
-        },
-
-        remove: function remove(name) {
-          this.write(name, '', Date.now() - 86400000);
-        }
-      };
-    })() :
-
-  // Non standard browser env (web workers, react-native) lack needed support.
-    (function nonStandardBrowserEnv() {
-      return {
-        write: function write() {},
-        read: function read() { return null; },
-        remove: function remove() {}
       };
     })()
 );
@@ -43423,10 +43447,28 @@ module.exports = function spread(callback) {
 /* 378 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(process, Buffer) {var original = __webpack_require__(379)
+"use strict";
+
+
+/**
+ * Determines whether the payload is an error thrown by Axios
+ *
+ * @param {*} payload The value to test
+ * @returns {boolean} True if the payload is an error thrown by Axios, otherwise false
+ */
+module.exports = function isAxiosError(payload) {
+  return (typeof payload === 'object') && (payload.isAxiosError === true);
+};
+
+
+/***/ }),
+/* 379 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(process, Buffer) {var original = __webpack_require__(380)
 var parse = __webpack_require__(88).parse
 var events = __webpack_require__(89)
-var https = __webpack_require__(388)
+var https = __webpack_require__(389)
 var http = __webpack_require__(156)
 var util = __webpack_require__(107)
 
@@ -43857,13 +43899,13 @@ function MessageEvent (type, eventInitDict) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(12), __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 379 */
+/* 380 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var parse = __webpack_require__(380);
+var parse = __webpack_require__(381);
 
 /**
  * Transform an URL to a valid origin value.
@@ -43910,14 +43952,14 @@ module.exports = origin;
 
 
 /***/ }),
-/* 380 */
+/* 381 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(global) {
 
-var required = __webpack_require__(381)
-  , qs = __webpack_require__(382)
+var required = __webpack_require__(382)
+  , qs = __webpack_require__(383)
   , slashes = /^[A-Za-z][A-Za-z0-9+-.]*:\/\//
   , protocolre = /^([a-z][a-z0-9.+-]*:)?(\/\/)?([\S\s]*)/i
   , whitespace = '[\\x09\\x0A\\x0B\\x0C\\x0D\\x20\\xA0\\u1680\\u180E\\u2000\\u2001\\u2002\\u2003\\u2004\\u2005\\u2006\\u2007\\u2008\\u2009\\u200A\\u202F\\u205F\\u3000\\u2028\\u2029\\uFEFF]'
@@ -44368,7 +44410,7 @@ module.exports = Url;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 381 */
+/* 382 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44413,7 +44455,7 @@ module.exports = function required(port, protocol) {
 
 
 /***/ }),
-/* 382 */
+/* 383 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -44538,7 +44580,7 @@ exports.parse = querystring;
 
 
 /***/ }),
-/* 383 */
+/* 384 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(module, global) {var __WEBPACK_AMD_DEFINE_RESULT__;/*! https://mths.be/punycode v1.4.1 by @mathias */
@@ -45064,7 +45106,7 @@ exports.parse = querystring;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(38)(module), __webpack_require__(5)))
 
 /***/ }),
-/* 384 */
+/* 385 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -45087,18 +45129,18 @@ module.exports = {
 
 
 /***/ }),
-/* 385 */
+/* 386 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-exports.decode = exports.parse = __webpack_require__(386);
-exports.encode = exports.stringify = __webpack_require__(387);
+exports.decode = exports.parse = __webpack_require__(387);
+exports.encode = exports.stringify = __webpack_require__(388);
 
 
 /***/ }),
-/* 386 */
+/* 387 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -45189,7 +45231,7 @@ var isArray = Array.isArray || function (xs) {
 
 
 /***/ }),
-/* 387 */
+/* 388 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -45281,7 +45323,7 @@ var objectKeys = Object.keys || function (obj) {
 
 
 /***/ }),
-/* 388 */
+/* 389 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var http = __webpack_require__(156)
@@ -45318,14 +45360,14 @@ function validateParams (params) {
 
 
 /***/ }),
-/* 389 */
+/* 390 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(157)
 var inherits = __webpack_require__(8)
 var response = __webpack_require__(158)
 var stream = __webpack_require__(159)
-var toArrayBuffer = __webpack_require__(397)
+var toArrayBuffer = __webpack_require__(398)
 
 var IncomingMessage = response.IncomingMessage
 var rStates = response.readyStates
@@ -45652,13 +45694,13 @@ var unsafeHeaders = [
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0).Buffer, __webpack_require__(5), __webpack_require__(12)))
 
 /***/ }),
-/* 390 */
+/* 391 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 391 */
+/* 392 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -45667,7 +45709,7 @@ var unsafeHeaders = [
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Buffer = __webpack_require__(90).Buffer;
-var util = __webpack_require__(392);
+var util = __webpack_require__(393);
 
 function copyBuffer(src, target, offset) {
   src.copy(target, offset);
@@ -45743,13 +45785,13 @@ if (util && util.inspect && util.inspect.custom) {
 }
 
 /***/ }),
-/* 392 */
+/* 393 */
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
-/* 393 */
+/* 394 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var scope = (typeof global !== "undefined" && global) ||
@@ -45805,7 +45847,7 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(394);
+__webpack_require__(395);
 // On some exotic environments, it's not clear which object `setimmediate` was
 // able to install onto.  Search each possibility in the same order as the
 // `setimmediate` library.
@@ -45819,7 +45861,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 394 */
+/* 395 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -46012,7 +46054,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5), __webpack_require__(12)))
 
 /***/ }),
-/* 395 */
+/* 396 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {
@@ -46086,7 +46128,7 @@ function config (name) {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(5)))
 
 /***/ }),
-/* 396 */
+/* 397 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46139,7 +46181,7 @@ PassThrough.prototype._transform = function (chunk, encoding, cb) {
 };
 
 /***/ }),
-/* 397 */
+/* 398 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Buffer = __webpack_require__(0).Buffer
@@ -46172,7 +46214,7 @@ module.exports = function (buf) {
 
 
 /***/ }),
-/* 398 */
+/* 399 */
 /***/ (function(module, exports) {
 
 module.exports = extend
@@ -46197,7 +46239,7 @@ function extend() {
 
 
 /***/ }),
-/* 399 */
+/* 400 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -46267,7 +46309,7 @@ module.exports = {
 
 
 /***/ }),
-/* 400 */
+/* 401 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46306,7 +46348,7 @@ exports.AccountCallBuilder = AccountCallBuilder;
 
 
 /***/ }),
-/* 401 */
+/* 402 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46336,7 +46378,7 @@ exports.AssetsCallBuilder = AssetsCallBuilder;
 
 
 /***/ }),
-/* 402 */
+/* 403 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46375,7 +46417,7 @@ exports.ClaimableBalanceCallBuilder = ClaimableBalanceCallBuilder;
 
 
 /***/ }),
-/* 403 */
+/* 404 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46417,7 +46459,7 @@ exports.EffectCallBuilder = EffectCallBuilder;
 
 
 /***/ }),
-/* 404 */
+/* 405 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46440,7 +46482,7 @@ exports.FriendbotBuilder = FriendbotBuilder;
 
 
 /***/ }),
-/* 405 */
+/* 406 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46466,7 +46508,7 @@ exports.LedgerCallBuilder = LedgerCallBuilder;
 
 
 /***/ }),
-/* 406 */
+/* 407 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46523,7 +46565,7 @@ exports.OfferCallBuilder = OfferCallBuilder;
 
 
 /***/ }),
-/* 407 */
+/* 408 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46570,7 +46612,7 @@ exports.OperationCallBuilder = OperationCallBuilder;
 
 
 /***/ }),
-/* 408 */
+/* 409 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46608,7 +46650,7 @@ exports.OrderbookCallBuilder = OrderbookCallBuilder;
 
 
 /***/ }),
-/* 409 */
+/* 410 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46646,7 +46688,7 @@ exports.PaymentCallBuilder = PaymentCallBuilder;
 
 
 /***/ }),
-/* 410 */
+/* 411 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46691,7 +46733,7 @@ exports.StrictReceivePathCallBuilder = StrictReceivePathCallBuilder;
 
 
 /***/ }),
-/* 411 */
+/* 412 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46736,7 +46778,7 @@ exports.StrictSendPathCallBuilder = StrictSendPathCallBuilder;
 
 
 /***/ }),
-/* 412 */
+/* 413 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46815,7 +46857,7 @@ exports.TradeAggregationCallBuilder = TradeAggregationCallBuilder;
 
 
 /***/ }),
-/* 413 */
+/* 414 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46864,7 +46906,7 @@ exports.TradesCallBuilder = TradesCallBuilder;
 
 
 /***/ }),
-/* 414 */
+/* 415 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46904,7 +46946,7 @@ exports.TransactionCallBuilder = TransactionCallBuilder;
 
 
 /***/ }),
-/* 415 */
+/* 416 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47049,11 +47091,11 @@ exports.FederationServer = FederationServer;
 
 
 /***/ }),
-/* 416 */
+/* 417 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parser = __webpack_require__(417);
-var compiler = __webpack_require__(418);
+var parser = __webpack_require__(418);
+var compiler = __webpack_require__(419);
 
 module.exports = {
   parse: function(input) {
@@ -47064,7 +47106,7 @@ module.exports = {
 
 
 /***/ }),
-/* 417 */
+/* 418 */
 /***/ (function(module, exports) {
 
 module.exports = (function() {
@@ -50911,7 +50953,7 @@ module.exports = (function() {
 
 
 /***/ }),
-/* 418 */
+/* 419 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51113,7 +51155,7 @@ module.exports = {
 
 
 /***/ }),
-/* 419 */
+/* 420 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51122,12 +51164,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Utils = void 0;
 var tslib_1 = __webpack_require__(2);
 var clone_1 = tslib_1.__importDefault(__webpack_require__(43));
-var randombytes_1 = tslib_1.__importDefault(__webpack_require__(420));
+var randombytes_1 = tslib_1.__importDefault(__webpack_require__(421));
 var stellar_base_1 = __webpack_require__(27);
 var errors_1 = __webpack_require__(33);
 var Utils;
 (function (Utils) {
-    function buildChallengeTx(serverKeypair, clientAccountID, homeDomain, timeout, networkPassphrase) {
+    function buildChallengeTx(serverKeypair, clientAccountID, homeDomain, timeout, networkPassphrase, webAuthDomain) {
         if (timeout === void 0) { timeout = 300; }
         if (clientAccountID.startsWith("M")) {
             throw Error("Invalid clientAccountID: multiplexed accounts are not supported.");
@@ -51148,6 +51190,11 @@ var Utils;
             value: value,
             source: clientAccountID,
         }))
+            .addOperation(stellar_base_1.Operation.manageData({
+            name: "web_auth_domain",
+            value: webAuthDomain,
+            source: account.accountId(),
+        }))
             .build();
         transaction.sign(serverKeypair);
         return transaction
@@ -51156,7 +51203,7 @@ var Utils;
             .toString();
     }
     Utils.buildChallengeTx = buildChallengeTx;
-    function readChallengeTx(challengeTx, serverAccountID, networkPassphrase, homeDomains) {
+    function readChallengeTx(challengeTx, serverAccountID, networkPassphrase, homeDomains, webAuthDomain) {
         var _a;
         if (serverAccountID.startsWith("M")) {
             throw Error("Invalid serverAccountID: multiplexed accounts are not supported.");
@@ -51190,6 +51237,12 @@ var Utils;
         if (!validateTimebounds(transaction)) {
             throw new errors_1.InvalidSep10ChallengeError("The transaction has expired");
         }
+        if (operation.value === undefined) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction's operation values should not be null");
+        }
+        if (!operation.value) {
+            throw new errors_1.InvalidSep10ChallengeError("The transaction's operation value should not be null");
+        }
         if (Buffer.from(operation.value.toString(), "base64").length !== 48) {
             throw new errors_1.InvalidSep10ChallengeError("The transaction's operation value should be a 64 bytes base64 random string");
         }
@@ -51219,14 +51272,22 @@ var Utils;
             if (op.source !== serverAccountID) {
                 throw new errors_1.InvalidSep10ChallengeError("The transaction has operations that are unrecognized");
             }
+            if (op.name === "web_auth_domain") {
+                if (op.value === undefined) {
+                    throw new errors_1.InvalidSep10ChallengeError("'web_auth_domain' operation value should not be null");
+                }
+                if (op.value.compare(Buffer.from(webAuthDomain))) {
+                    throw new errors_1.InvalidSep10ChallengeError("'web_auth_domain' operation value does not match " + webAuthDomain);
+                }
+            }
         }
         return { tx: transaction, clientAccountID: clientAccountID, matchedHomeDomain: matchedHomeDomain };
     }
     Utils.readChallengeTx = readChallengeTx;
-    function verifyChallengeTxThreshold(challengeTx, serverAccountID, networkPassphrase, threshold, signerSummary, homeDomains) {
+    function verifyChallengeTxThreshold(challengeTx, serverAccountID, networkPassphrase, threshold, signerSummary, homeDomains, webAuthDomain) {
         var _a;
         var signers = signerSummary.map(function (signer) { return signer.key; });
-        var signersFound = verifyChallengeTxSigners(challengeTx, serverAccountID, networkPassphrase, signers, homeDomains);
+        var signersFound = verifyChallengeTxSigners(challengeTx, serverAccountID, networkPassphrase, signers, homeDomains, webAuthDomain);
         var weight = 0;
         var _loop_1 = function (signer) {
             var sigWeight = ((_a = signerSummary.find(function (s) { return s.key === signer; })) === null || _a === void 0 ? void 0 : _a.weight) || 0;
@@ -51242,8 +51303,8 @@ var Utils;
         return signersFound;
     }
     Utils.verifyChallengeTxThreshold = verifyChallengeTxThreshold;
-    function verifyChallengeTxSigners(challengeTx, serverAccountID, networkPassphrase, signers, homeDomains) {
-        var tx = readChallengeTx(challengeTx, serverAccountID, networkPassphrase, homeDomains).tx;
+    function verifyChallengeTxSigners(challengeTx, serverAccountID, networkPassphrase, signers, homeDomains, webAuthDomain) {
+        var tx = readChallengeTx(challengeTx, serverAccountID, networkPassphrase, homeDomains, webAuthDomain).tx;
         var serverKP;
         try {
             serverKP = stellar_base_1.Keypair.fromPublicKey(serverAccountID);
@@ -51331,7 +51392,7 @@ var Utils;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 420 */
+/* 421 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
