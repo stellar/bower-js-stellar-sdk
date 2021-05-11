@@ -1893,7 +1893,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
 var XDR = _interopRequireWildcard(_jsXdr);
 
@@ -7675,7 +7675,7 @@ var _isNull = __webpack_require__(100);
 
 var _isNull2 = _interopRequireDefault(_isNull);
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -7686,14 +7686,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var versionBytes = {
-  ed25519PublicKey: 6 << 3, // G
+  ed25519PublicKey: 6 << 3, // G (when encoded in base32)
   ed25519SecretSeed: 18 << 3, // S
+  med25519PublicKey: 12 << 3, // M
   preAuthTx: 19 << 3, // T
   sha256Hash: 23 << 3 // X
 };
 
 /**
- * StrKey is a helper class that allows encoding and decoding strkey.
+ * StrKey is a helper class that allows encoding and decoding Stellar keys
+ * to/from strings, i.e. between their binary (Buffer, xdr.PublicKey, etc.) and
+ * string (i.e. "GABCD...", etc.) representations.
  */
 
 var StrKey = exports.StrKey = function () {
@@ -7705,9 +7708,10 @@ var StrKey = exports.StrKey = function () {
     key: 'encodeEd25519PublicKey',
 
     /**
-     * Encodes data to strkey ed25519 public key.
-     * @param {Buffer} data data to encode
-     * @returns {string}
+     * Encodes `data` to strkey ed25519 public key.
+     *
+     * @param   {Buffer} data   raw data to encode
+     * @returns {string}        "G..." representation of the key
      */
     value: function encodeEd25519PublicKey(data) {
       return encodeCheck('ed25519PublicKey', data);
@@ -7715,8 +7719,12 @@ var StrKey = exports.StrKey = function () {
 
     /**
      * Decodes strkey ed25519 public key to raw data.
-     * @param {string} data data to decode
-     * @returns {Buffer}
+     *
+     * If the parameter is a muxed account key ("M..."), this will only encode it
+     * as a basic Ed25519 key (as if in "G..." format).
+     *
+     * @param   {string} data   "G..." (or "M...") key representation to decode
+     * @returns {Buffer}        raw key
      */
 
   }, {
@@ -7774,6 +7782,42 @@ var StrKey = exports.StrKey = function () {
     }
 
     /**
+     * Encodes data to strkey med25519 public key.
+     * @param {Buffer} data data to encode
+     * @returns {string}
+     */
+
+  }, {
+    key: 'encodeMed25519PublicKey',
+    value: function encodeMed25519PublicKey(data) {
+      return encodeCheck('med25519PublicKey', data);
+    }
+
+    /**
+     * Decodes strkey med25519 public key to raw data.
+     * @param {string} data data to decode
+     * @returns {Buffer}
+     */
+
+  }, {
+    key: 'decodeMed25519PublicKey',
+    value: function decodeMed25519PublicKey(data) {
+      return decodeCheck('med25519PublicKey', data);
+    }
+
+    /**
+     * Returns true if the given Stellar public key is a valid med25519 public key.
+     * @param {string} publicKey public key to check
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'isValidMed25519PublicKey',
+    value: function isValidMed25519PublicKey(publicKey) {
+      return isValid('med25519PublicKey', publicKey);
+    }
+
+    /**
      * Encodes data to strkey preAuthTx.
      * @param {Buffer} data data to encode
      * @returns {string}
@@ -7825,14 +7869,19 @@ var StrKey = exports.StrKey = function () {
   return StrKey;
 }();
 
+// Warning: This isn't a *definitive* check of validity, but rather just a
+// basic-effort check.
+
+
 function isValid(versionByteName, encoded) {
-  if (encoded && encoded.length !== 56) {
+  // it's either non-muxed && len=56, or muxed && len=69
+  if (encoded && encoded.length !== 56 && encoded.length !== 69) {
     return false;
   }
 
   try {
     var decoded = decodeCheck(versionByteName, encoded);
-    if (decoded.length !== 32) {
+    if (decoded.length !== 32 && decoded.length !== 40) {
       return false;
     }
   } catch (err) {
@@ -7859,7 +7908,7 @@ function decodeCheck(versionByteName, encoded) {
   var expectedVersion = versionBytes[versionByteName];
 
   if ((0, _isUndefined2.default)(expectedVersion)) {
-    throw new Error(versionByteName + ' is not a valid version byte name. Expected one of "ed25519PublicKey", "ed25519SecretSeed", "preAuthTx", "sha256Hash", "muxedAccount"');
+    throw new Error(versionByteName + ' is not a valid version byte name. ' + ('Expected one of ' + Object.keys(versionBytes).join(', ')));
   }
 
   if (versionByte !== expectedVersion) {
@@ -7883,7 +7932,7 @@ function encodeCheck(versionByteName, data) {
   var versionByte = versionBytes[versionByteName];
 
   if ((0, _isUndefined2.default)(versionByte)) {
-    throw new Error(versionByteName + ' is not a valid version byte name. Expected one of "ed25519PublicKey", "ed25519SecretSeed", "preAuthTx", "sha256Hash", "muxedAccount"');
+    throw new Error(versionByteName + ' is not a valid version byte name. ' + ('Expected one of ' + Object.keys(versionBytes).join(', ')));
   }
   data = Buffer.from(data);
 
@@ -8507,6 +8556,264 @@ module.exports = root;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _buffer = __webpack_require__(0);
+
+var createBuffer = _buffer.Buffer.from && _buffer.Buffer.alloc && _buffer.Buffer.allocUnsafe && _buffer.Buffer.allocUnsafeSlow ? _buffer.Buffer.from : // support for Node < 5.10
+function (val) {
+  return new _buffer.Buffer(val);
+};
+
+exports.default = createBuffer;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+exports.default = function (model, calc) {
+  var fn = function fn(buf, previous) {
+    return calc(buf, previous) >>> 0;
+  };
+  fn.signed = calc;
+  fn.unsigned = fn;
+  fn.model = model;
+
+  return fn;
+};
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var baseGetTag = __webpack_require__(20),
+    isArray = __webpack_require__(3),
+    isObjectLike = __webpack_require__(11);
+
+/** `Object#toString` result references. */
+var stringTag = '[object String]';
+
+/**
+ * Checks if `value` is classified as a `String` primitive or object.
+ *
+ * @static
+ * @since 0.1.0
+ * @memberOf _
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a string, else `false`.
+ * @example
+ *
+ * _.isString('abc');
+ * // => true
+ *
+ * _.isString(1);
+ * // => false
+ */
+function isString(value) {
+  return typeof value == 'string' ||
+    (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
+}
+
+module.exports = isString;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(Buffer) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.decodeAddressToMuxedAccount = decodeAddressToMuxedAccount;
+exports.encodeMuxedAccountToAddress = encodeMuxedAccountToAddress;
+exports.encodeMuxedAccount = encodeMuxedAccount;
+
+var _isString = __webpack_require__(16);
+
+var _isString2 = _interopRequireDefault(_isString);
+
+var _stellarXdr_generated = __webpack_require__(1);
+
+var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
+
+var _strkey = __webpack_require__(9);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Converts a Stellar address (in G... or M... form) to an XDR MuxedAccount
+ * structure, forcing the ed25519 representation by default.
+ *
+ * This optionally (that is, opt-in only) supports proper muxed accounts, where
+ * an M... address will resolve to both its underlying G... address and an ID.
+ * Note that this behaviour will eventually be the default.
+ *
+ * @function
+ *
+ * @param   {string}  address         G... or M... address to encode into XDR
+ * @param   {bool}   [supportMuxing]  allows decoding of the muxed
+ *     representation of the address, extracting the underlying ID from the M...
+ *     address
+ *
+ * @returns {xdr.MuxedAccount}  a muxed account object for this address string
+ *
+ * @note     If you pass a G... address and DO specify supportMuxing=true, then
+ *           this will return an xdr.MuxedAccount with an ID of zero.
+ * @warning  If you pass an M... address and do NOT specify supportMuxing=true,
+ *           then this function will throw an error.
+ */
+function decodeAddressToMuxedAccount(address, supportMuxing) {
+  if (supportMuxing) {
+    if (_strkey.StrKey.isValidMed25519PublicKey(address)) {
+      return _decodeAddressFullyToMuxedAccount(address);
+    }
+
+    if (_strkey.StrKey.isValidEd25519PublicKey(address)) {
+      return encodeMuxedAccount(address, '0');
+    }
+  }
+
+  return _stellarXdr_generated2.default.MuxedAccount.keyTypeEd25519(_strkey.StrKey.decodeEd25519PublicKey(address));
+}
+
+/**
+ * Converts an xdr.MuxedAccount to its string representation.
+ *
+ * By default, this returns its "G..." string representation (i.e. forcing the
+ * ed25519 representation), but can return the "M..." representation via opt-in.
+ *
+ * @function
+ *
+ * @param   {xdr.MuxedAccount} muxedAccount   account to stringify
+ * @param   {bool}            [supportMuxing] converts the object into its full,
+ *     proper M... address, encoding both the underlying G... address and the
+ *     Muxing ID
+ *
+ * @returns {string}  stringified G... (corresponding to the underlying pubkey)
+ *     or M... address (corresponding to both the key and the muxed ID)
+ */
+function encodeMuxedAccountToAddress(muxedAccount, supportMuxing) {
+  if (muxedAccount.switch().value === _stellarXdr_generated2.default.CryptoKeyType.keyTypeMuxedEd25519().value) {
+    if (supportMuxing) {
+      return _encodeMuxedAccountFullyToAddress(muxedAccount);
+    }
+    muxedAccount = muxedAccount.med25519();
+  }
+  return _strkey.StrKey.encodeEd25519PublicKey(muxedAccount.ed25519());
+}
+
+/**
+ * Transform a Stellar address (G...) and an ID into its XDR representation.
+ *
+ * @param  {string} address   - a Stellar G... address
+ * @param  {string} id        - a Uint64 ID represented as a string
+ * @return {xdr.MuxedAccount} - XDR representation of the above muxed account
+ */
+function encodeMuxedAccount(address, id) {
+  if (!_strkey.StrKey.isValidEd25519PublicKey(address)) {
+    throw new Error('address should be a Stellar account ID (G...)');
+  }
+  if (!(0, _isString2.default)(id)) {
+    throw new Error('id should be a string representing a number (uint64)');
+  }
+
+  return _stellarXdr_generated2.default.MuxedAccount.keyTypeMuxedEd25519(new _stellarXdr_generated2.default.MuxedAccountMed25519({
+    id: _stellarXdr_generated2.default.Uint64.fromString(id),
+    ed25519: _strkey.StrKey.decodeEd25519PublicKey(address)
+  }));
+}
+
+// Decodes an "M..." account ID into its MuxedAccount object representation.
+function _decodeAddressFullyToMuxedAccount(address) {
+  var rawBytes = _strkey.StrKey.decodeMed25519PublicKey(address);
+
+  // Decoding M... addresses cannot be done through a simple
+  // MuxedAccountMed25519.fromXDR() call, because the definition is:
+  //
+  //    constructor(attributes: { id: Uint64; ed25519: Buffer });
+  //
+  // Note the ID is the first attribute. However, the ID comes *last* in the
+  // stringified (base32-encoded) address itself (it's the last 8-byte suffix).
+  // The `fromXDR()` method interprets bytes in order, so we need to parse out
+  // the raw binary into its requisite parts, i.e. use the MuxedAccountMed25519
+  // constructor directly.
+  //
+  // Refer to https://github.com/stellar/go/blob/master/xdr/muxed_account.go#L26
+  // for the Golang implementation of the M... parsing.
+  return _stellarXdr_generated2.default.MuxedAccount.keyTypeMuxedEd25519(new _stellarXdr_generated2.default.MuxedAccountMed25519({
+    id: _stellarXdr_generated2.default.Uint64.fromXDR(rawBytes.slice(-8)),
+    ed25519: rawBytes.slice(0, -8)
+  }));
+}
+
+// Converts an xdr.MuxedAccount into its *true* "M..." string representation.
+function _encodeMuxedAccountFullyToAddress(muxedAccount) {
+  if (muxedAccount.switch() === _stellarXdr_generated2.default.CryptoKeyType.keyTypeEd25519()) {
+    return encodeMuxedAccountToAddress(muxedAccount);
+  }
+
+  var muxed = muxedAccount.med25519();
+  return _strkey.StrKey.encodeMed25519PublicKey(Buffer.concat([muxed.ed25519(), muxed.id().toXDR('raw')]));
+}
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0).Buffer))
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports) {
+
+/**
+ * Checks if `value` is the
+ * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+ * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+ * @example
+ *
+ * _.isObject({});
+ * // => true
+ *
+ * _.isObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isObject(_.noop);
+ * // => true
+ *
+ * _.isObject(null);
+ * // => false
+ */
+function isObject(value) {
+  var type = typeof value;
+  return value != null && (type == 'object' || type == 'function');
+}
+
+module.exports = isObject;
+
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 /* WEBPACK VAR INJECTION */(function(Buffer) {
 
 Object.defineProperty(exports, "__esModule", {
@@ -8784,122 +9091,7 @@ var Keypair = exports.Keypair = function () {
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(0).Buffer))
 
 /***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _buffer = __webpack_require__(0);
-
-var createBuffer = _buffer.Buffer.from && _buffer.Buffer.alloc && _buffer.Buffer.allocUnsafe && _buffer.Buffer.allocUnsafeSlow ? _buffer.Buffer.from : // support for Node < 5.10
-function (val) {
-  return new _buffer.Buffer(val);
-};
-
-exports.default = createBuffer;
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-exports.default = function (model, calc) {
-  var fn = function fn(buf, previous) {
-    return calc(buf, previous) >>> 0;
-  };
-  fn.signed = calc;
-  fn.unsigned = fn;
-  fn.model = model;
-
-  return fn;
-};
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports) {
-
-/**
- * Checks if `value` is the
- * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
- * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
- *
- * @static
- * @memberOf _
- * @since 0.1.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an object, else `false`.
- * @example
- *
- * _.isObject({});
- * // => true
- *
- * _.isObject([1, 2, 3]);
- * // => true
- *
- * _.isObject(_.noop);
- * // => true
- *
- * _.isObject(null);
- * // => false
- */
-function isObject(value) {
-  var type = typeof value;
-  return value != null && (type == 'object' || type == 'function');
-}
-
-module.exports = isObject;
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var baseGetTag = __webpack_require__(19),
-    isArray = __webpack_require__(3),
-    isObjectLike = __webpack_require__(11);
-
-/** `Object#toString` result references. */
-var stringTag = '[object String]';
-
-/**
- * Checks if `value` is classified as a `String` primitive or object.
- *
- * @static
- * @since 0.1.0
- * @memberOf _
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a string, else `false`.
- * @example
- *
- * _.isString('abc');
- * // => true
- *
- * _.isString(1);
- * // => false
- */
-function isString(value) {
-  return typeof value == 'string' ||
-    (!isArray(value) && isObjectLike(value) && baseGetTag(value) == stringTag);
-}
-
-module.exports = isString;
-
-
-/***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var Symbol = __webpack_require__(36),
@@ -8933,7 +9125,7 @@ module.exports = baseGetTag;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
@@ -9004,7 +9196,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9039,7 +9231,7 @@ Object.keys(_config).forEach(function (key) {
 });
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v4.1.0 https://github.com/MikeMcl/bignumber.js/LICENCE */
@@ -11773,54 +11965,6 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*! bignumber.js v4.1.0 https://github.com/Mik
 
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.decodeAddressToMuxedAccount = decodeAddressToMuxedAccount;
-exports.encodeMuxedAccountToAddress = encodeMuxedAccountToAddress;
-
-var _stellarXdr_generated = __webpack_require__(1);
-
-var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
-
-var _strkey = __webpack_require__(9);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * Returns a XDR.MuxedAccount forcing the ed25519 discriminant.
- * @function
- * @param {string} address address to encode to XDR.
- * @returns {xdr.MuxedAccount} MuxedAccount with ed25519 discriminant.
- */
-function decodeAddressToMuxedAccount(address) {
-  return _stellarXdr_generated2.default.MuxedAccount.keyTypeEd25519(_strkey.StrKey.decodeEd25519PublicKey(address));
-}
-
-/**
- * Converts an xdr.MuxedAccount to its string representation, forcing the ed25519 representation.
- * @function
- * @param {xdr.MuxedAccount} muxedAccount .
- * @returns {string} address
- */
-function encodeMuxedAccountToAddress(muxedAccount) {
-  var ed25519 = void 0;
-  if (muxedAccount.switch() === _stellarXdr_generated2.default.CryptoKeyType.keyTypeEd25519()) {
-    ed25519 = muxedAccount.ed25519();
-  } else {
-    ed25519 = muxedAccount.med25519().ed25519();
-  }
-
-  return _strkey.StrKey.encodeEd25519PublicKey(ed25519);
-}
-
-/***/ }),
 /* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -11930,7 +12074,7 @@ module.exports = keysIn;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.StrKey = exports.Networks = exports.Claimant = exports.Account = exports.AuthImmutableFlag = exports.AuthRevocableFlag = exports.AuthRequiredFlag = exports.Operation = exports.Asset = exports.BASE_FEE = exports.TimeoutInfinite = exports.TransactionBuilder = exports.FeeBumpTransaction = exports.Transaction = exports.TransactionBase = exports.Hyper = exports.UnsignedHyper = exports.Keypair = exports.FastSigning = exports.verify = exports.sign = exports.hash = exports.xdr = undefined;
+exports.encodeMuxedAccount = exports.encodeMuxedAccountToAddress = exports.decodeAddressToMuxedAccount = exports.StrKey = exports.Networks = exports.Claimant = exports.MuxedAccount = exports.Account = exports.AuthClawbackEnabledFlag = exports.AuthImmutableFlag = exports.AuthRevocableFlag = exports.AuthRequiredFlag = exports.Operation = exports.Asset = exports.BASE_FEE = exports.TimeoutInfinite = exports.TransactionBuilder = exports.FeeBumpTransaction = exports.Transaction = exports.TransactionBase = exports.Hyper = exports.UnsignedHyper = exports.Keypair = exports.FastSigning = exports.verify = exports.sign = exports.hash = exports.xdr = undefined;
 
 var _hashing = __webpack_require__(39);
 
@@ -11962,7 +12106,7 @@ Object.defineProperty(exports, 'FastSigning', {
   }
 });
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 Object.defineProperty(exports, 'Keypair', {
   enumerable: true,
@@ -11971,7 +12115,7 @@ Object.defineProperty(exports, 'Keypair', {
   }
 });
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
 Object.defineProperty(exports, 'UnsignedHyper', {
   enumerable: true,
@@ -12069,6 +12213,12 @@ Object.defineProperty(exports, 'AuthImmutableFlag', {
     return _operation.AuthImmutableFlag;
   }
 });
+Object.defineProperty(exports, 'AuthClawbackEnabledFlag', {
+  enumerable: true,
+  get: function get() {
+    return _operation.AuthClawbackEnabledFlag;
+  }
+});
 
 var _memo = __webpack_require__(86);
 
@@ -12088,6 +12238,12 @@ Object.defineProperty(exports, 'Account', {
   enumerable: true,
   get: function get() {
     return _account.Account;
+  }
+});
+Object.defineProperty(exports, 'MuxedAccount', {
+  enumerable: true,
+  get: function get() {
+    return _account.MuxedAccount;
   }
 });
 
@@ -12118,6 +12274,27 @@ Object.defineProperty(exports, 'StrKey', {
   }
 });
 
+var _decode_encode_muxed_account = __webpack_require__(17);
+
+Object.defineProperty(exports, 'decodeAddressToMuxedAccount', {
+  enumerable: true,
+  get: function get() {
+    return _decode_encode_muxed_account.decodeAddressToMuxedAccount;
+  }
+});
+Object.defineProperty(exports, 'encodeMuxedAccountToAddress', {
+  enumerable: true,
+  get: function get() {
+    return _decode_encode_muxed_account.encodeMuxedAccountToAddress;
+  }
+});
+Object.defineProperty(exports, 'encodeMuxedAccount', {
+  enumerable: true,
+  get: function get() {
+    return _decode_encode_muxed_account.encodeMuxedAccount;
+  }
+});
+
 var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
@@ -12131,7 +12308,7 @@ exports.default = module.exports;
 /* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 // prototype class for hash functions
 function Hash (blockSize, finalSize) {
@@ -15062,7 +15239,7 @@ function hash(data) {
 /* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
+var baseGetTag = __webpack_require__(20),
     isObjectLike = __webpack_require__(11);
 
 /** `Object#toString` result references. */
@@ -15154,7 +15331,7 @@ var DataView = __webpack_require__(262),
     Promise = __webpack_require__(263),
     Set = __webpack_require__(264),
     WeakMap = __webpack_require__(265),
-    baseGetTag = __webpack_require__(19),
+    baseGetTag = __webpack_require__(20),
     toSource = __webpack_require__(104);
 
 /** `Object#toString` result references. */
@@ -15495,8 +15672,8 @@ module.exports = isPrototype;
 /* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
-    isObject = __webpack_require__(17);
+var baseGetTag = __webpack_require__(20),
+    isObject = __webpack_require__(18);
 
 /** `Object#toString` result references. */
 var asyncTag = '[object AsyncFunction]',
@@ -15716,7 +15893,7 @@ module.exports = getMapData;
 /* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
+var baseGetTag = __webpack_require__(20),
     isObjectLike = __webpack_require__(11);
 
 /** `Object#toString` result references. */
@@ -15862,7 +16039,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 var _strkey = __webpack_require__(9);
 
@@ -16154,7 +16331,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 63 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"8.1.1\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"files\":[\"/types\",\"/lib\",\"/dist\"],\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"^4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"^7.0.2\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"^5.0.2\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"^2.0.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"^7.1.1\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"0.21.1\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^5.1.0\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
+module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"8.2.0\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"files\":[\"/types\",\"/lib\",\"/dist\"],\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"^4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"^7.0.2\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"^5.0.2\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^1.2.0\",\"karma-mocha\":\"^2.0.0\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.4\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"3.0.5\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"^7.1.1\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"0.21.1\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.11\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^5.2.1\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
 
 /***/ }),
 /* 64 */
@@ -16720,7 +16897,7 @@ var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
 var _hashing = __webpack_require__(39);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -16998,7 +17175,7 @@ var _memo = __webpack_require__(86);
 
 var _transaction_base = __webpack_require__(81);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -17009,21 +17186,32 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 /**
- * Use {@link TransactionBuilder} to build a transaction object. If you have
- * an object or base64-encoded string of the transaction envelope XDR use {@link TransactionBuilder.fromXDR}.
+ * Use {@link TransactionBuilder} to build a transaction object. If you have an
+ * object or base64-encoded string of the transaction envelope XDR, use {@link
+ * TransactionBuilder.fromXDR}.
  *
- * Once a Transaction has been created, its attributes and operations
- * should not be changed. You should only add signatures (using {@link Transaction#sign}) to a Transaction object before
- * submitting to the network or forwarding on to additional signers.
+ * Once a Transaction has been created, its attributes and operations should not
+ * be changed. You should only add signatures (using {@link Transaction#sign})
+ * to a Transaction object before submitting to the network or forwarding on to
+ * additional signers.
+ *
  * @constructor
- * @param {string|xdr.TransactionEnvelope} envelope - The transaction envelope object or base64 encoded string.
- * @param {string} [networkPassphrase] passphrase of the target stellar network (e.g. "Public Global Stellar Network ; September 2015").
+ *
+ * @param {string|xdr.TransactionEnvelope} envelope - transaction envelope
+ *     object or base64 encoded string
+ * @param {string}  [networkPassphrase] - passphrase of the target stellar
+ *     network (e.g. "Public Global Stellar Network ; September 2015")
+ * @param {bool}    [opts.withMuxing] - Indicates that this.sourceAccount is a
+ *     muxed account (i.e. came from an M... address) and should be interpreted
+ *     fully as such. By default, this option is disabled until muxed accounts
+ *     are mature.
+ *
  * @extends TransactionBase
  */
 var Transaction = exports.Transaction = function (_TransactionBase) {
   _inherits(Transaction, _TransactionBase);
 
-  function Transaction(envelope, networkPassphrase) {
+  function Transaction(envelope, networkPassphrase, withMuxing) {
     _classCallCheck(this, Transaction);
 
     if (typeof envelope === 'string') {
@@ -17052,7 +17240,7 @@ var Transaction = exports.Transaction = function (_TransactionBase) {
         _this._source = _strkey.StrKey.encodeEd25519PublicKey(_this.tx.sourceAccountEd25519());
         break;
       default:
-        _this._source = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(_this.tx.sourceAccount());
+        _this._source = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(_this.tx.sourceAccount(), withMuxing);
         break;
     }
 
@@ -17299,7 +17487,7 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -17307,9 +17495,9 @@ var _clone = __webpack_require__(43);
 
 var _clone2 = _interopRequireDefault(_clone);
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
-var _bignumber = __webpack_require__(22);
+var _bignumber = __webpack_require__(23);
 
 var _bignumber2 = _interopRequireDefault(_bignumber);
 
@@ -19092,7 +19280,7 @@ module.exports = Array.isArray || function (arr) {
 
 var inherits = __webpack_require__(8)
 var Hash = __webpack_require__(28)
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 var K = [
   0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -19225,7 +19413,7 @@ module.exports = Sha256
 
 var inherits = __webpack_require__(8)
 var Hash = __webpack_require__(28)
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 var K = [
   0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
@@ -22386,7 +22574,7 @@ module.exports = createAssigner;
 var eq = __webpack_require__(41),
     isArrayLike = __webpack_require__(24),
     isIndex = __webpack_require__(66),
-    isObject = __webpack_require__(17);
+    isObject = __webpack_require__(18);
 
 /**
  * Checks if the given arguments are from an iteratee call.
@@ -23461,7 +23649,7 @@ module.exports = stubArray;
 /* 118 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(17);
+var isObject = __webpack_require__(18);
 
 /**
  * Checks if `value` is suitable for strict equality comparisons, i.e. `===`.
@@ -24950,13 +25138,13 @@ module.exports = map;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Operation = exports.AuthImmutableFlag = exports.AuthRevocableFlag = exports.AuthRequiredFlag = undefined;
+exports.Operation = exports.AuthClawbackEnabledFlag = exports.AuthImmutableFlag = exports.AuthRevocableFlag = exports.AuthRequiredFlag = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* eslint-disable no-bitwise */
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
-var _bignumber = __webpack_require__(22);
+var _bignumber = __webpack_require__(23);
 
 var _bignumber2 = _interopRequireDefault(_bignumber);
 
@@ -24968,7 +25156,7 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -24996,7 +25184,7 @@ var _index = __webpack_require__(330);
 
 var ops = _interopRequireWildcard(_index);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -25008,26 +25196,40 @@ var ONE = 10000000;
 var MAX_INT64 = '9223372036854775807';
 
 /**
- * When set using `{@link Operation.setOptions}` option, requires the issuing account to
- * give other accounts permission before they can hold the issuing account’s credit.
+ * When set using `{@link Operation.setOptions}` option, requires the issuing
+ * account to give other accounts permission before they can hold the issuing
+ * account’s credit.
+ *
  * @constant
  * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
  */
 var AuthRequiredFlag = exports.AuthRequiredFlag = 1 << 0;
 /**
- * When set using `{@link Operation.setOptions}` option, allows the issuing account to
- * revoke its credit held by other accounts.
+ * When set using `{@link Operation.setOptions}` option, allows the issuing
+ * account to revoke its credit held by other accounts.
+ *
  * @constant
  * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
  */
 var AuthRevocableFlag = exports.AuthRevocableFlag = 1 << 1;
 /**
- * When set using `{@link Operation.setOptions}` option, then none of the authorization flags
- * can be set and the account can never be deleted.
+ * When set using `{@link Operation.setOptions}` option, then none of the
+ * authorization flags can be set and the account can never be deleted.
+ *
  * @constant
  * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
  */
 var AuthImmutableFlag = exports.AuthImmutableFlag = 1 << 2;
+
+/**
+ * When set using `{@link Operation.setOptions}` option, then any trustlines
+ * created by this account can have a ClawbackOp operation submitted for the
+ * corresponding asset.
+ *
+ * @constant
+ * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
+ */
+var AuthClawbackEnabledFlag = exports.AuthClawbackEnabledFlag = 1 << 3;
 
 /**
  * `Operation` class represents [operations](https://www.stellar.org/developers/guides/concepts/operations.html) in Stellar network.
@@ -25073,7 +25275,7 @@ var Operation = exports.Operation = function () {
     value: function setSourceAccount(opAttributes, opts) {
       if (opts.source) {
         try {
-          opAttributes.sourceAccount = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.source);
+          opAttributes.sourceAccount = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.source, opts.withMuxing);
         } catch (e) {
           throw new Error('Source address is invalid');
         }
@@ -25081,18 +25283,24 @@ var Operation = exports.Operation = function () {
     }
 
     /**
-     * Converts the XDR Operation object to the opts object used to create the XDR
-     * operation.
-     * @param {xdr.Operation} operation - An XDR Operation.
+     * Deconstructs the raw XDR operation object into the structured object that
+     * was used to create the operation (i.e. the `opts` parameter to most ops).
+     *
+     * @param {xdr.Operation}   operation - An XDR Operation.
+     * @param {boolean}         [withMuxing] - Indicates that the operation
+     *     contains M... addresses which should be interpreted fully as muxed
+     *     accounts. By default, this option is disabled until muxed accounts are
+     *     mature.
+     *
      * @return {Operation}
      */
 
   }, {
     key: 'fromXDRObject',
-    value: function fromXDRObject(operation) {
+    value: function fromXDRObject(operation, withMuxing) {
       var result = {};
       if (operation.sourceAccount()) {
-        result.source = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(operation.sourceAccount());
+        result.source = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(operation.sourceAccount(), withMuxing);
       }
 
       var attrs = operation.body().value();
@@ -25109,7 +25317,7 @@ var Operation = exports.Operation = function () {
         case 'payment':
           {
             result.type = 'payment';
-            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs.destination());
+            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs.destination(), withMuxing);
             result.asset = _asset.Asset.fromOperation(attrs.asset());
             result.amount = this._fromXDRAmount(attrs.amount());
             break;
@@ -25119,7 +25327,7 @@ var Operation = exports.Operation = function () {
             result.type = 'pathPaymentStrictReceive';
             result.sendAsset = _asset.Asset.fromOperation(attrs.sendAsset());
             result.sendMax = this._fromXDRAmount(attrs.sendMax());
-            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs.destination());
+            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs.destination(), withMuxing);
             result.destAsset = _asset.Asset.fromOperation(attrs.destAsset());
             result.destAmount = this._fromXDRAmount(attrs.destAmount());
             result.path = [];
@@ -25137,7 +25345,7 @@ var Operation = exports.Operation = function () {
             result.type = 'pathPaymentStrictSend';
             result.sendAsset = _asset.Asset.fromOperation(attrs.sendAsset());
             result.sendAmount = this._fromXDRAmount(attrs.sendAmount());
-            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs.destination());
+            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs.destination(), withMuxing);
             result.destAsset = _asset.Asset.fromOperation(attrs.destAsset());
             result.destMin = this._fromXDRAmount(attrs.destMin());
             result.path = [];
@@ -25234,7 +25442,7 @@ var Operation = exports.Operation = function () {
         case 'accountMerge':
           {
             result.type = 'accountMerge';
-            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs);
+            result.destination = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(attrs, withMuxing);
             break;
           }
         case 'manageData':
@@ -25941,7 +26149,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 var _strkey = __webpack_require__(9);
 
@@ -26226,7 +26434,7 @@ var _transaction = __webpack_require__(82);
 
 var _transaction_base = __webpack_require__(81);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -30164,7 +30372,7 @@ Writable.prototype._destroy = function (err, cb) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(20).Buffer;
+var Buffer = __webpack_require__(21).Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -31976,6 +32184,9 @@ var Horizon;
         OperationResponseType["beginSponsoringFutureReserves"] = "begin_sponsoring_future_reserves";
         OperationResponseType["endSponsoringFutureReserves"] = "end_sponsoring_future_reserves";
         OperationResponseType["revokeSponsorship"] = "revoke_sponsorship";
+        OperationResponseType["clawback"] = "clawback";
+        OperationResponseType["clawbackClaimableBalance"] = "clawback_claimable_balance";
+        OperationResponseType["setTrustLineFlags"] = "set_trust_line_flags";
     })(OperationResponseType = Horizon.OperationResponseType || (Horizon.OperationResponseType = {}));
     var OperationResponseTypeI;
     (function (OperationResponseTypeI) {
@@ -31998,6 +32209,9 @@ var Horizon;
         OperationResponseTypeI[OperationResponseTypeI["beginSponsoringFutureReserves"] = 16] = "beginSponsoringFutureReserves";
         OperationResponseTypeI[OperationResponseTypeI["endSponsoringFutureReserves"] = 17] = "endSponsoringFutureReserves";
         OperationResponseTypeI[OperationResponseTypeI["revokeSponsorship"] = 18] = "revokeSponsorship";
+        OperationResponseTypeI[OperationResponseTypeI["clawback"] = 19] = "clawback";
+        OperationResponseTypeI[OperationResponseTypeI["clawbackClaimableBalance"] = 20] = "clawbackClaimableBalance";
+        OperationResponseTypeI[OperationResponseTypeI["setTrustLineFlags"] = 21] = "setTrustLineFlags";
     })(OperationResponseTypeI = Horizon.OperationResponseTypeI || (Horizon.OperationResponseTypeI = {}));
     var TransactionFailedResultCodes;
     (function (TransactionFailedResultCodes) {
@@ -32109,7 +32323,7 @@ module.exports = createBaseFor;
 /* 175 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
+var baseGetTag = __webpack_require__(20),
     isObjectLike = __webpack_require__(11);
 
 /** `Object#toString` result references. */
@@ -32237,7 +32451,7 @@ module.exports = stubFalse;
 /* 179 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
+var baseGetTag = __webpack_require__(20),
     isLength = __webpack_require__(67),
     isObjectLike = __webpack_require__(11);
 
@@ -32303,7 +32517,7 @@ module.exports = baseIsTypedArray;
 /* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(17),
+var isObject = __webpack_require__(18),
     isPrototype = __webpack_require__(48),
     nativeKeysIn = __webpack_require__(181);
 
@@ -32399,7 +32613,7 @@ exports.sha512 = __webpack_require__(97)
 
 var inherits = __webpack_require__(8)
 var Hash = __webpack_require__(28)
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 var K = [
   0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -32749,7 +32963,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
 
 var inherits = __webpack_require__(8)
 var Hash = __webpack_require__(28)
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 var K = [
   0x5a827999, 0x6ed9eba1, 0x8f1bbcdc | 0, 0xca62c1d6 | 0
@@ -32854,7 +33068,7 @@ module.exports = Sha1
 var inherits = __webpack_require__(8)
 var Sha256 = __webpack_require__(96)
 var Hash = __webpack_require__(28)
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 var W = new Array(64)
 
@@ -32905,7 +33119,7 @@ module.exports = Sha224
 var inherits = __webpack_require__(8)
 var SHA512 = __webpack_require__(97)
 var Hash = __webpack_require__(28)
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 
 var W = new Array(160)
 
@@ -33388,11 +33602,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33428,11 +33642,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33472,11 +33686,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33516,11 +33730,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33560,11 +33774,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33604,11 +33818,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33648,11 +33862,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33695,11 +33909,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33739,11 +33953,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33783,11 +33997,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33827,11 +34041,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _buffer = __webpack_require__(0);
 
-var _create_buffer = __webpack_require__(15);
+var _create_buffer = __webpack_require__(14);
 
 var _create_buffer2 = _interopRequireDefault(_create_buffer);
 
-var _define_crc = __webpack_require__(16);
+var _define_crc = __webpack_require__(15);
 
 var _define_crc2 = _interopRequireDefault(_define_crc);
 
@@ -33948,7 +34162,7 @@ module.exports = assignIn;
 
 var isFunction = __webpack_require__(49),
     isMasked = __webpack_require__(208),
-    isObject = __webpack_require__(17),
+    isObject = __webpack_require__(18),
     toSource = __webpack_require__(104);
 
 /**
@@ -36687,7 +36901,7 @@ var Quadruple = exports.Quadruple = {
 /* 282 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
+var baseGetTag = __webpack_require__(20),
     isObjectLike = __webpack_require__(11);
 
 /** `Object#toString` result references. */
@@ -36732,7 +36946,7 @@ exports.String = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -37146,7 +37360,7 @@ module.exports = toFinite;
 /* 289 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(17),
+var isObject = __webpack_require__(18),
     isSymbol = __webpack_require__(56);
 
 /** Used as references for various `Number` constants. */
@@ -37835,7 +38049,7 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -38704,7 +38918,7 @@ var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = [
 
 exports.best_r = best_r;
 
-var _bignumber = __webpack_require__(22);
+var _bignumber = __webpack_require__(23);
 
 var _bignumber2 = _interopRequireDefault(_bignumber);
 
@@ -38780,7 +38994,7 @@ var Stack = __webpack_require__(51),
     isArray = __webpack_require__(3),
     isBuffer = __webpack_require__(37),
     isMap = __webpack_require__(322),
-    isObject = __webpack_require__(17),
+    isObject = __webpack_require__(18),
     isSet = __webpack_require__(324),
     keys = __webpack_require__(31);
 
@@ -39230,7 +39444,7 @@ module.exports = cloneSymbol;
 /* 321 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(17);
+var isObject = __webpack_require__(18);
 
 /** Built-in value references. */
 var objectCreate = Object.create;
@@ -39779,7 +39993,7 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
 var _stellarXdr_generated = __webpack_require__(1);
 
@@ -39910,23 +40124,29 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * Transfers native balance to destination account.
+ *
  * @function
  * @alias Operation.accountMerge
- * @param {object} opts Options object
- * @param {string} opts.destination - Destination to merge the source account into.
- * @param {string} [opts.source] - The source account (defaults to transaction source).
- * @returns {xdr.AccountMergeOp} Account Merge operation
+ *
+ * @param {object} opts - options object
+ * @param {string} opts.destination - destination to merge the source account into
+ * @param {bool}  [opts.withMuxing] - indicates that opts.destination is an
+ *     M... address and should be interpreted fully as a muxed account. By
+ *     default, this option is disabled until muxed accounts are mature.*
+ * @param {string} [opts.source]    - operation source account (defaults to
+ *     transaction source)
+ * @returns {xdr.Operation} an Account Merge operation (xdr.AccountMergeOp)
  */
 function accountMerge(opts) {
   var opAttributes = {};
   try {
-    opAttributes.body = _stellarXdr_generated2.default.OperationBody.accountMerge((0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination));
+    opAttributes.body = _stellarXdr_generated2.default.OperationBody.accountMerge((0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination, opts.withMuxing));
   } catch (e) {
     throw new Error('destination is invalid');
   }
@@ -39955,7 +40175,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 var _strkey = __webpack_require__(9);
 
@@ -40025,13 +40245,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.bumpSequence = bumpSequence;
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
-var _bignumber = __webpack_require__(22);
+var _bignumber = __webpack_require__(23);
 
 var _bignumber2 = _interopRequireDefault(_bignumber);
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -40091,9 +40311,9 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
-var _bignumber = __webpack_require__(22);
+var _bignumber = __webpack_require__(23);
 
 var _bignumber2 = _interopRequireDefault(_bignumber);
 
@@ -40159,7 +40379,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 var _strkey = __webpack_require__(9);
 
@@ -40380,7 +40600,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.manageData = manageData;
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -40448,7 +40668,7 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
 var _stellarXdr_generated = __webpack_require__(1);
 
@@ -40518,25 +40738,38 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * Returns a XDR PathPaymentStrictReceiveOp. A `PathPaymentStrictReceive` operation send the specified amount to the
- * destination account, optionally through a path. XLM payments create the destination
- * account if it does not exist.
+ * Creates a PathPaymentStrictReceive operation.
+ *
+ * A `PathPaymentStrictReceive` operation sends the specified amount to the
+ * destination account. It credits the destination with `destAmount` of
+ * `destAsset`, while debiting at most `sendMax` of `sendAsset` from the source.
+ * The transfer optionally occurs through a path. XLM payments create the
+ * destination account if it does not exist.
+ *
  * @function
  * @alias Operation.pathPaymentStrictReceive
- * @param {object} opts Options object
- * @param {Asset} opts.sendAsset - The asset to pay with.
- * @param {string} opts.sendMax - The maximum amount of sendAsset to send.
- * @param {string} opts.destination - The destination account to send to.
- * @param {Asset} opts.destAsset - The asset the destination will receive.
- * @param {string} opts.destAmount - The amount the destination receives.
- * @param {Asset[]} opts.path - An array of Asset objects to use as the path.
- * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
- * @returns {xdr.PathPaymentStrictReceiveOp} Path Payment Strict Receive operation
+ * @see https://developers.stellar.org/docs/start/list-of-operations/#path-payment-strict-receive
+ *
+ * @param {object}  opts - Options object
+ * @param {Asset}   opts.sendAsset    - asset to pay with
+ * @param {string}  opts.sendMax      - maximum amount of sendAsset to send
+ * @param {string}  opts.destination  - destination account to send to
+ * @param {Asset}   opts.destAsset    - asset the destination will receive
+ * @param {string}  opts.destAmount   - amount the destination receives
+ * @param {Asset[]} opts.path         - array of Asset objects to use as the path
+ * @param {bool}    [opts.withMuxing] - Indicates that opts.destination is an
+ *     M... address and should be interpreted fully as a muxed account. By
+ *     default, this option is disabled until muxed accounts are mature.
+ * @param {string}  [opts.source]     - The source account for the payment.
+ *     Defaults to the transaction's source account.
+ *
+ * @returns {xdr.Operation}   the resulting path payment operation
+ *     (xdr.PathPaymentStrictReceiveOp)
  */
 function pathPaymentStrictReceive(opts) {
   switch (true) {
@@ -40557,7 +40790,7 @@ function pathPaymentStrictReceive(opts) {
   attributes.sendMax = this._toXDRAmount(opts.sendMax);
 
   try {
-    attributes.destination = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination);
+    attributes.destination = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination, opts.withMuxing);
   } catch (e) {
     throw new Error('destination is invalid');
   }
@@ -40595,25 +40828,37 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
- * Returns a XDR PathPaymentStrictSendOp. A `PathPaymentStrictSend` operation send the specified amount to the
- * destination account crediting at least `destMin` of `destAsset`, optionally through a path. XLM payments create the destination
- * account if it does not exist.
+ * Creates a PathPaymentStrictSend operation.
+ *
+ * A `PathPaymentStrictSend` operation sends the specified amount to the
+ * destination account crediting at least `destMin` of `destAsset`, optionally
+ * through a path. XLM payments create the destination account if it does not
+ * exist.
+ *
  * @function
  * @alias Operation.pathPaymentStrictSend
- * @param {object} opts Options object
- * @param {Asset} opts.sendAsset - The asset to pay with.
- * @param {string} opts.sendAmount - Amount of sendAsset to send (excluding fees).
- * @param {string} opts.destination - The destination account to send to.
- * @param {Asset} opts.destAsset - The asset the destination will receive.
- * @param {string} opts.destMin - The minimum amount of destAsset to be received
- * @param {Asset[]} opts.path - An array of Asset objects to use as the path.
- * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
- * @returns {xdr.PathPaymentStrictSendOp} Path Payment Strict Receive operation
+ * @see https://developers.stellar.org/docs/start/list-of-operations/#path-payment-strict-send
+ *
+ * @param {object}  opts - Options object
+ * @param {Asset}   opts.sendAsset    - asset to pay with
+ * @param {string}  opts.sendAmount   - amount of sendAsset to send (excluding fees)
+ * @param {string}  opts.destination  - destination account to send to
+ * @param {Asset}   opts.destAsset    - asset the destination will receive
+ * @param {string}  opts.destMin      - minimum amount of destAsset to be receive
+ * @param {Asset[]} opts.path         - array of Asset objects to use as the path
+ * @param {bool}    [opts.withMuxing] - Indicates that opts.destination is an
+ *     M... address and should be interpreted fully as a muxed account. By
+ *     default, this option is disabled until muxed accounts are mature.
+ * @param {string}  [opts.source]     - The source account for the payment.
+ *     Defaults to the transaction's source account.
+ *
+ * @returns {xdr.Operation}   the resulting path payment operation
+ *     (xdr.PathPaymentStrictSendOp)
  */
 function pathPaymentStrictSend(opts) {
   switch (true) {
@@ -40633,7 +40878,7 @@ function pathPaymentStrictSend(opts) {
   attributes.sendAsset = opts.sendAsset.toXDRObject();
   attributes.sendAmount = this._toXDRAmount(opts.sendAmount);
   try {
-    attributes.destination = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination);
+    attributes.destination = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination, opts.withMuxing);
   } catch (e) {
     throw new Error('destination is invalid');
   }
@@ -40670,20 +40915,28 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * Create a payment operation.
+ *
  * @function
  * @alias Operation.payment
- * @param {object} opts Options object
- * @param {string} opts.destination - The destination account ID.
- * @param {Asset} opts.asset - The asset to send.
- * @param {string} opts.amount - The amount to send.
- * @param {string} [opts.source] - The source account for the payment. Defaults to the transaction's source account.
- * @returns {xdr.PaymentOp} Payment operation
+ * @see https://developers.stellar.org/docs/start/list-of-operations/#payment
+ *
+ * @param {object}  opts - Options object
+ * @param {string}  opts.destination  - The destination account ID.
+ * @param {Asset}   opts.asset        - The asset to send.
+ * @param {string}  opts.amount       - The amount to send.
+ * @param {bool}    [opts.withMuxing] - Indicates that opts.destination is an
+ *     M... address and should be interpreted fully as a muxed account. By
+ *     default, this option is disabled until muxed accounts are mature.
+ * @param {string}  [opts.source]     - The source account for the payment.
+ *     Defaults to the transaction's source account.
+ *
+ * @returns {xdr.Operation}   The resulting payment operation (xdr.PaymentOp)
  */
 function payment(opts) {
   if (!opts.asset) {
@@ -40695,7 +40948,7 @@ function payment(opts) {
 
   var attributes = {};
   try {
-    attributes.destination = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination);
+    attributes.destination = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(opts.destination, opts.withMuxing);
   } catch (e) {
     throw new Error('destination is invalid');
   }
@@ -40727,7 +40980,7 @@ var _isUndefined = __webpack_require__(7);
 
 var _isUndefined2 = _interopRequireDefault(_isUndefined);
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -40735,7 +40988,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 var _strkey = __webpack_require__(9);
 
@@ -40755,10 +41008,13 @@ function weightCheckFunction(value, name) {
  *   - `{@link AuthRequiredFlag}`
  *   - `{@link AuthRevocableFlag}`
  *   - `{@link AuthImmutableFlag}`
+ *   - `{@link AuthClawbackEnabledFlag}`
  *
  * It's possible to set/clear multiple flags at once using logical or.
+ *
  * @function
  * @alias Operation.setOptions
+ *
  * @param {object} opts Options object
  * @param {string} [opts.inflationDest] - Set this account ID as the account's inflation destination.
  * @param {(number|string)} [opts.clearFlags] - Bitmap integer for which account flags to clear.
@@ -40775,6 +41031,7 @@ function weightCheckFunction(value, name) {
  * @param {number|string} [opts.signer.weight] - The weight of the new signer (0 to delete or 1-255)
  * @param {string} [opts.homeDomain] - sets the home domain used for reverse federation lookup.
  * @param {string} [opts.source] - The source account (defaults to transaction source).
+ *
  * @returns {xdr.SetOptionsOp}  XDR operation
  * @see [Account flags](https://www.stellar.org/developers/guides/concepts/accounts.html#flags)
  */
@@ -40882,7 +41139,7 @@ var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
 var _strkey = __webpack_require__(9);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -40975,7 +41232,7 @@ exports.revokeDataSponsorship = revokeDataSponsorship;
 exports.revokeClaimableBalanceSponsorship = revokeClaimableBalanceSponsorship;
 exports.revokeSignerSponsorship = revokeSignerSponsorship;
 
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
@@ -40985,7 +41242,7 @@ var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
 var _strkey = __webpack_require__(9);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 var _asset = __webpack_require__(59);
 
@@ -41279,7 +41536,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _decode_encode_muxed_account = __webpack_require__(23);
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41339,7 +41596,7 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
+var _keypair = __webpack_require__(19);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41442,9 +41699,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 exports.isValidDate = isValidDate;
 
-var _jsXdr = __webpack_require__(21);
+var _jsXdr = __webpack_require__(22);
 
-var _bignumber = __webpack_require__(22);
+var _bignumber = __webpack_require__(23);
 
 var _bignumber2 = _interopRequireDefault(_bignumber);
 
@@ -41460,13 +41717,13 @@ var _stellarXdr_generated = __webpack_require__(1);
 
 var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
 
-var _keypair = __webpack_require__(14);
-
 var _transaction = __webpack_require__(82);
 
 var _fee_bump_transaction = __webpack_require__(143);
 
 var _memo = __webpack_require__(86);
+
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41492,29 +41749,35 @@ var BASE_FEE = exports.BASE_FEE = '100'; // Stroops
 var TimeoutInfinite = exports.TimeoutInfinite = 0;
 
 /**
- * <p>Transaction builder helps constructs a new `{@link Transaction}` using the given {@link Account}
- * as the transaction's "source account". The transaction will use the current sequence
- * number of the given account as its sequence number and increment the given account's
- * sequence number by one. The given source account must include a private key for signing
- * the transaction or an error will be thrown.</p>
+ * <p>Transaction builder helps constructs a new `{@link Transaction}` using the
+ * given {@link Account} as the transaction's "source account". The transaction
+ * will use the current sequence number of the given account as its sequence
+ * number and increment the given account's sequence number by one. The given
+ * source account must include a private key for signing the transaction or an
+ * error will be thrown.</p>
  *
- * <p>Operations can be added to the transaction via their corresponding builder methods, and
- * each returns the TransactionBuilder object so they can be chained together. After adding
- * the desired operations, call the `build()` method on the `TransactionBuilder` to return a fully
- * constructed `{@link Transaction}` that can be signed. The returned transaction will contain the
- * sequence number of the source account and include the signature from the source account.</p>
+ * <p>Operations can be added to the transaction via their corresponding builder
+ * methods, and each returns the TransactionBuilder object so they can be
+ * chained together. After adding the desired operations, call the `build()`
+ * method on the `TransactionBuilder` to return a fully constructed `{@link
+ * Transaction}` that can be signed. The returned transaction will contain the
+ * sequence number of the source account and include the signature from the
+ * source account.</p>
  *
- * <p><strong>Be careful about unsubmitted transactions!</strong> When you build a transaction, stellar-sdk
- * automatically increments the source account's sequence number. If you end up
- * not submitting this transaction and submitting another one instead, it'll fail due to
- * the sequence number being wrong. So if you decide not to use a built transaction,
- * make sure to update the source account's sequence number
- * with [Server.loadAccount](https://stellar.github.io/js-stellar-sdk/Server.html#loadAccount) before creating another transaction.</p>
+ * <p><strong>Be careful about unsubmitted transactions!</strong> When you build
+ * a transaction, stellar-sdk automatically increments the source account's
+ * sequence number. If you end up not submitting this transaction and submitting
+ * another one instead, it'll fail due to the sequence number being wrong. So if
+ * you decide not to use a built transaction, make sure to update the source
+ * account's sequence number with
+ * [Server.loadAccount](https://stellar.github.io/js-stellar-sdk/Server.html#loadAccount)
+ * before creating another transaction.</p>
  *
- * <p>The following code example creates a new transaction with {@link Operation.createAccount} and
- * {@link Operation.payment} operations.
- * The Transaction's source account first funds `destinationA`, then sends
- * a payment to `destinationB`. The built transaction is then signed by `sourceKeypair`.</p>
+ * <p>The following code example creates a new transaction with {@link
+ * Operation.createAccount} and {@link Operation.payment} operations. The
+ * Transaction's source account first funds `destinationA`, then sends a payment
+ * to `destinationB`. The built transaction is then signed by
+ * `sourceKeypair`.</p>
  *
  * ```
  * var transaction = new TransactionBuilder(source, { fee, networkPassphrase: Networks.TESTNET })
@@ -41532,15 +41795,28 @@ var TimeoutInfinite = exports.TimeoutInfinite = 0;
  *
  * transaction.sign(sourceKeypair);
  * ```
+ *
  * @constructor
- * @param {Account} sourceAccount - The source account for this transaction.
- * @param {object} opts Options object
- * @param {string} opts.fee - The max fee willing to pay per operation in this transaction (**in stroops**). Required.
- * @param {object} [opts.timebounds] - The timebounds for the validity of this transaction.
- * @param {number|string|Date} [opts.timebounds.minTime] - 64 bit unix timestamp or Date object
- * @param {number|string|Date} [opts.timebounds.maxTime] - 64 bit unix timestamp or Date object
- * @param {Memo} [opts.memo] - The memo for the transaction
- * @param {string} [opts.networkPassphrase] passphrase of the target stellar network (e.g. "Public Global Stellar Network ; September 2015").
+ *
+ * @param {Account} sourceAccount - source account for this transaction
+ * @param {object}  opts          - Options object
+ * @param {string}  opts.fee      - max fee you're willing to pay per
+ *     operation in this transaction (**in stroops**)
+ *
+ * @param {object}              [opts.timebounds] - timebounds for the
+ *     validity of this transaction
+ * @param {number|string|Date}  [opts.timebounds.minTime] - 64-bit UNIX
+ *     timestamp or Date object
+ * @param {number|string|Date}  [opts.timebounds.maxTime] - 64-bit UNIX
+ *     timestamp or Date object
+ * @param {Memo}                [opts.memo] - memo for the transaction
+ * @param {string}              [opts.networkPassphrase] passphrase of the
+ *     target Stellar network (e.g. "Public Global Stellar Network ; September
+ *     2015" for the pubnet)
+ * @param {bool}    [opts.withMuxing] - Indicates that the source account of
+ *     every transaction created by this Builder can be interpreted as a proper
+ *     muxed account (i.e. coming from an M... address). By default, this option
+ *     is disabled until muxed accounts are mature.
  */
 
 var TransactionBuilder = exports.TransactionBuilder = function () {
@@ -41564,6 +41840,7 @@ var TransactionBuilder = exports.TransactionBuilder = function () {
     this.timebounds = (0, _clone2.default)(opts.timebounds) || null;
     this.memo = opts.memo || _memo.Memo.none();
     this.networkPassphrase = opts.networkPassphrase || null;
+    this.supportMuxedAccounts = opts.withMuxing || false;
   }
 
   /**
@@ -41658,6 +41935,18 @@ var TransactionBuilder = exports.TransactionBuilder = function () {
     }
 
     /**
+     * Enable support for muxed accounts for the Transaction that will be built.
+     * @returns {TransactionBuilder}
+     */
+
+  }, {
+    key: 'enableMuxedAccounts',
+    value: function enableMuxedAccounts() {
+      this.supportMuxedAccounts = true;
+      return this;
+    }
+
+    /**
      * This will build the transaction.
      * It will also increment the source account's sequence number by 1.
      * @returns {Transaction} This method will return the built {@link Transaction}.
@@ -41689,14 +41978,14 @@ var TransactionBuilder = exports.TransactionBuilder = function () {
       this.timebounds.maxTime = _jsXdr.UnsignedHyper.fromString(this.timebounds.maxTime.toString());
 
       attrs.timeBounds = new _stellarXdr_generated2.default.TimeBounds(this.timebounds);
-      attrs.sourceAccount = _keypair.Keypair.fromPublicKey(this.source.accountId()).xdrMuxedAccount();
+      attrs.sourceAccount = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(this.source.accountId(), this.supportMuxedAccounts);
       attrs.ext = new _stellarXdr_generated2.default.TransactionExt(0);
 
       var xtx = new _stellarXdr_generated2.default.Transaction(attrs);
       xtx.operations(this.operations);
       var txEnvelope = new _stellarXdr_generated2.default.TransactionEnvelope.envelopeTypeTx(new _stellarXdr_generated2.default.TransactionV1Envelope({ tx: xtx }));
 
-      var tx = new _transaction.Transaction(txEnvelope, this.networkPassphrase);
+      var tx = new _transaction.Transaction(txEnvelope, this.networkPassphrase, this.supportMuxedAccounts);
 
       this.source.incrementSequenceNumber();
 
@@ -41812,19 +42101,25 @@ function isValidDate(d) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Account = undefined;
+exports.MuxedAccount = exports.Account = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _bignumber = __webpack_require__(22);
-
-var _bignumber2 = _interopRequireDefault(_bignumber);
-
-var _isString = __webpack_require__(18);
+var _isString = __webpack_require__(16);
 
 var _isString2 = _interopRequireDefault(_isString);
 
+var _bignumber = __webpack_require__(23);
+
+var _bignumber2 = _interopRequireDefault(_bignumber);
+
+var _stellarXdr_generated = __webpack_require__(1);
+
+var _stellarXdr_generated2 = _interopRequireDefault(_stellarXdr_generated);
+
 var _strkey = __webpack_require__(9);
+
+var _decode_encode_muxed_account = __webpack_require__(17);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41833,17 +42128,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * Create a new Account object.
  *
- * `Account` represents a single account in Stellar network and its sequence number.
- * Account tracks the sequence number as it is used by {@link TransactionBuilder}.
- * See [Accounts](https://stellar.org/developers/learn/concepts/accounts.html) for more information about how
- * accounts work in Stellar.
+ * `Account` represents a single account in the Stellar network and its sequence
+ * number. Account tracks the sequence number as it is used by {@link
+ * TransactionBuilder}. See
+ * [Accounts](https://developers.stellar.org/docs/glossary/accounts/) for
+ * more information about how accounts work in Stellar.
+ *
  * @constructor
- * @param {string} accountId ID of the account (ex. `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`)
- * @param {string} sequence current sequence number of the account
+ *
+ * @param {string} accountId - ID of the account (ex.
+ *     `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`). If you
+ *     provide a muxed account address, this will throw; use {@link
+ *     MuxedAccount} instead.
+ * @param {string} sequence  - current sequence number of the account
  */
 var Account = exports.Account = function () {
   function Account(accountId, sequence) {
     _classCallCheck(this, Account);
+
+    if (_strkey.StrKey.isValidMed25519PublicKey(accountId)) {
+      throw new Error('accountId is an M-address; use MuxedAccount instead');
+    }
 
     if (!_strkey.StrKey.isValidEd25519PublicKey(accountId)) {
       throw new Error('accountId is invalid');
@@ -41851,12 +42156,14 @@ var Account = exports.Account = function () {
     if (!(0, _isString2.default)(sequence)) {
       throw new Error('sequence must be of type string');
     }
+
     this._accountId = accountId;
     this.sequence = new _bignumber2.default(sequence);
   }
 
   /**
-   * Returns Stellar account ID, ex. `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`
+   * Returns Stellar account ID, ex.
+   * `GB3KJPLFUYN5VL6R3GU3EGCGVCKFDSD7BEDX42HWG5BWFKB3KQGJJRMA`.
    * @returns {string}
    */
 
@@ -41868,7 +42175,7 @@ var Account = exports.Account = function () {
     }
 
     /**
-     * @returns {string}
+     * @returns {string}  sequence number for the account as a string
      */
 
   }, {
@@ -41887,9 +42194,179 @@ var Account = exports.Account = function () {
     value: function incrementSequenceNumber() {
       this.sequence = this.sequence.add(1);
     }
+
+    /**
+     * Creates a muxed "sub"account with this base address and an ID set.
+     *
+     * @param  {string} id - the ID of the new muxed account
+     * @return {MuxedAccount} a new instance w/ the specified parameters
+     *
+     * @see MuxedAccount
+     */
+
+  }, {
+    key: 'createSubaccount',
+    value: function createSubaccount(id) {
+      return new MuxedAccount(this, id);
+    }
   }]);
 
   return Account;
+}();
+
+/**
+ * Represents a muxed account for transactions and operations.
+ *
+ * A muxed (or *multiplexed*) account (defined rigorously in
+ * [CAP-27](https://stellar.org/protocol/cap-27) and briefly in
+ * [SEP-23](https://stellar.org/protocol/sep-23)) is one that resolves a single
+ * Stellar `G...`` account to many different underlying IDs.
+ *
+ * For example, you may have a single Stellar address for accounting purposes:
+ *   GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ
+ *
+ * Yet would like to use it for 4 different family members:
+ *   1: MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAAGZFQ
+ *   2: MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAALIWQ
+ *   3: MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAAPYHQ
+ *   4: MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAAQLQQ
+ *
+ * This object makes it easy to create muxed accounts from regular accounts,
+ * duplicate them, retrieve the underlying IDs, etc. without mucking around with
+ * the raw XDR.
+ *
+ * Because muxed accounts are purely an off-chain convention, they all share the
+ * sequence number tied to the underlying G... account. Thus, this object
+ * *requires* an {@link Account} instance to be passed in, so that muxed
+ * instances of an account can collectively modify the sequence number whenever
+ * a muxed account is used as the source of a @{link Transaction} with {@link
+ * TransactionBuilder}.
+ *
+ * @constructor
+ *
+ * @param {Account}   account - the @{link Account} instance representing the
+ *     underlying G... address
+ * @param {string}    id      - a stringified uint64 value that represents the
+ *     ID of the muxed account
+ */
+
+
+var MuxedAccount = exports.MuxedAccount = function () {
+  function MuxedAccount(baseAccount, id) {
+    _classCallCheck(this, MuxedAccount);
+
+    var accountId = baseAccount.accountId();
+    if (!_strkey.StrKey.isValidEd25519PublicKey(accountId)) {
+      throw new Error('accountId is invalid');
+    }
+
+    this.account = baseAccount;
+    this._muxedXdr = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(accountId, true);
+    this._mAddress = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(this._muxedXdr, true);
+    this.setId(id);
+  }
+
+  /**
+   * Parses an M-address into a MuxedAccount object.
+   *
+   * @param  {string} mAddress    - an M-address to transform
+   * @param  {string} sequenceNum - the sequence number of the underlying {@link
+   *     Account}, to use for the underlying base account (@link
+   *     MuxedAccount.baseAccount). If you're using the SDK, you can use
+   *     `server.loadAccount` to fetch this if you don't know it.
+   *
+   * @return {MuxedAccount}
+   */
+
+
+  _createClass(MuxedAccount, [{
+    key: 'baseAccount',
+
+
+    /**
+     * @return {Account} the underlying account object shared among all muxed
+     *     accounts with this Stellar address
+     */
+    value: function baseAccount() {
+      return this.account;
+    }
+
+    /**
+     * @return {string} the M-address representing this account's (G-address, ID)
+     */
+
+  }, {
+    key: 'accountId',
+    value: function accountId() {
+      return this._mAddress;
+    }
+  }, {
+    key: 'id',
+    value: function id() {
+      return this._id;
+    }
+  }, {
+    key: 'setId',
+    value: function setId(id) {
+      if (!(0, _isString2.default)(id)) {
+        throw new Error('id should be a string representing a number (uint64)');
+      }
+
+      this._muxedXdr.med25519().id(_stellarXdr_generated2.default.Uint64.fromString(id));
+      this._mAddress = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(this._muxedXdr, true);
+      this._id = id;
+      return this;
+    }
+
+    /**
+     * Accesses the underlying account's sequence number.
+     * @return {string}  strigified sequence number for the underlying account
+     */
+
+  }, {
+    key: 'sequenceNumber',
+    value: function sequenceNumber() {
+      return this.account.sequenceNumber();
+    }
+
+    /**
+     * Increments the underlying account's sequence number by one.
+     * @return {void}
+     */
+
+  }, {
+    key: 'incrementSequenceNumber',
+    value: function incrementSequenceNumber() {
+      return this.account.incrementSequenceNumber();
+    }
+
+    /**
+     * @return {xdr.MuxedAccount} the XDR object representing this muxed account's
+     *     G-address and uint64 ID
+     */
+
+  }, {
+    key: 'toXDRObject',
+    value: function toXDRObject() {
+      return this._muxedXdr;
+    }
+  }, {
+    key: 'equals',
+    value: function equals(otherMuxedAccount) {
+      return this.accountId() === otherMuxedAccount.accountId();
+    }
+  }], [{
+    key: 'fromAddress',
+    value: function fromAddress(mAddress, sequenceNum) {
+      var muxedAccount = (0, _decode_encode_muxed_account.decodeAddressToMuxedAccount)(mAddress, true);
+      var gAddress = (0, _decode_encode_muxed_account.encodeMuxedAccountToAddress)(muxedAccount, false);
+      var id = muxedAccount.med25519().id().toString();
+
+      return new MuxedAccount(new Account(gAddress, sequenceNum), id);
+    }
+  }]);
+
+  return MuxedAccount;
 }();
 
 /***/ }),
@@ -41922,7 +42399,7 @@ var Networks = exports.Networks = {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Server = exports.SUBMIT_TRANSACTION_TIMEOUT = void 0;
 var tslib_1 = __webpack_require__(2);
-var bignumber_js_1 = tslib_1.__importDefault(__webpack_require__(22));
+var bignumber_js_1 = tslib_1.__importDefault(__webpack_require__(23));
 var isEmpty_1 = tslib_1.__importDefault(__webpack_require__(356));
 var merge_1 = tslib_1.__importDefault(__webpack_require__(357));
 var stellar_base_1 = __webpack_require__(27);
@@ -42420,7 +42897,7 @@ var Stack = __webpack_require__(51),
     assignMergeValue = __webpack_require__(144),
     baseFor = __webpack_require__(64),
     baseMergeDeep = __webpack_require__(359),
-    isObject = __webpack_require__(17),
+    isObject = __webpack_require__(18),
     keysIn = __webpack_require__(26),
     safeGet = __webpack_require__(145);
 
@@ -42474,7 +42951,7 @@ var assignMergeValue = __webpack_require__(144),
     isArrayLikeObject = __webpack_require__(360),
     isBuffer = __webpack_require__(37),
     isFunction = __webpack_require__(49),
-    isObject = __webpack_require__(17),
+    isObject = __webpack_require__(18),
     isPlainObject = __webpack_require__(361),
     isTypedArray = __webpack_require__(47),
     safeGet = __webpack_require__(145),
@@ -42603,7 +43080,7 @@ module.exports = isArrayLikeObject;
 /* 361 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var baseGetTag = __webpack_require__(19),
+var baseGetTag = __webpack_require__(20),
     getPrototype = __webpack_require__(84),
     isObjectLike = __webpack_require__(11);
 
@@ -47181,6 +47658,10 @@ var OperationCallBuilder = (function (_super) {
         this.filter.push(["accounts", accountId, "operations"]);
         return this;
     };
+    OperationCallBuilder.prototype.forClaimableBalance = function (claimableBalanceId) {
+        this.filter.push(["claimable_balances", claimableBalanceId, "operations"]);
+        return this;
+    };
     OperationCallBuilder.prototype.forLedger = function (sequence) {
         this.filter.push([
             "ledgers",
@@ -47520,6 +48001,10 @@ var TransactionCallBuilder = (function (_super) {
     };
     TransactionCallBuilder.prototype.forAccount = function (accountId) {
         this.filter.push(["accounts", accountId, "transactions"]);
+        return this;
+    };
+    TransactionCallBuilder.prototype.forClaimableBalance = function (claimableBalanceId) {
+        this.filter.push(["claimable_balances", claimableBalanceId, "transactions"]);
         return this;
     };
     TransactionCallBuilder.prototype.forLedger = function (sequence) {
@@ -52001,7 +52486,7 @@ function oldBrowser () {
   throw new Error('Secure random number generation is not supported by this browser.\nUse Chrome, Firefox or Internet Explorer 11')
 }
 
-var Buffer = __webpack_require__(20).Buffer
+var Buffer = __webpack_require__(21).Buffer
 var crypto = global.crypto || global.msCrypto
 
 if (crypto && crypto.getRandomValues) {
