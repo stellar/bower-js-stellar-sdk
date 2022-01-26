@@ -22,6 +22,14 @@ jobs:
           repository: stellar/bower-js-stellar-sdk
           path: sdk/bower
 
+      - name: Check for updated SDK
+        # if this check fails then the job doesn't need to proceed
+        run: |
+          cd sdk/
+          TAG=`git describe --tags`
+          cd bower/
+          "`git log -1 --pretty=%B`" != "$TAG"
+
       - name: Install Node (14.x)
         uses: actions/setup-node@v2
         with:
@@ -36,9 +44,9 @@ jobs:
 
       - name: Publish package
         run: |
+          cd sdk/
           TAG=`git describe --tags`
           cd bower/
-          [ "$(git log -1 --pretty=%B)" = "$TAG" ] && exit
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
