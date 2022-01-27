@@ -28,7 +28,7 @@ jobs:
           cd sdk/
           TAG=`git describe --tags`
           cd bower/
-          "`git log -1 --pretty=%B`" != "$TAG"
+          [ "`git log -1 --pretty=%B`" == "$TAG" ] && exit 1
 
       - name: Install Node (14.x)
         uses: actions/setup-node@v2
