@@ -52,4 +52,4 @@ jobs:
           git add .
           git commit -m $TAG
           git tag -a $TAG -m $TAG
-          git push origin master --tags
+          git push --atomic origin master "$TAG"
