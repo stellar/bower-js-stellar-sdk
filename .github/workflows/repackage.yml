@@ -1,0 +1,55 @@
+name: Package SDK for Bower
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'  # daily @ noon
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout JS SDK
+        uses: actions/checkout@v2
+        with:
+          repository: stellar/js-stellar-sdk
+          fetch-depth: 0
+          persist-credentials: false
+          path: sdk
+
+      - name: Checkout Bower
+        uses: actions/checkout@v2
+        with:
+          repository: stellar/bower-js-stellar-sdk
+          path: sdk/bower
+
+      - name: Check for updated SDK
+        # if this check fails then the job doesn't need to proceed
+        run: |
+          cd sdk/
+          TAG=`git describe --tags`
+          cd bower/
+          "`git log -1 --pretty=%B`" != "$TAG"
+
+      - name: Install Node (14.x)
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.x'
+
+      - name: Install and build package
+        run: |
+          cd sdk
+          yarn install
+          yarn
+          cp dist/* bower/
+
+      - name: Publish package
+        run: |
+          cd sdk/
+          TAG=`git describe --tags`
+          cd bower/
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m $TAG
+          git tag -a $TAG -m $TAG
+          git push --atomic origin master "$TAG"
