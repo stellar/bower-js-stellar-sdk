@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 12 * * *'  # daily @ noon
-  pull_request:
 
 jobs:
   build-and-deploy:
@@ -61,4 +60,4 @@ jobs:
           git add .
           git commit -m $TAG
           git tag -a $TAG -m $TAG
-          # git push --atomic origin master "$TAG"
+          git push --atomic origin master "$TAG"
