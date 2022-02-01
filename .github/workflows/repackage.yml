@@ -14,21 +14,31 @@ jobs:
           repository: stellar/js-stellar-sdk
           fetch-depth: 0
           persist-credentials: false
-          path: sdk
 
       - name: Checkout Bower
         uses: actions/checkout@v2
         with:
           repository: stellar/bower-js-stellar-sdk
-          path: sdk/bower
+          fetch-depth: 0
+          ref: master
+          path: bower
 
+      # if this check fails then the job doesn't need to proceed
       - name: Check for updated SDK
-        # if this check fails then the job doesn't need to proceed
+        shell: bash
         run: |
-          cd sdk/
           TAG=`git describe --tags`
           cd bower/
-          [ "`git log -1 --pretty=%B`" == "$TAG" ] && exit 1
+          OLDTAG=`git describe --abbrev=0 --tags`
+          if [ "$OLDTAG" == "$TAG" ]; then
+            echo "No new JavaScript SDK version was found, skipping run."
+            exit 1
+          else
+            echo "::group::New JavaScript SDK version found:"
+            echo "Previous version: $OLDTAG"
+            echo "New version: $TAG"
+            echo "::endgroup::"
+          fi
 
       - name: Install Node (14.x)
         uses: actions/setup-node@v2
@@ -37,14 +47,12 @@ jobs:
 
       - name: Install and build package
         run: |
-          cd sdk
           yarn install
           yarn
           cp dist/* bower/
 
       - name: Publish package
         run: |
-          cd sdk/
           TAG=`git describe --tags`
           cd bower/
           git config user.name github-actions
