@@ -7971,15 +7971,9 @@ var CallBuilder = (function () {
             }
             createTimeout();
             if (es) {
-                var closed_1 = false;
                 var onClose_1 = function () {
-                    if (closed_1) {
-                        return;
-                    }
                     clearTimeout(timeout);
                     es.close();
-                    createEventSource();
-                    closed_1 = true;
                 };
                 var onMessage = function (message) {
                     if (message.type === "close") {
