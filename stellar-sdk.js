@@ -17650,7 +17650,7 @@ function nextTick(fn, arg1, arg2, arg3) {
 /* 65 */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"10.1.1\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"files\":[\"/types\",\"/lib\",\"/dist\"],\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"chai-http\":\"^4.3.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"^4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"^7.0.2\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"^6.3.0\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^2.1.2\",\"karma-mocha\":\"^2.0.1\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.5\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"5.0.0\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"^9.1.4\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"0.25.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.0.7\",\"lodash\":\"^4.17.21\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^8.0.1\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
+module.exports = JSON.parse("{\"name\":\"stellar-sdk\",\"version\":\"10.1.2\",\"description\":\"stellar-sdk is a library for working with the Stellar Horizon server.\",\"main\":\"./lib/index.js\",\"types\":\"./lib/index.d.ts\",\"files\":[\"/types\",\"/lib\",\"/dist\"],\"scripts\":{\"prepare\":\"gulp build\",\"test\":\"babel-node ./node_modules/.bin/gulp test\",\"test:watch\":\"babel-node ./node_modules/.bin/gulp test:watch\",\"build:docs\":\"gulp build:docs\",\"docs\":\"yarn build:docs && jsdoc -c .jsdoc.json\",\"preversion\":\"gulp test\",\"version\":\"gulp build\",\"postversion\":\"git push && git push --tags\",\"prettier-all\":\"prettier --write **/*.{js,ts}\"},\"husky\":{\"hooks\":{\"pre-commit\":\"lint-staged\"}},\"prettier\":\"@stellar/prettier-config\",\"lint-staged\":{\"lib/*.{js,json}\":[\"prettier --write\",\"git add\"],\"lib/*.js\":[\"eslint --fix --max-warnings 0\",\"git add\"],\"**/*.ts\":[\"prettier --write\",\"tslint --fix\",\"git add\"]},\"keywords\":[\"stellar\"],\"repository\":{\"type\":\"git\",\"url\":\"https://github.com/stellar/js-stellar-sdk.git\"},\"author\":\"Stellar Development Foundation <hello@stellar.org>\",\"license\":\"Apache-2.0\",\"bugs\":{\"url\":\"https://github.com/stellar/js-stellar-sdk/issues\"},\"homepage\":\"https://github.com/stellar/js-stellar-sdk\",\"devDependencies\":{\"@kollavarsham/gulp-coveralls\":\"0.2.8\",\"@stellar/prettier-config\":\"^1.0.1\",\"@stellar/tsconfig\":\"^1.0.1\",\"@stellar/tslint-config\":\"^1.0.3\",\"@types/detect-node\":\"^2.0.0\",\"@types/lodash\":\"^4.14.130\",\"axios-mock-adapter\":\"^1.16.0\",\"babel-cli\":\"^6.26.0\",\"babel-core\":\"~6.26.3\",\"babel-eslint\":\"^10.0.1\",\"babel-istanbul\":\"^0.12.2\",\"babel-loader\":\"^7.0.0\",\"babel-plugin-transform-builtin-extend\":\"^1.1.2\",\"babel-preset-es2015\":\"^6.24.1\",\"babel-register\":\"^6.26.0\",\"body-parser\":\"^1.12.2\",\"chai\":\"^2.2.0\",\"chai-as-promised\":\"^5.2.0\",\"chai-http\":\"^4.3.0\",\"clear\":\"^0.1.0\",\"coveralls\":\"3.0.2\",\"del\":\"^5.1.0\",\"eslint\":\"^5.12.1\",\"eslint-config-airbnb-base\":\"^13.1.0\",\"eslint-config-prettier\":\"^3.6.0\",\"eslint-plugin-import\":\"^2.15.0\",\"eslint-plugin-node\":\"^8.0.1\",\"eslint-plugin-prefer-import\":\"^0.0.1\",\"eslint-plugin-prettier\":\"^3.0.1\",\"ghooks\":\"^0.3.0\",\"gulp\":\"^4.0.0\",\"gulp-babel\":\"^6.1.3\",\"gulp-eslint\":\"^5.0.0\",\"gulp-insert\":\"^0.5.0\",\"gulp-istanbul\":\"^1.1.3\",\"gulp-load-plugins\":\"1.5.0\",\"gulp-mocha\":\"^7.0.2\",\"gulp-plumber\":\"^1.0.0\",\"gulp-rename\":\"~1.2.0\",\"gulp-tslint\":\"^8.1.4\",\"husky\":\"^1.3.1\",\"isparta\":\"^4.1.1\",\"istanbul\":\"^0.4.5\",\"jsdoc\":\"3.5.5\",\"json-loader\":\"^0.5.1\",\"karma\":\"^6.3.0\",\"karma-chai\":\"^0.1.0\",\"karma-chai-as-promised\":\"^0.1.2\",\"karma-chrome-launcher\":\"^3.1.0\",\"karma-commonjs\":\"^1.0.0\",\"karma-firefox-launcher\":\"^2.1.2\",\"karma-mocha\":\"^2.0.1\",\"karma-phantomjs-launcher\":\"^1.0.4\",\"karma-sauce-launcher\":\"2.0.2\",\"karma-sinon\":\"^1.0.5\",\"karma-sinon-chai\":\"2.0.2\",\"karma-webpack\":\"5.0.0\",\"lint-staged\":\"7.3.0\",\"minami\":\"^1.1.1\",\"mocha\":\"^9.1.4\",\"prettier\":\"^1.17.1\",\"sinon\":\"^1.14.1\",\"sinon-chai\":\"^2.7.0\",\"terser-webpack-plugin\":\"^1.3.0\",\"ts-loader\":\"^5.0.0\",\"tslint\":\"^5.16.0\",\"typescript\":\"^3.4.5\",\"webpack\":\"^4.33.0\",\"webpack-cli\":\"^3.3.3\",\"webpack-stream\":\"^5.2.1\"},\"dependencies\":{\"@types/eventsource\":\"^1.1.2\",\"@types/node\":\">= 8\",\"@types/randombytes\":\"^2.0.0\",\"@types/urijs\":\"^1.19.6\",\"axios\":\"0.25.0\",\"bignumber.js\":\"^4.0.0\",\"detect-node\":\"^2.0.4\",\"es6-promise\":\"^4.2.4\",\"eventsource\":\"^1.1.1\",\"lodash\":\"^4.17.21\",\"randombytes\":\"^2.1.0\",\"stellar-base\":\"^8.0.1\",\"toml\":\"^2.3.0\",\"tslib\":\"^1.10.0\",\"urijs\":\"^1.19.1\",\"utility-types\":\"^3.7.0\"}}");
 
 /***/ }),
 /* 66 */
@@ -29541,6 +29541,8 @@ function hasBom (buf) {
  **/
 function EventSource (url, eventSourceInitDict) {
   var readyState = EventSource.CONNECTING
+  var headers = eventSourceInitDict && eventSourceInitDict.headers
+  var hasNewOrigin = false
   Object.defineProperty(this, 'readyState', {
     get: function () {
       return readyState
@@ -29555,31 +29557,34 @@ function EventSource (url, eventSourceInitDict) {
 
   var self = this
   self.reconnectInterval = 1000
+  self.connectionInProgress = false
 
   function onConnectionClosed (message) {
     if (readyState === EventSource.CLOSED) return
     readyState = EventSource.CONNECTING
     _emit('error', new Event('error', {message: message}))
 
-    // The url may have been changed by a temporary
-    // redirect. If that's the case, revert it now.
+    // The url may have been changed by a temporary redirect. If that's the case,
+    // revert it now, and flag that we are no longer pointing to a new origin
     if (reconnectUrl) {
       url = reconnectUrl
       reconnectUrl = null
+      hasNewOrigin = false
     }
     setTimeout(function () {
-      if (readyState !== EventSource.CONNECTING) {
+      if (readyState !== EventSource.CONNECTING || self.connectionInProgress) {
         return
       }
+      self.connectionInProgress = true
       connect()
     }, self.reconnectInterval)
   }
 
   var req
   var lastEventId = ''
-  if (eventSourceInitDict && eventSourceInitDict.headers && eventSourceInitDict.headers['Last-Event-ID']) {
-    lastEventId = eventSourceInitDict.headers['Last-Event-ID']
-    delete eventSourceInitDict.headers['Last-Event-ID']
+  if (headers && headers['Last-Event-ID']) {
+    lastEventId = headers['Last-Event-ID']
+    delete headers['Last-Event-ID']
   }
 
   var discardTrailingNewline = false
@@ -29593,9 +29598,10 @@ function EventSource (url, eventSourceInitDict) {
     var isSecure = options.protocol === 'https:'
     options.headers = { 'Cache-Control': 'no-cache', 'Accept': 'text/event-stream' }
     if (lastEventId) options.headers['Last-Event-ID'] = lastEventId
-    if (eventSourceInitDict && eventSourceInitDict.headers) {
-      for (var i in eventSourceInitDict.headers) {
-        var header = eventSourceInitDict.headers[i]
+    if (headers) {
+      var reqHeaders = hasNewOrigin ? removeUnsafeHeaders(headers) : headers
+      for (var i in reqHeaders) {
+        var header = reqHeaders[i]
         if (header) {
           options.headers[i] = header
         }
@@ -29605,6 +29611,10 @@ function EventSource (url, eventSourceInitDict) {
     // Legacy: this should be specified as `eventSourceInitDict.https.rejectUnauthorized`,
     // but for now exists as a backwards-compatibility layer
     options.rejectUnauthorized = !(eventSourceInitDict && !eventSourceInitDict.rejectUnauthorized)
+
+    if (eventSourceInitDict && eventSourceInitDict.createConnection !== undefined) {
+      options.createConnection = eventSourceInitDict.createConnection
+    }
 
     // If specify http proxy, make the request to sent to the proxy server,
     // and include the original url in path and Host headers
@@ -29641,6 +29651,7 @@ function EventSource (url, eventSourceInitDict) {
     }
 
     req = (isSecure ? https : http).request(options, function (res) {
+      self.connectionInProgress = false
       // Handle HTTP errors
       if (res.statusCode === 500 || res.statusCode === 502 || res.statusCode === 503 || res.statusCode === 504) {
         _emit('error', new Event('error', {status: res.statusCode, message: res.statusMessage}))
@@ -29649,14 +29660,18 @@ function EventSource (url, eventSourceInitDict) {
       }
 
       // Handle HTTP redirects
-      if (res.statusCode === 301 || res.statusCode === 307) {
-        if (!res.headers.location) {
+      if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) {
+        var location = res.headers.location
+        if (!location) {
           // Server sent redirect response without Location header.
           _emit('error', new Event('error', {status: res.statusCode, message: res.statusMessage}))
           return
         }
+        var prevOrigin = original(url)
+        var nextOrigin = original(location)
+        hasNewOrigin = prevOrigin !== nextOrigin
         if (res.statusCode === 307) reconnectUrl = url
-        url = res.headers.location
+        url = location
         process.nextTick(connect)
         return
       }
@@ -29684,6 +29699,8 @@ function EventSource (url, eventSourceInitDict) {
       // Source/WebCore/page/EventSource.cpp
       var isFirst = true
       var buf
+      var startingPos = 0
+      var startingFieldLength = -1
       res.on('data', function (chunk) {
         buf = buf ? Buffer.concat([buf, chunk]) : chunk
         if (isFirst && hasBom(buf)) {
@@ -29703,10 +29720,10 @@ function EventSource (url, eventSourceInitDict) {
           }
 
           var lineLength = -1
-          var fieldLength = -1
+          var fieldLength = startingFieldLength
           var c
 
-          for (var i = pos; lineLength < 0 && i < length; ++i) {
+          for (var i = startingPos; lineLength < 0 && i < length; ++i) {
             c = buf[i]
             if (c === colon) {
               if (fieldLength < 0) {
@@ -29721,7 +29738,12 @@ function EventSource (url, eventSourceInitDict) {
           }
 
           if (lineLength < 0) {
+            startingPos = length - pos
+            startingFieldLength = fieldLength
             break
+          } else {
+            startingPos = 0
+            startingFieldLength = -1
           }
 
           parseEventStreamLine(buf, pos, fieldLength, lineLength)
@@ -29738,6 +29760,7 @@ function EventSource (url, eventSourceInitDict) {
     })
 
     req.on('error', function (err) {
+      self.connectionInProgress = false
       onConnectionClosed(err.message)
     })
 
@@ -29937,6 +29960,26 @@ function MessageEvent (type, eventInitDict) {
       Object.defineProperty(this, f, { writable: false, value: eventInitDict[f], enumerable: true })
     }
   }
+}
+
+/**
+ * Returns a new object of headers that does not include any authorization and cookie headers
+ *
+ * @param {Object} headers An object of headers ({[headerName]: headerValue})
+ * @return {Object} a new object of headers
+ * @api private
+ */
+function removeUnsafeHeaders (headers) {
+  var safe = {}
+  for (var key in headers) {
+    if (/^(cookie|authorization)$/i.test(key)) {
+      continue
+    }
+
+    safe[key] = headers[key]
+  }
+
+  return safe
 }
 
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(13), __webpack_require__(1).Buffer))
