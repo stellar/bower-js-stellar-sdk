@@ -27105,11 +27105,17 @@ function _toPrimitive(t, r) { if ("object" != parsers_typeof(t) || !t) return t;
 
 
 function parseRawSendTransaction(r) {
-  var errResult = r.errorResultXdr;
+  var errorResultXdr = r.errorResultXdr,
+    diagnosticEventsXdr = r.diagnosticEventsXdr;
   delete r.errorResultXdr;
-  if (!!errResult) {
-    return _objectSpread(_objectSpread({}, r), {}, {
-      errorResult: lib.xdr.TransactionResult.fromXDR(errResult, 'base64')
+  delete r.diagnosticEventsXdr;
+  if (!!errorResultXdr) {
+    return _objectSpread(_objectSpread(_objectSpread({}, r), diagnosticEventsXdr !== undefined && diagnosticEventsXdr.length > 0 && {
+      diagnosticEvents: diagnosticEventsXdr.map(function (evt) {
+        return lib.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
+      })
+    }), {}, {
+      errorResult: lib.xdr.TransactionResult.fromXDR(errorResultXdr, 'base64')
     });
   }
   return _objectSpread({}, r);
