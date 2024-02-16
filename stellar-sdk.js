@@ -27015,80 +27015,40 @@ function _regeneratorRuntime() { "use strict"; _regeneratorRuntime = function _r
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function post(_x, _x2) {
-  return _post.apply(this, arguments);
+function postObject(_x, _x2) {
+  return _postObject.apply(this, arguments);
 }
-function _post() {
-  _post = _asyncToGenerator(_regeneratorRuntime().mark(function _callee(url, method) {
-    var _len,
-      params,
-      _key,
+function _postObject() {
+  _postObject = _asyncToGenerator(_regeneratorRuntime().mark(function _callee(url, method) {
+    var param,
       response,
       _response$data,
       _args = arguments;
     return _regeneratorRuntime().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          for (_len = _args.length, params = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-            params[_key - 2] = _args[_key];
-          }
-          if (params && params.length < 1) {
-            params = null;
-          }
-          _context.next = 4;
-          return soroban_axios.post(url, {
-            jsonrpc: "2.0",
-            id: 1,
-            method: method,
-            params: params
-          });
-        case 4:
-          response = _context.sent;
-          if (!jsonrpc_hasOwnProperty(response.data, "error")) {
-            _context.next = 9;
-            break;
-          }
-          throw response.data.error;
-        case 9:
-          return _context.abrupt("return", (_response$data = response.data) === null || _response$data === void 0 ? void 0 : _response$data.result);
-        case 10:
-        case "end":
-          return _context.stop();
-      }
-    }, _callee);
-  }));
-  return _post.apply(this, arguments);
-}
-function postObject(_x3, _x4, _x5) {
-  return _postObject.apply(this, arguments);
-}
-function _postObject() {
-  _postObject = _asyncToGenerator(_regeneratorRuntime().mark(function _callee2(url, method, param) {
-    var response, _response$data2;
-    return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-      while (1) switch (_context2.prev = _context2.next) {
-        case 0:
-          _context2.next = 2;
+          param = _args.length > 2 && _args[2] !== undefined ? _args[2] : null;
+          _context.next = 3;
           return soroban_axios.post(url, {
             jsonrpc: "2.0",
             id: 1,
             method: method,
             params: param
           });
-        case 2:
-          response = _context2.sent;
+        case 3:
+          response = _context.sent;
           if (!jsonrpc_hasOwnProperty(response.data, "error")) {
-            _context2.next = 7;
+            _context.next = 8;
             break;
           }
           throw response.data.error;
-        case 7:
-          return _context2.abrupt("return", (_response$data2 = response.data) === null || _response$data2 === void 0 ? void 0 : _response$data2.result);
         case 8:
+          return _context.abrupt("return", (_response$data = response.data) === null || _response$data === void 0 ? void 0 : _response$data.result);
+        case 9:
         case "end":
-          return _context2.stop();
+          return _context.stop();
       }
-    }, _callee2);
+    }, _callee);
   }));
   return _postObject.apply(this, arguments);
 }
@@ -27342,7 +27302,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee2$(_context2) {
           while (1) switch (_context2.prev = _context2.next) {
             case 0:
-              return _context2.abrupt("return", post(this.serverURL.toString(), 'getHealth'));
+              return _context2.abrupt("return", postObject(this.serverURL.toString(), 'getHealth'));
             case 1:
             case "end":
               return _context2.stop();
@@ -27464,9 +27424,11 @@ var Server = function () {
               for (_len = _args5.length, keys = new Array(_len), _key = 0; _key < _len; _key++) {
                 keys[_key] = _args5[_key];
               }
-              return _context5.abrupt("return", post(this.serverURL.toString(), 'getLedgerEntries', keys.map(function (k) {
-                return k.toXDR('base64');
-              })));
+              return _context5.abrupt("return", postObject(this.serverURL.toString(), 'getLedgerEntries', {
+                keys: keys.map(function (k) {
+                  return k.toXDR('base64');
+                })
+              }));
             case 2:
             case "end":
               return _context5.stop();
@@ -27529,7 +27491,9 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee7$(_context7) {
           while (1) switch (_context7.prev = _context7.next) {
             case 0:
-              return _context7.abrupt("return", post(this.serverURL.toString(), 'getTransaction', hash));
+              return _context7.abrupt("return", postObject(this.serverURL.toString(), 'getTransaction', {
+                hash: hash
+              }));
             case 1:
             case "end":
               return _context7.stop();
@@ -27597,7 +27561,7 @@ var Server = function () {
           while (1) switch (_context10.prev = _context10.next) {
             case 0:
               _context10.next = 2;
-              return post(this.serverURL.toString(), 'getNetwork');
+              return postObject(this.serverURL.toString(), 'getNetwork');
             case 2:
               return _context10.abrupt("return", _context10.sent);
             case 3:
@@ -27618,7 +27582,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee11$(_context11) {
           while (1) switch (_context11.prev = _context11.next) {
             case 0:
-              return _context11.abrupt("return", post(this.serverURL.toString(), 'getLatestLedger'));
+              return _context11.abrupt("return", postObject(this.serverURL.toString(), 'getLatestLedger'));
             case 1:
             case "end":
               return _context11.stop();
@@ -27730,7 +27694,9 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee16$(_context16) {
           while (1) switch (_context16.prev = _context16.next) {
             case 0:
-              return _context16.abrupt("return", post(this.serverURL.toString(), 'sendTransaction', transaction.toXDR()));
+              return _context16.abrupt("return", postObject(this.serverURL.toString(), 'sendTransaction', {
+                transaction: transaction.toXDR()
+              }));
             case 1:
             case "end":
               return _context16.stop();
