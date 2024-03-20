@@ -20597,31 +20597,102 @@ var Config = function () {
 
 /***/ }),
 
-/***/ 8296:
+/***/ 9652:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   S: () => (/* binding */ ContractSpec)
-/* harmony export */ });
-/* harmony import */ var ___WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6196);
-/* provided dependency */ var Buffer = __webpack_require__(3296)["Buffer"];
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  S: () => (/* binding */ ContractSpec)
+});
+
+// EXTERNAL MODULE: ./src/index.ts
+var src = __webpack_require__(6196);
+;// CONCATENATED MODULE: ./src/rust_types/result.ts
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : String(i); }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var Ok = function () {
+  function Ok(value) {
+    _classCallCheck(this, Ok);
+    this.value = value;
+  }
+  _createClass(Ok, [{
+    key: "unwrapErr",
+    value: function unwrapErr() {
+      throw new Error("No error");
+    }
+  }, {
+    key: "unwrap",
+    value: function unwrap() {
+      return this.value;
+    }
+  }, {
+    key: "isOk",
+    value: function isOk() {
+      return true;
+    }
+  }, {
+    key: "isErr",
+    value: function isErr() {
+      return false;
+    }
+  }]);
+  return Ok;
+}();
+var Err = function () {
+  function Err(error) {
+    _classCallCheck(this, Err);
+    this.error = error;
+  }
+  _createClass(Err, [{
+    key: "unwrapErr",
+    value: function unwrapErr() {
+      return this.error;
+    }
+  }, {
+    key: "unwrap",
+    value: function unwrap() {
+      throw new Error(this.error.message);
+    }
+  }, {
+    key: "isOk",
+    value: function isOk() {
+      return false;
+    }
+  }, {
+    key: "isErr",
+    value: function isErr() {
+      return true;
+    }
+  }]);
+  return Err;
+}();
+;// CONCATENATED MODULE: ./src/rust_types/index.ts
+
+;// CONCATENATED MODULE: ./src/contract_spec.ts
+/* provided dependency */ var Buffer = __webpack_require__(3296)["Buffer"];
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function contract_spec_typeof(o) { "@babel/helpers - typeof"; return contract_spec_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, contract_spec_typeof(o); }
+function contract_spec_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function contract_spec_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, contract_spec_toPropertyKey(descriptor.key), descriptor); } }
+function contract_spec_createClass(Constructor, protoProps, staticProps) { if (protoProps) contract_spec_defineProperties(Constructor.prototype, protoProps); if (staticProps) contract_spec_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _defineProperty(obj, key, value) { key = contract_spec_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function contract_spec_toPropertyKey(t) { var i = contract_spec_toPrimitive(t, "string"); return "symbol" == contract_spec_typeof(i) ? i : String(i); }
+function contract_spec_toPrimitive(t, r) { if ("object" != contract_spec_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != contract_spec_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
 
 function readObj(args, input) {
   var inputName = input.name().toString();
@@ -20638,7 +20709,7 @@ function readObj(args, input) {
 }
 var ContractSpec = function () {
   function ContractSpec(entries) {
-    _classCallCheck(this, ContractSpec);
+    contract_spec_classCallCheck(this, ContractSpec);
     _defineProperty(this, "entries", []);
     if (entries.length == 0) {
       throw new Error("Contract spec must have at least one entry");
@@ -20646,17 +20717,17 @@ var ContractSpec = function () {
     var entry = entries[0];
     if (typeof entry === "string") {
       this.entries = entries.map(function (s) {
-        return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntry.fromXDR(s, "base64");
+        return src.xdr.ScSpecEntry.fromXDR(s, "base64");
       });
     } else {
       this.entries = entries;
     }
   }
-  _createClass(ContractSpec, [{
+  contract_spec_createClass(ContractSpec, [{
     key: "funcs",
     value: function funcs() {
       return this.entries.filter(function (entry) {
-        return entry.switch().value === ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value;
+        return entry.switch().value === src.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value;
       }).map(function (entry) {
         return entry.functionV0();
       });
@@ -20665,7 +20736,7 @@ var ContractSpec = function () {
     key: "getFunc",
     value: function getFunc(name) {
       var entry = this.findEntry(name);
-      if (entry.switch().value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value) {
+      if (entry.switch().value !== src.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value) {
         throw new Error("".concat(name, " is not a function"));
       }
       return entry.functionV0();
@@ -20682,12 +20753,12 @@ var ContractSpec = function () {
   }, {
     key: "funcResToNative",
     value: function funcResToNative(name, val_or_base64) {
-      var val = typeof val_or_base64 === "string" ? ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(val_or_base64, "base64") : val_or_base64;
+      var val = typeof val_or_base64 === "string" ? src.xdr.ScVal.fromXDR(val_or_base64, "base64") : val_or_base64;
       var func = this.getFunc(name);
       var outputs = func.outputs();
       if (outputs.length === 0) {
         var type = val.switch();
-        if (type.value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvVoid().value) {
+        if (type.value !== src.xdr.ScValType.scvVoid().value) {
           throw new Error("Expected void, got ".concat(type.name));
         }
         return null;
@@ -20696,8 +20767,8 @@ var ContractSpec = function () {
         throw new Error("Multiple outputs not supported");
       }
       var output = outputs[0];
-      if (output.switch().value === ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeResult().value) {
-        return this.scValToNative(val, output.result().okType());
+      if (output.switch().value === src.xdr.ScSpecType.scSpecTypeResult().value) {
+        return new Ok(this.scValToNative(val, output.result().okType()));
       }
       return this.scValToNative(val, output);
     }
@@ -20718,40 +20789,40 @@ var ContractSpec = function () {
       var _this2 = this;
       var t = ty.switch();
       var value = t.value;
-      if (t.value === ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeUdt().value) {
+      if (t.value === src.xdr.ScSpecType.scSpecTypeUdt().value) {
         var udt = ty.udt();
         return this.nativeToUdt(val, udt.name().toString());
       }
-      if (value === ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeOption().value) {
+      if (value === src.xdr.ScSpecType.scSpecTypeOption().value) {
         var opt = ty.option();
         if (val === undefined) {
-          return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid();
+          return src.xdr.ScVal.scvVoid();
         }
         return this.nativeToScVal(val, opt.valueType());
       }
-      switch (_typeof(val)) {
+      switch (contract_spec_typeof(val)) {
         case "object":
           {
             var _val$constructor$name, _val$constructor;
             if (val === null) {
               switch (value) {
-                case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVoid().value:
-                  return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid();
+                case src.xdr.ScSpecType.scSpecTypeVoid().value:
+                  return src.xdr.ScVal.scvVoid();
                 default:
                   throw new TypeError("Type ".concat(ty, " was not void, but value was null"));
               }
             }
-            if (val instanceof ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal) {
+            if (val instanceof src.xdr.ScVal) {
               return val;
             }
-            if (val instanceof ___WEBPACK_IMPORTED_MODULE_0__.Address) {
-              if (ty.switch().value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeAddress().value) {
+            if (val instanceof src.Address) {
+              if (ty.switch().value !== src.xdr.ScSpecType.scSpecTypeAddress().value) {
                 throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
               }
               return val.toScVal();
             }
-            if (val instanceof ___WEBPACK_IMPORTED_MODULE_0__.Contract) {
-              if (ty.switch().value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeAddress().value) {
+            if (val instanceof src.Contract) {
+              if (ty.switch().value !== src.xdr.ScSpecType.scSpecTypeAddress().value) {
                 throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
               }
               return val.address().toScVal();
@@ -20759,50 +20830,50 @@ var ContractSpec = function () {
             if (val instanceof Uint8Array || Buffer.isBuffer(val)) {
               var copy = Uint8Array.from(val);
               switch (value) {
-                case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBytesN().value:
+                case src.xdr.ScSpecType.scSpecTypeBytesN().value:
                   {
                     var bytes_n = ty.bytesN();
                     if (copy.length !== bytes_n.n()) {
                       throw new TypeError("expected ".concat(bytes_n.n(), " bytes, but got ").concat(copy.length));
                     }
-                    return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvBytes(copy);
+                    return src.xdr.ScVal.scvBytes(copy);
                   }
-                case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBytes().value:
-                  return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvBytes(copy);
+                case src.xdr.ScSpecType.scSpecTypeBytes().value:
+                  return src.xdr.ScVal.scvBytes(copy);
                 default:
                   throw new TypeError("invalid type (".concat(ty, ") specified for Bytes and BytesN"));
               }
             }
             if (Array.isArray(val)) {
               switch (value) {
-                case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVec().value:
+                case src.xdr.ScSpecType.scSpecTypeVec().value:
                   {
                     var vec = ty.vec();
                     var elementType = vec.elementType();
-                    return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVec(val.map(function (v) {
+                    return src.xdr.ScVal.scvVec(val.map(function (v) {
                       return _this2.nativeToScVal(v, elementType);
                     }));
                   }
-                case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeTuple().value:
+                case src.xdr.ScSpecType.scSpecTypeTuple().value:
                   {
                     var tup = ty.tuple();
                     var valTypes = tup.valueTypes();
                     if (val.length !== valTypes.length) {
                       throw new TypeError("Tuple expects ".concat(valTypes.length, " values, but ").concat(val.length, " were provided"));
                     }
-                    return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVec(val.map(function (v, i) {
+                    return src.xdr.ScVal.scvVec(val.map(function (v, i) {
                       return _this2.nativeToScVal(v, valTypes[i]);
                     }));
                   }
-                case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeMap().value:
+                case src.xdr.ScSpecType.scSpecTypeMap().value:
                   {
                     var map = ty.map();
                     var keyType = map.keyType();
                     var valueType = map.valueType();
-                    return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvMap(val.map(function (entry) {
+                    return src.xdr.ScVal.scvMap(val.map(function (entry) {
                       var key = _this2.nativeToScVal(entry[0], keyType);
                       var val = _this2.nativeToScVal(entry[1], valueType);
-                      return new ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScMapEntry({
+                      return new src.xdr.ScMapEntry({
                         key: key,
                         val: val
                       });
@@ -20813,7 +20884,7 @@ var ContractSpec = function () {
               }
             }
             if (val.constructor === Map) {
-              if (value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeMap().value) {
+              if (value !== src.xdr.ScSpecType.scSpecTypeMap().value) {
                 throw new TypeError("Type ".concat(ty, " was not map, but value was Map"));
               }
               var scMap = ty.map();
@@ -20827,13 +20898,13 @@ var ContractSpec = function () {
                   v = _res$value[1];
                 var _key = this.nativeToScVal(k, scMap.keyType());
                 var _val = this.nativeToScVal(v, scMap.valueType());
-                entries.push(new ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScMapEntry({
+                entries.push(new src.xdr.ScMapEntry({
                   key: _key,
                   val: _val
                 }));
                 res = values.next();
               }
-              return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvMap(entries);
+              return src.xdr.ScVal.scvMap(entries);
             }
             if (((_val$constructor$name = (_val$constructor = val.constructor) === null || _val$constructor === void 0 ? void 0 : _val$constructor.name) !== null && _val$constructor$name !== void 0 ? _val$constructor$name : "") !== "Object") {
               var _val$constructor2;
@@ -20845,19 +20916,19 @@ var ContractSpec = function () {
         case "bigint":
           {
             switch (value) {
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU32().value:
-                return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvU32(val);
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI32().value:
-                return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvI32(val);
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU64().value:
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI64().value:
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU128().value:
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI128().value:
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU256().value:
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI256().value:
+              case src.xdr.ScSpecType.scSpecTypeU32().value:
+                return src.xdr.ScVal.scvU32(val);
+              case src.xdr.ScSpecType.scSpecTypeI32().value:
+                return src.xdr.ScVal.scvI32(val);
+              case src.xdr.ScSpecType.scSpecTypeU64().value:
+              case src.xdr.ScSpecType.scSpecTypeI64().value:
+              case src.xdr.ScSpecType.scSpecTypeU128().value:
+              case src.xdr.ScSpecType.scSpecTypeI128().value:
+              case src.xdr.ScSpecType.scSpecTypeU256().value:
+              case src.xdr.ScSpecType.scSpecTypeI256().value:
                 {
                   var intType = t.name.substring(10).toLowerCase();
-                  return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt(intType, val).toScVal();
+                  return new src.XdrLargeInt(intType, val).toScVal();
                 }
               default:
                 throw new TypeError("invalid type (".concat(ty, ") specified for integer"));
@@ -20867,20 +20938,20 @@ var ContractSpec = function () {
           return stringToScVal(val, t);
         case "boolean":
           {
-            if (value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBool().value) {
+            if (value !== src.xdr.ScSpecType.scSpecTypeBool().value) {
               throw TypeError("Type ".concat(ty, " was not bool, but value was bool"));
             }
-            return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvBool(val);
+            return src.xdr.ScVal.scvBool(val);
           }
         case "undefined":
           {
             if (!ty) {
-              return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid();
+              return src.xdr.ScVal.scvVoid();
             }
             switch (value) {
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVoid().value:
-              case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeOption().value:
-                return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid();
+              case src.xdr.ScSpecType.scSpecTypeVoid().value:
+              case src.xdr.ScSpecType.scSpecTypeOption().value:
+                return src.xdr.ScVal.scvVoid();
               default:
                 throw new TypeError("Type ".concat(ty, " was not void, but value was undefined"));
             }
@@ -20888,7 +20959,7 @@ var ContractSpec = function () {
         case "function":
           return this.nativeToScVal(val(), ty);
         default:
-          throw new TypeError("failed to convert typeof ".concat(_typeof(val), " (").concat(val, ")"));
+          throw new TypeError("failed to convert typeof ".concat(contract_spec_typeof(val), " (").concat(val, ")"));
       }
     }
   }, {
@@ -20896,14 +20967,14 @@ var ContractSpec = function () {
     value: function nativeToUdt(val, name) {
       var entry = this.findEntry(name);
       switch (entry.switch()) {
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
+        case src.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
           if (typeof val !== "number") {
-            throw new TypeError("expected number for enum ".concat(name, ", but got ").concat(_typeof(val)));
+            throw new TypeError("expected number for enum ".concat(name, ", but got ").concat(contract_spec_typeof(val)));
           }
           return this.nativeToEnum(val, entry.udtEnumV0());
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
+        case src.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
           return this.nativeToStruct(val, entry.udtStructV0());
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
+        case src.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
           return this.nativeToUnion(val, entry.udtUnionV0());
         default:
           throw new Error("failed to parse udt ".concat(name));
@@ -20921,13 +20992,13 @@ var ContractSpec = function () {
       if (!case_) {
         throw new TypeError("no such enum entry: ".concat(entry_name, " in ").concat(union_));
       }
-      var key = ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvSymbol(entry_name);
+      var key = src.xdr.ScVal.scvSymbol(entry_name);
       switch (case_.switch()) {
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0():
+        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0():
           {
-            return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVec([key]);
+            return src.xdr.ScVal.scvVec([key]);
           }
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0():
+        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0():
           {
             var types = case_.tupleCase().type();
             if (Array.isArray(val.values)) {
@@ -20938,7 +21009,7 @@ var ContractSpec = function () {
                 return _this3.nativeToScVal(v, types[i]);
               });
               scvals.unshift(key);
-              return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVec(scvals);
+              return src.xdr.ScVal.scvVec(scvals);
             }
             throw new Error("failed to parse union case ".concat(case_, " with ").concat(val));
           }
@@ -20955,14 +21026,14 @@ var ContractSpec = function () {
         if (!fields.every(isNumeric)) {
           throw new Error("mixed numeric and non-numeric field names are not allowed");
         }
-        return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVec(fields.map(function (_, i) {
+        return src.xdr.ScVal.scvVec(fields.map(function (_, i) {
           return _this4.nativeToScVal(val[i], fields[i].type());
         }));
       }
-      return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvMap(fields.map(function (field) {
+      return src.xdr.ScVal.scvMap(fields.map(function (field) {
         var name = field.name().toString();
-        return new ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScMapEntry({
-          key: _this4.nativeToScVal(name, ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecTypeDef.scSpecTypeSymbol()),
+        return new src.xdr.ScMapEntry({
+          key: _this4.nativeToScVal(name, src.xdr.ScSpecTypeDef.scSpecTypeSymbol()),
           val: _this4.nativeToScVal(val[name], field.type())
         });
       }));
@@ -20973,14 +21044,14 @@ var ContractSpec = function () {
       if (enum_.cases().some(function (entry) {
         return entry.value() === val;
       })) {
-        return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvU32(val);
+        return src.xdr.ScVal.scvU32(val);
       }
       throw new TypeError("no such enum entry: ".concat(val, " in ").concat(enum_));
     }
   }, {
     key: "scValStrToNative",
     value: function scValStrToNative(scv, typeDef) {
-      return this.scValToNative(___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(scv, "base64"), typeDef);
+      return this.scValToNative(src.xdr.ScVal.fromXDR(scv, "base64"), typeDef);
     }
   }, {
     key: "scValToNative",
@@ -20988,28 +21059,28 @@ var ContractSpec = function () {
       var _this5 = this;
       var t = typeDef.switch();
       var value = t.value;
-      if (value === ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeUdt().value) {
+      if (value === src.xdr.ScSpecType.scSpecTypeUdt().value) {
         return this.scValUdtToNative(scv, typeDef.udt());
       }
       switch (scv.switch().value) {
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvVoid().value:
+        case src.xdr.ScValType.scvVoid().value:
           return void 0;
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvU64().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvI64().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvU128().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvI128().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvU256().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvI256().value:
-          return (0,___WEBPACK_IMPORTED_MODULE_0__.scValToBigInt)(scv);
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvVec().value:
+        case src.xdr.ScValType.scvU64().value:
+        case src.xdr.ScValType.scvI64().value:
+        case src.xdr.ScValType.scvU128().value:
+        case src.xdr.ScValType.scvI128().value:
+        case src.xdr.ScValType.scvU256().value:
+        case src.xdr.ScValType.scvI256().value:
+          return (0,src.scValToBigInt)(scv);
+        case src.xdr.ScValType.scvVec().value:
           {
-            if (value == ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVec().value) {
+            if (value == src.xdr.ScSpecType.scSpecTypeVec().value) {
               var _scv$vec;
               var vec = typeDef.vec();
               return ((_scv$vec = scv.vec()) !== null && _scv$vec !== void 0 ? _scv$vec : []).map(function (elm) {
                 return _this5.scValToNative(elm, vec.elementType());
               });
-            } else if (value == ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeTuple().value) {
+            } else if (value == src.xdr.ScSpecType.scSpecTypeTuple().value) {
               var _scv$vec2;
               var tuple = typeDef.tuple();
               var valTypes = tuple.valueTypes();
@@ -21019,13 +21090,13 @@ var ContractSpec = function () {
             }
             throw new TypeError("Type ".concat(typeDef, " was not vec, but ").concat(scv, " is"));
           }
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvAddress().value:
-          return ___WEBPACK_IMPORTED_MODULE_0__.Address.fromScVal(scv).toString();
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvMap().value:
+        case src.xdr.ScValType.scvAddress().value:
+          return src.Address.fromScVal(scv).toString();
+        case src.xdr.ScValType.scvMap().value:
           {
             var _scv$map;
             var map = (_scv$map = scv.map()) !== null && _scv$map !== void 0 ? _scv$map : [];
-            if (value == ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeMap().value) {
+            if (value == src.xdr.ScSpecType.scSpecTypeMap().value) {
               var type_ = typeDef.map();
               var keyType = type_.keyType();
               var valueType = type_.valueType();
@@ -21036,23 +21107,23 @@ var ContractSpec = function () {
             }
             throw new TypeError("ScSpecType ".concat(t.name, " was not map, but ").concat(JSON.stringify(scv, null, 2), " is"));
           }
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvBool().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvU32().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvI32().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvBytes().value:
+        case src.xdr.ScValType.scvBool().value:
+        case src.xdr.ScValType.scvU32().value:
+        case src.xdr.ScValType.scvI32().value:
+        case src.xdr.ScValType.scvBytes().value:
           return scv.value();
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvString().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvSymbol().value:
+        case src.xdr.ScValType.scvString().value:
+        case src.xdr.ScValType.scvSymbol().value:
           {
             var _scv$value;
-            if (value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeString().value && value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeSymbol().value) {
+            if (value !== src.xdr.ScSpecType.scSpecTypeString().value && value !== src.xdr.ScSpecType.scSpecTypeSymbol().value) {
               throw new Error("ScSpecType ".concat(t.name, " was not string or symbol, but ").concat(JSON.stringify(scv, null, 2), " is"));
             }
             return (_scv$value = scv.value()) === null || _scv$value === void 0 ? void 0 : _scv$value.toString();
           }
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvTimepoint().value:
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvDuration().value:
-          return (0,___WEBPACK_IMPORTED_MODULE_0__.scValToBigInt)(___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvU64(scv.u64()));
+        case src.xdr.ScValType.scvTimepoint().value:
+        case src.xdr.ScValType.scvDuration().value:
+          return (0,src.scValToBigInt)(src.xdr.ScVal.scvU64(scv.u64()));
         default:
           throw new TypeError("failed to convert ".concat(JSON.stringify(scv, null, 2), " to native type from type ").concat(t.name));
       }
@@ -21062,11 +21133,11 @@ var ContractSpec = function () {
     value: function scValUdtToNative(scv, udt) {
       var entry = this.findEntry(udt.name().toString());
       switch (entry.switch()) {
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
+        case src.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
           return this.enumToNative(scv);
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
+        case src.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
           return this.structToNative(scv, entry.udtStructV0());
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
+        case src.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
           return this.unionToNative(scv, entry.udtUnionV0());
         default:
           throw new Error("failed to parse udt ".concat(udt.name().toString(), ": ").concat(entry));
@@ -21084,7 +21155,7 @@ var ContractSpec = function () {
         throw new Error("".concat(val, " has length 0, but the there are at least one case in the union"));
       }
       var name = vec[0].sym().toString();
-      if (vec[0].switch().value != ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvSymbol().value) {
+      if (vec[0].switch().value != src.xdr.ScValType.scvSymbol().value) {
         throw new Error("{vec[0]} is not a symbol");
       }
       var entry = udt.cases().find(findCase(name));
@@ -21094,7 +21165,7 @@ var ContractSpec = function () {
       var res = {
         tag: name
       };
-      if (entry.switch().value === ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value) {
+      if (entry.switch().value === src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value) {
         var tuple = entry.tupleCase();
         var ty = tuple.type();
         var values = ty.map(function (entry, i) {
@@ -21127,11 +21198,20 @@ var ContractSpec = function () {
   }, {
     key: "enumToNative",
     value: function enumToNative(scv) {
-      if (scv.switch().value !== ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScValType.scvU32().value) {
+      if (scv.switch().value !== src.xdr.ScValType.scvU32().value) {
         throw new Error("Enum must have a u32 value");
       }
       var num = scv.u32();
       return num;
+    }
+  }, {
+    key: "errorCases",
+    value: function errorCases() {
+      return this.entries.filter(function (entry) {
+        return entry.switch().value === src.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value;
+      }).flatMap(function (entry) {
+        return entry.value().cases();
+      });
     }
   }, {
     key: "jsonSchema",
@@ -21143,23 +21223,23 @@ var ContractSpec = function () {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var entry = _step.value;
           switch (entry.switch().value) {
-            case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value:
+            case src.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value:
               {
                 var _udt = entry.udtEnumV0();
                 definitions[_udt.name().toString()] = enumToJsonSchema(_udt);
                 break;
               }
-            case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value:
+            case src.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value:
               {
                 var _udt2 = entry.udtStructV0();
                 definitions[_udt2.name().toString()] = structToJsonSchema(_udt2);
                 break;
               }
-            case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value:
+            case src.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value:
               var udt = entry.udtUnionV0();
               definitions[udt.name().toString()] = unionToJsonSchema(udt);
               break;
-            case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value:
+            case src.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value:
               {
                 var fn = entry.functionV0();
                 var fnName = fn.name().toString();
@@ -21168,7 +21248,7 @@ var ContractSpec = function () {
                 definitions[fnName] = input;
                 break;
               }
-            case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value:
+            case src.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value:
               {}
           }
         }
@@ -21191,30 +21271,30 @@ var ContractSpec = function () {
 }();
 function stringToScVal(str, ty) {
   switch (ty.value) {
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeString().value:
-      return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvString(str);
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeSymbol().value:
-      return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvSymbol(str);
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeAddress().value:
+    case src.xdr.ScSpecType.scSpecTypeString().value:
+      return src.xdr.ScVal.scvString(str);
+    case src.xdr.ScSpecType.scSpecTypeSymbol().value:
+      return src.xdr.ScVal.scvSymbol(str);
+    case src.xdr.ScSpecType.scSpecTypeAddress().value:
       {
-        var addr = ___WEBPACK_IMPORTED_MODULE_0__.Address.fromString(str);
-        return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvAddress(addr.toScAddress());
+        var addr = src.Address.fromString(str);
+        return src.xdr.ScVal.scvAddress(addr.toScAddress());
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU64().value:
-      return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt("u64", str).toScVal();
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI64().value:
-      return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt("i64", str).toScVal();
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU128().value:
-      return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt("u128", str).toScVal();
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI128().value:
-      return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt("i128", str).toScVal();
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU256().value:
-      return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt("u256", str).toScVal();
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI256().value:
-      return new ___WEBPACK_IMPORTED_MODULE_0__.XdrLargeInt("i256", str).toScVal();
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBytes().value:
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBytesN().value:
-      return ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvBytes(Buffer.from(str, "base64"));
+    case src.xdr.ScSpecType.scSpecTypeU64().value:
+      return new src.XdrLargeInt("u64", str).toScVal();
+    case src.xdr.ScSpecType.scSpecTypeI64().value:
+      return new src.XdrLargeInt("i64", str).toScVal();
+    case src.xdr.ScSpecType.scSpecTypeU128().value:
+      return new src.XdrLargeInt("u128", str).toScVal();
+    case src.xdr.ScSpecType.scSpecTypeI128().value:
+      return new src.XdrLargeInt("i128", str).toScVal();
+    case src.xdr.ScSpecType.scSpecTypeU256().value:
+      return new src.XdrLargeInt("u256", str).toScVal();
+    case src.xdr.ScSpecType.scSpecTypeI256().value:
+      return new src.XdrLargeInt("i256", str).toScVal();
+    case src.xdr.ScSpecType.scSpecTypeBytes().value:
+    case src.xdr.ScSpecType.scSpecTypeBytesN().value:
+      return src.xdr.ScVal.scvBytes(Buffer.from(str, "base64"));
     default:
       throw new TypeError("invalid type ".concat(ty.name, " specified for string value"));
   }
@@ -21225,12 +21305,12 @@ function isNumeric(field) {
 function findCase(name) {
   return function matches(entry) {
     switch (entry.switch().value) {
-      case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
+      case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
         {
           var tuple = entry.tupleCase();
           return tuple.name().toString() === name;
         }
-      case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
+      case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
         {
           var void_case = entry.voidCase();
           return void_case.name().toString() === name;
@@ -21310,110 +21390,110 @@ function typeRef(typeDef) {
   var value = t.value;
   var ref;
   switch (value) {
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVal().value:
+    case src.xdr.ScSpecType.scSpecTypeVal().value:
       {
         ref = "Val";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBool().value:
+    case src.xdr.ScSpecType.scSpecTypeBool().value:
       {
         return {
           type: "boolean"
         };
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVoid().value:
+    case src.xdr.ScSpecType.scSpecTypeVoid().value:
       {
         return {
           type: "null"
         };
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeError().value:
+    case src.xdr.ScSpecType.scSpecTypeError().value:
       {
         ref = "Error";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU32().value:
+    case src.xdr.ScSpecType.scSpecTypeU32().value:
       {
         ref = "U32";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI32().value:
+    case src.xdr.ScSpecType.scSpecTypeI32().value:
       {
         ref = "I32";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU64().value:
+    case src.xdr.ScSpecType.scSpecTypeU64().value:
       {
         ref = "U64";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI64().value:
+    case src.xdr.ScSpecType.scSpecTypeI64().value:
       {
         ref = "I64";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeTimepoint().value:
+    case src.xdr.ScSpecType.scSpecTypeTimepoint().value:
       {
         throw new Error("Timepoint type not supported");
         ref = "Timepoint";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeDuration().value:
+    case src.xdr.ScSpecType.scSpecTypeDuration().value:
       {
         throw new Error("Duration not supported");
         ref = "Duration";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU128().value:
+    case src.xdr.ScSpecType.scSpecTypeU128().value:
       {
         ref = "U128";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI128().value:
+    case src.xdr.ScSpecType.scSpecTypeI128().value:
       {
         ref = "I128";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeU256().value:
+    case src.xdr.ScSpecType.scSpecTypeU256().value:
       {
         ref = "U256";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeI256().value:
+    case src.xdr.ScSpecType.scSpecTypeI256().value:
       {
         ref = "I256";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBytes().value:
+    case src.xdr.ScSpecType.scSpecTypeBytes().value:
       {
         ref = "DataUrl";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeString().value:
+    case src.xdr.ScSpecType.scSpecTypeString().value:
       {
         ref = "ScString";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeSymbol().value:
+    case src.xdr.ScSpecType.scSpecTypeSymbol().value:
       {
         ref = "ScSymbol";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeAddress().value:
+    case src.xdr.ScSpecType.scSpecTypeAddress().value:
       {
         ref = "Address";
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeOption().value:
+    case src.xdr.ScSpecType.scSpecTypeOption().value:
       {
         var opt = typeDef.option();
         return typeRef(opt.valueType());
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeResult().value:
+    case src.xdr.ScSpecType.scSpecTypeResult().value:
       {
         break;
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeVec().value:
+    case src.xdr.ScSpecType.scSpecTypeVec().value:
       {
         var arr = typeDef.vec();
         var _ref3 = typeRef(arr.elementType());
@@ -21422,7 +21502,7 @@ function typeRef(typeDef) {
           items: _ref3
         };
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeMap().value:
+    case src.xdr.ScSpecType.scSpecTypeMap().value:
       {
         var map = typeDef.map();
         var items = [typeRef(map.keyType()), typeRef(map.valueType())];
@@ -21436,7 +21516,7 @@ function typeRef(typeDef) {
           }
         };
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeTuple().value:
+    case src.xdr.ScSpecType.scSpecTypeTuple().value:
       {
         var tuple = typeDef.tuple();
         var minItems = tuple.valueTypes().length;
@@ -21449,7 +21529,7 @@ function typeRef(typeDef) {
           maxItems: maxItems
         };
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeBytesN().value:
+    case src.xdr.ScSpecType.scSpecTypeBytesN().value:
       {
         var _arr = typeDef.bytesN();
         return {
@@ -21457,7 +21537,7 @@ function typeRef(typeDef) {
           maxLength: _arr.n()
         };
       }
-    case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeUdt().value:
+    case src.xdr.ScSpecType.scSpecTypeUdt().value:
       {
         var udt = typeDef.udt();
         ref = udt.name().toString();
@@ -21469,7 +21549,7 @@ function typeRef(typeDef) {
   };
 }
 function isRequired(typeDef) {
-  return typeDef.switch().value != ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecType.scSpecTypeOption().value;
+  return typeDef.switch().value != src.xdr.ScSpecType.scSpecTypeOption().value;
 }
 function structToJsonSchema(udt) {
   var fields = udt.fields();
@@ -21545,7 +21625,7 @@ function functionToJsonSchema(func) {
     }
   };
   var outputs = func.outputs();
-  var output = outputs.length > 0 ? typeRef(outputs[0]) : typeRef(___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecTypeDef.scSpecTypeVoid());
+  var output = outputs.length > 0 ? typeRef(outputs[0]) : typeRef(src.xdr.ScSpecTypeDef.scSpecTypeVoid());
   var description = func.doc().toString();
   if (description.length > 0) {
     input.description = description;
@@ -21567,7 +21647,7 @@ function unionToJsonSchema(udt) {
     for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
       var case_ = _step3.value;
       switch (case_.switch().value) {
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
+        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
           {
             var c = case_.voidCase();
             var title = c.name().toString();
@@ -21582,7 +21662,7 @@ function unionToJsonSchema(udt) {
             });
             break;
           }
-        case ___WEBPACK_IMPORTED_MODULE_0__.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
+        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
           {
             var _c = case_.tupleCase();
             var _title = _c.name().toString();
@@ -26918,11 +26998,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _friendbot__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3120);
 /* harmony import */ var _horizon__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(6952);
 /* harmony import */ var _soroban__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(6288);
-/* harmony import */ var _contract_spec__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(8296);
+/* harmony import */ var _contract_spec__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(9652);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(3324);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony reexport (unknown) */ var __WEBPACK_REEXPORT_OBJECT__ = {};
-/* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__) if(["default","Config","Utils","StellarToml","Federation","WebAuth","Friendbot","Horizon","SorobanRpc","ContractSpec","AccountRequiresMemoError","BadRequestError","BadResponseError","NetworkError","NotFoundError"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__[__WEBPACK_IMPORT_KEY__]
+/* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__) if(["default","Config","Utils","StellarToml","Federation","WebAuth","Friendbot","Horizon","SorobanRpc","AccountRequiresMemoError","BadRequestError","BadResponseError","NetworkError","NotFoundError","ContractSpec"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__[__WEBPACK_IMPORT_KEY__]
 /* harmony reexport (unknown) */ __webpack_require__.d(__webpack_exports__, __WEBPACK_REEXPORT_OBJECT__);
 /* module decorator */ module = __webpack_require__.hmd(module);
 
