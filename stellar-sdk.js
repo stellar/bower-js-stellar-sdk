@@ -1890,7 +1890,7 @@ var types = XDR.config(function (xdr) {
   //   const MASK_ACCOUNT_FLAGS_V17 = 0xF;
   //
   // ===========================================================================
-  xdr["const"]("MASK_ACCOUNT_FLAGS_V17", 0xf);
+  xdr["const"]("MASK_ACCOUNT_FLAGS_V17", 0xF);
 
   // === xdr source ============================================================
   //
@@ -2732,15 +2732,79 @@ var types = XDR.config(function (xdr) {
 
   // === xdr source ============================================================
   //
-  //   struct ContractCodeEntry {
+  //   struct ContractCodeCostInputs {
   //       ExtensionPoint ext;
+  //       uint32 nInstructions;
+  //       uint32 nFunctions;
+  //       uint32 nGlobals;
+  //       uint32 nTableEntries;
+  //       uint32 nTypes;
+  //       uint32 nDataSegments;
+  //       uint32 nElemSegments;
+  //       uint32 nImports;
+  //       uint32 nExports;
+  //       uint32 nDataSegmentBytes;
+  //   };
+  //
+  // ===========================================================================
+  xdr.struct("ContractCodeCostInputs", [["ext", xdr.lookup("ExtensionPoint")], ["nInstructions", xdr.lookup("Uint32")], ["nFunctions", xdr.lookup("Uint32")], ["nGlobals", xdr.lookup("Uint32")], ["nTableEntries", xdr.lookup("Uint32")], ["nTypes", xdr.lookup("Uint32")], ["nDataSegments", xdr.lookup("Uint32")], ["nElemSegments", xdr.lookup("Uint32")], ["nImports", xdr.lookup("Uint32")], ["nExports", xdr.lookup("Uint32")], ["nDataSegmentBytes", xdr.lookup("Uint32")]]);
+
+  // === xdr source ============================================================
+  //
+  //   struct
+  //               {
+  //                   ExtensionPoint ext;
+  //                   ContractCodeCostInputs costInputs;
+  //               }
+  //
+  // ===========================================================================
+  xdr.struct("ContractCodeEntryV1", [["ext", xdr.lookup("ExtensionPoint")], ["costInputs", xdr.lookup("ContractCodeCostInputs")]]);
+
+  // === xdr source ============================================================
+  //
+  //   union switch (int v)
+  //       {
+  //           case 0:
+  //               void;
+  //           case 1:
+  //               struct
+  //               {
+  //                   ExtensionPoint ext;
+  //                   ContractCodeCostInputs costInputs;
+  //               } v1;
+  //       }
+  //
+  // ===========================================================================
+  xdr.union("ContractCodeEntryExt", {
+    switchOn: xdr["int"](),
+    switchName: "v",
+    switches: [[0, xdr["void"]()], [1, "v1"]],
+    arms: {
+      v1: xdr.lookup("ContractCodeEntryV1")
+    }
+  });
+
+  // === xdr source ============================================================
+  //
+  //   struct ContractCodeEntry {
+  //       union switch (int v)
+  //       {
+  //           case 0:
+  //               void;
+  //           case 1:
+  //               struct
+  //               {
+  //                   ExtensionPoint ext;
+  //                   ContractCodeCostInputs costInputs;
+  //               } v1;
+  //       } ext;
   //
   //       Hash hash;
   //       opaque code<>;
   //   };
   //
   // ===========================================================================
-  xdr.struct("ContractCodeEntry", [["ext", xdr.lookup("ExtensionPoint")], ["hash", xdr.lookup("Hash")], ["code", xdr.varOpaque()]]);
+  xdr.struct("ContractCodeEntry", [["ext", xdr.lookup("ContractCodeEntryExt")], ["hash", xdr.lookup("Hash")], ["code", xdr.varOpaque()]]);
 
   // === xdr source ============================================================
   //
@@ -3935,9 +3999,68 @@ var types = XDR.config(function (xdr) {
 
   // === xdr source ============================================================
   //
-  //   struct SorobanTransactionMeta
+  //   struct SorobanTransactionMetaExtV1
   //   {
   //       ExtensionPoint ext;
+  //
+  //       // The following are the components of the overall Soroban resource fee
+  //       // charged for the transaction.
+  //       // The following relation holds:
+  //       // `resourceFeeCharged = totalNonRefundableResourceFeeCharged + totalRefundableResourceFeeCharged`
+  //       // where `resourceFeeCharged` is the overall fee charged for the
+  //       // transaction. Also, `resourceFeeCharged` <= `sorobanData.resourceFee`
+  //       // i.e.we never charge more than the declared resource fee.
+  //       // The inclusion fee for charged the Soroban transaction can be found using
+  //       // the following equation:
+  //       // `result.feeCharged = resourceFeeCharged + inclusionFeeCharged`.
+  //
+  //       // Total amount (in stroops) that has been charged for non-refundable
+  //       // Soroban resources.
+  //       // Non-refundable resources are charged based on the usage declared in
+  //       // the transaction envelope (such as `instructions`, `readBytes` etc.) and
+  //       // is charged regardless of the success of the transaction.
+  //       int64 totalNonRefundableResourceFeeCharged;
+  //       // Total amount (in stroops) that has been charged for refundable
+  //       // Soroban resource fees.
+  //       // Currently this comprises the rent fee (`rentFeeCharged`) and the
+  //       // fee for the events and return value.
+  //       // Refundable resources are charged based on the actual resources usage.
+  //       // Since currently refundable resources are only used for the successful
+  //       // transactions, this will be `0` for failed transactions.
+  //       int64 totalRefundableResourceFeeCharged;
+  //       // Amount (in stroops) that has been charged for rent.
+  //       // This is a part of `totalNonRefundableResourceFeeCharged`.
+  //       int64 rentFeeCharged;
+  //   };
+  //
+  // ===========================================================================
+  xdr.struct("SorobanTransactionMetaExtV1", [["ext", xdr.lookup("ExtensionPoint")], ["totalNonRefundableResourceFeeCharged", xdr.lookup("Int64")], ["totalRefundableResourceFeeCharged", xdr.lookup("Int64")], ["rentFeeCharged", xdr.lookup("Int64")]]);
+
+  // === xdr source ============================================================
+  //
+  //   union SorobanTransactionMetaExt switch (int v)
+  //   {
+  //   case 0:
+  //       void;
+  //   case 1:
+  //       SorobanTransactionMetaExtV1 v1;
+  //   };
+  //
+  // ===========================================================================
+  xdr.union("SorobanTransactionMetaExt", {
+    switchOn: xdr["int"](),
+    switchName: "v",
+    switches: [[0, xdr["void"]()], [1, "v1"]],
+    arms: {
+      v1: xdr.lookup("SorobanTransactionMetaExtV1")
+    }
+  });
+
+  // === xdr source ============================================================
+  //
+  //   struct SorobanTransactionMeta
+  //   {
+  //       SorobanTransactionMetaExt ext;
   //
   //       ContractEvent events<>;             // custom events populated by the
   //                                           // contracts themselves.
@@ -3950,7 +4073,7 @@ var types = XDR.config(function (xdr) {
   //   };
   //
   // ===========================================================================
-  xdr.struct("SorobanTransactionMeta", [["ext", xdr.lookup("ExtensionPoint")], ["events", xdr.varArray(xdr.lookup("ContractEvent"), 2147483647)], ["returnValue", xdr.lookup("ScVal")], ["diagnosticEvents", xdr.varArray(xdr.lookup("DiagnosticEvent"), 2147483647)]]);
+  xdr.struct("SorobanTransactionMeta", [["ext", xdr.lookup("SorobanTransactionMetaExt")], ["events", xdr.varArray(xdr.lookup("ContractEvent"), 2147483647)], ["returnValue", xdr.lookup("ScVal")], ["diagnosticEvents", xdr.varArray(xdr.lookup("DiagnosticEvent"), 2147483647)]]);
 
   // === xdr source ============================================================
   //
@@ -4056,11 +4179,40 @@ var types = XDR.config(function (xdr) {
 
   // === xdr source ============================================================
   //
+  //   struct LedgerCloseMetaExtV1
+  //   {
+  //       ExtensionPoint ext;
+  //       int64 sorobanFeeWrite1KB;
+  //   };
+  //
+  // ===========================================================================
+  xdr.struct("LedgerCloseMetaExtV1", [["ext", xdr.lookup("ExtensionPoint")], ["sorobanFeeWrite1Kb", xdr.lookup("Int64")]]);
+
+  // === xdr source ============================================================
+  //
+  //   union LedgerCloseMetaExt switch (int v)
+  //   {
+  //   case 0:
+  //       void;
+  //   case 1:
+  //       LedgerCloseMetaExtV1 v1;
+  //   };
+  //
+  // ===========================================================================
+  xdr.union("LedgerCloseMetaExt", {
+    switchOn: xdr["int"](),
+    switchName: "v",
+    switches: [[0, xdr["void"]()], [1, "v1"]],
+    arms: {
+      v1: xdr.lookup("LedgerCloseMetaExtV1")
+    }
+  });
+
+  // === xdr source ============================================================
+  //
   //   struct LedgerCloseMetaV1
   //   {
-  //       // We forgot to add an ExtensionPoint in v0 but at least
-  //       // we can add one now in v1.
-  //       ExtensionPoint ext;
+  //       LedgerCloseMetaExt ext;
   //
   //       LedgerHeaderHistoryEntry ledgerHeader;
   //
@@ -4090,7 +4242,7 @@ var types = XDR.config(function (xdr) {
   //   };
   //
   // ===========================================================================
-  xdr.struct("LedgerCloseMetaV1", [["ext", xdr.lookup("ExtensionPoint")], ["ledgerHeader", xdr.lookup("LedgerHeaderHistoryEntry")], ["txSet", xdr.lookup("GeneralizedTransactionSet")], ["txProcessing", xdr.varArray(xdr.lookup("TransactionResultMeta"), 2147483647)], ["upgradesProcessing", xdr.varArray(xdr.lookup("UpgradeEntryMeta"), 2147483647)], ["scpInfo", xdr.varArray(xdr.lookup("ScpHistoryEntry"), 2147483647)], ["totalByteSizeOfBucketList", xdr.lookup("Uint64")], ["evictedTemporaryLedgerKeys", xdr.varArray(xdr.lookup("LedgerKey"), 2147483647)], ["evictedPersistentLedgerEntries", xdr.varArray(xdr.lookup("LedgerEntry"), 2147483647)]]);
+  xdr.struct("LedgerCloseMetaV1", [["ext", xdr.lookup("LedgerCloseMetaExt")], ["ledgerHeader", xdr.lookup("LedgerHeaderHistoryEntry")], ["txSet", xdr.lookup("GeneralizedTransactionSet")], ["txProcessing", xdr.varArray(xdr.lookup("TransactionResultMeta"), 2147483647)], ["upgradesProcessing", xdr.varArray(xdr.lookup("UpgradeEntryMeta"), 2147483647)], ["scpInfo", xdr.varArray(xdr.lookup("ScpHistoryEntry"), 2147483647)], ["totalByteSizeOfBucketList", xdr.lookup("Uint64")], ["evictedTemporaryLedgerKeys", xdr.varArray(xdr.lookup("LedgerKey"), 2147483647)], ["evictedPersistentLedgerEntries", xdr.varArray(xdr.lookup("LedgerEntry"), 2147483647)]]);
 
   // === xdr source ============================================================
   //
@@ -9504,8 +9656,9 @@ var types = XDR.config(function (xdr) {
   //       InvokeVmFunction = 13,
   //       // Cost of computing a keccak256 hash from bytes.
   //       ComputeKeccak256Hash = 14,
-  //       // Cost of computing an ECDSA secp256k1 signature from bytes.
-  //       ComputeEcdsaSecp256k1Sig = 15,
+  //       // Cost of decoding an ECDSA signature computed from a 256-bit prime modulus
+  //       // curve (e.g. secp256k1 and secp256r1)
+  //       DecodeEcdsaCurve256Sig = 15,
   //       // Cost of recovering an ECDSA secp256k1 key from a signature.
   //       RecoverEcdsaSecp256k1Key = 16,
   //       // Cost of int256 addition (`+`) and subtraction (`-`) operations
@@ -9519,7 +9672,55 @@ var types = XDR.config(function (xdr) {
   //       // Cost of int256 shift (`shl`, `shr`) operation
   //       Int256Shift = 21,
   //       // Cost of drawing random bytes using a ChaCha20 PRNG
-  //       ChaCha20DrawBytes = 22
+  //       ChaCha20DrawBytes = 22,
+  //
+  //       // Cost of parsing wasm bytes that only encode instructions.
+  //       ParseWasmInstructions = 23,
+  //       // Cost of parsing a known number of wasm functions.
+  //       ParseWasmFunctions = 24,
+  //       // Cost of parsing a known number of wasm globals.
+  //       ParseWasmGlobals = 25,
+  //       // Cost of parsing a known number of wasm table entries.
+  //       ParseWasmTableEntries = 26,
+  //       // Cost of parsing a known number of wasm types.
+  //       ParseWasmTypes = 27,
+  //       // Cost of parsing a known number of wasm data segments.
+  //       ParseWasmDataSegments = 28,
+  //       // Cost of parsing a known number of wasm element segments.
+  //       ParseWasmElemSegments = 29,
+  //       // Cost of parsing a known number of wasm imports.
+  //       ParseWasmImports = 30,
+  //       // Cost of parsing a known number of wasm exports.
+  //       ParseWasmExports = 31,
+  //       // Cost of parsing a known number of data segment bytes.
+  //       ParseWasmDataSegmentBytes = 32,
+  //
+  //       // Cost of instantiating wasm bytes that only encode instructions.
+  //       InstantiateWasmInstructions = 33,
+  //       // Cost of instantiating a known number of wasm functions.
+  //       InstantiateWasmFunctions = 34,
+  //       // Cost of instantiating a known number of wasm globals.
+  //       InstantiateWasmGlobals = 35,
+  //       // Cost of instantiating a known number of wasm table entries.
+  //       InstantiateWasmTableEntries = 36,
+  //       // Cost of instantiating a known number of wasm types.
+  //       InstantiateWasmTypes = 37,
+  //       // Cost of instantiating a known number of wasm data segments.
+  //       InstantiateWasmDataSegments = 38,
+  //       // Cost of instantiating a known number of wasm element segments.
+  //       InstantiateWasmElemSegments = 39,
+  //       // Cost of instantiating a known number of wasm imports.
+  //       InstantiateWasmImports = 40,
+  //       // Cost of instantiating a known number of wasm exports.
+  //       InstantiateWasmExports = 41,
+  //       // Cost of instantiating a known number of data segment bytes.
+  //       InstantiateWasmDataSegmentBytes = 42,
+  //
+  //       // Cost of decoding a bytes array representing an uncompressed SEC-1 encoded
+  //       // point on a 256-bit elliptic curve
+  //       Sec1DecodePointUncompressed = 43,
+  //       // Cost of verifying an ECDSA Secp256r1 signature
+  //       VerifyEcdsaSecp256r1Sig = 44
   //   };
   //
   // ===========================================================================
@@ -9539,14 +9740,36 @@ var types = XDR.config(function (xdr) {
     vmCachedInstantiation: 12,
     invokeVmFunction: 13,
     computeKeccak256Hash: 14,
-    computeEcdsaSecp256k1Sig: 15,
+    decodeEcdsaCurve256Sig: 15,
     recoverEcdsaSecp256k1Key: 16,
     int256AddSub: 17,
     int256Mul: 18,
     int256Div: 19,
     int256Pow: 20,
     int256Shift: 21,
-    chaCha20DrawBytes: 22
+    chaCha20DrawBytes: 22,
+    parseWasmInstructions: 23,
+    parseWasmFunctions: 24,
+    parseWasmGlobals: 25,
+    parseWasmTableEntries: 26,
+    parseWasmTypes: 27,
+    parseWasmDataSegments: 28,
+    parseWasmElemSegments: 29,
+    parseWasmImports: 30,
+    parseWasmExports: 31,
+    parseWasmDataSegmentBytes: 32,
+    instantiateWasmInstructions: 33,
+    instantiateWasmFunctions: 34,
+    instantiateWasmGlobals: 35,
+    instantiateWasmTableEntries: 36,
+    instantiateWasmTypes: 37,
+    instantiateWasmDataSegments: 38,
+    instantiateWasmElemSegments: 39,
+    instantiateWasmImports: 40,
+    instantiateWasmExports: 41,
+    instantiateWasmDataSegmentBytes: 42,
+    sec1DecodePointUncompressed: 43,
+    verifyEcdsaSecp256r1Sig: 44
   });
 
   // === xdr source ============================================================
@@ -9579,15 +9802,18 @@ var types = XDR.config(function (xdr) {
   //       // Number of snapshots to use when calculating average BucketList size
   //       uint32 bucketListSizeWindowSampleSize;
   //
+  //       // How often to sample the BucketList size for the average, in ledgers
+  //       uint32 bucketListWindowSamplePeriod;
+  //
   //       // Maximum number of bytes that we scan for eviction per ledger
-  //       uint64 evictionScanSize;
+  //       uint32 evictionScanSize;
   //
   //       // Lowest BucketList level to be scanned to evict entries
   //       uint32 startingEvictionScanLevel;
   //   };
   //
   // ===========================================================================
-  xdr.struct("StateArchivalSettings", [["maxEntryTtl", xdr.lookup("Uint32")], ["minTemporaryTtl", xdr.lookup("Uint32")], ["minPersistentTtl", xdr.lookup("Uint32")], ["persistentRentRateDenominator", xdr.lookup("Int64")], ["tempRentRateDenominator", xdr.lookup("Int64")], ["maxEntriesToArchive", xdr.lookup("Uint32")], ["bucketListSizeWindowSampleSize", xdr.lookup("Uint32")], ["evictionScanSize", xdr.lookup("Uint64")], ["startingEvictionScanLevel", xdr.lookup("Uint32")]]);
+  xdr.struct("StateArchivalSettings", [["maxEntryTtl", xdr.lookup("Uint32")], ["minTemporaryTtl", xdr.lookup("Uint32")], ["minPersistentTtl", xdr.lookup("Uint32")], ["persistentRentRateDenominator", xdr.lookup("Int64")], ["tempRentRateDenominator", xdr.lookup("Int64")], ["maxEntriesToArchive", xdr.lookup("Uint32")], ["bucketListSizeWindowSampleSize", xdr.lookup("Uint32")], ["bucketListWindowSamplePeriod", xdr.lookup("Uint32")], ["evictionScanSize", xdr.lookup("Uint32")], ["startingEvictionScanLevel", xdr.lookup("Uint32")]]);
 
   // === xdr source ============================================================
   //
@@ -20869,10 +21095,10 @@ var ContractSpec = function () {
                 var _res$value = _slicedToArray(res.value, 2),
                   k = _res$value[0],
                   v = _res$value[1];
-                var _key = this.nativeToScVal(k, scMap.keyType());
+                var key = this.nativeToScVal(k, scMap.keyType());
                 var _val = this.nativeToScVal(v, scMap.valueType());
                 entries.push(new src.xdr.ScMapEntry({
-                  key: _key,
+                  key: key,
                   val: _val
                 }));
                 res = values.next();
@@ -36919,7 +37145,7 @@ var defaults = {
     charset: 'utf-8',
     charsetSentinel: false,
     comma: false,
-    decodeDotInKeys: true,
+    decodeDotInKeys: false,
     decoder: utils.decode,
     delimiter: '&',
     depth: 5,
@@ -37682,6 +37908,10 @@ var decode = function (str, decoder, charset) {
     }
 };
 
+var limit = 1024;
+
+/* eslint operator-linebreak: [2, "before"] */
+
 var encode = function encode(str, defaultEncoder, charset, kind, format) {
     // This code was originally written by Brian White (mscdex) for the io.js core querystring library.
     // It has been adapted here for stricter adherence to RFC 3986
@@ -37703,45 +37933,54 @@ var encode = function encode(str, defaultEncoder, charset, kind, format) {
     }
 
     var out = '';
-    for (var i = 0; i < string.length; ++i) {
-        var c = string.charCodeAt(i);
+    for (var j = 0; j < string.length; j += limit) {
+        var segment = string.length >= limit ? string.slice(j, j + limit) : string;
+        var arr = [];
 
-        if (
-            c === 0x2D // -
-            || c === 0x2E // .
-            || c === 0x5F // _
-            || c === 0x7E // ~
-            || (c >= 0x30 && c <= 0x39) // 0-9
-            || (c >= 0x41 && c <= 0x5A) // a-z
-            || (c >= 0x61 && c <= 0x7A) // A-Z
-            || (format === formats.RFC1738 && (c === 0x28 || c === 0x29)) // ( )
-        ) {
-            out += string.charAt(i);
-            continue;
+        for (var i = 0; i < segment.length; ++i) {
+            var c = segment.charCodeAt(i);
+            if (
+                c === 0x2D // -
+                || c === 0x2E // .
+                || c === 0x5F // _
+                || c === 0x7E // ~
+                || (c >= 0x30 && c <= 0x39) // 0-9
+                || (c >= 0x41 && c <= 0x5A) // a-z
+                || (c >= 0x61 && c <= 0x7A) // A-Z
+                || (format === formats.RFC1738 && (c === 0x28 || c === 0x29)) // ( )
+            ) {
+                arr[arr.length] = segment.charAt(i);
+                continue;
+            }
+
+            if (c < 0x80) {
+                arr[arr.length] = hexTable[c];
+                continue;
+            }
+
+            if (c < 0x800) {
+                arr[arr.length] = hexTable[0xC0 | (c >> 6)]
+                    + hexTable[0x80 | (c & 0x3F)];
+                continue;
+            }
+
+            if (c < 0xD800 || c >= 0xE000) {
+                arr[arr.length] = hexTable[0xE0 | (c >> 12)]
+                    + hexTable[0x80 | ((c >> 6) & 0x3F)]
+                    + hexTable[0x80 | (c & 0x3F)];
+                continue;
+            }
+
+            i += 1;
+            c = 0x10000 + (((c & 0x3FF) << 10) | (segment.charCodeAt(i) & 0x3FF));
+
+            arr[arr.length] = hexTable[0xF0 | (c >> 18)]
+                + hexTable[0x80 | ((c >> 12) & 0x3F)]
+                + hexTable[0x80 | ((c >> 6) & 0x3F)]
+                + hexTable[0x80 | (c & 0x3F)];
         }
 
-        if (c < 0x80) {
-            out = out + hexTable[c];
-            continue;
-        }
-
-        if (c < 0x800) {
-            out = out + (hexTable[0xC0 | (c >> 6)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        if (c < 0xD800 || c >= 0xE000) {
-            out = out + (hexTable[0xE0 | (c >> 12)] + hexTable[0x80 | ((c >> 6) & 0x3F)] + hexTable[0x80 | (c & 0x3F)]);
-            continue;
-        }
-
-        i += 1;
-        c = 0x10000 + (((c & 0x3FF) << 10) | (string.charCodeAt(i) & 0x3FF));
-        /* eslint operator-linebreak: [2, "before"] */
-        out += hexTable[0xF0 | (c >> 18)]
-            + hexTable[0x80 | ((c >> 12) & 0x3F)]
-            + hexTable[0x80 | ((c >> 6) & 0x3F)]
-            + hexTable[0x80 | (c & 0x3F)];
+        out += arr.join('');
     }
 
     return out;
@@ -57065,7 +57304,7 @@ axios.default = axios;
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"rE":"11.3.0"};
+module.exports = {"rE":"12.0.0"};
 
 /***/ })
 
