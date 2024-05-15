@@ -10034,6 +10034,7 @@ Object.defineProperty(exports, "__esModule", ({
 }));
 var _exportNames = {
   xdr: true,
+  cereal: true,
   hash: true,
   sign: true,
   verify: true,
@@ -10239,6 +10240,12 @@ Object.defineProperty(exports, "UnsignedHyper", ({
     return _jsXdr.UnsignedHyper;
   }
 }));
+Object.defineProperty(exports, "cereal", ({
+  enumerable: true,
+  get: function get() {
+    return _jsxdr["default"];
+  }
+}));
 Object.defineProperty(exports, "decodeAddressToMuxedAccount", ({
   enumerable: true,
   get: function get() {
@@ -10295,6 +10302,7 @@ Object.defineProperty(exports, "xdr", ({
   }
 }));
 var _xdr = _interopRequireDefault(__webpack_require__(1918));
+var _jsxdr = _interopRequireDefault(__webpack_require__(3335));
 var _hashing = __webpack_require__(9152);
 var _signing = __webpack_require__(15);
 var _get_liquidity_pool_id = __webpack_require__(5578);
@@ -10610,6 +10618,25 @@ function walkHelper(node, depth, callback, parent) {
     return walkHelper(i, depth + 1, callback, node);
   });
 }
+
+/***/ }),
+
+/***/ 3335:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports["default"] = void 0;
+var _jsXdr = __webpack_require__(3740);
+var cereal = {
+  XdrWriter: _jsXdr.XdrWriter,
+  XdrReader: _jsXdr.XdrReader
+};
+var _default = exports["default"] = cereal;
 
 /***/ }),
 
@@ -16637,7 +16664,7 @@ function encodeCheck(versionByteName, data) {
   data = Buffer.from(data);
   var versionBuffer = Buffer.from([versionByte]);
   var payload = Buffer.concat([versionBuffer, data]);
-  var checksum = calculateChecksum(payload);
+  var checksum = Buffer.from(calculateChecksum(payload));
   var unencoded = Buffer.concat([payload, checksum]);
   return _base["default"].encode(unencoded);
 }
@@ -27476,6 +27503,7 @@ function isSorobanTransaction(tx) {
   }
 }
 ;// CONCATENATED MODULE: ./src/soroban/server.ts
+/* provided dependency */ var Buffer = __webpack_require__(8287)["Buffer"];
 function server_typeof(o) { "@babel/helpers - typeof"; return server_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, server_typeof(o); }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -27652,19 +27680,100 @@ var Server = function () {
       return getContractData;
     }())
   }, {
-    key: "getLedgerEntries",
+    key: "getContractWasmByContractId",
     value: (function () {
-      var _getLedgerEntries2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee4() {
-        var _args4 = arguments;
+      var _getContractWasmByContractId = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee4(contractId) {
+        var _response$entries$;
+        var contractLedgerKey, response, wasmHash;
         return server_regeneratorRuntime().wrap(function _callee4$(_context4) {
           while (1) switch (_context4.prev = _context4.next) {
             case 0:
-              return _context4.abrupt("return", this._getLedgerEntries.apply(this, _args4).then(parseRawLedgerEntries));
-            case 1:
+              contractLedgerKey = new lib.Contract(contractId).getFootprint();
+              _context4.next = 3;
+              return this.getLedgerEntries(contractLedgerKey);
+            case 3:
+              response = _context4.sent;
+              if (!(!response.entries.length || !((_response$entries$ = response.entries[0]) !== null && _response$entries$ !== void 0 && _response$entries$.val))) {
+                _context4.next = 6;
+                break;
+              }
+              return _context4.abrupt("return", Promise.reject({
+                code: 404,
+                message: "Could not obtain contract hash from server"
+              }));
+            case 6:
+              wasmHash = response.entries[0].val.contractData().val().instance().executable().wasmHash();
+              return _context4.abrupt("return", this.getContractWasmByHash(wasmHash));
+            case 8:
             case "end":
               return _context4.stop();
           }
         }, _callee4, this);
+      }));
+      function getContractWasmByContractId(_x4) {
+        return _getContractWasmByContractId.apply(this, arguments);
+      }
+      return getContractWasmByContractId;
+    }())
+  }, {
+    key: "getContractWasmByHash",
+    value: (function () {
+      var _getContractWasmByHash = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee5(wasmHash) {
+        var _responseWasm$entries;
+        var format,
+          wasmHashBuffer,
+          ledgerKeyWasmHash,
+          responseWasm,
+          wasmBuffer,
+          _args5 = arguments;
+        return server_regeneratorRuntime().wrap(function _callee5$(_context5) {
+          while (1) switch (_context5.prev = _context5.next) {
+            case 0:
+              format = _args5.length > 1 && _args5[1] !== undefined ? _args5[1] : undefined;
+              wasmHashBuffer = typeof wasmHash === "string" ? Buffer.from(wasmHash, format) : wasmHash;
+              ledgerKeyWasmHash = lib.xdr.LedgerKey.contractCode(new lib.xdr.LedgerKeyContractCode({
+                hash: wasmHashBuffer
+              }));
+              _context5.next = 5;
+              return this.getLedgerEntries(ledgerKeyWasmHash);
+            case 5:
+              responseWasm = _context5.sent;
+              if (!(!responseWasm.entries.length || !((_responseWasm$entries = responseWasm.entries[0]) !== null && _responseWasm$entries !== void 0 && _responseWasm$entries.val))) {
+                _context5.next = 8;
+                break;
+              }
+              return _context5.abrupt("return", Promise.reject({
+                code: 404,
+                message: "Could not obtain contract wasm from server"
+              }));
+            case 8:
+              wasmBuffer = responseWasm.entries[0].val.contractCode().code();
+              return _context5.abrupt("return", wasmBuffer);
+            case 10:
+            case "end":
+              return _context5.stop();
+          }
+        }, _callee5, this);
+      }));
+      function getContractWasmByHash(_x5) {
+        return _getContractWasmByHash.apply(this, arguments);
+      }
+      return getContractWasmByHash;
+    }())
+  }, {
+    key: "getLedgerEntries",
+    value: (function () {
+      var _getLedgerEntries2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee6() {
+        var _args6 = arguments;
+        return server_regeneratorRuntime().wrap(function _callee6$(_context6) {
+          while (1) switch (_context6.prev = _context6.next) {
+            case 0:
+              return _context6.abrupt("return", this._getLedgerEntries.apply(this, _args6).then(parseRawLedgerEntries));
+            case 1:
+            case "end":
+              return _context6.stop();
+          }
+        }, _callee6, this);
       }));
       function getLedgerEntries() {
         return _getLedgerEntries2.apply(this, arguments);
@@ -27674,27 +27783,27 @@ var Server = function () {
   }, {
     key: "_getLedgerEntries",
     value: function () {
-      var _getLedgerEntries3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee5() {
+      var _getLedgerEntries3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee7() {
         var _len,
           keys,
           _key,
-          _args5 = arguments;
-        return server_regeneratorRuntime().wrap(function _callee5$(_context5) {
-          while (1) switch (_context5.prev = _context5.next) {
+          _args7 = arguments;
+        return server_regeneratorRuntime().wrap(function _callee7$(_context7) {
+          while (1) switch (_context7.prev = _context7.next) {
             case 0:
-              for (_len = _args5.length, keys = new Array(_len), _key = 0; _key < _len; _key++) {
-                keys[_key] = _args5[_key];
+              for (_len = _args7.length, keys = new Array(_len), _key = 0; _key < _len; _key++) {
+                keys[_key] = _args7[_key];
               }
-              return _context5.abrupt("return", postObject(this.serverURL.toString(), 'getLedgerEntries', {
+              return _context7.abrupt("return", postObject(this.serverURL.toString(), 'getLedgerEntries', {
                 keys: keys.map(function (k) {
                   return k.toXDR('base64');
                 })
               }));
             case 2:
             case "end":
-              return _context5.stop();
+              return _context7.stop();
           }
-        }, _callee5, this);
+        }, _callee7, this);
       }));
       function _getLedgerEntries() {
         return _getLedgerEntries3.apply(this, arguments);
@@ -27704,11 +27813,11 @@ var Server = function () {
   }, {
     key: "getTransaction",
     value: (function () {
-      var _getTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee6(hash) {
-        return server_regeneratorRuntime().wrap(function _callee6$(_context6) {
-          while (1) switch (_context6.prev = _context6.next) {
+      var _getTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee8(hash) {
+        return server_regeneratorRuntime().wrap(function _callee8$(_context8) {
+          while (1) switch (_context8.prev = _context8.next) {
             case 0:
-              return _context6.abrupt("return", this._getTransaction(hash).then(function (raw) {
+              return _context8.abrupt("return", this._getTransaction(hash).then(function (raw) {
                 var foundInfo = {};
                 if (raw.status !== Api.GetTransactionStatus.NOT_FOUND) {
                   var _meta$v3$sorobanMeta;
@@ -27736,11 +27845,11 @@ var Server = function () {
               }));
             case 1:
             case "end":
-              return _context6.stop();
+              return _context8.stop();
           }
-        }, _callee6, this);
+        }, _callee8, this);
       }));
-      function getTransaction(_x4) {
+      function getTransaction(_x6) {
         return _getTransaction2.apply(this, arguments);
       }
       return getTransaction;
@@ -27748,20 +27857,20 @@ var Server = function () {
   }, {
     key: "_getTransaction",
     value: function () {
-      var _getTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee7(hash) {
-        return server_regeneratorRuntime().wrap(function _callee7$(_context7) {
-          while (1) switch (_context7.prev = _context7.next) {
+      var _getTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee9(hash) {
+        return server_regeneratorRuntime().wrap(function _callee9$(_context9) {
+          while (1) switch (_context9.prev = _context9.next) {
             case 0:
-              return _context7.abrupt("return", postObject(this.serverURL.toString(), 'getTransaction', {
+              return _context9.abrupt("return", postObject(this.serverURL.toString(), 'getTransaction', {
                 hash: hash
               }));
             case 1:
             case "end":
-              return _context7.stop();
+              return _context9.stop();
           }
-        }, _callee7, this);
+        }, _callee9, this);
       }));
-      function _getTransaction(_x5) {
+      function _getTransaction(_x7) {
         return _getTransaction3.apply(this, arguments);
       }
       return _getTransaction;
@@ -27769,18 +27878,18 @@ var Server = function () {
   }, {
     key: "getEvents",
     value: (function () {
-      var _getEvents2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee8(request) {
-        return server_regeneratorRuntime().wrap(function _callee8$(_context8) {
-          while (1) switch (_context8.prev = _context8.next) {
+      var _getEvents2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee10(request) {
+        return server_regeneratorRuntime().wrap(function _callee10$(_context10) {
+          while (1) switch (_context10.prev = _context10.next) {
             case 0:
-              return _context8.abrupt("return", this._getEvents(request).then(parseRawEvents));
+              return _context10.abrupt("return", this._getEvents(request).then(parseRawEvents));
             case 1:
             case "end":
-              return _context8.stop();
+              return _context10.stop();
           }
-        }, _callee8, this);
+        }, _callee10, this);
       }));
-      function getEvents(_x6) {
+      function getEvents(_x8) {
         return _getEvents2.apply(this, arguments);
       }
       return getEvents;
@@ -27788,12 +27897,12 @@ var Server = function () {
   }, {
     key: "_getEvents",
     value: function () {
-      var _getEvents3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee9(request) {
+      var _getEvents3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee11(request) {
         var _request$filters;
-        return server_regeneratorRuntime().wrap(function _callee9$(_context9) {
-          while (1) switch (_context9.prev = _context9.next) {
+        return server_regeneratorRuntime().wrap(function _callee11$(_context11) {
+          while (1) switch (_context11.prev = _context11.next) {
             case 0:
-              return _context9.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', server_objectSpread({
+              return _context11.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', server_objectSpread({
                 filters: (_request$filters = request.filters) !== null && _request$filters !== void 0 ? _request$filters : [],
                 pagination: server_objectSpread(server_objectSpread({}, request.cursor && {
                   cursor: request.cursor
@@ -27805,11 +27914,11 @@ var Server = function () {
               })));
             case 1:
             case "end":
-              return _context9.stop();
+              return _context11.stop();
           }
-        }, _callee9, this);
+        }, _callee11, this);
       }));
-      function _getEvents(_x7) {
+      function _getEvents(_x9) {
         return _getEvents3.apply(this, arguments);
       }
       return _getEvents;
@@ -27817,19 +27926,19 @@ var Server = function () {
   }, {
     key: "getNetwork",
     value: (function () {
-      var _getNetwork = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee10() {
-        return server_regeneratorRuntime().wrap(function _callee10$(_context10) {
-          while (1) switch (_context10.prev = _context10.next) {
+      var _getNetwork = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee12() {
+        return server_regeneratorRuntime().wrap(function _callee12$(_context12) {
+          while (1) switch (_context12.prev = _context12.next) {
             case 0:
-              _context10.next = 2;
+              _context12.next = 2;
               return postObject(this.serverURL.toString(), 'getNetwork');
             case 2:
-              return _context10.abrupt("return", _context10.sent);
+              return _context12.abrupt("return", _context12.sent);
             case 3:
             case "end":
-              return _context10.stop();
+              return _context12.stop();
           }
-        }, _callee10, this);
+        }, _callee12, this);
       }));
       function getNetwork() {
         return _getNetwork.apply(this, arguments);
@@ -27839,16 +27948,16 @@ var Server = function () {
   }, {
     key: "getLatestLedger",
     value: (function () {
-      var _getLatestLedger = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee11() {
-        return server_regeneratorRuntime().wrap(function _callee11$(_context11) {
-          while (1) switch (_context11.prev = _context11.next) {
+      var _getLatestLedger = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee13() {
+        return server_regeneratorRuntime().wrap(function _callee13$(_context13) {
+          while (1) switch (_context13.prev = _context13.next) {
             case 0:
-              return _context11.abrupt("return", postObject(this.serverURL.toString(), 'getLatestLedger'));
+              return _context13.abrupt("return", postObject(this.serverURL.toString(), 'getLatestLedger'));
             case 1:
             case "end":
-              return _context11.stop();
+              return _context13.stop();
           }
-        }, _callee11, this);
+        }, _callee13, this);
       }));
       function getLatestLedger() {
         return _getLatestLedger.apply(this, arguments);
@@ -27858,18 +27967,18 @@ var Server = function () {
   }, {
     key: "simulateTransaction",
     value: (function () {
-      var _simulateTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee12(tx, addlResources) {
-        return server_regeneratorRuntime().wrap(function _callee12$(_context12) {
-          while (1) switch (_context12.prev = _context12.next) {
+      var _simulateTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee14(tx, addlResources) {
+        return server_regeneratorRuntime().wrap(function _callee14$(_context14) {
+          while (1) switch (_context14.prev = _context14.next) {
             case 0:
-              return _context12.abrupt("return", this._simulateTransaction(tx, addlResources).then(parseRawSimulation));
+              return _context14.abrupt("return", this._simulateTransaction(tx, addlResources).then(parseRawSimulation));
             case 1:
             case "end":
-              return _context12.stop();
+              return _context14.stop();
           }
-        }, _callee12, this);
+        }, _callee14, this);
       }));
-      function simulateTransaction(_x8, _x9) {
+      function simulateTransaction(_x10, _x11) {
         return _simulateTransaction2.apply(this, arguments);
       }
       return simulateTransaction;
@@ -27877,11 +27986,11 @@ var Server = function () {
   }, {
     key: "_simulateTransaction",
     value: function () {
-      var _simulateTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee13(transaction, addlResources) {
-        return server_regeneratorRuntime().wrap(function _callee13$(_context13) {
-          while (1) switch (_context13.prev = _context13.next) {
+      var _simulateTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee15(transaction, addlResources) {
+        return server_regeneratorRuntime().wrap(function _callee15$(_context15) {
+          while (1) switch (_context15.prev = _context15.next) {
             case 0:
-              return _context13.abrupt("return", postObject(this.serverURL.toString(), 'simulateTransaction', server_objectSpread({
+              return _context15.abrupt("return", postObject(this.serverURL.toString(), 'simulateTransaction', server_objectSpread({
                 transaction: transaction.toXDR()
               }, addlResources !== undefined && {
                 resourceConfig: {
@@ -27890,11 +27999,11 @@ var Server = function () {
               })));
             case 1:
             case "end":
-              return _context13.stop();
+              return _context15.stop();
           }
-        }, _callee13, this);
+        }, _callee15, this);
       }));
-      function _simulateTransaction(_x10, _x11) {
+      function _simulateTransaction(_x12, _x13) {
         return _simulateTransaction3.apply(this, arguments);
       }
       return _simulateTransaction;
@@ -27902,29 +28011,29 @@ var Server = function () {
   }, {
     key: "prepareTransaction",
     value: (function () {
-      var _prepareTransaction = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee14(tx) {
+      var _prepareTransaction = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee16(tx) {
         var simResponse;
-        return server_regeneratorRuntime().wrap(function _callee14$(_context14) {
-          while (1) switch (_context14.prev = _context14.next) {
+        return server_regeneratorRuntime().wrap(function _callee16$(_context16) {
+          while (1) switch (_context16.prev = _context16.next) {
             case 0:
-              _context14.next = 2;
+              _context16.next = 2;
               return this.simulateTransaction(tx);
             case 2:
-              simResponse = _context14.sent;
+              simResponse = _context16.sent;
               if (!Api.isSimulationError(simResponse)) {
-                _context14.next = 5;
+                _context16.next = 5;
                 break;
               }
               throw simResponse.error;
             case 5:
-              return _context14.abrupt("return", assembleTransaction(tx, simResponse).build());
+              return _context16.abrupt("return", assembleTransaction(tx, simResponse).build());
             case 6:
             case "end":
-              return _context14.stop();
+              return _context16.stop();
           }
-        }, _callee14, this);
+        }, _callee16, this);
       }));
-      function prepareTransaction(_x12) {
+      function prepareTransaction(_x14) {
         return _prepareTransaction.apply(this, arguments);
       }
       return prepareTransaction;
@@ -27932,18 +28041,18 @@ var Server = function () {
   }, {
     key: "sendTransaction",
     value: (function () {
-      var _sendTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee15(transaction) {
-        return server_regeneratorRuntime().wrap(function _callee15$(_context15) {
-          while (1) switch (_context15.prev = _context15.next) {
+      var _sendTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee17(transaction) {
+        return server_regeneratorRuntime().wrap(function _callee17$(_context17) {
+          while (1) switch (_context17.prev = _context17.next) {
             case 0:
-              return _context15.abrupt("return", this._sendTransaction(transaction).then(parseRawSendTransaction));
+              return _context17.abrupt("return", this._sendTransaction(transaction).then(parseRawSendTransaction));
             case 1:
             case "end":
-              return _context15.stop();
+              return _context17.stop();
           }
-        }, _callee15, this);
+        }, _callee17, this);
       }));
-      function sendTransaction(_x13) {
+      function sendTransaction(_x15) {
         return _sendTransaction2.apply(this, arguments);
       }
       return sendTransaction;
@@ -27951,20 +28060,20 @@ var Server = function () {
   }, {
     key: "_sendTransaction",
     value: function () {
-      var _sendTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee16(transaction) {
-        return server_regeneratorRuntime().wrap(function _callee16$(_context16) {
-          while (1) switch (_context16.prev = _context16.next) {
+      var _sendTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee18(transaction) {
+        return server_regeneratorRuntime().wrap(function _callee18$(_context18) {
+          while (1) switch (_context18.prev = _context18.next) {
             case 0:
-              return _context16.abrupt("return", postObject(this.serverURL.toString(), 'sendTransaction', {
+              return _context18.abrupt("return", postObject(this.serverURL.toString(), 'sendTransaction', {
                 transaction: transaction.toXDR()
               }));
             case 1:
             case "end":
-              return _context16.stop();
+              return _context18.stop();
           }
-        }, _callee16, this);
+        }, _callee18, this);
       }));
-      function _sendTransaction(_x14) {
+      function _sendTransaction(_x16) {
         return _sendTransaction3.apply(this, arguments);
       }
       return _sendTransaction;
@@ -27972,58 +28081,58 @@ var Server = function () {
   }, {
     key: "requestAirdrop",
     value: (function () {
-      var _requestAirdrop = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee17(address, friendbotUrl) {
+      var _requestAirdrop = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee19(address, friendbotUrl) {
         var account, response, meta, sequence, _error$response, _error$response$detai;
-        return server_regeneratorRuntime().wrap(function _callee17$(_context17) {
-          while (1) switch (_context17.prev = _context17.next) {
+        return server_regeneratorRuntime().wrap(function _callee19$(_context19) {
+          while (1) switch (_context19.prev = _context19.next) {
             case 0:
               account = typeof address === 'string' ? address : address.accountId();
-              _context17.t0 = friendbotUrl;
-              if (_context17.t0) {
-                _context17.next = 6;
+              _context19.t0 = friendbotUrl;
+              if (_context19.t0) {
+                _context19.next = 6;
                 break;
               }
-              _context17.next = 5;
+              _context19.next = 5;
               return this.getNetwork();
             case 5:
-              _context17.t0 = _context17.sent.friendbotUrl;
+              _context19.t0 = _context19.sent.friendbotUrl;
             case 6:
-              friendbotUrl = _context17.t0;
+              friendbotUrl = _context19.t0;
               if (friendbotUrl) {
-                _context17.next = 9;
+                _context19.next = 9;
                 break;
               }
               throw new Error('No friendbot URL configured for current network');
             case 9:
-              _context17.prev = 9;
-              _context17.next = 12;
+              _context19.prev = 9;
+              _context19.next = 12;
               return soroban_axios.post("".concat(friendbotUrl, "?addr=").concat(encodeURIComponent(account)));
             case 12:
-              response = _context17.sent;
+              response = _context19.sent;
               meta = lib.xdr.TransactionMeta.fromXDR(response.data.result_meta_xdr, 'base64');
               sequence = findCreatedAccountSequenceInTransactionMeta(meta);
-              return _context17.abrupt("return", new lib.Account(account, sequence));
+              return _context19.abrupt("return", new lib.Account(account, sequence));
             case 18:
-              _context17.prev = 18;
-              _context17.t1 = _context17["catch"](9);
-              if (!(((_error$response = _context17.t1.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400)) {
-                _context17.next = 23;
+              _context19.prev = 18;
+              _context19.t1 = _context19["catch"](9);
+              if (!(((_error$response = _context19.t1.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400)) {
+                _context19.next = 23;
                 break;
               }
-              if (!((_error$response$detai = _context17.t1.response.detail) !== null && _error$response$detai !== void 0 && _error$response$detai.includes('createAccountAlreadyExist'))) {
-                _context17.next = 23;
+              if (!((_error$response$detai = _context19.t1.response.detail) !== null && _error$response$detai !== void 0 && _error$response$detai.includes('createAccountAlreadyExist'))) {
+                _context19.next = 23;
                 break;
               }
-              return _context17.abrupt("return", this.getAccount(account));
+              return _context19.abrupt("return", this.getAccount(account));
             case 23:
-              throw _context17.t1;
+              throw _context19.t1;
             case 24:
             case "end":
-              return _context17.stop();
+              return _context19.stop();
           }
-        }, _callee17, this, [[9, 18]]);
+        }, _callee19, this, [[9, 18]]);
       }));
-      function requestAirdrop(_x15, _x16) {
+      function requestAirdrop(_x17, _x18) {
         return _requestAirdrop.apply(this, arguments);
       }
       return requestAirdrop;
