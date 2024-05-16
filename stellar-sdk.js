@@ -20825,19 +20825,34 @@ var Config = function () {
 
 /***/ }),
 
-/***/ 7366:
+/***/ 145:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
+// ESM COMPAT FLAG
+__webpack_require__.r(__webpack_exports__);
 
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, {
-  o: () => (/* binding */ ContractSpec)
+  AssembledTransaction: () => (/* reexport */ AssembledTransaction),
+  Client: () => (/* reexport */ Client),
+  Err: () => (/* reexport */ Err),
+  NULL_ACCOUNT: () => (/* reexport */ NULL_ACCOUNT),
+  Ok: () => (/* reexport */ Ok),
+  SentTransaction: () => (/* reexport */ SentTransaction),
+  Spec: () => (/* reexport */ Spec),
+  basicNodeSigner: () => (/* reexport */ basicNodeSigner)
 });
 
-// EXTERNAL MODULE: ./src/index.ts
-var src = __webpack_require__(4356);
-;// CONCATENATED MODULE: ./src/rust_types/result.ts
+// EXTERNAL MODULE: ./node_modules/@stellar/stellar-base/lib/index.js
+var lib = __webpack_require__(356);
+// EXTERNAL MODULE: ./src/rpc/server.ts + 1 modules
+var server = __webpack_require__(1575);
+// EXTERNAL MODULE: ./src/rpc/api.ts
+var api = __webpack_require__(4076);
+// EXTERNAL MODULE: ./src/rpc/transaction.ts
+var transaction = __webpack_require__(8680);
+;// CONCATENATED MODULE: ./src/contract/rust_result.ts
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
@@ -20898,32 +20913,828 @@ var Err = function () {
     }
   }]);
 }();
-;// CONCATENATED MODULE: ./src/rust_types/index.ts
+;// CONCATENATED MODULE: ./src/contract/utils.ts
+function _regeneratorRuntime() { "use strict"; _regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == utils_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(utils_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
+function utils_typeof(o) { "@babel/helpers - typeof"; return utils_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, utils_typeof(o); }
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-;// CONCATENATED MODULE: ./src/contract_spec.ts
+var DEFAULT_TIMEOUT = 5 * 60;
+function withExponentialBackoff(_x, _x2, _x3) {
+  return _withExponentialBackoff.apply(this, arguments);
+}
+function _withExponentialBackoff() {
+  _withExponentialBackoff = _asyncToGenerator(_regeneratorRuntime().mark(function _callee(fn, keepWaitingIf, timeoutInSeconds) {
+    var exponentialFactor,
+      verbose,
+      attempts,
+      count,
+      waitUntil,
+      waitTime,
+      totalWaitTime,
+      _args = arguments;
+    return _regeneratorRuntime().wrap(function _callee$(_context) {
+      while (1) switch (_context.prev = _context.next) {
+        case 0:
+          exponentialFactor = _args.length > 3 && _args[3] !== undefined ? _args[3] : 1.5;
+          verbose = _args.length > 4 && _args[4] !== undefined ? _args[4] : false;
+          attempts = [];
+          count = 0;
+          _context.t0 = attempts;
+          _context.next = 7;
+          return fn();
+        case 7:
+          _context.t1 = _context.sent;
+          _context.t0.push.call(_context.t0, _context.t1);
+          if (keepWaitingIf(attempts[attempts.length - 1])) {
+            _context.next = 11;
+            break;
+          }
+          return _context.abrupt("return", attempts);
+        case 11:
+          waitUntil = new Date(Date.now() + timeoutInSeconds * 1000).valueOf();
+          waitTime = 1000;
+          totalWaitTime = waitTime;
+        case 14:
+          if (!(Date.now() < waitUntil && keepWaitingIf(attempts[attempts.length - 1]))) {
+            _context.next = 30;
+            break;
+          }
+          count += 1;
+          if (verbose) {
+            console.info("Waiting ".concat(waitTime, "ms before trying again (bringing the total wait time to ").concat(totalWaitTime, "ms so far, of total ").concat(timeoutInSeconds * 1000, "ms)"));
+          }
+          _context.next = 19;
+          return new Promise(function (res) {
+            return setTimeout(res, waitTime);
+          });
+        case 19:
+          waitTime *= exponentialFactor;
+          if (new Date(Date.now() + waitTime).valueOf() > waitUntil) {
+            waitTime = waitUntil - Date.now();
+            if (verbose) {
+              console.info("was gonna wait too long; new waitTime: ".concat(waitTime, "ms"));
+            }
+          }
+          totalWaitTime = waitTime + totalWaitTime;
+          _context.t2 = attempts;
+          _context.next = 25;
+          return fn(attempts[attempts.length - 1]);
+        case 25:
+          _context.t3 = _context.sent;
+          _context.t2.push.call(_context.t2, _context.t3);
+          if (verbose && keepWaitingIf(attempts[attempts.length - 1])) {
+            console.info("".concat(count, ". Called ").concat(fn, "; ").concat(attempts.length, " prev attempts. Most recent: ").concat(JSON.stringify(attempts[attempts.length - 1], null, 2)));
+          }
+          _context.next = 14;
+          break;
+        case 30:
+          return _context.abrupt("return", attempts);
+        case 31:
+        case "end":
+          return _context.stop();
+      }
+    }, _callee);
+  }));
+  return _withExponentialBackoff.apply(this, arguments);
+}
+var contractErrorPattern = /Error\(Contract, #(\d+)\)/;
+function implementsToString(obj) {
+  return utils_typeof(obj) === "object" && obj !== null && "toString" in obj;
+}
+function processSpecEntryStream(buffer) {
+  var reader = new lib.cereal.XdrReader(buffer);
+  var res = [];
+  while (!reader.eof) {
+    res.push(lib.xdr.ScSpecEntry.read(reader));
+  }
+  return res;
+}
+;// CONCATENATED MODULE: ./src/contract/sent_transaction.ts
+var _SentTransaction;
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(self, call) { if (call && (sent_transaction_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
+function _construct(t, e, r) { if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments); var o = [null]; o.push.apply(o, e); var p = new (t.bind.apply(t, o))(); return r && _setPrototypeOf(p, r.prototype), p; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _isNativeFunction(fn) { try { return Function.toString.call(fn).indexOf("[native code]") !== -1; } catch (e) { return typeof fn === "function"; } }
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+function sent_transaction_typeof(o) { "@babel/helpers - typeof"; return sent_transaction_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, sent_transaction_typeof(o); }
+function sent_transaction_regeneratorRuntime() { "use strict"; sent_transaction_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == sent_transaction_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(sent_transaction_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
+function sent_transaction_asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function sent_transaction_asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { sent_transaction_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { sent_transaction_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+function sent_transaction_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function sent_transaction_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, sent_transaction_toPropertyKey(descriptor.key), descriptor); } }
+function sent_transaction_createClass(Constructor, protoProps, staticProps) { if (protoProps) sent_transaction_defineProperties(Constructor.prototype, protoProps); if (staticProps) sent_transaction_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _defineProperty(obj, key, value) { key = sent_transaction_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function sent_transaction_toPropertyKey(t) { var i = sent_transaction_toPrimitive(t, "string"); return "symbol" == sent_transaction_typeof(i) ? i : i + ""; }
+function sent_transaction_toPrimitive(t, r) { if ("object" != sent_transaction_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != sent_transaction_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
+
+
+
+var SentTransaction = function () {
+  function SentTransaction(signTransaction, assembled) {
+    var _this = this,
+      _this$assembled$optio2;
+    sent_transaction_classCallCheck(this, SentTransaction);
+    _defineProperty(this, "send", sent_transaction_asyncToGenerator(sent_transaction_regeneratorRuntime().mark(function _callee() {
+      var _this$assembled$optio;
+      var timeoutInSeconds, signature, hash;
+      return sent_transaction_regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) switch (_context.prev = _context.next) {
+          case 0:
+            timeoutInSeconds = (_this$assembled$optio = _this.assembled.options.timeoutInSeconds) !== null && _this$assembled$optio !== void 0 ? _this$assembled$optio : DEFAULT_TIMEOUT;
+            _this.assembled.built = lib.TransactionBuilder.cloneFrom(_this.assembled.built, {
+              fee: _this.assembled.built.fee,
+              timebounds: undefined,
+              sorobanData: new lib.SorobanDataBuilder(_this.assembled.simulationData.transactionData.toXDR()).build()
+            }).setTimeout(timeoutInSeconds).build();
+            _context.next = 4;
+            return _this.signTransaction(_this.assembled.built.toXDR(), {
+              networkPassphrase: _this.assembled.options.networkPassphrase
+            });
+          case 4:
+            signature = _context.sent;
+            _this.signed = lib.TransactionBuilder.fromXDR(signature, _this.assembled.options.networkPassphrase);
+            _context.next = 8;
+            return _this.server.sendTransaction(_this.signed);
+          case 8:
+            _this.sendTransactionResponse = _context.sent;
+            if (!(_this.sendTransactionResponse.status !== "PENDING")) {
+              _context.next = 11;
+              break;
+            }
+            throw new SentTransaction.Errors.SendFailed("Sending the transaction to the network failed!\n".concat(JSON.stringify(_this.sendTransactionResponse, null, 2)));
+          case 11:
+            hash = _this.sendTransactionResponse.hash;
+            _context.next = 14;
+            return withExponentialBackoff(function () {
+              return _this.server.getTransaction(hash);
+            }, function (resp) {
+              return resp.status === api/* Api */.j.GetTransactionStatus.NOT_FOUND;
+            }, timeoutInSeconds);
+          case 14:
+            _this.getTransactionResponseAll = _context.sent;
+            _this.getTransactionResponse = _this.getTransactionResponseAll[_this.getTransactionResponseAll.length - 1];
+            if (!(_this.getTransactionResponse.status === api/* Api */.j.GetTransactionStatus.NOT_FOUND)) {
+              _context.next = 18;
+              break;
+            }
+            throw new SentTransaction.Errors.TransactionStillPending("Waited ".concat(timeoutInSeconds, " seconds for transaction to complete, but it did not. ") + "Returning anyway. Check the transaction status manually. " + "Sent transaction: ".concat(JSON.stringify(_this.sendTransactionResponse, null, 2), "\n") + "All attempts to get the result: ".concat(JSON.stringify(_this.getTransactionResponseAll, null, 2)));
+          case 18:
+            return _context.abrupt("return", _this);
+          case 19:
+          case "end":
+            return _context.stop();
+        }
+      }, _callee);
+    })));
+    this.signTransaction = signTransaction;
+    this.assembled = assembled;
+    if (!signTransaction) {
+      throw new Error("You must provide a `signTransaction` function to send a transaction");
+    }
+    this.server = new server/* Server */.gq(this.assembled.options.rpcUrl, {
+      allowHttp: (_this$assembled$optio2 = this.assembled.options.allowHttp) !== null && _this$assembled$optio2 !== void 0 ? _this$assembled$optio2 : false
+    });
+  }
+  return sent_transaction_createClass(SentTransaction, [{
+    key: "result",
+    get: function get() {
+      if ("getTransactionResponse" in this && this.getTransactionResponse) {
+        if ("returnValue" in this.getTransactionResponse) {
+          return this.assembled.options.parseResultXdr(this.getTransactionResponse.returnValue);
+        }
+        throw new Error("Transaction failed! Cannot parse result.");
+      }
+      if (this.sendTransactionResponse) {
+        var _this$sendTransaction;
+        var errorResult = (_this$sendTransaction = this.sendTransactionResponse.errorResult) === null || _this$sendTransaction === void 0 ? void 0 : _this$sendTransaction.result();
+        if (errorResult) {
+          throw new SentTransaction.Errors.SendFailed("Transaction simulation looked correct, but attempting to send the transaction failed. Check `simulation` and `sendTransactionResponseAll` to troubleshoot. Decoded `sendTransactionResponse.errorResultXdr`: ".concat(errorResult));
+        }
+        throw new SentTransaction.Errors.SendResultOnly("Transaction was sent to the network, but not yet awaited. No result to show. Await transaction completion with `getTransaction(sendTransactionResponse.hash)`");
+      }
+      throw new Error("Sending transaction failed: ".concat(JSON.stringify(this.assembled)));
+    }
+  }]);
+}();
+_SentTransaction = SentTransaction;
+_defineProperty(SentTransaction, "Errors", {
+  SendFailed: function (_Error) {
+    function SendFailedError() {
+      sent_transaction_classCallCheck(this, SendFailedError);
+      return _callSuper(this, SendFailedError, arguments);
+    }
+    _inherits(SendFailedError, _Error);
+    return sent_transaction_createClass(SendFailedError);
+  }(_wrapNativeSuper(Error)),
+  SendResultOnly: function (_Error2) {
+    function SendResultOnlyError() {
+      sent_transaction_classCallCheck(this, SendResultOnlyError);
+      return _callSuper(this, SendResultOnlyError, arguments);
+    }
+    _inherits(SendResultOnlyError, _Error2);
+    return sent_transaction_createClass(SendResultOnlyError);
+  }(_wrapNativeSuper(Error)),
+  TransactionStillPending: function (_Error3) {
+    function TransactionStillPendingError() {
+      sent_transaction_classCallCheck(this, TransactionStillPendingError);
+      return _callSuper(this, TransactionStillPendingError, arguments);
+    }
+    _inherits(TransactionStillPendingError, _Error3);
+    return sent_transaction_createClass(TransactionStillPendingError);
+  }(_wrapNativeSuper(Error))
+});
+_defineProperty(SentTransaction, "init", function () {
+  var _ref2 = sent_transaction_asyncToGenerator(sent_transaction_regeneratorRuntime().mark(function _callee2(signTransaction, assembled) {
+    var tx, sent;
+    return sent_transaction_regeneratorRuntime().wrap(function _callee2$(_context2) {
+      while (1) switch (_context2.prev = _context2.next) {
+        case 0:
+          tx = new _SentTransaction(signTransaction, assembled);
+          _context2.next = 3;
+          return tx.send();
+        case 3:
+          sent = _context2.sent;
+          return _context2.abrupt("return", sent);
+        case 5:
+        case "end":
+          return _context2.stop();
+      }
+    }, _callee2);
+  }));
+  return function (_x, _x2) {
+    return _ref2.apply(this, arguments);
+  };
+}());
+;// CONCATENATED MODULE: ./src/contract/assembled_transaction.ts
 /* provided dependency */ var Buffer = __webpack_require__(8287)["Buffer"];
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-function contract_spec_typeof(o) { "@babel/helpers - typeof"; return contract_spec_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, contract_spec_typeof(o); }
-function contract_spec_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function contract_spec_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, contract_spec_toPropertyKey(descriptor.key), descriptor); } }
-function contract_spec_createClass(Constructor, protoProps, staticProps) { if (protoProps) contract_spec_defineProperties(Constructor.prototype, protoProps); if (staticProps) contract_spec_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _defineProperty(obj, key, value) { key = contract_spec_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function contract_spec_toPropertyKey(t) { var i = contract_spec_toPrimitive(t, "string"); return "symbol" == contract_spec_typeof(i) ? i : i + ""; }
-function contract_spec_toPrimitive(t, r) { if ("object" != contract_spec_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != contract_spec_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function assembled_transaction_callSuper(t, o, e) { return o = assembled_transaction_getPrototypeOf(o), assembled_transaction_possibleConstructorReturn(t, assembled_transaction_isNativeReflectConstruct() ? Reflect.construct(o, e || [], assembled_transaction_getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function assembled_transaction_possibleConstructorReturn(self, call) { if (call && (assembled_transaction_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return assembled_transaction_assertThisInitialized(self); }
+function assembled_transaction_assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+function assembled_transaction_inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) assembled_transaction_setPrototypeOf(subClass, superClass); }
+function assembled_transaction_wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; assembled_transaction_wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !assembled_transaction_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return assembled_transaction_construct(Class, arguments, assembled_transaction_getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return assembled_transaction_setPrototypeOf(Wrapper, Class); }; return assembled_transaction_wrapNativeSuper(Class); }
+function assembled_transaction_construct(t, e, r) { if (assembled_transaction_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments); var o = [null]; o.push.apply(o, e); var p = new (t.bind.apply(t, o))(); return r && assembled_transaction_setPrototypeOf(p, r.prototype), p; }
+function assembled_transaction_isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (assembled_transaction_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function assembled_transaction_isNativeFunction(fn) { try { return Function.toString.call(fn).indexOf("[native code]") !== -1; } catch (e) { return typeof fn === "function"; } }
+function assembled_transaction_setPrototypeOf(o, p) { assembled_transaction_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return assembled_transaction_setPrototypeOf(o, p); }
+function assembled_transaction_getPrototypeOf(o) { assembled_transaction_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return assembled_transaction_getPrototypeOf(o); }
+function assembled_transaction_typeof(o) { "@babel/helpers - typeof"; return assembled_transaction_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, assembled_transaction_typeof(o); }
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function assembled_transaction_regeneratorRuntime() { "use strict"; assembled_transaction_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == assembled_transaction_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(assembled_transaction_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
+function assembled_transaction_asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function assembled_transaction_asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { assembled_transaction_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { assembled_transaction_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+function assembled_transaction_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function assembled_transaction_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, assembled_transaction_toPropertyKey(descriptor.key), descriptor); } }
+function assembled_transaction_createClass(Constructor, protoProps, staticProps) { if (protoProps) assembled_transaction_defineProperties(Constructor.prototype, protoProps); if (staticProps) assembled_transaction_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function assembled_transaction_defineProperty(obj, key, value) { key = assembled_transaction_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function assembled_transaction_toPropertyKey(t) { var i = assembled_transaction_toPrimitive(t, "string"); return "symbol" == assembled_transaction_typeof(i) ? i : i + ""; }
+function assembled_transaction_toPrimitive(t, r) { if ("object" != assembled_transaction_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != assembled_transaction_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
+
+
+
+
+
+
+var NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+var AssembledTransaction = function () {
+  function AssembledTransaction(options) {
+    var _this = this,
+      _this$options$simulat,
+      _this$options$allowHt;
+    assembled_transaction_classCallCheck(this, AssembledTransaction);
+    assembled_transaction_defineProperty(this, "simulate", assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee() {
+      return assembled_transaction_regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) switch (_context.prev = _context.next) {
+          case 0:
+            if (_this.raw) {
+              _context.next = 2;
+              break;
+            }
+            throw new Error("Transaction has not yet been assembled; " + "call `AssembledTransaction.build` first.");
+          case 2:
+            _this.built = _this.raw.build();
+            _context.next = 5;
+            return _this.server.simulateTransaction(_this.built);
+          case 5:
+            _this.simulation = _context.sent;
+            if (api/* Api */.j.isSimulationSuccess(_this.simulation)) {
+              _this.built = (0,transaction/* assembleTransaction */.X)(_this.built, _this.simulation).build();
+            }
+            return _context.abrupt("return", _this);
+          case 8:
+          case "end":
+            return _context.stop();
+        }
+      }, _callee);
+    })));
+    assembled_transaction_defineProperty(this, "signAndSend", assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee2() {
+      var _ref3,
+        _ref3$force,
+        force,
+        _ref3$signTransaction,
+        signTransaction,
+        typeChecked,
+        sent,
+        _args2 = arguments;
+      return assembled_transaction_regeneratorRuntime().wrap(function _callee2$(_context2) {
+        while (1) switch (_context2.prev = _context2.next) {
+          case 0:
+            _ref3 = _args2.length > 0 && _args2[0] !== undefined ? _args2[0] : {}, _ref3$force = _ref3.force, force = _ref3$force === void 0 ? false : _ref3$force, _ref3$signTransaction = _ref3.signTransaction, signTransaction = _ref3$signTransaction === void 0 ? _this.options.signTransaction : _ref3$signTransaction;
+            if (_this.built) {
+              _context2.next = 3;
+              break;
+            }
+            throw new Error("Transaction has not yet been simulated");
+          case 3:
+            if (!(!force && _this.isReadCall)) {
+              _context2.next = 5;
+              break;
+            }
+            throw new AssembledTransaction.Errors.NoSignatureNeeded("This is a read call. It requires no signature or sending. " + "Use `force: true` to sign and send anyway.");
+          case 5:
+            if (signTransaction) {
+              _context2.next = 7;
+              break;
+            }
+            throw new AssembledTransaction.Errors.NoSigner("You must provide a signTransaction function, either when calling " + "`signAndSend` or when initializing your Client");
+          case 7:
+            if (!_this.needsNonInvokerSigningBy().length) {
+              _context2.next = 9;
+              break;
+            }
+            throw new AssembledTransaction.Errors.NeedsMoreSignatures("Transaction requires more signatures. " + "See `needsNonInvokerSigningBy` for details.");
+          case 9:
+            typeChecked = _this;
+            _context2.next = 12;
+            return SentTransaction.init(signTransaction, typeChecked);
+          case 12:
+            sent = _context2.sent;
+            return _context2.abrupt("return", sent);
+          case 14:
+          case "end":
+            return _context2.stop();
+        }
+      }, _callee2);
+    })));
+    assembled_transaction_defineProperty(this, "getStorageExpiration", assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee3() {
+      var entryRes;
+      return assembled_transaction_regeneratorRuntime().wrap(function _callee3$(_context3) {
+        while (1) switch (_context3.prev = _context3.next) {
+          case 0:
+            _context3.next = 2;
+            return _this.server.getLedgerEntries(new lib.Contract(_this.options.contractId).getFootprint());
+          case 2:
+            entryRes = _context3.sent;
+            if (!(!entryRes.entries || !entryRes.entries.length || !entryRes.entries[0].liveUntilLedgerSeq)) {
+              _context3.next = 5;
+              break;
+            }
+            throw new Error("failed to get ledger entry");
+          case 5:
+            return _context3.abrupt("return", entryRes.entries[0].liveUntilLedgerSeq);
+          case 6:
+          case "end":
+            return _context3.stop();
+        }
+      }, _callee3);
+    })));
+    assembled_transaction_defineProperty(this, "needsNonInvokerSigningBy", function () {
+      var _rawInvokeHostFunctio;
+      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        _ref5$includeAlreadyS = _ref5.includeAlreadySigned,
+        includeAlreadySigned = _ref5$includeAlreadyS === void 0 ? false : _ref5$includeAlreadyS;
+      if (!_this.built) {
+        throw new Error("Transaction has not yet been simulated");
+      }
+      if (!("operations" in _this.built)) {
+        throw new Error("Unexpected Transaction type; no operations: ".concat(JSON.stringify(_this.built)));
+      }
+      var rawInvokeHostFunctionOp = _this.built.operations[0];
+      return _toConsumableArray(new Set(((_rawInvokeHostFunctio = rawInvokeHostFunctionOp.auth) !== null && _rawInvokeHostFunctio !== void 0 ? _rawInvokeHostFunctio : []).filter(function (entry) {
+        return entry.credentials().switch() === lib.xdr.SorobanCredentialsType.sorobanCredentialsAddress() && (includeAlreadySigned || entry.credentials().address().signature().switch().name === "scvVoid");
+      }).map(function (entry) {
+        return lib.StrKey.encodeEd25519PublicKey(entry.credentials().address().address().accountId().ed25519());
+      })));
+    });
+    assembled_transaction_defineProperty(this, "signAuthEntries", assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee5() {
+      var _rawInvokeHostFunctio2;
+      var _ref7,
+        _ref7$expiration,
+        expiration,
+        _ref7$signAuthEntry,
+        signAuthEntry,
+        _ref7$publicKey,
+        publicKey,
+        needsNonInvokerSigningBy,
+        rawInvokeHostFunctionOp,
+        authEntries,
+        _iterator,
+        _step,
+        _step$value,
+        i,
+        entry,
+        pk,
+        _args5 = arguments;
+      return assembled_transaction_regeneratorRuntime().wrap(function _callee5$(_context5) {
+        while (1) switch (_context5.prev = _context5.next) {
+          case 0:
+            _ref7 = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : {}, _ref7$expiration = _ref7.expiration, expiration = _ref7$expiration === void 0 ? _this.getStorageExpiration() : _ref7$expiration, _ref7$signAuthEntry = _ref7.signAuthEntry, signAuthEntry = _ref7$signAuthEntry === void 0 ? _this.options.signAuthEntry : _ref7$signAuthEntry, _ref7$publicKey = _ref7.publicKey, publicKey = _ref7$publicKey === void 0 ? _this.options.publicKey : _ref7$publicKey;
+            if (_this.built) {
+              _context5.next = 3;
+              break;
+            }
+            throw new Error("Transaction has not yet been assembled or simulated");
+          case 3:
+            needsNonInvokerSigningBy = _this.needsNonInvokerSigningBy();
+            if (needsNonInvokerSigningBy) {
+              _context5.next = 6;
+              break;
+            }
+            throw new AssembledTransaction.Errors.NoUnsignedNonInvokerAuthEntries("No unsigned non-invoker auth entries; maybe you already signed?");
+          case 6:
+            if (!(needsNonInvokerSigningBy.indexOf(publicKey !== null && publicKey !== void 0 ? publicKey : "") === -1)) {
+              _context5.next = 8;
+              break;
+            }
+            throw new AssembledTransaction.Errors.NoSignatureNeeded("No auth entries for public key \"".concat(publicKey, "\""));
+          case 8:
+            if (signAuthEntry) {
+              _context5.next = 10;
+              break;
+            }
+            throw new AssembledTransaction.Errors.NoSigner("You must provide `signAuthEntry` when calling `signAuthEntries`, " + "or when constructing the `Client` or `AssembledTransaction`");
+          case 10:
+            rawInvokeHostFunctionOp = _this.built.operations[0];
+            authEntries = (_rawInvokeHostFunctio2 = rawInvokeHostFunctionOp.auth) !== null && _rawInvokeHostFunctio2 !== void 0 ? _rawInvokeHostFunctio2 : [];
+            _iterator = _createForOfIteratorHelper(authEntries.entries());
+            _context5.prev = 13;
+            _iterator.s();
+          case 15:
+            if ((_step = _iterator.n()).done) {
+              _context5.next = 34;
+              break;
+            }
+            _step$value = _slicedToArray(_step.value, 2), i = _step$value[0], entry = _step$value[1];
+            if (!(entry.credentials().switch() !== lib.xdr.SorobanCredentialsType.sorobanCredentialsAddress())) {
+              _context5.next = 19;
+              break;
+            }
+            return _context5.abrupt("continue", 32);
+          case 19:
+            pk = lib.StrKey.encodeEd25519PublicKey(entry.credentials().address().address().accountId().ed25519());
+            if (!(pk !== publicKey)) {
+              _context5.next = 22;
+              break;
+            }
+            return _context5.abrupt("continue", 32);
+          case 22:
+            _context5.t0 = lib.authorizeEntry;
+            _context5.t1 = entry;
+            _context5.t2 = function () {
+              var _ref8 = assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee4(preimage) {
+                return assembled_transaction_regeneratorRuntime().wrap(function _callee4$(_context4) {
+                  while (1) switch (_context4.prev = _context4.next) {
+                    case 0:
+                      _context4.t0 = Buffer;
+                      _context4.next = 3;
+                      return signAuthEntry(preimage.toXDR("base64"));
+                    case 3:
+                      _context4.t1 = _context4.sent;
+                      return _context4.abrupt("return", _context4.t0.from.call(_context4.t0, _context4.t1, "base64"));
+                    case 5:
+                    case "end":
+                      return _context4.stop();
+                  }
+                }, _callee4);
+              }));
+              return function (_x) {
+                return _ref8.apply(this, arguments);
+              };
+            }();
+            _context5.next = 27;
+            return expiration;
+          case 27:
+            _context5.t3 = _context5.sent;
+            _context5.t4 = _this.options.networkPassphrase;
+            _context5.next = 31;
+            return (0, _context5.t0)(_context5.t1, _context5.t2, _context5.t3, _context5.t4);
+          case 31:
+            authEntries[i] = _context5.sent;
+          case 32:
+            _context5.next = 15;
+            break;
+          case 34:
+            _context5.next = 39;
+            break;
+          case 36:
+            _context5.prev = 36;
+            _context5.t5 = _context5["catch"](13);
+            _iterator.e(_context5.t5);
+          case 39:
+            _context5.prev = 39;
+            _iterator.f();
+            return _context5.finish(39);
+          case 42:
+          case "end":
+            return _context5.stop();
+        }
+      }, _callee5, null, [[13, 36, 39, 42]]);
+    })));
+    this.options = options;
+    this.options.simulate = (_this$options$simulat = this.options.simulate) !== null && _this$options$simulat !== void 0 ? _this$options$simulat : true;
+    this.server = new server/* Server */.gq(this.options.rpcUrl, {
+      allowHttp: (_this$options$allowHt = this.options.allowHttp) !== null && _this$options$allowHt !== void 0 ? _this$options$allowHt : false
+    });
+  }
+  return assembled_transaction_createClass(AssembledTransaction, [{
+    key: "toJSON",
+    value: function toJSON() {
+      var _this$built;
+      return JSON.stringify({
+        method: this.options.method,
+        tx: (_this$built = this.built) === null || _this$built === void 0 ? void 0 : _this$built.toXDR(),
+        simulationResult: {
+          auth: this.simulationData.result.auth.map(function (a) {
+            return a.toXDR("base64");
+          }),
+          retval: this.simulationData.result.retval.toXDR("base64")
+        },
+        simulationTransactionData: this.simulationData.transactionData.toXDR("base64")
+      });
+    }
+  }, {
+    key: "simulationData",
+    get: function get() {
+      if (this.simulationResult && this.simulationTransactionData) {
+        return {
+          result: this.simulationResult,
+          transactionData: this.simulationTransactionData
+        };
+      }
+      var simulation = this.simulation;
+      if (!simulation) {
+        throw new AssembledTransaction.Errors.NotYetSimulated("Transaction has not yet been simulated");
+      }
+      if (api/* Api */.j.isSimulationError(simulation)) {
+        throw new Error("Transaction simulation failed: \"".concat(simulation.error, "\""));
+      }
+      if (api/* Api */.j.isSimulationRestore(simulation)) {
+        throw new AssembledTransaction.Errors.ExpiredState("You need to restore some contract state before you can invoke this method. ".concat(JSON.stringify(simulation, null, 2)));
+      }
+      if (!simulation.result) {
+        throw new Error("Expected an invocation simulation, but got no 'result' field. Simulation: ".concat(JSON.stringify(simulation, null, 2)));
+      }
+      this.simulationResult = simulation.result;
+      this.simulationTransactionData = simulation.transactionData.build();
+      return {
+        result: this.simulationResult,
+        transactionData: this.simulationTransactionData
+      };
+    }
+  }, {
+    key: "result",
+    get: function get() {
+      try {
+        return this.options.parseResultXdr(this.simulationData.result.retval);
+      } catch (e) {
+        if (!implementsToString(e)) throw e;
+        var err = this.parseError(e.toString());
+        if (err) return err;
+        throw e;
+      }
+    }
+  }, {
+    key: "parseError",
+    value: function parseError(errorMessage) {
+      if (!this.options.errorTypes) return undefined;
+      var match = errorMessage.match(contractErrorPattern);
+      if (!match) return undefined;
+      var i = parseInt(match[1], 10);
+      var err = this.options.errorTypes[i];
+      if (!err) return undefined;
+      return new Err(err);
+    }
+  }, {
+    key: "isReadCall",
+    get: function get() {
+      var authsCount = this.simulationData.result.auth.length;
+      var writeLength = this.simulationData.transactionData.resources().footprint().readWrite().length;
+      return authsCount === 0 && writeLength === 0;
+    }
+  }], [{
+    key: "fromJSON",
+    value: function fromJSON(options, _ref9) {
+      var tx = _ref9.tx,
+        simulationResult = _ref9.simulationResult,
+        simulationTransactionData = _ref9.simulationTransactionData;
+      var txn = new AssembledTransaction(options);
+      txn.built = lib.TransactionBuilder.fromXDR(tx, options.networkPassphrase);
+      txn.simulationResult = {
+        auth: simulationResult.auth.map(function (a) {
+          return lib.xdr.SorobanAuthorizationEntry.fromXDR(a, "base64");
+        }),
+        retval: lib.xdr.ScVal.fromXDR(simulationResult.retval, "base64")
+      };
+      txn.simulationTransactionData = lib.xdr.SorobanTransactionData.fromXDR(simulationTransactionData, "base64");
+      return txn;
+    }
+  }, {
+    key: "build",
+    value: (function () {
+      var _build = assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee6(options) {
+        var _options$fee, _options$args, _options$timeoutInSec;
+        var tx, contract, account;
+        return assembled_transaction_regeneratorRuntime().wrap(function _callee6$(_context6) {
+          while (1) switch (_context6.prev = _context6.next) {
+            case 0:
+              tx = new AssembledTransaction(options);
+              contract = new lib.Contract(options.contractId);
+              if (!options.publicKey) {
+                _context6.next = 8;
+                break;
+              }
+              _context6.next = 5;
+              return tx.server.getAccount(options.publicKey);
+            case 5:
+              _context6.t0 = _context6.sent;
+              _context6.next = 9;
+              break;
+            case 8:
+              _context6.t0 = new lib.Account(NULL_ACCOUNT, "0");
+            case 9:
+              account = _context6.t0;
+              tx.raw = new lib.TransactionBuilder(account, {
+                fee: (_options$fee = options.fee) !== null && _options$fee !== void 0 ? _options$fee : lib.BASE_FEE,
+                networkPassphrase: options.networkPassphrase
+              }).addOperation(contract.call.apply(contract, [options.method].concat(_toConsumableArray((_options$args = options.args) !== null && _options$args !== void 0 ? _options$args : [])))).setTimeout((_options$timeoutInSec = options.timeoutInSeconds) !== null && _options$timeoutInSec !== void 0 ? _options$timeoutInSec : DEFAULT_TIMEOUT);
+              if (!options.simulate) {
+                _context6.next = 14;
+                break;
+              }
+              _context6.next = 14;
+              return tx.simulate();
+            case 14:
+              return _context6.abrupt("return", tx);
+            case 15:
+            case "end":
+              return _context6.stop();
+          }
+        }, _callee6);
+      }));
+      function build(_x2) {
+        return _build.apply(this, arguments);
+      }
+      return build;
+    }())
+  }]);
+}();
+assembled_transaction_defineProperty(AssembledTransaction, "Errors", {
+  ExpiredState: function (_Error) {
+    function ExpiredStateError() {
+      assembled_transaction_classCallCheck(this, ExpiredStateError);
+      return assembled_transaction_callSuper(this, ExpiredStateError, arguments);
+    }
+    assembled_transaction_inherits(ExpiredStateError, _Error);
+    return assembled_transaction_createClass(ExpiredStateError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  NeedsMoreSignatures: function (_Error2) {
+    function NeedsMoreSignaturesError() {
+      assembled_transaction_classCallCheck(this, NeedsMoreSignaturesError);
+      return assembled_transaction_callSuper(this, NeedsMoreSignaturesError, arguments);
+    }
+    assembled_transaction_inherits(NeedsMoreSignaturesError, _Error2);
+    return assembled_transaction_createClass(NeedsMoreSignaturesError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  NoSignatureNeeded: function (_Error3) {
+    function NoSignatureNeededError() {
+      assembled_transaction_classCallCheck(this, NoSignatureNeededError);
+      return assembled_transaction_callSuper(this, NoSignatureNeededError, arguments);
+    }
+    assembled_transaction_inherits(NoSignatureNeededError, _Error3);
+    return assembled_transaction_createClass(NoSignatureNeededError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  NoUnsignedNonInvokerAuthEntries: function (_Error4) {
+    function NoUnsignedNonInvokerAuthEntriesError() {
+      assembled_transaction_classCallCheck(this, NoUnsignedNonInvokerAuthEntriesError);
+      return assembled_transaction_callSuper(this, NoUnsignedNonInvokerAuthEntriesError, arguments);
+    }
+    assembled_transaction_inherits(NoUnsignedNonInvokerAuthEntriesError, _Error4);
+    return assembled_transaction_createClass(NoUnsignedNonInvokerAuthEntriesError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  NoSigner: function (_Error5) {
+    function NoSignerError() {
+      assembled_transaction_classCallCheck(this, NoSignerError);
+      return assembled_transaction_callSuper(this, NoSignerError, arguments);
+    }
+    assembled_transaction_inherits(NoSignerError, _Error5);
+    return assembled_transaction_createClass(NoSignerError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  NotYetSimulated: function (_Error6) {
+    function NotYetSimulatedError() {
+      assembled_transaction_classCallCheck(this, NotYetSimulatedError);
+      return assembled_transaction_callSuper(this, NotYetSimulatedError, arguments);
+    }
+    assembled_transaction_inherits(NotYetSimulatedError, _Error6);
+    return assembled_transaction_createClass(NotYetSimulatedError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  FakeAccount: function (_Error7) {
+    function FakeAccountError() {
+      assembled_transaction_classCallCheck(this, FakeAccountError);
+      return assembled_transaction_callSuper(this, FakeAccountError, arguments);
+    }
+    assembled_transaction_inherits(FakeAccountError, _Error7);
+    return assembled_transaction_createClass(FakeAccountError);
+  }(assembled_transaction_wrapNativeSuper(Error))
+});
+;// CONCATENATED MODULE: ./src/contract/basic_node_signer.ts
+/* provided dependency */ var basic_node_signer_Buffer = __webpack_require__(8287)["Buffer"];
+function basic_node_signer_typeof(o) { "@babel/helpers - typeof"; return basic_node_signer_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, basic_node_signer_typeof(o); }
+function basic_node_signer_regeneratorRuntime() { "use strict"; basic_node_signer_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == basic_node_signer_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(basic_node_signer_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
+function basic_node_signer_asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function basic_node_signer_asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { basic_node_signer_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { basic_node_signer_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+var basicNodeSigner = function basicNodeSigner(keypair, networkPassphrase) {
+  return {
+    signTransaction: function () {
+      var _signTransaction = basic_node_signer_asyncToGenerator(basic_node_signer_regeneratorRuntime().mark(function _callee(tx) {
+        var t;
+        return basic_node_signer_regeneratorRuntime().wrap(function _callee$(_context) {
+          while (1) switch (_context.prev = _context.next) {
+            case 0:
+              t = lib.TransactionBuilder.fromXDR(tx, networkPassphrase);
+              t.sign(keypair);
+              return _context.abrupt("return", t.toXDR());
+            case 3:
+            case "end":
+              return _context.stop();
+          }
+        }, _callee);
+      }));
+      function signTransaction(_x) {
+        return _signTransaction.apply(this, arguments);
+      }
+      return signTransaction;
+    }(),
+    signAuthEntry: function () {
+      var _signAuthEntry = basic_node_signer_asyncToGenerator(basic_node_signer_regeneratorRuntime().mark(function _callee2(entryXdr) {
+        return basic_node_signer_regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) switch (_context2.prev = _context2.next) {
+            case 0:
+              return _context2.abrupt("return", keypair.sign((0,lib.hash)(basic_node_signer_Buffer.from(entryXdr, "base64"))).toString("base64"));
+            case 1:
+            case "end":
+              return _context2.stop();
+          }
+        }, _callee2);
+      }));
+      function signAuthEntry(_x2) {
+        return _signAuthEntry.apply(this, arguments);
+      }
+      return signAuthEntry;
+    }()
+  };
+};
+;// CONCATENATED MODULE: ./src/contract/spec.ts
+/* provided dependency */ var spec_Buffer = __webpack_require__(8287)["Buffer"];
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { spec_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function spec_createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = spec_unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function spec_typeof(o) { "@babel/helpers - typeof"; return spec_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, spec_typeof(o); }
+function spec_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function spec_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, spec_toPropertyKey(descriptor.key), descriptor); } }
+function spec_createClass(Constructor, protoProps, staticProps) { if (protoProps) spec_defineProperties(Constructor.prototype, protoProps); if (staticProps) spec_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function spec_defineProperty(obj, key, value) { key = spec_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function spec_toPropertyKey(t) { var i = spec_toPrimitive(t, "string"); return "symbol" == spec_typeof(i) ? i : i + ""; }
+function spec_toPrimitive(t, r) { if ("object" != spec_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != spec_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function spec_slicedToArray(arr, i) { return spec_arrayWithHoles(arr) || spec_iterableToArrayLimit(arr, i) || spec_unsupportedIterableToArray(arr, i) || spec_nonIterableRest(); }
+function spec_nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function spec_unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return spec_arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return spec_arrayLikeToArray(o, minLen); }
+function spec_arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function spec_iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function spec_arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 
 function readObj(args, input) {
   var inputName = input.name().toString();
   var entry = Object.entries(args).find(function (_ref) {
-    var _ref2 = _slicedToArray(_ref, 2),
+    var _ref2 = spec_slicedToArray(_ref, 2),
       name = _ref2[0],
       _ = _ref2[1];
     return name === inputName;
@@ -20933,27 +21744,27 @@ function readObj(args, input) {
   }
   return entry[1];
 }
-var ContractSpec = function () {
-  function ContractSpec(entries) {
-    contract_spec_classCallCheck(this, ContractSpec);
-    _defineProperty(this, "entries", []);
+var Spec = function () {
+  function Spec(entries) {
+    spec_classCallCheck(this, Spec);
+    spec_defineProperty(this, "entries", []);
     if (entries.length == 0) {
       throw new Error("Contract spec must have at least one entry");
     }
     var entry = entries[0];
     if (typeof entry === "string") {
       this.entries = entries.map(function (s) {
-        return src.xdr.ScSpecEntry.fromXDR(s, "base64");
+        return lib.xdr.ScSpecEntry.fromXDR(s, "base64");
       });
     } else {
       this.entries = entries;
     }
   }
-  return contract_spec_createClass(ContractSpec, [{
+  return spec_createClass(Spec, [{
     key: "funcs",
     value: function funcs() {
       return this.entries.filter(function (entry) {
-        return entry.switch().value === src.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value;
+        return entry.switch().value === lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value;
       }).map(function (entry) {
         return entry.functionV0();
       });
@@ -20962,7 +21773,7 @@ var ContractSpec = function () {
     key: "getFunc",
     value: function getFunc(name) {
       var entry = this.findEntry(name);
-      if (entry.switch().value !== src.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value) {
+      if (entry.switch().value !== lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value) {
         throw new Error("".concat(name, " is not a function"));
       }
       return entry.functionV0();
@@ -20979,12 +21790,12 @@ var ContractSpec = function () {
   }, {
     key: "funcResToNative",
     value: function funcResToNative(name, val_or_base64) {
-      var val = typeof val_or_base64 === "string" ? src.xdr.ScVal.fromXDR(val_or_base64, "base64") : val_or_base64;
+      var val = typeof val_or_base64 === "string" ? lib.xdr.ScVal.fromXDR(val_or_base64, "base64") : val_or_base64;
       var func = this.getFunc(name);
       var outputs = func.outputs();
       if (outputs.length === 0) {
         var type = val.switch();
-        if (type.value !== src.xdr.ScValType.scvVoid().value) {
+        if (type.value !== lib.xdr.ScValType.scvVoid().value) {
           throw new Error("Expected void, got ".concat(type.name));
         }
         return null;
@@ -20993,7 +21804,7 @@ var ContractSpec = function () {
         throw new Error("Multiple outputs not supported");
       }
       var output = outputs[0];
-      if (output.switch().value === src.xdr.ScSpecType.scSpecTypeResult().value) {
+      if (output.switch().value === lib.xdr.ScSpecType.scSpecTypeResult().value) {
         return new Ok(this.scValToNative(val, output.result().okType()));
       }
       return this.scValToNative(val, output);
@@ -21015,91 +21826,91 @@ var ContractSpec = function () {
       var _this2 = this;
       var t = ty.switch();
       var value = t.value;
-      if (t.value === src.xdr.ScSpecType.scSpecTypeUdt().value) {
+      if (t.value === lib.xdr.ScSpecType.scSpecTypeUdt().value) {
         var udt = ty.udt();
         return this.nativeToUdt(val, udt.name().toString());
       }
-      if (value === src.xdr.ScSpecType.scSpecTypeOption().value) {
+      if (value === lib.xdr.ScSpecType.scSpecTypeOption().value) {
         var opt = ty.option();
         if (val === undefined) {
-          return src.xdr.ScVal.scvVoid();
+          return lib.xdr.ScVal.scvVoid();
         }
         return this.nativeToScVal(val, opt.valueType());
       }
-      switch (contract_spec_typeof(val)) {
+      switch (spec_typeof(val)) {
         case "object":
           {
             var _val$constructor$name, _val$constructor;
             if (val === null) {
               switch (value) {
-                case src.xdr.ScSpecType.scSpecTypeVoid().value:
-                  return src.xdr.ScVal.scvVoid();
+                case lib.xdr.ScSpecType.scSpecTypeVoid().value:
+                  return lib.xdr.ScVal.scvVoid();
                 default:
                   throw new TypeError("Type ".concat(ty, " was not void, but value was null"));
               }
             }
-            if (val instanceof src.xdr.ScVal) {
+            if (val instanceof lib.xdr.ScVal) {
               return val;
             }
-            if (val instanceof src.Address) {
-              if (ty.switch().value !== src.xdr.ScSpecType.scSpecTypeAddress().value) {
+            if (val instanceof lib.Address) {
+              if (ty.switch().value !== lib.xdr.ScSpecType.scSpecTypeAddress().value) {
                 throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
               }
               return val.toScVal();
             }
-            if (val instanceof src.Contract) {
-              if (ty.switch().value !== src.xdr.ScSpecType.scSpecTypeAddress().value) {
+            if (val instanceof lib.Contract) {
+              if (ty.switch().value !== lib.xdr.ScSpecType.scSpecTypeAddress().value) {
                 throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
               }
               return val.address().toScVal();
             }
-            if (val instanceof Uint8Array || Buffer.isBuffer(val)) {
+            if (val instanceof Uint8Array || spec_Buffer.isBuffer(val)) {
               var copy = Uint8Array.from(val);
               switch (value) {
-                case src.xdr.ScSpecType.scSpecTypeBytesN().value:
+                case lib.xdr.ScSpecType.scSpecTypeBytesN().value:
                   {
                     var bytes_n = ty.bytesN();
                     if (copy.length !== bytes_n.n()) {
                       throw new TypeError("expected ".concat(bytes_n.n(), " bytes, but got ").concat(copy.length));
                     }
-                    return src.xdr.ScVal.scvBytes(copy);
+                    return lib.xdr.ScVal.scvBytes(copy);
                   }
-                case src.xdr.ScSpecType.scSpecTypeBytes().value:
-                  return src.xdr.ScVal.scvBytes(copy);
+                case lib.xdr.ScSpecType.scSpecTypeBytes().value:
+                  return lib.xdr.ScVal.scvBytes(copy);
                 default:
                   throw new TypeError("invalid type (".concat(ty, ") specified for Bytes and BytesN"));
               }
             }
             if (Array.isArray(val)) {
               switch (value) {
-                case src.xdr.ScSpecType.scSpecTypeVec().value:
+                case lib.xdr.ScSpecType.scSpecTypeVec().value:
                   {
                     var vec = ty.vec();
                     var elementType = vec.elementType();
-                    return src.xdr.ScVal.scvVec(val.map(function (v) {
+                    return lib.xdr.ScVal.scvVec(val.map(function (v) {
                       return _this2.nativeToScVal(v, elementType);
                     }));
                   }
-                case src.xdr.ScSpecType.scSpecTypeTuple().value:
+                case lib.xdr.ScSpecType.scSpecTypeTuple().value:
                   {
                     var tup = ty.tuple();
                     var valTypes = tup.valueTypes();
                     if (val.length !== valTypes.length) {
                       throw new TypeError("Tuple expects ".concat(valTypes.length, " values, but ").concat(val.length, " were provided"));
                     }
-                    return src.xdr.ScVal.scvVec(val.map(function (v, i) {
+                    return lib.xdr.ScVal.scvVec(val.map(function (v, i) {
                       return _this2.nativeToScVal(v, valTypes[i]);
                     }));
                   }
-                case src.xdr.ScSpecType.scSpecTypeMap().value:
+                case lib.xdr.ScSpecType.scSpecTypeMap().value:
                   {
                     var map = ty.map();
                     var keyType = map.keyType();
                     var valueType = map.valueType();
-                    return src.xdr.ScVal.scvMap(val.map(function (entry) {
+                    return lib.xdr.ScVal.scvMap(val.map(function (entry) {
                       var key = _this2.nativeToScVal(entry[0], keyType);
                       var val = _this2.nativeToScVal(entry[1], valueType);
-                      return new src.xdr.ScMapEntry({
+                      return new lib.xdr.ScMapEntry({
                         key: key,
                         val: val
                       });
@@ -21110,7 +21921,7 @@ var ContractSpec = function () {
               }
             }
             if (val.constructor === Map) {
-              if (value !== src.xdr.ScSpecType.scSpecTypeMap().value) {
+              if (value !== lib.xdr.ScSpecType.scSpecTypeMap().value) {
                 throw new TypeError("Type ".concat(ty, " was not map, but value was Map"));
               }
               var scMap = ty.map();
@@ -21119,18 +21930,18 @@ var ContractSpec = function () {
               var values = _map.entries();
               var res = values.next();
               while (!res.done) {
-                var _res$value = _slicedToArray(res.value, 2),
+                var _res$value = spec_slicedToArray(res.value, 2),
                   k = _res$value[0],
                   v = _res$value[1];
                 var key = this.nativeToScVal(k, scMap.keyType());
                 var _val = this.nativeToScVal(v, scMap.valueType());
-                entries.push(new src.xdr.ScMapEntry({
+                entries.push(new lib.xdr.ScMapEntry({
                   key: key,
                   val: _val
                 }));
                 res = values.next();
               }
-              return src.xdr.ScVal.scvMap(entries);
+              return lib.xdr.ScVal.scvMap(entries);
             }
             if (((_val$constructor$name = (_val$constructor = val.constructor) === null || _val$constructor === void 0 ? void 0 : _val$constructor.name) !== null && _val$constructor$name !== void 0 ? _val$constructor$name : "") !== "Object") {
               var _val$constructor2;
@@ -21142,19 +21953,19 @@ var ContractSpec = function () {
         case "bigint":
           {
             switch (value) {
-              case src.xdr.ScSpecType.scSpecTypeU32().value:
-                return src.xdr.ScVal.scvU32(val);
-              case src.xdr.ScSpecType.scSpecTypeI32().value:
-                return src.xdr.ScVal.scvI32(val);
-              case src.xdr.ScSpecType.scSpecTypeU64().value:
-              case src.xdr.ScSpecType.scSpecTypeI64().value:
-              case src.xdr.ScSpecType.scSpecTypeU128().value:
-              case src.xdr.ScSpecType.scSpecTypeI128().value:
-              case src.xdr.ScSpecType.scSpecTypeU256().value:
-              case src.xdr.ScSpecType.scSpecTypeI256().value:
+              case lib.xdr.ScSpecType.scSpecTypeU32().value:
+                return lib.xdr.ScVal.scvU32(val);
+              case lib.xdr.ScSpecType.scSpecTypeI32().value:
+                return lib.xdr.ScVal.scvI32(val);
+              case lib.xdr.ScSpecType.scSpecTypeU64().value:
+              case lib.xdr.ScSpecType.scSpecTypeI64().value:
+              case lib.xdr.ScSpecType.scSpecTypeU128().value:
+              case lib.xdr.ScSpecType.scSpecTypeI128().value:
+              case lib.xdr.ScSpecType.scSpecTypeU256().value:
+              case lib.xdr.ScSpecType.scSpecTypeI256().value:
                 {
                   var intType = t.name.substring(10).toLowerCase();
-                  return new src.XdrLargeInt(intType, val).toScVal();
+                  return new lib.XdrLargeInt(intType, val).toScVal();
                 }
               default:
                 throw new TypeError("invalid type (".concat(ty, ") specified for integer"));
@@ -21164,20 +21975,20 @@ var ContractSpec = function () {
           return stringToScVal(val, t);
         case "boolean":
           {
-            if (value !== src.xdr.ScSpecType.scSpecTypeBool().value) {
+            if (value !== lib.xdr.ScSpecType.scSpecTypeBool().value) {
               throw TypeError("Type ".concat(ty, " was not bool, but value was bool"));
             }
-            return src.xdr.ScVal.scvBool(val);
+            return lib.xdr.ScVal.scvBool(val);
           }
         case "undefined":
           {
             if (!ty) {
-              return src.xdr.ScVal.scvVoid();
+              return lib.xdr.ScVal.scvVoid();
             }
             switch (value) {
-              case src.xdr.ScSpecType.scSpecTypeVoid().value:
-              case src.xdr.ScSpecType.scSpecTypeOption().value:
-                return src.xdr.ScVal.scvVoid();
+              case lib.xdr.ScSpecType.scSpecTypeVoid().value:
+              case lib.xdr.ScSpecType.scSpecTypeOption().value:
+                return lib.xdr.ScVal.scvVoid();
               default:
                 throw new TypeError("Type ".concat(ty, " was not void, but value was undefined"));
             }
@@ -21185,7 +21996,7 @@ var ContractSpec = function () {
         case "function":
           return this.nativeToScVal(val(), ty);
         default:
-          throw new TypeError("failed to convert typeof ".concat(contract_spec_typeof(val), " (").concat(val, ")"));
+          throw new TypeError("failed to convert typeof ".concat(spec_typeof(val), " (").concat(val, ")"));
       }
     }
   }, {
@@ -21193,14 +22004,14 @@ var ContractSpec = function () {
     value: function nativeToUdt(val, name) {
       var entry = this.findEntry(name);
       switch (entry.switch()) {
-        case src.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
           if (typeof val !== "number") {
-            throw new TypeError("expected number for enum ".concat(name, ", but got ").concat(contract_spec_typeof(val)));
+            throw new TypeError("expected number for enum ".concat(name, ", but got ").concat(spec_typeof(val)));
           }
           return this.nativeToEnum(val, entry.udtEnumV0());
-        case src.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
           return this.nativeToStruct(val, entry.udtStructV0());
-        case src.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
           return this.nativeToUnion(val, entry.udtUnionV0());
         default:
           throw new Error("failed to parse udt ".concat(name));
@@ -21218,13 +22029,13 @@ var ContractSpec = function () {
       if (!case_) {
         throw new TypeError("no such enum entry: ".concat(entry_name, " in ").concat(union_));
       }
-      var key = src.xdr.ScVal.scvSymbol(entry_name);
+      var key = lib.xdr.ScVal.scvSymbol(entry_name);
       switch (case_.switch()) {
-        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0():
+        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0():
           {
-            return src.xdr.ScVal.scvVec([key]);
+            return lib.xdr.ScVal.scvVec([key]);
           }
-        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0():
+        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0():
           {
             var types = case_.tupleCase().type();
             if (Array.isArray(val.values)) {
@@ -21235,7 +22046,7 @@ var ContractSpec = function () {
                 return _this3.nativeToScVal(v, types[i]);
               });
               scvals.unshift(key);
-              return src.xdr.ScVal.scvVec(scvals);
+              return lib.xdr.ScVal.scvVec(scvals);
             }
             throw new Error("failed to parse union case ".concat(case_, " with ").concat(val));
           }
@@ -21252,14 +22063,14 @@ var ContractSpec = function () {
         if (!fields.every(isNumeric)) {
           throw new Error("mixed numeric and non-numeric field names are not allowed");
         }
-        return src.xdr.ScVal.scvVec(fields.map(function (_, i) {
+        return lib.xdr.ScVal.scvVec(fields.map(function (_, i) {
           return _this4.nativeToScVal(val[i], fields[i].type());
         }));
       }
-      return src.xdr.ScVal.scvMap(fields.map(function (field) {
+      return lib.xdr.ScVal.scvMap(fields.map(function (field) {
         var name = field.name().toString();
-        return new src.xdr.ScMapEntry({
-          key: _this4.nativeToScVal(name, src.xdr.ScSpecTypeDef.scSpecTypeSymbol()),
+        return new lib.xdr.ScMapEntry({
+          key: _this4.nativeToScVal(name, lib.xdr.ScSpecTypeDef.scSpecTypeSymbol()),
           val: _this4.nativeToScVal(val[name], field.type())
         });
       }));
@@ -21270,14 +22081,14 @@ var ContractSpec = function () {
       if (enum_.cases().some(function (entry) {
         return entry.value() === val;
       })) {
-        return src.xdr.ScVal.scvU32(val);
+        return lib.xdr.ScVal.scvU32(val);
       }
       throw new TypeError("no such enum entry: ".concat(val, " in ").concat(enum_));
     }
   }, {
     key: "scValStrToNative",
     value: function scValStrToNative(scv, typeDef) {
-      return this.scValToNative(src.xdr.ScVal.fromXDR(scv, "base64"), typeDef);
+      return this.scValToNative(lib.xdr.ScVal.fromXDR(scv, "base64"), typeDef);
     }
   }, {
     key: "scValToNative",
@@ -21285,28 +22096,28 @@ var ContractSpec = function () {
       var _this5 = this;
       var t = typeDef.switch();
       var value = t.value;
-      if (value === src.xdr.ScSpecType.scSpecTypeUdt().value) {
+      if (value === lib.xdr.ScSpecType.scSpecTypeUdt().value) {
         return this.scValUdtToNative(scv, typeDef.udt());
       }
       switch (scv.switch().value) {
-        case src.xdr.ScValType.scvVoid().value:
+        case lib.xdr.ScValType.scvVoid().value:
           return void 0;
-        case src.xdr.ScValType.scvU64().value:
-        case src.xdr.ScValType.scvI64().value:
-        case src.xdr.ScValType.scvU128().value:
-        case src.xdr.ScValType.scvI128().value:
-        case src.xdr.ScValType.scvU256().value:
-        case src.xdr.ScValType.scvI256().value:
-          return (0,src.scValToBigInt)(scv);
-        case src.xdr.ScValType.scvVec().value:
+        case lib.xdr.ScValType.scvU64().value:
+        case lib.xdr.ScValType.scvI64().value:
+        case lib.xdr.ScValType.scvU128().value:
+        case lib.xdr.ScValType.scvI128().value:
+        case lib.xdr.ScValType.scvU256().value:
+        case lib.xdr.ScValType.scvI256().value:
+          return (0,lib.scValToBigInt)(scv);
+        case lib.xdr.ScValType.scvVec().value:
           {
-            if (value == src.xdr.ScSpecType.scSpecTypeVec().value) {
+            if (value == lib.xdr.ScSpecType.scSpecTypeVec().value) {
               var _scv$vec;
               var vec = typeDef.vec();
               return ((_scv$vec = scv.vec()) !== null && _scv$vec !== void 0 ? _scv$vec : []).map(function (elm) {
                 return _this5.scValToNative(elm, vec.elementType());
               });
-            } else if (value == src.xdr.ScSpecType.scSpecTypeTuple().value) {
+            } else if (value == lib.xdr.ScSpecType.scSpecTypeTuple().value) {
               var _scv$vec2;
               var tuple = typeDef.tuple();
               var valTypes = tuple.valueTypes();
@@ -21316,13 +22127,13 @@ var ContractSpec = function () {
             }
             throw new TypeError("Type ".concat(typeDef, " was not vec, but ").concat(scv, " is"));
           }
-        case src.xdr.ScValType.scvAddress().value:
-          return src.Address.fromScVal(scv).toString();
-        case src.xdr.ScValType.scvMap().value:
+        case lib.xdr.ScValType.scvAddress().value:
+          return lib.Address.fromScVal(scv).toString();
+        case lib.xdr.ScValType.scvMap().value:
           {
             var _scv$map;
             var map = (_scv$map = scv.map()) !== null && _scv$map !== void 0 ? _scv$map : [];
-            if (value == src.xdr.ScSpecType.scSpecTypeMap().value) {
+            if (value == lib.xdr.ScSpecType.scSpecTypeMap().value) {
               var type_ = typeDef.map();
               var keyType = type_.keyType();
               var valueType = type_.valueType();
@@ -21333,23 +22144,23 @@ var ContractSpec = function () {
             }
             throw new TypeError("ScSpecType ".concat(t.name, " was not map, but ").concat(JSON.stringify(scv, null, 2), " is"));
           }
-        case src.xdr.ScValType.scvBool().value:
-        case src.xdr.ScValType.scvU32().value:
-        case src.xdr.ScValType.scvI32().value:
-        case src.xdr.ScValType.scvBytes().value:
+        case lib.xdr.ScValType.scvBool().value:
+        case lib.xdr.ScValType.scvU32().value:
+        case lib.xdr.ScValType.scvI32().value:
+        case lib.xdr.ScValType.scvBytes().value:
           return scv.value();
-        case src.xdr.ScValType.scvString().value:
-        case src.xdr.ScValType.scvSymbol().value:
+        case lib.xdr.ScValType.scvString().value:
+        case lib.xdr.ScValType.scvSymbol().value:
           {
             var _scv$value;
-            if (value !== src.xdr.ScSpecType.scSpecTypeString().value && value !== src.xdr.ScSpecType.scSpecTypeSymbol().value) {
+            if (value !== lib.xdr.ScSpecType.scSpecTypeString().value && value !== lib.xdr.ScSpecType.scSpecTypeSymbol().value) {
               throw new Error("ScSpecType ".concat(t.name, " was not string or symbol, but ").concat(JSON.stringify(scv, null, 2), " is"));
             }
             return (_scv$value = scv.value()) === null || _scv$value === void 0 ? void 0 : _scv$value.toString();
           }
-        case src.xdr.ScValType.scvTimepoint().value:
-        case src.xdr.ScValType.scvDuration().value:
-          return (0,src.scValToBigInt)(src.xdr.ScVal.scvU64(scv.u64()));
+        case lib.xdr.ScValType.scvTimepoint().value:
+        case lib.xdr.ScValType.scvDuration().value:
+          return (0,lib.scValToBigInt)(lib.xdr.ScVal.scvU64(scv.u64()));
         default:
           throw new TypeError("failed to convert ".concat(JSON.stringify(scv, null, 2), " to native type from type ").concat(t.name));
       }
@@ -21359,11 +22170,11 @@ var ContractSpec = function () {
     value: function scValUdtToNative(scv, udt) {
       var entry = this.findEntry(udt.name().toString());
       switch (entry.switch()) {
-        case src.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
           return this.enumToNative(scv);
-        case src.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
           return this.structToNative(scv, entry.udtStructV0());
-        case src.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
           return this.unionToNative(scv, entry.udtUnionV0());
         default:
           throw new Error("failed to parse udt ".concat(udt.name().toString(), ": ").concat(entry));
@@ -21381,7 +22192,7 @@ var ContractSpec = function () {
         throw new Error("".concat(val, " has length 0, but the there are at least one case in the union"));
       }
       var name = vec[0].sym().toString();
-      if (vec[0].switch().value != src.xdr.ScValType.scvSymbol().value) {
+      if (vec[0].switch().value != lib.xdr.ScValType.scvSymbol().value) {
         throw new Error("{vec[0]} is not a symbol");
       }
       var entry = udt.cases().find(findCase(name));
@@ -21391,7 +22202,7 @@ var ContractSpec = function () {
       var res = {
         tag: name
       };
-      if (entry.switch().value === src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value) {
+      if (entry.switch().value === lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value) {
         var tuple = entry.tupleCase();
         var ty = tuple.type();
         var values = ty.map(function (entry, i) {
@@ -21424,7 +22235,7 @@ var ContractSpec = function () {
   }, {
     key: "enumToNative",
     value: function enumToNative(scv) {
-      if (scv.switch().value !== src.xdr.ScValType.scvU32().value) {
+      if (scv.switch().value !== lib.xdr.ScValType.scvU32().value) {
         throw new Error("Enum must have a u32 value");
       }
       var num = scv.u32();
@@ -21434,7 +22245,7 @@ var ContractSpec = function () {
     key: "errorCases",
     value: function errorCases() {
       return this.entries.filter(function (entry) {
-        return entry.switch().value === src.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value;
+        return entry.switch().value === lib.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value;
       }).flatMap(function (entry) {
         return entry.value().cases();
       });
@@ -21443,29 +22254,29 @@ var ContractSpec = function () {
     key: "jsonSchema",
     value: function jsonSchema(funcName) {
       var definitions = {};
-      var _iterator = _createForOfIteratorHelper(this.entries),
+      var _iterator = spec_createForOfIteratorHelper(this.entries),
         _step;
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var entry = _step.value;
           switch (entry.switch().value) {
-            case src.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value:
+            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value:
               {
                 var _udt = entry.udtEnumV0();
                 definitions[_udt.name().toString()] = enumToJsonSchema(_udt);
                 break;
               }
-            case src.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value:
+            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value:
               {
                 var _udt2 = entry.udtStructV0();
                 definitions[_udt2.name().toString()] = structToJsonSchema(_udt2);
                 break;
               }
-            case src.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value:
+            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value:
               var udt = entry.udtUnionV0();
               definitions[udt.name().toString()] = unionToJsonSchema(udt);
               break;
-            case src.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value:
+            case lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value:
               {
                 var fn = entry.functionV0();
                 var fnName = fn.name().toString();
@@ -21474,7 +22285,7 @@ var ContractSpec = function () {
                 definitions[fnName] = input;
                 break;
               }
-            case src.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value:
+            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value:
               {}
           }
         }
@@ -21496,30 +22307,30 @@ var ContractSpec = function () {
 }();
 function stringToScVal(str, ty) {
   switch (ty.value) {
-    case src.xdr.ScSpecType.scSpecTypeString().value:
-      return src.xdr.ScVal.scvString(str);
-    case src.xdr.ScSpecType.scSpecTypeSymbol().value:
-      return src.xdr.ScVal.scvSymbol(str);
-    case src.xdr.ScSpecType.scSpecTypeAddress().value:
+    case lib.xdr.ScSpecType.scSpecTypeString().value:
+      return lib.xdr.ScVal.scvString(str);
+    case lib.xdr.ScSpecType.scSpecTypeSymbol().value:
+      return lib.xdr.ScVal.scvSymbol(str);
+    case lib.xdr.ScSpecType.scSpecTypeAddress().value:
       {
-        var addr = src.Address.fromString(str);
-        return src.xdr.ScVal.scvAddress(addr.toScAddress());
+        var addr = lib.Address.fromString(str);
+        return lib.xdr.ScVal.scvAddress(addr.toScAddress());
       }
-    case src.xdr.ScSpecType.scSpecTypeU64().value:
-      return new src.XdrLargeInt("u64", str).toScVal();
-    case src.xdr.ScSpecType.scSpecTypeI64().value:
-      return new src.XdrLargeInt("i64", str).toScVal();
-    case src.xdr.ScSpecType.scSpecTypeU128().value:
-      return new src.XdrLargeInt("u128", str).toScVal();
-    case src.xdr.ScSpecType.scSpecTypeI128().value:
-      return new src.XdrLargeInt("i128", str).toScVal();
-    case src.xdr.ScSpecType.scSpecTypeU256().value:
-      return new src.XdrLargeInt("u256", str).toScVal();
-    case src.xdr.ScSpecType.scSpecTypeI256().value:
-      return new src.XdrLargeInt("i256", str).toScVal();
-    case src.xdr.ScSpecType.scSpecTypeBytes().value:
-    case src.xdr.ScSpecType.scSpecTypeBytesN().value:
-      return src.xdr.ScVal.scvBytes(Buffer.from(str, "base64"));
+    case lib.xdr.ScSpecType.scSpecTypeU64().value:
+      return new lib.XdrLargeInt("u64", str).toScVal();
+    case lib.xdr.ScSpecType.scSpecTypeI64().value:
+      return new lib.XdrLargeInt("i64", str).toScVal();
+    case lib.xdr.ScSpecType.scSpecTypeU128().value:
+      return new lib.XdrLargeInt("u128", str).toScVal();
+    case lib.xdr.ScSpecType.scSpecTypeI128().value:
+      return new lib.XdrLargeInt("i128", str).toScVal();
+    case lib.xdr.ScSpecType.scSpecTypeU256().value:
+      return new lib.XdrLargeInt("u256", str).toScVal();
+    case lib.xdr.ScSpecType.scSpecTypeI256().value:
+      return new lib.XdrLargeInt("i256", str).toScVal();
+    case lib.xdr.ScSpecType.scSpecTypeBytes().value:
+    case lib.xdr.ScSpecType.scSpecTypeBytesN().value:
+      return lib.xdr.ScVal.scvBytes(spec_Buffer.from(str, "base64"));
     default:
       throw new TypeError("invalid type ".concat(ty.name, " specified for string value"));
   }
@@ -21530,12 +22341,12 @@ function isNumeric(field) {
 function findCase(name) {
   return function matches(entry) {
     switch (entry.switch().value) {
-      case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
+      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
         {
           var tuple = entry.tupleCase();
           return tuple.name().toString() === name;
         }
-      case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
+      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
         {
           var void_case = entry.voidCase();
           return void_case.name().toString() === name;
@@ -21615,110 +22426,110 @@ function typeRef(typeDef) {
   var value = t.value;
   var ref;
   switch (value) {
-    case src.xdr.ScSpecType.scSpecTypeVal().value:
+    case lib.xdr.ScSpecType.scSpecTypeVal().value:
       {
         ref = "Val";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeBool().value:
+    case lib.xdr.ScSpecType.scSpecTypeBool().value:
       {
         return {
           type: "boolean"
         };
       }
-    case src.xdr.ScSpecType.scSpecTypeVoid().value:
+    case lib.xdr.ScSpecType.scSpecTypeVoid().value:
       {
         return {
           type: "null"
         };
       }
-    case src.xdr.ScSpecType.scSpecTypeError().value:
+    case lib.xdr.ScSpecType.scSpecTypeError().value:
       {
         ref = "Error";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeU32().value:
+    case lib.xdr.ScSpecType.scSpecTypeU32().value:
       {
         ref = "U32";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeI32().value:
+    case lib.xdr.ScSpecType.scSpecTypeI32().value:
       {
         ref = "I32";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeU64().value:
+    case lib.xdr.ScSpecType.scSpecTypeU64().value:
       {
         ref = "U64";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeI64().value:
+    case lib.xdr.ScSpecType.scSpecTypeI64().value:
       {
         ref = "I64";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeTimepoint().value:
+    case lib.xdr.ScSpecType.scSpecTypeTimepoint().value:
       {
         throw new Error("Timepoint type not supported");
         ref = "Timepoint";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeDuration().value:
+    case lib.xdr.ScSpecType.scSpecTypeDuration().value:
       {
         throw new Error("Duration not supported");
         ref = "Duration";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeU128().value:
+    case lib.xdr.ScSpecType.scSpecTypeU128().value:
       {
         ref = "U128";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeI128().value:
+    case lib.xdr.ScSpecType.scSpecTypeI128().value:
       {
         ref = "I128";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeU256().value:
+    case lib.xdr.ScSpecType.scSpecTypeU256().value:
       {
         ref = "U256";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeI256().value:
+    case lib.xdr.ScSpecType.scSpecTypeI256().value:
       {
         ref = "I256";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeBytes().value:
+    case lib.xdr.ScSpecType.scSpecTypeBytes().value:
       {
         ref = "DataUrl";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeString().value:
+    case lib.xdr.ScSpecType.scSpecTypeString().value:
       {
         ref = "ScString";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeSymbol().value:
+    case lib.xdr.ScSpecType.scSpecTypeSymbol().value:
       {
         ref = "ScSymbol";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeAddress().value:
+    case lib.xdr.ScSpecType.scSpecTypeAddress().value:
       {
         ref = "Address";
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeOption().value:
+    case lib.xdr.ScSpecType.scSpecTypeOption().value:
       {
         var opt = typeDef.option();
         return typeRef(opt.valueType());
       }
-    case src.xdr.ScSpecType.scSpecTypeResult().value:
+    case lib.xdr.ScSpecType.scSpecTypeResult().value:
       {
         break;
       }
-    case src.xdr.ScSpecType.scSpecTypeVec().value:
+    case lib.xdr.ScSpecType.scSpecTypeVec().value:
       {
         var arr = typeDef.vec();
         var _ref3 = typeRef(arr.elementType());
@@ -21727,7 +22538,7 @@ function typeRef(typeDef) {
           items: _ref3
         };
       }
-    case src.xdr.ScSpecType.scSpecTypeMap().value:
+    case lib.xdr.ScSpecType.scSpecTypeMap().value:
       {
         var map = typeDef.map();
         var items = [typeRef(map.keyType()), typeRef(map.valueType())];
@@ -21741,7 +22552,7 @@ function typeRef(typeDef) {
           }
         };
       }
-    case src.xdr.ScSpecType.scSpecTypeTuple().value:
+    case lib.xdr.ScSpecType.scSpecTypeTuple().value:
       {
         var tuple = typeDef.tuple();
         var minItems = tuple.valueTypes().length;
@@ -21754,7 +22565,7 @@ function typeRef(typeDef) {
           maxItems: maxItems
         };
       }
-    case src.xdr.ScSpecType.scSpecTypeBytesN().value:
+    case lib.xdr.ScSpecType.scSpecTypeBytesN().value:
       {
         var _arr = typeDef.bytesN();
         return {
@@ -21762,7 +22573,7 @@ function typeRef(typeDef) {
           maxLength: _arr.n()
         };
       }
-    case src.xdr.ScSpecType.scSpecTypeUdt().value:
+    case lib.xdr.ScSpecType.scSpecTypeUdt().value:
       {
         var udt = typeDef.udt();
         ref = udt.name().toString();
@@ -21774,7 +22585,7 @@ function typeRef(typeDef) {
   };
 }
 function isRequired(typeDef) {
-  return typeDef.switch().value != src.xdr.ScSpecType.scSpecTypeOption().value;
+  return typeDef.switch().value != lib.xdr.ScSpecType.scSpecTypeOption().value;
 }
 function structToJsonSchema(udt) {
   var fields = udt.fields();
@@ -21807,7 +22618,7 @@ function structToJsonSchema(udt) {
 function args_and_required(input) {
   var properties = {};
   var required = [];
-  var _iterator2 = _createForOfIteratorHelper(input),
+  var _iterator2 = spec_createForOfIteratorHelper(input),
     _step2;
   try {
     for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
@@ -21850,7 +22661,7 @@ function functionToJsonSchema(func) {
     }
   };
   var outputs = func.outputs();
-  var output = outputs.length > 0 ? typeRef(outputs[0]) : typeRef(src.xdr.ScSpecTypeDef.scSpecTypeVoid());
+  var output = outputs.length > 0 ? typeRef(outputs[0]) : typeRef(lib.xdr.ScSpecTypeDef.scSpecTypeVoid());
   var description = func.doc().toString();
   if (description.length > 0) {
     input.description = description;
@@ -21866,13 +22677,13 @@ function unionToJsonSchema(udt) {
   var description = udt.doc().toString();
   var cases = udt.cases();
   var oneOf = [];
-  var _iterator3 = _createForOfIteratorHelper(cases),
+  var _iterator3 = spec_createForOfIteratorHelper(cases),
     _step3;
   try {
     for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
       var case_ = _step3.value;
       switch (case_.switch().value) {
-        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
+        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
           {
             var c = case_.voidCase();
             var title = c.name().toString();
@@ -21887,7 +22698,7 @@ function unionToJsonSchema(udt) {
             });
             break;
           }
-        case src.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
+        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
           {
             var _c = case_.tupleCase();
             var _title = _c.name().toString();
@@ -21924,7 +22735,7 @@ function enumToJsonSchema(udt) {
   var description = udt.doc().toString();
   var cases = udt.cases();
   var oneOf = [];
-  var _iterator4 = _createForOfIteratorHelper(cases),
+  var _iterator4 = spec_createForOfIteratorHelper(cases),
     _step4;
   try {
     for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
@@ -21951,6 +22762,189 @@ function enumToJsonSchema(udt) {
   }
   return res;
 }
+// EXTERNAL MODULE: ./src/rpc/index.ts
+var rpc = __webpack_require__(1660);
+;// CONCATENATED MODULE: ./src/contract/client.ts
+/* provided dependency */ var client_Buffer = __webpack_require__(8287)["Buffer"];
+var _excluded = ["method"];
+function client_typeof(o) { "@babel/helpers - typeof"; return client_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, client_typeof(o); }
+function client_regeneratorRuntime() { "use strict"; client_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == client_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(client_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
+function client_asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+function client_asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { client_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { client_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+function client_ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function client_objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? client_ownKeys(Object(t), !0).forEach(function (r) { client_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : client_ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } } return target; }
+function client_classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function client_defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, client_toPropertyKey(descriptor.key), descriptor); } }
+function client_createClass(Constructor, protoProps, staticProps) { if (protoProps) client_defineProperties(Constructor.prototype, protoProps); if (staticProps) client_defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function client_defineProperty(obj, key, value) { key = client_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function client_toPropertyKey(t) { var i = client_toPrimitive(t, "string"); return "symbol" == client_typeof(i) ? i : i + ""; }
+function client_toPrimitive(t, r) { if ("object" != client_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != client_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
+
+
+
+var Client = function () {
+  function Client(spec, options) {
+    var _this = this;
+    client_classCallCheck(this, Client);
+    client_defineProperty(this, "txFromJSON", function (json) {
+      var _JSON$parse = JSON.parse(json),
+        method = _JSON$parse.method,
+        tx = _objectWithoutProperties(_JSON$parse, _excluded);
+      return AssembledTransaction.fromJSON(client_objectSpread(client_objectSpread({}, _this.options), {}, {
+        method: method,
+        parseResultXdr: function parseResultXdr(result) {
+          return _this.spec.funcResToNative(method, result);
+        }
+      }), tx);
+    });
+    this.spec = spec;
+    this.options = options;
+    this.spec.funcs().forEach(function (xdrFn) {
+      var method = xdrFn.name().toString();
+      var assembleTransaction = function assembleTransaction(args, methodOptions) {
+        return AssembledTransaction.build(client_objectSpread(client_objectSpread(client_objectSpread({
+          method: method,
+          args: args && spec.funcArgsToScVals(method, args)
+        }, options), methodOptions), {}, {
+          errorTypes: spec.errorCases().reduce(function (acc, curr) {
+            return client_objectSpread(client_objectSpread({}, acc), {}, client_defineProperty({}, curr.value(), {
+              message: curr.doc().toString()
+            }));
+          }, {}),
+          parseResultXdr: function parseResultXdr(result) {
+            return spec.funcResToNative(method, result);
+          }
+        }));
+      };
+      _this[method] = spec.getFunc(method).inputs().length === 0 ? function (opts) {
+        return assembleTransaction(undefined, opts);
+      } : assembleTransaction;
+    });
+  }
+  return client_createClass(Client, null, [{
+    key: "fromWasmHash",
+    value: (function () {
+      var _fromWasmHash = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee(wasmHash, options) {
+        var format,
+          rpcUrl,
+          allowHttp,
+          serverOpts,
+          server,
+          wasm,
+          _args = arguments;
+        return client_regeneratorRuntime().wrap(function _callee$(_context) {
+          while (1) switch (_context.prev = _context.next) {
+            case 0:
+              format = _args.length > 2 && _args[2] !== undefined ? _args[2] : "hex";
+              if (!(!options || !options.rpcUrl)) {
+                _context.next = 3;
+                break;
+              }
+              throw new TypeError('options must contain rpcUrl');
+            case 3:
+              rpcUrl = options.rpcUrl, allowHttp = options.allowHttp;
+              serverOpts = {
+                allowHttp: allowHttp
+              };
+              server = new rpc.Server(rpcUrl, serverOpts);
+              _context.next = 8;
+              return server.getContractWasmByHash(wasmHash, format);
+            case 8:
+              wasm = _context.sent;
+              return _context.abrupt("return", Client.fromWasm(wasm, options));
+            case 10:
+            case "end":
+              return _context.stop();
+          }
+        }, _callee);
+      }));
+      function fromWasmHash(_x, _x2) {
+        return _fromWasmHash.apply(this, arguments);
+      }
+      return fromWasmHash;
+    }())
+  }, {
+    key: "fromWasm",
+    value: (function () {
+      var _fromWasm = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee2(wasm, options) {
+        var wasmModule, xdrSections, bufferSection, specEntryArray, spec;
+        return client_regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) switch (_context2.prev = _context2.next) {
+            case 0:
+              _context2.next = 2;
+              return WebAssembly.compile(wasm);
+            case 2:
+              wasmModule = _context2.sent;
+              xdrSections = WebAssembly.Module.customSections(wasmModule, "contractspecv0");
+              if (!(xdrSections.length === 0)) {
+                _context2.next = 6;
+                break;
+              }
+              throw new Error('Could not obtain contract spec from wasm');
+            case 6:
+              bufferSection = client_Buffer.from(xdrSections[0]);
+              specEntryArray = processSpecEntryStream(bufferSection);
+              spec = new Spec(specEntryArray);
+              return _context2.abrupt("return", new Client(spec, options));
+            case 10:
+            case "end":
+              return _context2.stop();
+          }
+        }, _callee2);
+      }));
+      function fromWasm(_x3, _x4) {
+        return _fromWasm.apply(this, arguments);
+      }
+      return fromWasm;
+    }())
+  }, {
+    key: "from",
+    value: (function () {
+      var _from = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee3(options) {
+        var rpcUrl, contractId, allowHttp, serverOpts, server, wasm;
+        return client_regeneratorRuntime().wrap(function _callee3$(_context3) {
+          while (1) switch (_context3.prev = _context3.next) {
+            case 0:
+              if (!(!options || !options.rpcUrl || !options.contractId)) {
+                _context3.next = 2;
+                break;
+              }
+              throw new TypeError('options must contain rpcUrl and contractId');
+            case 2:
+              rpcUrl = options.rpcUrl, contractId = options.contractId, allowHttp = options.allowHttp;
+              serverOpts = {
+                allowHttp: allowHttp
+              };
+              server = new rpc.Server(rpcUrl, serverOpts);
+              _context3.next = 7;
+              return server.getContractWasmByContractId(contractId);
+            case 7:
+              wasm = _context3.sent;
+              return _context3.abrupt("return", Client.fromWasm(wasm, options));
+            case 9:
+            case "end":
+              return _context3.stop();
+          }
+        }, _callee3);
+      }));
+      function from(_x5) {
+        return _from.apply(this, arguments);
+      }
+      return from;
+    }())
+  }]);
+}();
+;// CONCATENATED MODULE: ./src/contract/index.ts
+
+
+
+
+
+
+
 
 /***/ }),
 
@@ -27185,17 +28179,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   BadRequestError: () => (/* reexport safe */ _errors__WEBPACK_IMPORTED_MODULE_0__.v7),
 /* harmony export */   BadResponseError: () => (/* reexport safe */ _errors__WEBPACK_IMPORTED_MODULE_0__.nS),
 /* harmony export */   Config: () => (/* reexport safe */ _config__WEBPACK_IMPORTED_MODULE_1__.T),
-/* harmony export */   ContractSpec: () => (/* reexport safe */ _contract_spec__WEBPACK_IMPORTED_MODULE_9__.o),
 /* harmony export */   Federation: () => (/* reexport module object */ _federation__WEBPACK_IMPORTED_MODULE_4__),
 /* harmony export */   Friendbot: () => (/* reexport module object */ _friendbot__WEBPACK_IMPORTED_MODULE_6__),
 /* harmony export */   Horizon: () => (/* reexport module object */ _horizon__WEBPACK_IMPORTED_MODULE_7__),
 /* harmony export */   NetworkError: () => (/* reexport safe */ _errors__WEBPACK_IMPORTED_MODULE_0__.Dr),
 /* harmony export */   NotFoundError: () => (/* reexport safe */ _errors__WEBPACK_IMPORTED_MODULE_0__.m_),
-/* harmony export */   SorobanRpc: () => (/* reexport module object */ _soroban__WEBPACK_IMPORTED_MODULE_8__),
+/* harmony export */   SorobanRpc: () => (/* reexport module object */ _rpc__WEBPACK_IMPORTED_MODULE_8__),
 /* harmony export */   StellarToml: () => (/* reexport module object */ _stellartoml__WEBPACK_IMPORTED_MODULE_3__),
 /* harmony export */   Utils: () => (/* reexport safe */ _utils__WEBPACK_IMPORTED_MODULE_2__.A),
 /* harmony export */   WebAuth: () => (/* reexport module object */ _webauth__WEBPACK_IMPORTED_MODULE_5__),
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   contract: () => (/* reexport module object */ _contract__WEBPACK_IMPORTED_MODULE_9__),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   rpc: () => (/* reexport module object */ _rpc__WEBPACK_IMPORTED_MODULE_8__)
 /* harmony export */ });
 /* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5885);
 /* harmony import */ var _config__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8732);
@@ -27205,14 +28200,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _webauth__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(5479);
 /* harmony import */ var _friendbot__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(8242);
 /* harmony import */ var _horizon__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(2731);
-/* harmony import */ var _soroban__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(4466);
-/* harmony import */ var _contract_spec__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(7366);
+/* harmony import */ var _rpc__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(1660);
+/* harmony import */ var _contract__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(145);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(356);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony reexport (unknown) */ var __WEBPACK_REEXPORT_OBJECT__ = {};
-/* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__) if(["default","Config","Utils","StellarToml","Federation","WebAuth","Friendbot","Horizon","SorobanRpc","AccountRequiresMemoError","BadRequestError","BadResponseError","NetworkError","NotFoundError","ContractSpec"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__[__WEBPACK_IMPORT_KEY__]
+/* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__) if(["default","Config","Utils","StellarToml","Federation","WebAuth","Friendbot","Horizon","rpc","SorobanRpc","contract","AccountRequiresMemoError","BadRequestError","BadResponseError","NetworkError","NotFoundError"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__[__WEBPACK_IMPORT_KEY__]
 /* harmony reexport (unknown) */ __webpack_require__.d(__webpack_exports__, __WEBPACK_REEXPORT_OBJECT__);
 /* module decorator */ module = __webpack_require__.hmd(module);
+
+
+
 
 
 
@@ -27234,26 +28232,13 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ 4466:
-/***/ ((module, __webpack_exports__, __webpack_require__) => {
+/***/ 4076:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  Api: () => (/* reexport */ Api),
-  AxiosClient: () => (/* reexport */ soroban_axios),
-  Durability: () => (/* reexport */ Durability),
-  Server: () => (/* reexport */ Server),
-  assembleTransaction: () => (/* reexport */ assembleTransaction),
-  "default": () => (/* binding */ soroban),
-  parseRawEvents: () => (/* reexport */ parseRawEvents),
-  parseRawSimulation: () => (/* reexport */ parseRawSimulation)
-});
-
-;// CONCATENATED MODULE: ./src/soroban/api.ts
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   j: () => (/* binding */ Api)
+/* harmony export */ });
 var Api;
 (function (_Api) {
   var GetTransactionStatus = function (GetTransactionStatus) {
@@ -27280,24 +28265,205 @@ var Api;
   }
   _Api.isSimulationRaw = isSimulationRaw;
 })(Api || (Api = {}));
-// EXTERNAL MODULE: ./node_modules/urijs/src/URI.js
-var URI = __webpack_require__(4193);
-var URI_default = /*#__PURE__*/__webpack_require__.n(URI);
-// EXTERNAL MODULE: ./node_modules/@stellar/stellar-base/lib/index.js
-var lib = __webpack_require__(356);
-// EXTERNAL MODULE: ./node_modules/axios/lib/axios.js + 42 modules
-var axios = __webpack_require__(6266);
-;// CONCATENATED MODULE: ./src/soroban/axios.ts
+
+/***/ }),
+
+/***/ 4982:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Ay: () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* unused harmony exports version, AxiosClient */
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(6266);
 
 var version = (__webpack_require__(8330)/* .version */ .rE);
-var AxiosClient = axios/* default */.A.create({
+var AxiosClient = axios__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A.create({
   headers: {
     'X-Client-Name': 'js-soroban-client',
     'X-Client-Version': version
   }
 });
-/* harmony default export */ const soroban_axios = (AxiosClient);
-;// CONCATENATED MODULE: ./src/soroban/jsonrpc.ts
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (AxiosClient);
+
+/***/ }),
+
+/***/ 1660:
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Api: () => (/* reexport safe */ _api__WEBPACK_IMPORTED_MODULE_0__.j),
+/* harmony export */   AxiosClient: () => (/* reexport safe */ _axios__WEBPACK_IMPORTED_MODULE_2__.Ay),
+/* harmony export */   Durability: () => (/* reexport safe */ _server__WEBPACK_IMPORTED_MODULE_1__.ku),
+/* harmony export */   Server: () => (/* reexport safe */ _server__WEBPACK_IMPORTED_MODULE_1__.gq),
+/* harmony export */   assembleTransaction: () => (/* reexport safe */ _transaction__WEBPACK_IMPORTED_MODULE_4__.X),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   parseRawEvents: () => (/* reexport safe */ _parsers__WEBPACK_IMPORTED_MODULE_3__.fG),
+/* harmony export */   parseRawSimulation: () => (/* reexport safe */ _parsers__WEBPACK_IMPORTED_MODULE_3__.jr)
+/* harmony export */ });
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4076);
+/* harmony import */ var _server__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1575);
+/* harmony import */ var _axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4982);
+/* harmony import */ var _parsers__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(784);
+/* harmony import */ var _transaction__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8680);
+/* module decorator */ module = __webpack_require__.hmd(module);
+
+
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (module.exports);
+
+/***/ }),
+
+/***/ 784:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   $D: () => (/* binding */ parseRawLedgerEntries),
+/* harmony export */   Af: () => (/* binding */ parseRawSendTransaction),
+/* harmony export */   fG: () => (/* binding */ parseRawEvents),
+/* harmony export */   jr: () => (/* binding */ parseRawSimulation)
+/* harmony export */ });
+/* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(356);
+/* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4076);
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
+
+function parseRawSendTransaction(r) {
+  var errorResultXdr = r.errorResultXdr,
+    diagnosticEventsXdr = r.diagnosticEventsXdr;
+  delete r.errorResultXdr;
+  delete r.diagnosticEventsXdr;
+  if (!!errorResultXdr) {
+    return _objectSpread(_objectSpread(_objectSpread({}, r), diagnosticEventsXdr !== undefined && diagnosticEventsXdr.length > 0 && {
+      diagnosticEvents: diagnosticEventsXdr.map(function (evt) {
+        return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
+      })
+    }), {}, {
+      errorResult: _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.TransactionResult.fromXDR(errorResultXdr, 'base64')
+    });
+  }
+  return _objectSpread({}, r);
+}
+function parseRawEvents(r) {
+  var _r$events;
+  return {
+    latestLedger: r.latestLedger,
+    events: ((_r$events = r.events) !== null && _r$events !== void 0 ? _r$events : []).map(function (evt) {
+      var clone = _objectSpread({}, evt);
+      delete clone.contractId;
+      return _objectSpread(_objectSpread(_objectSpread({}, clone), evt.contractId !== '' && {
+        contractId: new _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.Contract(evt.contractId)
+      }), {}, {
+        topic: evt.topic.map(function (topic) {
+          return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(topic, 'base64');
+        }),
+        value: _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(evt.value, 'base64')
+      });
+    })
+  };
+}
+function parseRawLedgerEntries(raw) {
+  var _raw$entries;
+  return {
+    latestLedger: raw.latestLedger,
+    entries: ((_raw$entries = raw.entries) !== null && _raw$entries !== void 0 ? _raw$entries : []).map(function (rawEntry) {
+      if (!rawEntry.key || !rawEntry.xdr) {
+        throw new TypeError("invalid ledger entry: ".concat(JSON.stringify(rawEntry)));
+      }
+      return _objectSpread({
+        lastModifiedLedgerSeq: rawEntry.lastModifiedLedgerSeq,
+        key: _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.LedgerKey.fromXDR(rawEntry.key, 'base64'),
+        val: _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.LedgerEntryData.fromXDR(rawEntry.xdr, 'base64')
+      }, rawEntry.liveUntilLedgerSeq !== undefined && {
+        liveUntilLedgerSeq: rawEntry.liveUntilLedgerSeq
+      });
+    })
+  };
+}
+function parseRawSimulation(sim) {
+  var _sim$events$map, _sim$events;
+  var looksRaw = _api__WEBPACK_IMPORTED_MODULE_1__/* .Api */ .j.isSimulationRaw(sim);
+  if (!looksRaw) {
+    return sim;
+  }
+  var base = {
+    _parsed: true,
+    id: sim.id,
+    latestLedger: sim.latestLedger,
+    events: (_sim$events$map = (_sim$events = sim.events) === null || _sim$events === void 0 ? void 0 : _sim$events.map(function (evt) {
+      return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
+    })) !== null && _sim$events$map !== void 0 ? _sim$events$map : []
+  };
+  if (typeof sim.error === 'string') {
+    return _objectSpread(_objectSpread({}, base), {}, {
+      error: sim.error
+    });
+  }
+  return parseSuccessful(sim, base);
+}
+function parseSuccessful(sim, partial) {
+  var _sim$results$length, _sim$results;
+  var success = _objectSpread(_objectSpread({}, partial), {}, {
+    transactionData: new _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.SorobanDataBuilder(sim.transactionData),
+    minResourceFee: sim.minResourceFee,
+    cost: sim.cost
+  }, ((_sim$results$length = (_sim$results = sim.results) === null || _sim$results === void 0 ? void 0 : _sim$results.length) !== null && _sim$results$length !== void 0 ? _sim$results$length : 0 > 0) && {
+    result: sim.results.map(function (row) {
+      var _row$auth;
+      return {
+        auth: ((_row$auth = row.auth) !== null && _row$auth !== void 0 ? _row$auth : []).map(function (entry) {
+          return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.SorobanAuthorizationEntry.fromXDR(entry, 'base64');
+        }),
+        retval: !!row.xdr ? _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(row.xdr, 'base64') : _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid()
+      };
+    })[0]
+  });
+  if (!sim.restorePreamble || sim.restorePreamble.transactionData === '') {
+    return success;
+  }
+  return _objectSpread(_objectSpread({}, success), {}, {
+    restorePreamble: {
+      minResourceFee: sim.restorePreamble.minResourceFee,
+      transactionData: new _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.SorobanDataBuilder(sim.restorePreamble.transactionData)
+    }
+  });
+}
+
+/***/ }),
+
+/***/ 1575:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  ku: () => (/* binding */ Durability),
+  gq: () => (/* binding */ Server)
+});
+
+// UNUSED EXPORTS: SUBMIT_TRANSACTION_TIMEOUT
+
+// EXTERNAL MODULE: ./node_modules/urijs/src/URI.js
+var URI = __webpack_require__(4193);
+var URI_default = /*#__PURE__*/__webpack_require__.n(URI);
+// EXTERNAL MODULE: ./node_modules/@stellar/stellar-base/lib/index.js
+var lib = __webpack_require__(356);
+// EXTERNAL MODULE: ./src/rpc/axios.ts
+var axios = __webpack_require__(4982);
+;// CONCATENATED MODULE: ./src/rpc/jsonrpc.ts
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _regeneratorRuntime() { "use strict"; _regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == _typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
@@ -27317,7 +28483,7 @@ function _postObject() {
         case 0:
           param = _args.length > 2 && _args[2] !== undefined ? _args[2] : null;
           _context.next = 3;
-          return soroban_axios.post(url, {
+          return axios/* default */.Ay.post(url, {
             jsonrpc: "2.0",
             id: 1,
             method: method,
@@ -27343,182 +28509,29 @@ function _postObject() {
 function jsonrpc_hasOwnProperty(obj, prop) {
   return obj.hasOwnProperty(prop);
 }
-;// CONCATENATED MODULE: ./src/soroban/parsers.ts
-function parsers_typeof(o) { "@babel/helpers - typeof"; return parsers_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, parsers_typeof(o); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == parsers_typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != parsers_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != parsers_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-
-
-function parseRawSendTransaction(r) {
-  var errorResultXdr = r.errorResultXdr,
-    diagnosticEventsXdr = r.diagnosticEventsXdr;
-  delete r.errorResultXdr;
-  delete r.diagnosticEventsXdr;
-  if (!!errorResultXdr) {
-    return _objectSpread(_objectSpread(_objectSpread({}, r), diagnosticEventsXdr !== undefined && diagnosticEventsXdr.length > 0 && {
-      diagnosticEvents: diagnosticEventsXdr.map(function (evt) {
-        return lib.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
-      })
-    }), {}, {
-      errorResult: lib.xdr.TransactionResult.fromXDR(errorResultXdr, 'base64')
-    });
-  }
-  return _objectSpread({}, r);
-}
-function parseRawEvents(r) {
-  var _r$events;
-  return {
-    latestLedger: r.latestLedger,
-    events: ((_r$events = r.events) !== null && _r$events !== void 0 ? _r$events : []).map(function (evt) {
-      var clone = _objectSpread({}, evt);
-      delete clone.contractId;
-      return _objectSpread(_objectSpread(_objectSpread({}, clone), evt.contractId !== '' && {
-        contractId: new lib.Contract(evt.contractId)
-      }), {}, {
-        topic: evt.topic.map(function (topic) {
-          return lib.xdr.ScVal.fromXDR(topic, 'base64');
-        }),
-        value: lib.xdr.ScVal.fromXDR(evt.value, 'base64')
-      });
-    })
-  };
-}
-function parseRawLedgerEntries(raw) {
-  var _raw$entries;
-  return {
-    latestLedger: raw.latestLedger,
-    entries: ((_raw$entries = raw.entries) !== null && _raw$entries !== void 0 ? _raw$entries : []).map(function (rawEntry) {
-      if (!rawEntry.key || !rawEntry.xdr) {
-        throw new TypeError("invalid ledger entry: ".concat(JSON.stringify(rawEntry)));
-      }
-      return _objectSpread({
-        lastModifiedLedgerSeq: rawEntry.lastModifiedLedgerSeq,
-        key: lib.xdr.LedgerKey.fromXDR(rawEntry.key, 'base64'),
-        val: lib.xdr.LedgerEntryData.fromXDR(rawEntry.xdr, 'base64')
-      }, rawEntry.liveUntilLedgerSeq !== undefined && {
-        liveUntilLedgerSeq: rawEntry.liveUntilLedgerSeq
-      });
-    })
-  };
-}
-function parseRawSimulation(sim) {
-  var _sim$events$map, _sim$events;
-  var looksRaw = Api.isSimulationRaw(sim);
-  if (!looksRaw) {
-    return sim;
-  }
-  var base = {
-    _parsed: true,
-    id: sim.id,
-    latestLedger: sim.latestLedger,
-    events: (_sim$events$map = (_sim$events = sim.events) === null || _sim$events === void 0 ? void 0 : _sim$events.map(function (evt) {
-      return lib.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
-    })) !== null && _sim$events$map !== void 0 ? _sim$events$map : []
-  };
-  if (typeof sim.error === 'string') {
-    return _objectSpread(_objectSpread({}, base), {}, {
-      error: sim.error
-    });
-  }
-  return parseSuccessful(sim, base);
-}
-function parseSuccessful(sim, partial) {
-  var _sim$results$length, _sim$results;
-  var success = _objectSpread(_objectSpread({}, partial), {}, {
-    transactionData: new lib.SorobanDataBuilder(sim.transactionData),
-    minResourceFee: sim.minResourceFee,
-    cost: sim.cost
-  }, ((_sim$results$length = (_sim$results = sim.results) === null || _sim$results === void 0 ? void 0 : _sim$results.length) !== null && _sim$results$length !== void 0 ? _sim$results$length : 0 > 0) && {
-    result: sim.results.map(function (row) {
-      var _row$auth;
-      return {
-        auth: ((_row$auth = row.auth) !== null && _row$auth !== void 0 ? _row$auth : []).map(function (entry) {
-          return lib.xdr.SorobanAuthorizationEntry.fromXDR(entry, 'base64');
-        }),
-        retval: !!row.xdr ? lib.xdr.ScVal.fromXDR(row.xdr, 'base64') : lib.xdr.ScVal.scvVoid()
-      };
-    })[0]
-  });
-  if (!sim.restorePreamble || sim.restorePreamble.transactionData === '') {
-    return success;
-  }
-  return _objectSpread(_objectSpread({}, success), {}, {
-    restorePreamble: {
-      minResourceFee: sim.restorePreamble.minResourceFee,
-      transactionData: new lib.SorobanDataBuilder(sim.restorePreamble.transactionData)
-    }
-  });
-}
-;// CONCATENATED MODULE: ./src/soroban/transaction.ts
-
-
-
-function assembleTransaction(raw, simulation) {
-  var _invokeOp$auth;
-  if ('innerTransaction' in raw) {
-    return assembleTransaction(raw.innerTransaction, simulation);
-  }
-  if (!isSorobanTransaction(raw)) {
-    throw new TypeError('unsupported transaction: must contain exactly one ' + 'invokeHostFunction, extendFootprintTtl, or restoreFootprint ' + 'operation');
-  }
-  var success = parseRawSimulation(simulation);
-  if (!Api.isSimulationSuccess(success)) {
-    throw new Error("simulation incorrect: ".concat(JSON.stringify(success)));
-  }
-  var classicFeeNum = parseInt(raw.fee) || 0;
-  var minResourceFeeNum = parseInt(success.minResourceFee) || 0;
-  var txnBuilder = lib.TransactionBuilder.cloneFrom(raw, {
-    fee: (classicFeeNum + minResourceFeeNum).toString(),
-    sorobanData: success.transactionData.build(),
-    networkPassphrase: raw.networkPassphrase
-  });
-  switch (raw.operations[0].type) {
-    case 'invokeHostFunction':
-      txnBuilder.clearOperations();
-      var invokeOp = raw.operations[0];
-      var existingAuth = (_invokeOp$auth = invokeOp.auth) !== null && _invokeOp$auth !== void 0 ? _invokeOp$auth : [];
-      txnBuilder.addOperation(lib.Operation.invokeHostFunction({
-        source: invokeOp.source,
-        func: invokeOp.func,
-        auth: existingAuth.length > 0 ? existingAuth : success.result.auth
-      }));
-      break;
-  }
-  return txnBuilder;
-}
-function isSorobanTransaction(tx) {
-  if (tx.operations.length !== 1) {
-    return false;
-  }
-  switch (tx.operations[0].type) {
-    case 'invokeHostFunction':
-    case 'extendFootprintTtl':
-    case 'restoreFootprint':
-      return true;
-    default:
-      return false;
-  }
-}
-;// CONCATENATED MODULE: ./src/soroban/server.ts
+// EXTERNAL MODULE: ./src/rpc/api.ts
+var api = __webpack_require__(4076);
+// EXTERNAL MODULE: ./src/rpc/transaction.ts
+var transaction = __webpack_require__(8680);
+// EXTERNAL MODULE: ./src/rpc/parsers.ts
+var parsers = __webpack_require__(784);
+;// CONCATENATED MODULE: ./src/rpc/server.ts
 /* provided dependency */ var Buffer = __webpack_require__(8287)["Buffer"];
 function server_typeof(o) { "@babel/helpers - typeof"; return server_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, server_typeof(o); }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-function server_ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function server_objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? server_ownKeys(Object(t), !0).forEach(function (r) { server_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : server_ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function server_defineProperty(obj, key, value) { key = server_toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function server_regeneratorRuntime() { "use strict"; server_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == server_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(server_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
 function server_asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 function server_asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { server_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { server_asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, server_toPropertyKey(descriptor.key), descriptor); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function server_toPropertyKey(t) { var i = server_toPrimitive(t, "string"); return "symbol" == server_typeof(i) ? i : i + ""; }
-function server_toPrimitive(t, r) { if ("object" != server_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != server_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == server_typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != server_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != server_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 
 
 
@@ -27538,7 +28551,7 @@ var Server = function () {
     _classCallCheck(this, Server);
     this.serverURL = URI_default()(serverURL);
     if (opts.headers && Object.keys(opts.headers).length === 0) {
-      soroban_axios.interceptors.request.use(function (config) {
+      axios/* default */.Ay.interceptors.request.use(function (config) {
         config.headers = Object.assign(config.headers, opts.headers);
         return config;
       });
@@ -27768,7 +28781,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee6$(_context6) {
           while (1) switch (_context6.prev = _context6.next) {
             case 0:
-              return _context6.abrupt("return", this._getLedgerEntries.apply(this, _args6).then(parseRawLedgerEntries));
+              return _context6.abrupt("return", this._getLedgerEntries.apply(this, _args6).then(parsers/* parseRawLedgerEntries */.$D));
             case 1:
             case "end":
               return _context6.stop();
@@ -27819,10 +28832,10 @@ var Server = function () {
             case 0:
               return _context8.abrupt("return", this._getTransaction(hash).then(function (raw) {
                 var foundInfo = {};
-                if (raw.status !== Api.GetTransactionStatus.NOT_FOUND) {
+                if (raw.status !== api/* Api */.j.GetTransactionStatus.NOT_FOUND) {
                   var _meta$v3$sorobanMeta;
                   var meta = lib.xdr.TransactionMeta.fromXDR(raw.resultMetaXdr, 'base64');
-                  foundInfo = server_objectSpread({
+                  foundInfo = _objectSpread({
                     ledger: raw.ledger,
                     createdAt: raw.createdAt,
                     applicationOrder: raw.applicationOrder,
@@ -27830,11 +28843,11 @@ var Server = function () {
                     envelopeXdr: lib.xdr.TransactionEnvelope.fromXDR(raw.envelopeXdr, 'base64'),
                     resultXdr: lib.xdr.TransactionResult.fromXDR(raw.resultXdr, 'base64'),
                     resultMetaXdr: meta
-                  }, meta.switch() === 3 && meta.v3().sorobanMeta() !== null && raw.status === Api.GetTransactionStatus.SUCCESS && {
+                  }, meta.switch() === 3 && meta.v3().sorobanMeta() !== null && raw.status === api/* Api */.j.GetTransactionStatus.SUCCESS && {
                     returnValue: (_meta$v3$sorobanMeta = meta.v3().sorobanMeta()) === null || _meta$v3$sorobanMeta === void 0 ? void 0 : _meta$v3$sorobanMeta.returnValue()
                   });
                 }
-                var result = server_objectSpread({
+                var result = _objectSpread({
                   status: raw.status,
                   latestLedger: raw.latestLedger,
                   latestLedgerCloseTime: raw.latestLedgerCloseTime,
@@ -27882,7 +28895,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee10$(_context10) {
           while (1) switch (_context10.prev = _context10.next) {
             case 0:
-              return _context10.abrupt("return", this._getEvents(request).then(parseRawEvents));
+              return _context10.abrupt("return", this._getEvents(request).then(parsers/* parseRawEvents */.fG));
             case 1:
             case "end":
               return _context10.stop();
@@ -27902,9 +28915,9 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee11$(_context11) {
           while (1) switch (_context11.prev = _context11.next) {
             case 0:
-              return _context11.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', server_objectSpread({
+              return _context11.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', _objectSpread({
                 filters: (_request$filters = request.filters) !== null && _request$filters !== void 0 ? _request$filters : [],
-                pagination: server_objectSpread(server_objectSpread({}, request.cursor && {
+                pagination: _objectSpread(_objectSpread({}, request.cursor && {
                   cursor: request.cursor
                 }), request.limit && {
                   limit: request.limit
@@ -27971,7 +28984,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee14$(_context14) {
           while (1) switch (_context14.prev = _context14.next) {
             case 0:
-              return _context14.abrupt("return", this._simulateTransaction(tx, addlResources).then(parseRawSimulation));
+              return _context14.abrupt("return", this._simulateTransaction(tx, addlResources).then(parsers/* parseRawSimulation */.jr));
             case 1:
             case "end":
               return _context14.stop();
@@ -27990,7 +29003,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee15$(_context15) {
           while (1) switch (_context15.prev = _context15.next) {
             case 0:
-              return _context15.abrupt("return", postObject(this.serverURL.toString(), 'simulateTransaction', server_objectSpread({
+              return _context15.abrupt("return", postObject(this.serverURL.toString(), 'simulateTransaction', _objectSpread({
                 transaction: transaction.toXDR()
               }, addlResources !== undefined && {
                 resourceConfig: {
@@ -28020,13 +29033,13 @@ var Server = function () {
               return this.simulateTransaction(tx);
             case 2:
               simResponse = _context16.sent;
-              if (!Api.isSimulationError(simResponse)) {
+              if (!api/* Api */.j.isSimulationError(simResponse)) {
                 _context16.next = 5;
                 break;
               }
               throw simResponse.error;
             case 5:
-              return _context16.abrupt("return", assembleTransaction(tx, simResponse).build());
+              return _context16.abrupt("return", (0,transaction/* assembleTransaction */.X)(tx, simResponse).build());
             case 6:
             case "end":
               return _context16.stop();
@@ -28045,7 +29058,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee17$(_context17) {
           while (1) switch (_context17.prev = _context17.next) {
             case 0:
-              return _context17.abrupt("return", this._sendTransaction(transaction).then(parseRawSendTransaction));
+              return _context17.abrupt("return", this._sendTransaction(transaction).then(parsers/* parseRawSendTransaction */.Af));
             case 1:
             case "end":
               return _context17.stop();
@@ -28106,7 +29119,7 @@ var Server = function () {
             case 9:
               _context19.prev = 9;
               _context19.next = 12;
-              return soroban_axios.post("".concat(friendbotUrl, "?addr=").concat(encodeURIComponent(account)));
+              return axios/* default */.Ay.post("".concat(friendbotUrl, "?addr=").concat(encodeURIComponent(account)));
             case 12:
               response = _context19.sent;
               meta = lib.xdr.TransactionMeta.fromXDR(response.data.result_meta_xdr, 'base64');
@@ -28185,14 +29198,69 @@ function findCreatedAccountSequenceInTransactionMeta(meta) {
   }
   throw new Error('No account created in transaction');
 }
-;// CONCATENATED MODULE: ./src/soroban/index.ts
-/* module decorator */ module = __webpack_require__.hmd(module);
+
+/***/ }),
+
+/***/ 8680:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   X: () => (/* binding */ assembleTransaction)
+/* harmony export */ });
+/* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(356);
+/* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4076);
+/* harmony import */ var _parsers__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(784);
 
 
 
-
-
-/* harmony default export */ const soroban = (module.exports);
+function assembleTransaction(raw, simulation) {
+  var _invokeOp$auth;
+  if ('innerTransaction' in raw) {
+    return assembleTransaction(raw.innerTransaction, simulation);
+  }
+  if (!isSorobanTransaction(raw)) {
+    throw new TypeError('unsupported transaction: must contain exactly one ' + 'invokeHostFunction, extendFootprintTtl, or restoreFootprint ' + 'operation');
+  }
+  var success = (0,_parsers__WEBPACK_IMPORTED_MODULE_2__/* .parseRawSimulation */ .jr)(simulation);
+  if (!_api__WEBPACK_IMPORTED_MODULE_1__/* .Api */ .j.isSimulationSuccess(success)) {
+    throw new Error("simulation incorrect: ".concat(JSON.stringify(success)));
+  }
+  var classicFeeNum = parseInt(raw.fee) || 0;
+  var minResourceFeeNum = parseInt(success.minResourceFee) || 0;
+  var txnBuilder = _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.TransactionBuilder.cloneFrom(raw, {
+    fee: (classicFeeNum + minResourceFeeNum).toString(),
+    sorobanData: success.transactionData.build(),
+    networkPassphrase: raw.networkPassphrase
+  });
+  switch (raw.operations[0].type) {
+    case 'invokeHostFunction':
+      txnBuilder.clearOperations();
+      var invokeOp = raw.operations[0];
+      var existingAuth = (_invokeOp$auth = invokeOp.auth) !== null && _invokeOp$auth !== void 0 ? _invokeOp$auth : [];
+      txnBuilder.addOperation(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.Operation.invokeHostFunction({
+        source: invokeOp.source,
+        func: invokeOp.func,
+        auth: existingAuth.length > 0 ? existingAuth : success.result.auth
+      }));
+      break;
+  }
+  return txnBuilder;
+}
+function isSorobanTransaction(tx) {
+  if (tx.operations.length !== 1) {
+    return false;
+  }
+  switch (tx.operations[0].type) {
+    case 'invokeHostFunction':
+    case 'extendFootprintTtl':
+    case 'restoreFootprint':
+      return true;
+    default:
+      return false;
+  }
+}
 
 /***/ }),
 
@@ -57413,7 +58481,7 @@ axios.default = axios;
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"rE":"12.0.0-rc.2"};
+module.exports = {"rE":"12.0.0-rc.3"};
 
 /***/ })
 
