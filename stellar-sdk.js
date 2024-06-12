@@ -20836,6 +20836,7 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   AssembledTransaction: () => (/* reexport */ AssembledTransaction),
   Client: () => (/* reexport */ Client),
+  DEFAULT_TIMEOUT: () => (/* reexport */ DEFAULT_TIMEOUT),
   Err: () => (/* reexport */ Err),
   NULL_ACCOUNT: () => (/* reexport */ NULL_ACCOUNT),
   Ok: () => (/* reexport */ Ok),
@@ -21185,6 +21186,8 @@ function assembled_transaction_isNativeFunction(t) { try { return -1 !== Functio
 function assembled_transaction_setPrototypeOf(t, e) { return assembled_transaction_setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, assembled_transaction_setPrototypeOf(t, e); }
 function assembled_transaction_getPrototypeOf(t) { return assembled_transaction_getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, assembled_transaction_getPrototypeOf(t); }
 function assembled_transaction_typeof(o) { "@babel/helpers - typeof"; return assembled_transaction_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, assembled_transaction_typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { assembled_transaction_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
@@ -21223,22 +21226,27 @@ var AssembledTransaction = function () {
       return assembled_transaction_regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
+            if (_this.built) {
+              _context.next = 4;
+              break;
+            }
             if (_this.raw) {
-              _context.next = 2;
+              _context.next = 3;
               break;
             }
             throw new Error("Transaction has not yet been assembled; " + "call `AssembledTransaction.build` first.");
-          case 2:
+          case 3:
             _this.built = _this.raw.build();
-            _context.next = 5;
+          case 4:
+            _context.next = 6;
             return _this.server.simulateTransaction(_this.built);
-          case 5:
+          case 6:
             _this.simulation = _context.sent;
             if (api/* Api */.j.isSimulationSuccess(_this.simulation)) {
               _this.built = (0,transaction/* assembleTransaction */.X)(_this.built, _this.simulation).build();
             }
             return _context.abrupt("return", _this);
-          case 8:
+          case 9:
           case "end":
             return _context.stop();
         }
@@ -21480,6 +21488,13 @@ var AssembledTransaction = function () {
       });
     }
   }, {
+    key: "toXDR",
+    value: function toXDR() {
+      var _this$built2;
+      if (!this.built) throw new Error("Transaction has not yet been simulated; " + "call `AssembledTransaction.simulate` first.");
+      return (_this$built2 = this.built) === null || _this$built2 === void 0 ? void 0 : _this$built2.toEnvelope().toXDR('base64');
+    }
+  }, {
     key: "simulationData",
     get: function get() {
       if (this.simulationResult && this.simulationTransactionData) {
@@ -21553,6 +21568,30 @@ var AssembledTransaction = function () {
         retval: lib.xdr.ScVal.fromXDR(simulationResult.retval, "base64")
       };
       txn.simulationTransactionData = lib.xdr.SorobanTransactionData.fromXDR(simulationTransactionData, "base64");
+      return txn;
+    }
+  }, {
+    key: "fromXDR",
+    value: function fromXDR(options, encodedXDR, spec) {
+      var _operation$func;
+      var envelope = lib.xdr.TransactionEnvelope.fromXDR(encodedXDR, "base64");
+      var built = lib.TransactionBuilder.fromXDR(envelope, options.networkPassphrase);
+      var operation = built.operations[0];
+      if (!(operation !== null && operation !== void 0 && (_operation$func = operation.func) !== null && _operation$func !== void 0 && _operation$func.value) || typeof operation.func.value !== 'function') {
+        throw new Error("Could not extract the method from the transaction envelope.");
+      }
+      var invokeContractArgs = operation.func.value();
+      if (!(invokeContractArgs !== null && invokeContractArgs !== void 0 && invokeContractArgs.functionName)) {
+        throw new Error("Could not extract the method name from the transaction envelope.");
+      }
+      var method = invokeContractArgs.functionName().toString('utf-8');
+      var txn = new AssembledTransaction(_objectSpread(_objectSpread({}, options), {}, {
+        method: method,
+        parseResultXdr: function parseResultXdr(result) {
+          return spec.funcResToNative(method, result);
+        }
+      }));
+      txn.built = built;
       return txn;
     }
   }, {
@@ -21713,8 +21752,8 @@ var basicNodeSigner = function basicNodeSigner(keypair, networkPassphrase) {
 };
 ;// CONCATENATED MODULE: ./src/contract/spec.ts
 /* provided dependency */ var spec_Buffer = __webpack_require__(8287)["Buffer"];
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { spec_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function spec_ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function spec_objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? spec_ownKeys(Object(t), !0).forEach(function (r) { spec_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : spec_ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function spec_createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = spec_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function spec_typeof(o) { "@babel/helpers - typeof"; return spec_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, spec_typeof(o); }
 function spec_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
@@ -22296,7 +22335,7 @@ var Spec = function () {
       }
       var res = {
         $schema: "http://json-schema.org/draft-07/schema#",
-        definitions: _objectSpread(_objectSpread({}, PRIMITIVE_DEFINITONS), definitions)
+        definitions: spec_objectSpread(spec_objectSpread({}, PRIMITIVE_DEFINITONS), definitions)
       };
       if (funcName) {
         res["$ref"] = "#/definitions/".concat(funcName);
@@ -22800,6 +22839,9 @@ var Client = function () {
         }
       }), tx);
     });
+    client_defineProperty(this, "txFromXDR", function (xdrBase64) {
+      return AssembledTransaction.fromXDR(_this.options, xdrBase64, _this.spec);
+    });
     this.spec = spec;
     this.options = options;
     this.spec.funcs().forEach(function (xdrFn) {
@@ -22938,6 +22980,7 @@ var Client = function () {
   }]);
 }();
 ;// CONCATENATED MODULE: ./src/contract/index.ts
+
 
 
 
