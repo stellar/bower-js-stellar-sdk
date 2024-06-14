@@ -21242,11 +21242,13 @@ var AssembledTransaction = function () {
             return _this.server.simulateTransaction(_this.built);
           case 6:
             _this.simulation = _context.sent;
+            delete _this.simulationResult;
+            delete _this.simulationTransactionData;
             if (api/* Api */.j.isSimulationSuccess(_this.simulation)) {
               _this.built = (0,transaction/* assembleTransaction */.X)(_this.built, _this.simulation).build();
             }
             return _context.abrupt("return", _this);
-          case 9:
+          case 11:
           case "end":
             return _context.stop();
         }
