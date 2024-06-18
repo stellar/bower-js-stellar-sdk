@@ -27984,6 +27984,9 @@ var Server = function () {
     if (opts.authToken) {
       customHeaders["X-Auth-Token"] = opts.authToken;
     }
+    if (opts.headers) {
+      Object.assign(customHeaders, opts.headers);
+    }
     if (Object.keys(customHeaders).length > 0) {
       horizon_axios_client.interceptors.request.use(function (config) {
         config.headers = Object.assign(config.headers, customHeaders);
@@ -28827,7 +28830,7 @@ var Server = function () {
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     _classCallCheck(this, Server);
     this.serverURL = URI_default()(serverURL);
-    if (opts.headers && Object.keys(opts.headers).length === 0) {
+    if (opts.headers && Object.keys(opts.headers).length !== 0) {
       axios/* default */.Ay.interceptors.request.use(function (config) {
         config.headers = Object.assign(config.headers, opts.headers);
         return config;
