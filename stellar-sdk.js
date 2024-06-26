@@ -20770,13 +20770,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   axios: () => (/* reexport safe */ axios__WEBPACK_IMPORTED_MODULE_2__.A),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1083);
 /* harmony import */ var _index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(4356);
 /* harmony reexport (unknown) */ var __WEBPACK_REEXPORT_OBJECT__ = {};
 /* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _index__WEBPACK_IMPORTED_MODULE_0__) if(["default","StellarBase","axios"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _index__WEBPACK_IMPORTED_MODULE_0__[__WEBPACK_IMPORT_KEY__]
 /* harmony reexport (unknown) */ __webpack_require__.d(__webpack_exports__, __WEBPACK_REEXPORT_OBJECT__);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(356);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1083);
 /* module decorator */ module = __webpack_require__.hmd(module);
 
 
@@ -20798,13 +20798,16 @@ function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == 
 function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
 function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 var defaultConfig = {
   allowHttp: false,
   timeout: 0
 };
-var config = Object.assign({}, defaultConfig);
+var config = _objectSpread({}, defaultConfig);
 var Config = function () {
   function Config() {
     _classCallCheck(this, Config);
@@ -20832,7 +20835,7 @@ var Config = function () {
   }, {
     key: "setDefault",
     value: function setDefault() {
-      config = Object.assign({}, defaultConfig);
+      config = _objectSpread({}, defaultConfig);
     }
   }]);
 }();
@@ -20840,7 +20843,7 @@ var Config = function () {
 
 /***/ }),
 
-/***/ 145:
+/***/ 6299:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -20929,6 +20932,9 @@ var Err = function () {
     }
   }]);
 }();
+;// CONCATENATED MODULE: ./src/contract/types.ts
+var DEFAULT_TIMEOUT = 5 * 60;
+var NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 ;// CONCATENATED MODULE: ./src/contract/utils.ts
 function _regeneratorRuntime() { "use strict"; _regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == utils_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(utils_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
 function utils_typeof(o) { "@babel/helpers - typeof"; return utils_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, utils_typeof(o); }
@@ -20936,7 +20942,6 @@ function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 
 
-var DEFAULT_TIMEOUT = 5 * 60;
 function withExponentialBackoff(_x, _x2, _x3) {
   return _withExponentialBackoff.apply(this, arguments);
 }
@@ -21035,21 +21040,8 @@ function _getAccount() {
     return _regeneratorRuntime().wrap(function _callee2$(_context2) {
       while (1) switch (_context2.prev = _context2.next) {
         case 0:
-          if (!options.publicKey) {
-            _context2.next = 6;
-            break;
-          }
-          _context2.next = 3;
-          return server.getAccount(options.publicKey);
-        case 3:
-          _context2.t0 = _context2.sent;
-          _context2.next = 7;
-          break;
-        case 6:
-          _context2.t0 = new lib.Account(NULL_ACCOUNT, "0");
-        case 7:
-          return _context2.abrupt("return", _context2.t0);
-        case 8:
+          return _context2.abrupt("return", options.publicKey ? server.getAccount(options.publicKey) : new lib.Account(NULL_ACCOUNT, "0"));
+        case 1:
         case "end":
           return _context2.stop();
       }
@@ -21079,6 +21071,7 @@ function sent_transaction_createClass(e, r, t) { return r && sent_transaction_de
 function _defineProperty(e, r, t) { return (r = sent_transaction_toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function sent_transaction_toPropertyKey(t) { var i = sent_transaction_toPrimitive(t, "string"); return "symbol" == sent_transaction_typeof(i) ? i : i + ""; }
 function sent_transaction_toPrimitive(t, r) { if ("object" != sent_transaction_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != sent_transaction_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
 
 
 
@@ -21244,7 +21237,7 @@ function assembled_transaction_toPrimitive(t, r) { if ("object" != assembled_tra
 
 
 
-var NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
+
 var AssembledTransaction = function () {
   function AssembledTransaction(options) {
     var _this = this,
@@ -21979,7 +21972,6 @@ var basicNodeSigner = function basicNodeSigner(keypair, networkPassphrase) {
 /* provided dependency */ var spec_Buffer = __webpack_require__(8287)["Buffer"];
 function spec_ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function spec_objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? spec_ownKeys(Object(t), !0).forEach(function (r) { spec_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : spec_ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function spec_createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = spec_unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function spec_typeof(o) { "@babel/helpers - typeof"; return spec_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, spec_typeof(o); }
 function spec_classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
 function spec_defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, spec_toPropertyKey(o.key), o); } }
@@ -21995,12 +21987,36 @@ function spec_iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined
 function spec_arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
+function enumToJsonSchema(udt) {
+  var description = udt.doc().toString();
+  var cases = udt.cases();
+  var oneOf = [];
+  cases.forEach(function (aCase) {
+    var title = aCase.name().toString();
+    var desc = aCase.doc().toString();
+    oneOf.push({
+      description: desc,
+      title: title,
+      enum: [aCase.value()],
+      type: "number"
+    });
+  });
+  var res = {
+    oneOf: oneOf
+  };
+  if (description.length > 0) {
+    res.description = description;
+  }
+  return res;
+}
+function isNumeric(field) {
+  return /^\d+$/.test(field.name().toString());
+}
 function readObj(args, input) {
   var inputName = input.name().toString();
   var entry = Object.entries(args).find(function (_ref) {
-    var _ref2 = spec_slicedToArray(_ref, 2),
-      name = _ref2[0],
-      _ = _ref2[1];
+    var _ref2 = spec_slicedToArray(_ref, 1),
+      name = _ref2[0];
     return name === inputName;
   });
   if (!entry) {
@@ -22008,567 +22024,24 @@ function readObj(args, input) {
   }
   return entry[1];
 }
-var Spec = function () {
-  function Spec(entries) {
-    spec_classCallCheck(this, Spec);
-    spec_defineProperty(this, "entries", []);
-    if (entries.length == 0) {
-      throw new Error("Contract spec must have at least one entry");
-    }
-    var entry = entries[0];
-    if (typeof entry === "string") {
-      this.entries = entries.map(function (s) {
-        return lib.xdr.ScSpecEntry.fromXDR(s, "base64");
-      });
-    } else {
-      this.entries = entries;
-    }
-  }
-  return spec_createClass(Spec, [{
-    key: "funcs",
-    value: function funcs() {
-      return this.entries.filter(function (entry) {
-        return entry.switch().value === lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value;
-      }).map(function (entry) {
-        return entry.functionV0();
-      });
-    }
-  }, {
-    key: "getFunc",
-    value: function getFunc(name) {
-      var entry = this.findEntry(name);
-      if (entry.switch().value !== lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value) {
-        throw new Error("".concat(name, " is not a function"));
-      }
-      return entry.functionV0();
-    }
-  }, {
-    key: "funcArgsToScVals",
-    value: function funcArgsToScVals(name, args) {
-      var _this = this;
-      var fn = this.getFunc(name);
-      return fn.inputs().map(function (input) {
-        return _this.nativeToScVal(readObj(args, input), input.type());
-      });
-    }
-  }, {
-    key: "funcResToNative",
-    value: function funcResToNative(name, val_or_base64) {
-      var val = typeof val_or_base64 === "string" ? lib.xdr.ScVal.fromXDR(val_or_base64, "base64") : val_or_base64;
-      var func = this.getFunc(name);
-      var outputs = func.outputs();
-      if (outputs.length === 0) {
-        var type = val.switch();
-        if (type.value !== lib.xdr.ScValType.scvVoid().value) {
-          throw new Error("Expected void, got ".concat(type.name));
+function findCase(name) {
+  return function matches(entry) {
+    switch (entry.switch().value) {
+      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
+        {
+          var tuple = entry.tupleCase();
+          return tuple.name().toString() === name;
         }
-        return null;
-      }
-      if (outputs.length > 1) {
-        throw new Error("Multiple outputs not supported");
-      }
-      var output = outputs[0];
-      if (output.switch().value === lib.xdr.ScSpecType.scSpecTypeResult().value) {
-        return new Ok(this.scValToNative(val, output.result().okType()));
-      }
-      return this.scValToNative(val, output);
-    }
-  }, {
-    key: "findEntry",
-    value: function findEntry(name) {
-      var entry = this.entries.find(function (entry) {
-        return entry.value().name().toString() === name;
-      });
-      if (!entry) {
-        throw new Error("no such entry: ".concat(name));
-      }
-      return entry;
-    }
-  }, {
-    key: "nativeToScVal",
-    value: function nativeToScVal(val, ty) {
-      var _this2 = this;
-      var t = ty.switch();
-      var value = t.value;
-      if (t.value === lib.xdr.ScSpecType.scSpecTypeUdt().value) {
-        var udt = ty.udt();
-        return this.nativeToUdt(val, udt.name().toString());
-      }
-      if (value === lib.xdr.ScSpecType.scSpecTypeOption().value) {
-        var opt = ty.option();
-        if (val === undefined) {
-          return lib.xdr.ScVal.scvVoid();
+      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
+        {
+          var voidCase = entry.voidCase();
+          return voidCase.name().toString() === name;
         }
-        return this.nativeToScVal(val, opt.valueType());
-      }
-      switch (spec_typeof(val)) {
-        case "object":
-          {
-            var _val$constructor$name, _val$constructor;
-            if (val === null) {
-              switch (value) {
-                case lib.xdr.ScSpecType.scSpecTypeVoid().value:
-                  return lib.xdr.ScVal.scvVoid();
-                default:
-                  throw new TypeError("Type ".concat(ty, " was not void, but value was null"));
-              }
-            }
-            if (val instanceof lib.xdr.ScVal) {
-              return val;
-            }
-            if (val instanceof lib.Address) {
-              if (ty.switch().value !== lib.xdr.ScSpecType.scSpecTypeAddress().value) {
-                throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
-              }
-              return val.toScVal();
-            }
-            if (val instanceof lib.Contract) {
-              if (ty.switch().value !== lib.xdr.ScSpecType.scSpecTypeAddress().value) {
-                throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
-              }
-              return val.address().toScVal();
-            }
-            if (val instanceof Uint8Array || spec_Buffer.isBuffer(val)) {
-              var copy = Uint8Array.from(val);
-              switch (value) {
-                case lib.xdr.ScSpecType.scSpecTypeBytesN().value:
-                  {
-                    var bytes_n = ty.bytesN();
-                    if (copy.length !== bytes_n.n()) {
-                      throw new TypeError("expected ".concat(bytes_n.n(), " bytes, but got ").concat(copy.length));
-                    }
-                    return lib.xdr.ScVal.scvBytes(copy);
-                  }
-                case lib.xdr.ScSpecType.scSpecTypeBytes().value:
-                  return lib.xdr.ScVal.scvBytes(copy);
-                default:
-                  throw new TypeError("invalid type (".concat(ty, ") specified for Bytes and BytesN"));
-              }
-            }
-            if (Array.isArray(val)) {
-              switch (value) {
-                case lib.xdr.ScSpecType.scSpecTypeVec().value:
-                  {
-                    var vec = ty.vec();
-                    var elementType = vec.elementType();
-                    return lib.xdr.ScVal.scvVec(val.map(function (v) {
-                      return _this2.nativeToScVal(v, elementType);
-                    }));
-                  }
-                case lib.xdr.ScSpecType.scSpecTypeTuple().value:
-                  {
-                    var tup = ty.tuple();
-                    var valTypes = tup.valueTypes();
-                    if (val.length !== valTypes.length) {
-                      throw new TypeError("Tuple expects ".concat(valTypes.length, " values, but ").concat(val.length, " were provided"));
-                    }
-                    return lib.xdr.ScVal.scvVec(val.map(function (v, i) {
-                      return _this2.nativeToScVal(v, valTypes[i]);
-                    }));
-                  }
-                case lib.xdr.ScSpecType.scSpecTypeMap().value:
-                  {
-                    var map = ty.map();
-                    var keyType = map.keyType();
-                    var valueType = map.valueType();
-                    return lib.xdr.ScVal.scvMap(val.map(function (entry) {
-                      var key = _this2.nativeToScVal(entry[0], keyType);
-                      var val = _this2.nativeToScVal(entry[1], valueType);
-                      return new lib.xdr.ScMapEntry({
-                        key: key,
-                        val: val
-                      });
-                    }));
-                  }
-                default:
-                  throw new TypeError("Type ".concat(ty, " was not vec, but value was Array"));
-              }
-            }
-            if (val.constructor === Map) {
-              if (value !== lib.xdr.ScSpecType.scSpecTypeMap().value) {
-                throw new TypeError("Type ".concat(ty, " was not map, but value was Map"));
-              }
-              var scMap = ty.map();
-              var _map = val;
-              var entries = [];
-              var values = _map.entries();
-              var res = values.next();
-              while (!res.done) {
-                var _res$value = spec_slicedToArray(res.value, 2),
-                  k = _res$value[0],
-                  v = _res$value[1];
-                var key = this.nativeToScVal(k, scMap.keyType());
-                var _val = this.nativeToScVal(v, scMap.valueType());
-                entries.push(new lib.xdr.ScMapEntry({
-                  key: key,
-                  val: _val
-                }));
-                res = values.next();
-              }
-              return lib.xdr.ScVal.scvMap(entries);
-            }
-            if (((_val$constructor$name = (_val$constructor = val.constructor) === null || _val$constructor === void 0 ? void 0 : _val$constructor.name) !== null && _val$constructor$name !== void 0 ? _val$constructor$name : "") !== "Object") {
-              var _val$constructor2;
-              throw new TypeError("cannot interpret ".concat((_val$constructor2 = val.constructor) === null || _val$constructor2 === void 0 ? void 0 : _val$constructor2.name, " value as ScVal (").concat(JSON.stringify(val), ")"));
-            }
-            throw new TypeError("Received object ".concat(val, "  did not match the provided type ").concat(ty));
-          }
-        case "number":
-        case "bigint":
-          {
-            switch (value) {
-              case lib.xdr.ScSpecType.scSpecTypeU32().value:
-                return lib.xdr.ScVal.scvU32(val);
-              case lib.xdr.ScSpecType.scSpecTypeI32().value:
-                return lib.xdr.ScVal.scvI32(val);
-              case lib.xdr.ScSpecType.scSpecTypeU64().value:
-              case lib.xdr.ScSpecType.scSpecTypeI64().value:
-              case lib.xdr.ScSpecType.scSpecTypeU128().value:
-              case lib.xdr.ScSpecType.scSpecTypeI128().value:
-              case lib.xdr.ScSpecType.scSpecTypeU256().value:
-              case lib.xdr.ScSpecType.scSpecTypeI256().value:
-                {
-                  var intType = t.name.substring(10).toLowerCase();
-                  return new lib.XdrLargeInt(intType, val).toScVal();
-                }
-              default:
-                throw new TypeError("invalid type (".concat(ty, ") specified for integer"));
-            }
-          }
-        case "string":
-          return stringToScVal(val, t);
-        case "boolean":
-          {
-            if (value !== lib.xdr.ScSpecType.scSpecTypeBool().value) {
-              throw TypeError("Type ".concat(ty, " was not bool, but value was bool"));
-            }
-            return lib.xdr.ScVal.scvBool(val);
-          }
-        case "undefined":
-          {
-            if (!ty) {
-              return lib.xdr.ScVal.scvVoid();
-            }
-            switch (value) {
-              case lib.xdr.ScSpecType.scSpecTypeVoid().value:
-              case lib.xdr.ScSpecType.scSpecTypeOption().value:
-                return lib.xdr.ScVal.scvVoid();
-              default:
-                throw new TypeError("Type ".concat(ty, " was not void, but value was undefined"));
-            }
-          }
-        case "function":
-          return this.nativeToScVal(val(), ty);
-        default:
-          throw new TypeError("failed to convert typeof ".concat(spec_typeof(val), " (").concat(val, ")"));
-      }
+      default:
+        return false;
     }
-  }, {
-    key: "nativeToUdt",
-    value: function nativeToUdt(val, name) {
-      var entry = this.findEntry(name);
-      switch (entry.switch()) {
-        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
-          if (typeof val !== "number") {
-            throw new TypeError("expected number for enum ".concat(name, ", but got ").concat(spec_typeof(val)));
-          }
-          return this.nativeToEnum(val, entry.udtEnumV0());
-        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
-          return this.nativeToStruct(val, entry.udtStructV0());
-        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
-          return this.nativeToUnion(val, entry.udtUnionV0());
-        default:
-          throw new Error("failed to parse udt ".concat(name));
-      }
-    }
-  }, {
-    key: "nativeToUnion",
-    value: function nativeToUnion(val, union_) {
-      var _this3 = this;
-      var entry_name = val.tag;
-      var case_ = union_.cases().find(function (entry) {
-        var case_ = entry.value().name().toString();
-        return case_ === entry_name;
-      });
-      if (!case_) {
-        throw new TypeError("no such enum entry: ".concat(entry_name, " in ").concat(union_));
-      }
-      var key = lib.xdr.ScVal.scvSymbol(entry_name);
-      switch (case_.switch()) {
-        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0():
-          {
-            return lib.xdr.ScVal.scvVec([key]);
-          }
-        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0():
-          {
-            var types = case_.tupleCase().type();
-            if (Array.isArray(val.values)) {
-              if (val.values.length != types.length) {
-                throw new TypeError("union ".concat(union_, " expects ").concat(types.length, " values, but got ").concat(val.values.length));
-              }
-              var scvals = val.values.map(function (v, i) {
-                return _this3.nativeToScVal(v, types[i]);
-              });
-              scvals.unshift(key);
-              return lib.xdr.ScVal.scvVec(scvals);
-            }
-            throw new Error("failed to parse union case ".concat(case_, " with ").concat(val));
-          }
-        default:
-          throw new Error("failed to parse union ".concat(union_, " with ").concat(val));
-      }
-    }
-  }, {
-    key: "nativeToStruct",
-    value: function nativeToStruct(val, struct) {
-      var _this4 = this;
-      var fields = struct.fields();
-      if (fields.some(isNumeric)) {
-        if (!fields.every(isNumeric)) {
-          throw new Error("mixed numeric and non-numeric field names are not allowed");
-        }
-        return lib.xdr.ScVal.scvVec(fields.map(function (_, i) {
-          return _this4.nativeToScVal(val[i], fields[i].type());
-        }));
-      }
-      return lib.xdr.ScVal.scvMap(fields.map(function (field) {
-        var name = field.name().toString();
-        return new lib.xdr.ScMapEntry({
-          key: _this4.nativeToScVal(name, lib.xdr.ScSpecTypeDef.scSpecTypeSymbol()),
-          val: _this4.nativeToScVal(val[name], field.type())
-        });
-      }));
-    }
-  }, {
-    key: "nativeToEnum",
-    value: function nativeToEnum(val, enum_) {
-      if (enum_.cases().some(function (entry) {
-        return entry.value() === val;
-      })) {
-        return lib.xdr.ScVal.scvU32(val);
-      }
-      throw new TypeError("no such enum entry: ".concat(val, " in ").concat(enum_));
-    }
-  }, {
-    key: "scValStrToNative",
-    value: function scValStrToNative(scv, typeDef) {
-      return this.scValToNative(lib.xdr.ScVal.fromXDR(scv, "base64"), typeDef);
-    }
-  }, {
-    key: "scValToNative",
-    value: function scValToNative(scv, typeDef) {
-      var _this5 = this;
-      var t = typeDef.switch();
-      var value = t.value;
-      if (value === lib.xdr.ScSpecType.scSpecTypeUdt().value) {
-        return this.scValUdtToNative(scv, typeDef.udt());
-      }
-      switch (scv.switch().value) {
-        case lib.xdr.ScValType.scvVoid().value:
-          return void 0;
-        case lib.xdr.ScValType.scvU64().value:
-        case lib.xdr.ScValType.scvI64().value:
-        case lib.xdr.ScValType.scvU128().value:
-        case lib.xdr.ScValType.scvI128().value:
-        case lib.xdr.ScValType.scvU256().value:
-        case lib.xdr.ScValType.scvI256().value:
-          return (0,lib.scValToBigInt)(scv);
-        case lib.xdr.ScValType.scvVec().value:
-          {
-            if (value == lib.xdr.ScSpecType.scSpecTypeVec().value) {
-              var _scv$vec;
-              var vec = typeDef.vec();
-              return ((_scv$vec = scv.vec()) !== null && _scv$vec !== void 0 ? _scv$vec : []).map(function (elm) {
-                return _this5.scValToNative(elm, vec.elementType());
-              });
-            } else if (value == lib.xdr.ScSpecType.scSpecTypeTuple().value) {
-              var _scv$vec2;
-              var tuple = typeDef.tuple();
-              var valTypes = tuple.valueTypes();
-              return ((_scv$vec2 = scv.vec()) !== null && _scv$vec2 !== void 0 ? _scv$vec2 : []).map(function (elm, i) {
-                return _this5.scValToNative(elm, valTypes[i]);
-              });
-            }
-            throw new TypeError("Type ".concat(typeDef, " was not vec, but ").concat(scv, " is"));
-          }
-        case lib.xdr.ScValType.scvAddress().value:
-          return lib.Address.fromScVal(scv).toString();
-        case lib.xdr.ScValType.scvMap().value:
-          {
-            var _scv$map;
-            var map = (_scv$map = scv.map()) !== null && _scv$map !== void 0 ? _scv$map : [];
-            if (value == lib.xdr.ScSpecType.scSpecTypeMap().value) {
-              var type_ = typeDef.map();
-              var keyType = type_.keyType();
-              var valueType = type_.valueType();
-              var res = map.map(function (entry) {
-                return [_this5.scValToNative(entry.key(), keyType), _this5.scValToNative(entry.val(), valueType)];
-              });
-              return res;
-            }
-            throw new TypeError("ScSpecType ".concat(t.name, " was not map, but ").concat(JSON.stringify(scv, null, 2), " is"));
-          }
-        case lib.xdr.ScValType.scvBool().value:
-        case lib.xdr.ScValType.scvU32().value:
-        case lib.xdr.ScValType.scvI32().value:
-        case lib.xdr.ScValType.scvBytes().value:
-          return scv.value();
-        case lib.xdr.ScValType.scvString().value:
-        case lib.xdr.ScValType.scvSymbol().value:
-          {
-            var _scv$value;
-            if (value !== lib.xdr.ScSpecType.scSpecTypeString().value && value !== lib.xdr.ScSpecType.scSpecTypeSymbol().value) {
-              throw new Error("ScSpecType ".concat(t.name, " was not string or symbol, but ").concat(JSON.stringify(scv, null, 2), " is"));
-            }
-            return (_scv$value = scv.value()) === null || _scv$value === void 0 ? void 0 : _scv$value.toString();
-          }
-        case lib.xdr.ScValType.scvTimepoint().value:
-        case lib.xdr.ScValType.scvDuration().value:
-          return (0,lib.scValToBigInt)(lib.xdr.ScVal.scvU64(scv.u64()));
-        default:
-          throw new TypeError("failed to convert ".concat(JSON.stringify(scv, null, 2), " to native type from type ").concat(t.name));
-      }
-    }
-  }, {
-    key: "scValUdtToNative",
-    value: function scValUdtToNative(scv, udt) {
-      var entry = this.findEntry(udt.name().toString());
-      switch (entry.switch()) {
-        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
-          return this.enumToNative(scv);
-        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
-          return this.structToNative(scv, entry.udtStructV0());
-        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
-          return this.unionToNative(scv, entry.udtUnionV0());
-        default:
-          throw new Error("failed to parse udt ".concat(udt.name().toString(), ": ").concat(entry));
-      }
-    }
-  }, {
-    key: "unionToNative",
-    value: function unionToNative(val, udt) {
-      var _this6 = this;
-      var vec = val.vec();
-      if (!vec) {
-        throw new Error("".concat(JSON.stringify(val, null, 2), " is not a vec"));
-      }
-      if (vec.length === 0 && udt.cases.length !== 0) {
-        throw new Error("".concat(val, " has length 0, but the there are at least one case in the union"));
-      }
-      var name = vec[0].sym().toString();
-      if (vec[0].switch().value != lib.xdr.ScValType.scvSymbol().value) {
-        throw new Error("{vec[0]} is not a symbol");
-      }
-      var entry = udt.cases().find(findCase(name));
-      if (!entry) {
-        throw new Error("failed to find entry ".concat(name, " in union {udt.name().toString()}"));
-      }
-      var res = {
-        tag: name
-      };
-      if (entry.switch().value === lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value) {
-        var tuple = entry.tupleCase();
-        var ty = tuple.type();
-        var values = ty.map(function (entry, i) {
-          return _this6.scValToNative(vec[i + 1], entry);
-        });
-        res.values = values;
-      }
-      return res;
-    }
-  }, {
-    key: "structToNative",
-    value: function structToNative(val, udt) {
-      var _this7 = this,
-        _val$map;
-      var res = {};
-      var fields = udt.fields();
-      if (fields.some(isNumeric)) {
-        var _val$vec;
-        var r = (_val$vec = val.vec()) === null || _val$vec === void 0 ? void 0 : _val$vec.map(function (entry, i) {
-          return _this7.scValToNative(entry, fields[i].type());
-        });
-        return r;
-      }
-      (_val$map = val.map()) === null || _val$map === void 0 || _val$map.forEach(function (entry, i) {
-        var field = fields[i];
-        res[field.name().toString()] = _this7.scValToNative(entry.val(), field.type());
-      });
-      return res;
-    }
-  }, {
-    key: "enumToNative",
-    value: function enumToNative(scv) {
-      if (scv.switch().value !== lib.xdr.ScValType.scvU32().value) {
-        throw new Error("Enum must have a u32 value");
-      }
-      var num = scv.u32();
-      return num;
-    }
-  }, {
-    key: "errorCases",
-    value: function errorCases() {
-      return this.entries.filter(function (entry) {
-        return entry.switch().value === lib.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value;
-      }).flatMap(function (entry) {
-        return entry.value().cases();
-      });
-    }
-  }, {
-    key: "jsonSchema",
-    value: function jsonSchema(funcName) {
-      var definitions = {};
-      var _iterator = spec_createForOfIteratorHelper(this.entries),
-        _step;
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var entry = _step.value;
-          switch (entry.switch().value) {
-            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value:
-              {
-                var _udt = entry.udtEnumV0();
-                definitions[_udt.name().toString()] = enumToJsonSchema(_udt);
-                break;
-              }
-            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value:
-              {
-                var _udt2 = entry.udtStructV0();
-                definitions[_udt2.name().toString()] = structToJsonSchema(_udt2);
-                break;
-              }
-            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value:
-              var udt = entry.udtUnionV0();
-              definitions[udt.name().toString()] = unionToJsonSchema(udt);
-              break;
-            case lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value:
-              {
-                var fn = entry.functionV0();
-                var fnName = fn.name().toString();
-                var _functionToJsonSchema = functionToJsonSchema(fn),
-                  input = _functionToJsonSchema.input;
-                definitions[fnName] = input;
-                break;
-              }
-            case lib.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value:
-              {}
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-      var res = {
-        $schema: "http://json-schema.org/draft-07/schema#",
-        definitions: spec_objectSpread(spec_objectSpread({}, PRIMITIVE_DEFINITONS), definitions)
-      };
-      if (funcName) {
-        res["$ref"] = "#/definitions/".concat(funcName);
-      }
-      return res;
-    }
-  }]);
-}();
+  };
+}
 function stringToScVal(str, ty) {
   switch (ty.value) {
     case lib.xdr.ScSpecType.scSpecTypeString().value:
@@ -22598,27 +22071,6 @@ function stringToScVal(str, ty) {
     default:
       throw new TypeError("invalid type ".concat(ty.name, " specified for string value"));
   }
-}
-function isNumeric(field) {
-  return /^\d+$/.test(field.name().toString());
-}
-function findCase(name) {
-  return function matches(entry) {
-    switch (entry.switch().value) {
-      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
-        {
-          var tuple = entry.tupleCase();
-          return tuple.name().toString() === name;
-        }
-      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
-        {
-          var void_case = entry.voidCase();
-          return void_case.name().toString() === name;
-        }
-      default:
-        return false;
-    }
-  };
 }
 var PRIMITIVE_DEFINITONS = {
   U32: {
@@ -22796,10 +22248,10 @@ function typeRef(typeDef) {
     case lib.xdr.ScSpecType.scSpecTypeVec().value:
       {
         var arr = typeDef.vec();
-        var _ref3 = typeRef(arr.elementType());
+        var reference = typeRef(arr.elementType());
         return {
           type: "array",
-          items: _ref3
+          items: reference
         };
       }
     case lib.xdr.ScSpecType.scSpecTypeMap().value:
@@ -22849,7 +22301,26 @@ function typeRef(typeDef) {
   };
 }
 function isRequired(typeDef) {
-  return typeDef.switch().value != lib.xdr.ScSpecType.scSpecTypeOption().value;
+  return typeDef.switch().value !== lib.xdr.ScSpecType.scSpecTypeOption().value;
+}
+function argsAndRequired(input) {
+  var properties = {};
+  var required = [];
+  input.forEach(function (arg) {
+    var aType = arg.type();
+    var name = arg.name().toString();
+    properties[name] = typeRef(aType);
+    if (isRequired(aType)) {
+      required.push(name);
+    }
+  });
+  var res = {
+    properties: properties
+  };
+  if (required.length > 0) {
+    res.required = required;
+  }
+  return res;
 }
 function structToJsonSchema(udt) {
   var fields = udt.fields();
@@ -22868,10 +22339,10 @@ function structToJsonSchema(udt) {
     };
   }
   var description = udt.doc().toString();
-  var _args_and_required = args_and_required(fields),
-    properties = _args_and_required.properties,
-    required = _args_and_required.required;
-  properties["additionalProperties"] = false;
+  var _argsAndRequired = argsAndRequired(fields),
+    properties = _argsAndRequired.properties,
+    required = _argsAndRequired.required;
+  properties.additionalProperties = false;
   return {
     description: description,
     properties: properties,
@@ -22879,38 +22350,10 @@ function structToJsonSchema(udt) {
     type: "object"
   };
 }
-function args_and_required(input) {
-  var properties = {};
-  var required = [];
-  var _iterator2 = spec_createForOfIteratorHelper(input),
-    _step2;
-  try {
-    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-      var arg = _step2.value;
-      var type_ = arg.type();
-      var name = arg.name().toString();
-      properties[name] = typeRef(type_);
-      if (isRequired(type_)) {
-        required.push(name);
-      }
-    }
-  } catch (err) {
-    _iterator2.e(err);
-  } finally {
-    _iterator2.f();
-  }
-  var res = {
-    properties: properties
-  };
-  if (required.length > 0) {
-    res.required = required;
-  }
-  return res;
-}
 function functionToJsonSchema(func) {
-  var _args_and_required2 = args_and_required(func.inputs()),
-    properties = _args_and_required2.properties,
-    required = _args_and_required2.required;
+  var _argsAndRequired2 = argsAndRequired(func.inputs()),
+    properties = _argsAndRequired2.properties,
+    required = _argsAndRequired2.required;
   var args = {
     additionalProperties: false,
     properties: properties,
@@ -22941,52 +22384,43 @@ function unionToJsonSchema(udt) {
   var description = udt.doc().toString();
   var cases = udt.cases();
   var oneOf = [];
-  var _iterator3 = spec_createForOfIteratorHelper(cases),
-    _step3;
-  try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var case_ = _step3.value;
-      switch (case_.switch().value) {
-        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
-          {
-            var c = case_.voidCase();
-            var title = c.name().toString();
-            oneOf.push({
-              type: "object",
-              title: title,
-              properties: {
-                tag: title
-              },
-              additionalProperties: false,
-              required: ["tag"]
-            });
-            break;
-          }
-        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
-          {
-            var _c = case_.tupleCase();
-            var _title = _c.name().toString();
-            oneOf.push({
-              type: "object",
-              title: _title,
-              properties: {
-                tag: _title,
-                values: {
-                  type: "array",
-                  items: _c.type().map(typeRef)
-                }
-              },
-              required: ["tag", "values"],
-              additionalProperties: false
-            });
-          }
-      }
+  cases.forEach(function (aCase) {
+    switch (aCase.switch().value) {
+      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0().value:
+        {
+          var c = aCase.voidCase();
+          var title = c.name().toString();
+          oneOf.push({
+            type: "object",
+            title: title,
+            properties: {
+              tag: title
+            },
+            additionalProperties: false,
+            required: ["tag"]
+          });
+          break;
+        }
+      case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value:
+        {
+          var _c = aCase.tupleCase();
+          var _title = _c.name().toString();
+          oneOf.push({
+            type: "object",
+            title: _title,
+            properties: {
+              tag: _title,
+              values: {
+                type: "array",
+                items: _c.type().map(typeRef)
+              }
+            },
+            required: ["tag", "values"],
+            additionalProperties: false
+          });
+        }
     }
-  } catch (err) {
-    _iterator3.e(err);
-  } finally {
-    _iterator3.f();
-  }
+  });
   var res = {
     oneOf: oneOf
   };
@@ -22995,37 +22429,561 @@ function unionToJsonSchema(udt) {
   }
   return res;
 }
-function enumToJsonSchema(udt) {
-  var description = udt.doc().toString();
-  var cases = udt.cases();
-  var oneOf = [];
-  var _iterator4 = spec_createForOfIteratorHelper(cases),
-    _step4;
-  try {
-    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-      var case_ = _step4.value;
-      var title = case_.name().toString();
-      var _description = case_.doc().toString();
-      oneOf.push({
-        description: _description,
-        title: title,
-        enum: [case_.value()],
-        type: "number"
+var Spec = function () {
+  function Spec(entries) {
+    spec_classCallCheck(this, Spec);
+    spec_defineProperty(this, "entries", []);
+    if (entries.length === 0) {
+      throw new Error("Contract spec must have at least one entry");
+    }
+    var entry = entries[0];
+    if (typeof entry === "string") {
+      this.entries = entries.map(function (s) {
+        return lib.xdr.ScSpecEntry.fromXDR(s, "base64");
+      });
+    } else {
+      this.entries = entries;
+    }
+  }
+  return spec_createClass(Spec, [{
+    key: "funcs",
+    value: function funcs() {
+      return this.entries.filter(function (entry) {
+        return entry.switch().value === lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value;
+      }).map(function (entry) {
+        return entry.functionV0();
       });
     }
-  } catch (err) {
-    _iterator4.e(err);
-  } finally {
-    _iterator4.f();
-  }
-  var res = {
-    oneOf: oneOf
-  };
-  if (description.length > 0) {
-    res.description = description;
-  }
-  return res;
-}
+  }, {
+    key: "getFunc",
+    value: function getFunc(name) {
+      var entry = this.findEntry(name);
+      if (entry.switch().value !== lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value) {
+        throw new Error("".concat(name, " is not a function"));
+      }
+      return entry.functionV0();
+    }
+  }, {
+    key: "funcArgsToScVals",
+    value: function funcArgsToScVals(name, args) {
+      var _this = this;
+      var fn = this.getFunc(name);
+      return fn.inputs().map(function (input) {
+        return _this.nativeToScVal(readObj(args, input), input.type());
+      });
+    }
+  }, {
+    key: "funcResToNative",
+    value: function funcResToNative(name, val_or_base64) {
+      var val = typeof val_or_base64 === "string" ? lib.xdr.ScVal.fromXDR(val_or_base64, "base64") : val_or_base64;
+      var func = this.getFunc(name);
+      var outputs = func.outputs();
+      if (outputs.length === 0) {
+        var type = val.switch();
+        if (type.value !== lib.xdr.ScValType.scvVoid().value) {
+          throw new Error("Expected void, got ".concat(type.name));
+        }
+        return null;
+      }
+      if (outputs.length > 1) {
+        throw new Error("Multiple outputs not supported");
+      }
+      var output = outputs[0];
+      if (output.switch().value === lib.xdr.ScSpecType.scSpecTypeResult().value) {
+        return new Ok(this.scValToNative(val, output.result().okType()));
+      }
+      return this.scValToNative(val, output);
+    }
+  }, {
+    key: "findEntry",
+    value: function findEntry(name) {
+      var entry = this.entries.find(function (e) {
+        return e.value().name().toString() === name;
+      });
+      if (!entry) {
+        throw new Error("no such entry: ".concat(name));
+      }
+      return entry;
+    }
+  }, {
+    key: "nativeToScVal",
+    value: function nativeToScVal(val, ty) {
+      var _this2 = this;
+      var t = ty.switch();
+      var value = t.value;
+      if (t.value === lib.xdr.ScSpecType.scSpecTypeUdt().value) {
+        var udt = ty.udt();
+        return this.nativeToUdt(val, udt.name().toString());
+      }
+      if (value === lib.xdr.ScSpecType.scSpecTypeOption().value) {
+        var opt = ty.option();
+        if (val === undefined) {
+          return lib.xdr.ScVal.scvVoid();
+        }
+        return this.nativeToScVal(val, opt.valueType());
+      }
+      switch (spec_typeof(val)) {
+        case "object":
+          {
+            var _val$constructor$name, _val$constructor;
+            if (val === null) {
+              switch (value) {
+                case lib.xdr.ScSpecType.scSpecTypeVoid().value:
+                  return lib.xdr.ScVal.scvVoid();
+                default:
+                  throw new TypeError("Type ".concat(ty, " was not void, but value was null"));
+              }
+            }
+            if (val instanceof lib.xdr.ScVal) {
+              return val;
+            }
+            if (val instanceof lib.Address) {
+              if (ty.switch().value !== lib.xdr.ScSpecType.scSpecTypeAddress().value) {
+                throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
+              }
+              return val.toScVal();
+            }
+            if (val instanceof lib.Contract) {
+              if (ty.switch().value !== lib.xdr.ScSpecType.scSpecTypeAddress().value) {
+                throw new TypeError("Type ".concat(ty, " was not address, but value was Address"));
+              }
+              return val.address().toScVal();
+            }
+            if (val instanceof Uint8Array || spec_Buffer.isBuffer(val)) {
+              var copy = Uint8Array.from(val);
+              switch (value) {
+                case lib.xdr.ScSpecType.scSpecTypeBytesN().value:
+                  {
+                    var bytesN = ty.bytesN();
+                    if (copy.length !== bytesN.n()) {
+                      throw new TypeError("expected ".concat(bytesN.n(), " bytes, but got ").concat(copy.length));
+                    }
+                    return lib.xdr.ScVal.scvBytes(copy);
+                  }
+                case lib.xdr.ScSpecType.scSpecTypeBytes().value:
+                  return lib.xdr.ScVal.scvBytes(copy);
+                default:
+                  throw new TypeError("invalid type (".concat(ty, ") specified for Bytes and BytesN"));
+              }
+            }
+            if (Array.isArray(val)) {
+              switch (value) {
+                case lib.xdr.ScSpecType.scSpecTypeVec().value:
+                  {
+                    var vec = ty.vec();
+                    var elementType = vec.elementType();
+                    return lib.xdr.ScVal.scvVec(val.map(function (v) {
+                      return _this2.nativeToScVal(v, elementType);
+                    }));
+                  }
+                case lib.xdr.ScSpecType.scSpecTypeTuple().value:
+                  {
+                    var tup = ty.tuple();
+                    var valTypes = tup.valueTypes();
+                    if (val.length !== valTypes.length) {
+                      throw new TypeError("Tuple expects ".concat(valTypes.length, " values, but ").concat(val.length, " were provided"));
+                    }
+                    return lib.xdr.ScVal.scvVec(val.map(function (v, i) {
+                      return _this2.nativeToScVal(v, valTypes[i]);
+                    }));
+                  }
+                case lib.xdr.ScSpecType.scSpecTypeMap().value:
+                  {
+                    var map = ty.map();
+                    var keyType = map.keyType();
+                    var valueType = map.valueType();
+                    return lib.xdr.ScVal.scvMap(val.map(function (entry) {
+                      var key = _this2.nativeToScVal(entry[0], keyType);
+                      var mapVal = _this2.nativeToScVal(entry[1], valueType);
+                      return new lib.xdr.ScMapEntry({
+                        key: key,
+                        val: mapVal
+                      });
+                    }));
+                  }
+                default:
+                  throw new TypeError("Type ".concat(ty, " was not vec, but value was Array"));
+              }
+            }
+            if (val.constructor === Map) {
+              if (value !== lib.xdr.ScSpecType.scSpecTypeMap().value) {
+                throw new TypeError("Type ".concat(ty, " was not map, but value was Map"));
+              }
+              var scMap = ty.map();
+              var _map = val;
+              var entries = [];
+              var values = _map.entries();
+              var res = values.next();
+              while (!res.done) {
+                var _res$value = spec_slicedToArray(res.value, 2),
+                  k = _res$value[0],
+                  v = _res$value[1];
+                var key = this.nativeToScVal(k, scMap.keyType());
+                var mapval = this.nativeToScVal(v, scMap.valueType());
+                entries.push(new lib.xdr.ScMapEntry({
+                  key: key,
+                  val: mapval
+                }));
+                res = values.next();
+              }
+              return lib.xdr.ScVal.scvMap(entries);
+            }
+            if (((_val$constructor$name = (_val$constructor = val.constructor) === null || _val$constructor === void 0 ? void 0 : _val$constructor.name) !== null && _val$constructor$name !== void 0 ? _val$constructor$name : "") !== "Object") {
+              var _val$constructor2;
+              throw new TypeError("cannot interpret ".concat((_val$constructor2 = val.constructor) === null || _val$constructor2 === void 0 ? void 0 : _val$constructor2.name, " value as ScVal (").concat(JSON.stringify(val), ")"));
+            }
+            throw new TypeError("Received object ".concat(val, "  did not match the provided type ").concat(ty));
+          }
+        case "number":
+        case "bigint":
+          {
+            switch (value) {
+              case lib.xdr.ScSpecType.scSpecTypeU32().value:
+                return lib.xdr.ScVal.scvU32(val);
+              case lib.xdr.ScSpecType.scSpecTypeI32().value:
+                return lib.xdr.ScVal.scvI32(val);
+              case lib.xdr.ScSpecType.scSpecTypeU64().value:
+              case lib.xdr.ScSpecType.scSpecTypeI64().value:
+              case lib.xdr.ScSpecType.scSpecTypeU128().value:
+              case lib.xdr.ScSpecType.scSpecTypeI128().value:
+              case lib.xdr.ScSpecType.scSpecTypeU256().value:
+              case lib.xdr.ScSpecType.scSpecTypeI256().value:
+                {
+                  var intType = t.name.substring(10).toLowerCase();
+                  return new lib.XdrLargeInt(intType, val).toScVal();
+                }
+              default:
+                throw new TypeError("invalid type (".concat(ty, ") specified for integer"));
+            }
+          }
+        case "string":
+          return stringToScVal(val, t);
+        case "boolean":
+          {
+            if (value !== lib.xdr.ScSpecType.scSpecTypeBool().value) {
+              throw TypeError("Type ".concat(ty, " was not bool, but value was bool"));
+            }
+            return lib.xdr.ScVal.scvBool(val);
+          }
+        case "undefined":
+          {
+            if (!ty) {
+              return lib.xdr.ScVal.scvVoid();
+            }
+            switch (value) {
+              case lib.xdr.ScSpecType.scSpecTypeVoid().value:
+              case lib.xdr.ScSpecType.scSpecTypeOption().value:
+                return lib.xdr.ScVal.scvVoid();
+              default:
+                throw new TypeError("Type ".concat(ty, " was not void, but value was undefined"));
+            }
+          }
+        case "function":
+          return this.nativeToScVal(val(), ty);
+        default:
+          throw new TypeError("failed to convert typeof ".concat(spec_typeof(val), " (").concat(val, ")"));
+      }
+    }
+  }, {
+    key: "nativeToUdt",
+    value: function nativeToUdt(val, name) {
+      var entry = this.findEntry(name);
+      switch (entry.switch()) {
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
+          if (typeof val !== "number") {
+            throw new TypeError("expected number for enum ".concat(name, ", but got ").concat(spec_typeof(val)));
+          }
+          return this.nativeToEnum(val, entry.udtEnumV0());
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
+          return this.nativeToStruct(val, entry.udtStructV0());
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
+          return this.nativeToUnion(val, entry.udtUnionV0());
+        default:
+          throw new Error("failed to parse udt ".concat(name));
+      }
+    }
+  }, {
+    key: "nativeToUnion",
+    value: function nativeToUnion(val, union_) {
+      var _this3 = this;
+      var entryName = val.tag;
+      var caseFound = union_.cases().find(function (entry) {
+        var caseN = entry.value().name().toString();
+        return caseN === entryName;
+      });
+      if (!caseFound) {
+        throw new TypeError("no such enum entry: ".concat(entryName, " in ").concat(union_));
+      }
+      var key = lib.xdr.ScVal.scvSymbol(entryName);
+      switch (caseFound.switch()) {
+        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseVoidV0():
+          {
+            return lib.xdr.ScVal.scvVec([key]);
+          }
+        case lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0():
+          {
+            var types = caseFound.tupleCase().type();
+            if (Array.isArray(val.values)) {
+              if (val.values.length !== types.length) {
+                throw new TypeError("union ".concat(union_, " expects ").concat(types.length, " values, but got ").concat(val.values.length));
+              }
+              var scvals = val.values.map(function (v, i) {
+                return _this3.nativeToScVal(v, types[i]);
+              });
+              scvals.unshift(key);
+              return lib.xdr.ScVal.scvVec(scvals);
+            }
+            throw new Error("failed to parse union case ".concat(caseFound, " with ").concat(val));
+          }
+        default:
+          throw new Error("failed to parse union ".concat(union_, " with ").concat(val));
+      }
+    }
+  }, {
+    key: "nativeToStruct",
+    value: function nativeToStruct(val, struct) {
+      var _this4 = this;
+      var fields = struct.fields();
+      if (fields.some(isNumeric)) {
+        if (!fields.every(isNumeric)) {
+          throw new Error("mixed numeric and non-numeric field names are not allowed");
+        }
+        return lib.xdr.ScVal.scvVec(fields.map(function (_, i) {
+          return _this4.nativeToScVal(val[i], fields[i].type());
+        }));
+      }
+      return lib.xdr.ScVal.scvMap(fields.map(function (field) {
+        var name = field.name().toString();
+        return new lib.xdr.ScMapEntry({
+          key: _this4.nativeToScVal(name, lib.xdr.ScSpecTypeDef.scSpecTypeSymbol()),
+          val: _this4.nativeToScVal(val[name], field.type())
+        });
+      }));
+    }
+  }, {
+    key: "nativeToEnum",
+    value: function nativeToEnum(val, enum_) {
+      if (enum_.cases().some(function (entry) {
+        return entry.value() === val;
+      })) {
+        return lib.xdr.ScVal.scvU32(val);
+      }
+      throw new TypeError("no such enum entry: ".concat(val, " in ").concat(enum_));
+    }
+  }, {
+    key: "scValStrToNative",
+    value: function scValStrToNative(scv, typeDef) {
+      return this.scValToNative(lib.xdr.ScVal.fromXDR(scv, "base64"), typeDef);
+    }
+  }, {
+    key: "scValToNative",
+    value: function scValToNative(scv, typeDef) {
+      var _this5 = this;
+      var t = typeDef.switch();
+      var value = t.value;
+      if (value === lib.xdr.ScSpecType.scSpecTypeUdt().value) {
+        return this.scValUdtToNative(scv, typeDef.udt());
+      }
+      switch (scv.switch().value) {
+        case lib.xdr.ScValType.scvVoid().value:
+          return undefined;
+        case lib.xdr.ScValType.scvU64().value:
+        case lib.xdr.ScValType.scvI64().value:
+        case lib.xdr.ScValType.scvU128().value:
+        case lib.xdr.ScValType.scvI128().value:
+        case lib.xdr.ScValType.scvU256().value:
+        case lib.xdr.ScValType.scvI256().value:
+          return (0,lib.scValToBigInt)(scv);
+        case lib.xdr.ScValType.scvVec().value:
+          {
+            if (value === lib.xdr.ScSpecType.scSpecTypeVec().value) {
+              var _scv$vec;
+              var vec = typeDef.vec();
+              return ((_scv$vec = scv.vec()) !== null && _scv$vec !== void 0 ? _scv$vec : []).map(function (elm) {
+                return _this5.scValToNative(elm, vec.elementType());
+              });
+            }
+            if (value === lib.xdr.ScSpecType.scSpecTypeTuple().value) {
+              var _scv$vec2;
+              var tuple = typeDef.tuple();
+              var valTypes = tuple.valueTypes();
+              return ((_scv$vec2 = scv.vec()) !== null && _scv$vec2 !== void 0 ? _scv$vec2 : []).map(function (elm, i) {
+                return _this5.scValToNative(elm, valTypes[i]);
+              });
+            }
+            throw new TypeError("Type ".concat(typeDef, " was not vec, but ").concat(scv, " is"));
+          }
+        case lib.xdr.ScValType.scvAddress().value:
+          return lib.Address.fromScVal(scv).toString();
+        case lib.xdr.ScValType.scvMap().value:
+          {
+            var _scv$map;
+            var map = (_scv$map = scv.map()) !== null && _scv$map !== void 0 ? _scv$map : [];
+            if (value === lib.xdr.ScSpecType.scSpecTypeMap().value) {
+              var typed = typeDef.map();
+              var keyType = typed.keyType();
+              var valueType = typed.valueType();
+              var res = map.map(function (entry) {
+                return [_this5.scValToNative(entry.key(), keyType), _this5.scValToNative(entry.val(), valueType)];
+              });
+              return res;
+            }
+            throw new TypeError("ScSpecType ".concat(t.name, " was not map, but ").concat(JSON.stringify(scv, null, 2), " is"));
+          }
+        case lib.xdr.ScValType.scvBool().value:
+        case lib.xdr.ScValType.scvU32().value:
+        case lib.xdr.ScValType.scvI32().value:
+        case lib.xdr.ScValType.scvBytes().value:
+          return scv.value();
+        case lib.xdr.ScValType.scvString().value:
+        case lib.xdr.ScValType.scvSymbol().value:
+          {
+            var _scv$value;
+            if (value !== lib.xdr.ScSpecType.scSpecTypeString().value && value !== lib.xdr.ScSpecType.scSpecTypeSymbol().value) {
+              throw new Error("ScSpecType ".concat(t.name, " was not string or symbol, but ").concat(JSON.stringify(scv, null, 2), " is"));
+            }
+            return (_scv$value = scv.value()) === null || _scv$value === void 0 ? void 0 : _scv$value.toString();
+          }
+        case lib.xdr.ScValType.scvTimepoint().value:
+        case lib.xdr.ScValType.scvDuration().value:
+          return (0,lib.scValToBigInt)(lib.xdr.ScVal.scvU64(scv.u64()));
+        default:
+          throw new TypeError("failed to convert ".concat(JSON.stringify(scv, null, 2), " to native type from type ").concat(t.name));
+      }
+    }
+  }, {
+    key: "scValUdtToNative",
+    value: function scValUdtToNative(scv, udt) {
+      var entry = this.findEntry(udt.name().toString());
+      switch (entry.switch()) {
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0():
+          return this.enumToNative(scv);
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0():
+          return this.structToNative(scv, entry.udtStructV0());
+        case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0():
+          return this.unionToNative(scv, entry.udtUnionV0());
+        default:
+          throw new Error("failed to parse udt ".concat(udt.name().toString(), ": ").concat(entry));
+      }
+    }
+  }, {
+    key: "unionToNative",
+    value: function unionToNative(val, udt) {
+      var _this6 = this;
+      var vec = val.vec();
+      if (!vec) {
+        throw new Error("".concat(JSON.stringify(val, null, 2), " is not a vec"));
+      }
+      if (vec.length === 0 && udt.cases.length !== 0) {
+        throw new Error("".concat(val, " has length 0, but the there are at least one case in the union"));
+      }
+      var name = vec[0].sym().toString();
+      if (vec[0].switch().value !== lib.xdr.ScValType.scvSymbol().value) {
+        throw new Error("{vec[0]} is not a symbol");
+      }
+      var entry = udt.cases().find(findCase(name));
+      if (!entry) {
+        throw new Error("failed to find entry ".concat(name, " in union {udt.name().toString()}"));
+      }
+      var res = {
+        tag: name
+      };
+      if (entry.switch().value === lib.xdr.ScSpecUdtUnionCaseV0Kind.scSpecUdtUnionCaseTupleV0().value) {
+        var tuple = entry.tupleCase();
+        var ty = tuple.type();
+        var values = ty.map(function (e, i) {
+          return _this6.scValToNative(vec[i + 1], e);
+        });
+        res.values = values;
+      }
+      return res;
+    }
+  }, {
+    key: "structToNative",
+    value: function structToNative(val, udt) {
+      var _this7 = this,
+        _val$map;
+      var res = {};
+      var fields = udt.fields();
+      if (fields.some(isNumeric)) {
+        var _val$vec;
+        var r = (_val$vec = val.vec()) === null || _val$vec === void 0 ? void 0 : _val$vec.map(function (entry, i) {
+          return _this7.scValToNative(entry, fields[i].type());
+        });
+        return r;
+      }
+      (_val$map = val.map()) === null || _val$map === void 0 || _val$map.forEach(function (entry, i) {
+        var field = fields[i];
+        res[field.name().toString()] = _this7.scValToNative(entry.val(), field.type());
+      });
+      return res;
+    }
+  }, {
+    key: "enumToNative",
+    value: function enumToNative(scv) {
+      if (scv.switch().value !== lib.xdr.ScValType.scvU32().value) {
+        throw new Error("Enum must have a u32 value");
+      }
+      var num = scv.u32();
+      return num;
+    }
+  }, {
+    key: "errorCases",
+    value: function errorCases() {
+      return this.entries.filter(function (entry) {
+        return entry.switch().value === lib.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value;
+      }).flatMap(function (entry) {
+        return entry.value().cases();
+      });
+    }
+  }, {
+    key: "jsonSchema",
+    value: function jsonSchema(funcName) {
+      var definitions = {};
+      this.entries.forEach(function (entry) {
+        switch (entry.switch().value) {
+          case lib.xdr.ScSpecEntryKind.scSpecEntryUdtEnumV0().value:
+            {
+              var udt = entry.udtEnumV0();
+              definitions[udt.name().toString()] = enumToJsonSchema(udt);
+              break;
+            }
+          case lib.xdr.ScSpecEntryKind.scSpecEntryUdtStructV0().value:
+            {
+              var _udt = entry.udtStructV0();
+              definitions[_udt.name().toString()] = structToJsonSchema(_udt);
+              break;
+            }
+          case lib.xdr.ScSpecEntryKind.scSpecEntryUdtUnionV0().value:
+            {
+              var _udt2 = entry.udtUnionV0();
+              definitions[_udt2.name().toString()] = unionToJsonSchema(_udt2);
+              break;
+            }
+          case lib.xdr.ScSpecEntryKind.scSpecEntryFunctionV0().value:
+            {
+              var fn = entry.functionV0();
+              var fnName = fn.name().toString();
+              var _functionToJsonSchema = functionToJsonSchema(fn),
+                input = _functionToJsonSchema.input;
+              definitions[fnName] = input;
+              break;
+            }
+          case lib.xdr.ScSpecEntryKind.scSpecEntryUdtErrorEnumV0().value:
+            {}
+        }
+      });
+      var res = {
+        $schema: "http://json-schema.org/draft-07/schema#",
+        definitions: spec_objectSpread(spec_objectSpread({}, PRIMITIVE_DEFINITONS), definitions)
+      };
+      if (funcName) {
+        res.$ref = "#/definitions/".concat(funcName);
+      }
+      return res;
+    }
+  }]);
+}();
 // EXTERNAL MODULE: ./src/rpc/index.ts
 var rpc = __webpack_require__(1660);
 ;// CONCATENATED MODULE: ./src/contract/client.ts
@@ -23205,7 +23163,6 @@ var Client = function () {
   }]);
 }();
 ;// CONCATENATED MODULE: ./src/contract/index.ts
-
 
 
 
@@ -26724,14 +26681,14 @@ var AxiosClient = axios/* default */.A.create({
     "X-Client-Version": version
   }
 });
-function _toSeconds(ms) {
+function toSeconds(ms) {
   return Math.floor(ms / 1000);
 }
-AxiosClient.interceptors.response.use(function interceptorHorizonResponse(response) {
+AxiosClient.interceptors.response.use(function (response) {
   var hostname = URI_default()(response.config.url).hostname();
-  var serverTime = _toSeconds(Date.parse(response.headers.date));
-  var localTimeRecorded = _toSeconds(new Date().getTime());
-  if (!isNaN(serverTime)) {
+  var serverTime = toSeconds(Date.parse(response.headers.date));
+  var localTimeRecorded = toSeconds(new Date().getTime());
+  if (!Number.isNaN(serverTime)) {
     SERVER_TIME_MAP[hostname] = {
       serverTime: serverTime,
       localTimeRecorded: localTimeRecorded
@@ -26747,7 +26704,7 @@ function getCurrentServerTime(hostname) {
   }
   var serverTime = entry.serverTime,
     localTimeRecorded = entry.localTimeRecorded;
-  var currentTime = _toSeconds(new Date().getTime());
+  var currentTime = toSeconds(new Date().getTime());
   if (currentTime - localTimeRecorded > 60 * 5) {
     return null;
   }
@@ -26948,8 +26905,7 @@ var CallBuilder = function () {
       if (!json._links) {
         return json;
       }
-      var _loop = function _loop() {
-        var key = _Object$keys[_i];
+      Object.keys(json._links).forEach(function (key) {
         var n = json._links[key];
         var included = false;
         if (typeof json[key] !== "undefined") {
@@ -26972,10 +26928,7 @@ var CallBuilder = function () {
         } else {
           json[key] = _this4._requestFnForLink(n);
         }
-      };
-      for (var _i = 0, _Object$keys = Object.keys(json._links); _i < _Object$keys.length; _i++) {
-        _loop();
-      }
+      });
       return json;
     }
   }, {
@@ -27786,13 +27739,9 @@ var TradeAggregationCallBuilder = function (_CallBuilder) {
   return trade_aggregation_call_builder_createClass(TradeAggregationCallBuilder, [{
     key: "isValidResolution",
     value: function isValidResolution(resolution) {
-      for (var _i = 0, _allowedResolutions = allowedResolutions; _i < _allowedResolutions.length; _i++) {
-        var allowed = _allowedResolutions[_i];
-        if (allowed === resolution) {
-          return true;
-        }
-      }
-      return false;
+      return allowedResolutions.some(function (allowed) {
+        return allowed === resolution;
+      });
     }
   }, {
     key: "isValidOffset",
@@ -27930,6 +27879,9 @@ var TransactionCallBuilder = function (_CallBuilder) {
 }(CallBuilder);
 ;// CONCATENATED MODULE: ./src/horizon/server.ts
 function server_typeof(o) { "@babel/helpers - typeof"; return server_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, server_typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = server_toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function server_regeneratorRuntime() { "use strict"; server_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == server_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(server_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
 function server_asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function server_asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { server_asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { server_asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
@@ -27965,7 +27917,7 @@ function server_toPrimitive(t, r) { if ("object" != server_typeof(t) || !t) retu
 var SUBMIT_TRANSACTION_TIMEOUT = 60 * 1000;
 var STROOPS_IN_LUMEN = 10000000;
 var ACCOUNT_REQUIRES_MEMO = "MQ==";
-function _getAmountInLumens(amt) {
+function getAmountInLumens(amt) {
   return new bignumber(amt).div(STROOPS_IN_LUMEN).toString();
 }
 var Server = function () {
@@ -28030,11 +27982,8 @@ var Server = function () {
               _context.next = 8;
               return horizon_axios_client.get(URI_default()(this.serverURL).toString());
             case 8:
-              _context.next = 10;
-              return this.fetchTimebounds(seconds, true);
-            case 10:
-              return _context.abrupt("return", _context.sent);
-            case 11:
+              return _context.abrupt("return", this.fetchTimebounds(seconds, true));
+            case 9:
             case "end":
               return _context.stop();
           }
@@ -28142,7 +28091,7 @@ var Server = function () {
                           sellerId = lib.StrKey.encodeEd25519PublicKey(offerClaimed.sellerId().ed25519());
                           break;
                         default:
-                          throw new Error("Invalid offer result type: " + offerClaimedAtom.switch());
+                          throw new Error("Invalid offer result type: ".concat(offerClaimedAtom.switch()));
                       }
                       var claimedOfferAmountBought = new bignumber(offerClaimed.amountBought().toString());
                       var claimedOfferAmountSold = new bignumber(offerClaimed.amountSold().toString());
@@ -28164,9 +28113,9 @@ var Server = function () {
                         sellerId: sellerId,
                         offerId: offerClaimed.offerId().toString(),
                         assetSold: assetSold,
-                        amountSold: _getAmountInLumens(claimedOfferAmountSold),
+                        amountSold: getAmountInLumens(claimedOfferAmountSold),
                         assetBought: assetBought,
-                        amountBought: _getAmountInLumens(claimedOfferAmountBought)
+                        amountBought: getAmountInLumens(claimedOfferAmountBought)
                       };
                     });
                     var effect = offerSuccess.offer().switch().name;
@@ -28177,7 +28126,7 @@ var Server = function () {
                         offerId: offerXDR.offerId().toString(),
                         selling: {},
                         buying: {},
-                        amount: _getAmountInLumens(offerXDR.amount().toString()),
+                        amount: getAmountInLumens(offerXDR.amount().toString()),
                         price: {
                           n: offerXDR.price().n(),
                           d: offerXDR.price().d()
@@ -28201,8 +28150,8 @@ var Server = function () {
                       effect: effect,
                       operationIndex: i,
                       currentOffer: currentOffer,
-                      amountBought: _getAmountInLumens(amountBought),
-                      amountSold: _getAmountInLumens(amountSold),
+                      amountBought: getAmountInLumens(amountBought),
+                      amountSold: getAmountInLumens(amountSold),
                       isFullyOpen: !offersClaimed.length && effect !== "manageOfferDeleted",
                       wasPartiallyFilled: !!offersClaimed.length && effect !== "manageOfferDeleted",
                       wasImmediatelyFilled: !!offersClaimed.length && effect === "manageOfferDeleted",
@@ -28212,7 +28161,7 @@ var Server = function () {
                     return !!result;
                   });
                 }
-                return Object.assign({}, response.data, {
+                return _objectSpread(_objectSpread({}, response.data), {}, {
                   offerResults: hasManageOffer ? offerResults : undefined
                 });
               }).catch(function (response) {
@@ -28413,7 +28362,7 @@ var Server = function () {
             case 32:
               return _context6.abrupt("continue", 33);
             case 33:
-              i++;
+              i += 1;
               _context6.next = 5;
               break;
             case 36:
@@ -28472,7 +28421,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _friendbot__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(8242);
 /* harmony import */ var _horizon__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(2731);
 /* harmony import */ var _rpc__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(1660);
-/* harmony import */ var _contract__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(145);
+/* harmony import */ var _contract__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(6299);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(356);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony reexport (unknown) */ var __WEBPACK_REEXPORT_OBJECT__ = {};
@@ -28616,7 +28565,7 @@ function parseRawSendTransaction(r) {
     diagnosticEventsXdr = r.diagnosticEventsXdr;
   delete r.errorResultXdr;
   delete r.diagnosticEventsXdr;
-  if (!!errorResultXdr) {
+  if (errorResultXdr) {
     return _objectSpread(_objectSpread(_objectSpread({}, r), diagnosticEventsXdr !== undefined && diagnosticEventsXdr.length > 0 && {
       diagnosticEvents: diagnosticEventsXdr.map(function (evt) {
         return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
@@ -28663,27 +28612,6 @@ function parseRawLedgerEntries(raw) {
     })
   };
 }
-function parseRawSimulation(sim) {
-  var _sim$events$map, _sim$events;
-  var looksRaw = _api__WEBPACK_IMPORTED_MODULE_1__/* .Api */ .j.isSimulationRaw(sim);
-  if (!looksRaw) {
-    return sim;
-  }
-  var base = {
-    _parsed: true,
-    id: sim.id,
-    latestLedger: sim.latestLedger,
-    events: (_sim$events$map = (_sim$events = sim.events) === null || _sim$events === void 0 ? void 0 : _sim$events.map(function (evt) {
-      return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
-    })) !== null && _sim$events$map !== void 0 ? _sim$events$map : []
-  };
-  if (typeof sim.error === 'string') {
-    return _objectSpread(_objectSpread({}, base), {}, {
-      error: sim.error
-    });
-  }
-  return parseSuccessful(sim, base);
-}
 function parseSuccessful(sim, partial) {
   var _sim$results$length, _sim$results, _sim$stateChanges$len, _sim$stateChanges, _sim$stateChanges2;
   var success = _objectSpread(_objectSpread(_objectSpread({}, partial), {}, {
@@ -28697,7 +28625,7 @@ function parseSuccessful(sim, partial) {
         auth: ((_row$auth = row.auth) !== null && _row$auth !== void 0 ? _row$auth : []).map(function (entry) {
           return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.SorobanAuthorizationEntry.fromXDR(entry, 'base64');
         }),
-        retval: !!row.xdr ? _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(row.xdr, 'base64') : _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid()
+        retval: row.xdr ? _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.fromXDR(row.xdr, 'base64') : _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.ScVal.scvVoid()
       };
     })[0]
   }), ((_sim$stateChanges$len = (_sim$stateChanges = sim.stateChanges) === null || _sim$stateChanges === void 0 ? void 0 : _sim$stateChanges.length) !== null && _sim$stateChanges$len !== void 0 ? _sim$stateChanges$len : 0 > 0) && {
@@ -28719,6 +28647,27 @@ function parseSuccessful(sim, partial) {
       transactionData: new _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.SorobanDataBuilder(sim.restorePreamble.transactionData)
     }
   });
+}
+function parseRawSimulation(sim) {
+  var _sim$events$map, _sim$events;
+  var looksRaw = _api__WEBPACK_IMPORTED_MODULE_1__/* .Api */ .j.isSimulationRaw(sim);
+  if (!looksRaw) {
+    return sim;
+  }
+  var base = {
+    _parsed: true,
+    id: sim.id,
+    latestLedger: sim.latestLedger,
+    events: (_sim$events$map = (_sim$events = sim.events) === null || _sim$events === void 0 ? void 0 : _sim$events.map(function (evt) {
+      return _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.xdr.DiagnosticEvent.fromXDR(evt, 'base64');
+    })) !== null && _sim$events$map !== void 0 ? _sim$events$map : []
+  };
+  if (typeof sim.error === 'string') {
+    return _objectSpread(_objectSpread({}, base), {}, {
+      error: sim.error
+    });
+  }
+  return parseSuccessful(sim, base);
 }
 
 /***/ }),
@@ -28749,6 +28698,9 @@ function _regeneratorRuntime() { "use strict"; _regeneratorRuntime = function _r
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 
+function jsonrpc_hasOwnProperty(obj, prop) {
+  return obj.hasOwnProperty(prop);
+}
 function postObject(_x, _x2) {
   return _postObject.apply(this, arguments);
 }
@@ -28786,9 +28738,6 @@ function _postObject() {
   }));
   return _postObject.apply(this, arguments);
 }
-function jsonrpc_hasOwnProperty(obj, prop) {
-  return obj.hasOwnProperty(prop);
-}
 // EXTERNAL MODULE: ./src/rpc/api.ts
 var api = __webpack_require__(4076);
 // EXTERNAL MODULE: ./src/rpc/transaction.ts
@@ -28798,9 +28747,6 @@ var parsers = __webpack_require__(784);
 ;// CONCATENATED MODULE: ./src/rpc/server.ts
 /* provided dependency */ var Buffer = __webpack_require__(8287)["Buffer"];
 function server_typeof(o) { "@babel/helpers - typeof"; return server_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, server_typeof(o); }
-function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -28825,6 +28771,31 @@ var Durability = function (Durability) {
   Durability["Persistent"] = "persistent";
   return Durability;
 }({});
+function findCreatedAccountSequenceInTransactionMeta(meta) {
+  var _operations$flatMap$f;
+  var operations = [];
+  switch (meta.switch()) {
+    case 0:
+      operations = meta.operations();
+      break;
+    case 1:
+    case 2:
+    case 3:
+      operations = meta.value().operations();
+      break;
+    default:
+      throw new Error('Unexpected transaction meta switch value');
+  }
+  var sequenceNumber = (_operations$flatMap$f = operations.flatMap(function (op) {
+    return op.changes();
+  }).find(function (c) {
+    return c.switch() === lib.xdr.LedgerEntryChangeType.ledgerEntryCreated() && c.created().data().switch() === lib.xdr.LedgerEntryType.account();
+  })) === null || _operations$flatMap$f === void 0 || (_operations$flatMap$f = _operations$flatMap$f.created()) === null || _operations$flatMap$f === void 0 || (_operations$flatMap$f = _operations$flatMap$f.data()) === null || _operations$flatMap$f === void 0 || (_operations$flatMap$f = _operations$flatMap$f.account()) === null || _operations$flatMap$f === void 0 || (_operations$flatMap$f = _operations$flatMap$f.seqNum()) === null || _operations$flatMap$f === void 0 ? void 0 : _operations$flatMap$f.toString();
+  if (sequenceNumber) {
+    return sequenceNumber;
+  }
+  throw new Error('No account created in transaction');
+}
 var Server = function () {
   function Server(serverURL) {
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -29223,11 +29194,8 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee12$(_context12) {
           while (1) switch (_context12.prev = _context12.next) {
             case 0:
-              _context12.next = 2;
-              return postObject(this.serverURL.toString(), 'getNetwork');
-            case 2:
-              return _context12.abrupt("return", _context12.sent);
-            case 3:
+              return _context12.abrupt("return", postObject(this.serverURL.toString(), 'getNetwork'));
+            case 1:
             case "end":
               return _context12.stop();
           }
@@ -29317,7 +29285,7 @@ var Server = function () {
                 _context16.next = 5;
                 break;
               }
-              throw simResponse.error;
+              throw new Error(simResponse.error);
             case 5:
               return _context16.abrupt("return", (0,transaction/* assembleTransaction */.X)(tx, simResponse).build());
             case 6:
@@ -29432,52 +29400,6 @@ var Server = function () {
     }())
   }]);
 }();
-function findCreatedAccountSequenceInTransactionMeta(meta) {
-  var operations = [];
-  switch (meta.switch()) {
-    case 0:
-      operations = meta.operations();
-      break;
-    case 1:
-    case 2:
-    case 3:
-      operations = meta.value().operations();
-      break;
-    default:
-      throw new Error('Unexpected transaction meta switch value');
-  }
-  var _iterator = _createForOfIteratorHelper(operations),
-    _step;
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var op = _step.value;
-      var _iterator2 = _createForOfIteratorHelper(op.changes()),
-        _step2;
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var c = _step2.value;
-          if (c.switch() !== lib.xdr.LedgerEntryChangeType.ledgerEntryCreated()) {
-            continue;
-          }
-          var data = c.created().data();
-          if (data.switch() !== lib.xdr.LedgerEntryType.account()) {
-            continue;
-          }
-          return data.account().seqNum().toString();
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-    }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
-  throw new Error('No account created in transaction');
-}
 
 /***/ }),
 
@@ -29495,8 +29417,20 @@ function findCreatedAccountSequenceInTransactionMeta(meta) {
 
 
 
+function isSorobanTransaction(tx) {
+  if (tx.operations.length !== 1) {
+    return false;
+  }
+  switch (tx.operations[0].type) {
+    case 'invokeHostFunction':
+    case 'extendFootprintTtl':
+    case 'restoreFootprint':
+      return true;
+    default:
+      return false;
+  }
+}
 function assembleTransaction(raw, simulation) {
-  var _invokeOp$auth;
   if ('innerTransaction' in raw) {
     return assembleTransaction(raw.innerTransaction, simulation);
   }
@@ -29514,32 +29448,18 @@ function assembleTransaction(raw, simulation) {
     sorobanData: success.transactionData.build(),
     networkPassphrase: raw.networkPassphrase
   });
-  switch (raw.operations[0].type) {
-    case 'invokeHostFunction':
-      txnBuilder.clearOperations();
-      var invokeOp = raw.operations[0];
-      var existingAuth = (_invokeOp$auth = invokeOp.auth) !== null && _invokeOp$auth !== void 0 ? _invokeOp$auth : [];
-      txnBuilder.addOperation(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.Operation.invokeHostFunction({
-        source: invokeOp.source,
-        func: invokeOp.func,
-        auth: existingAuth.length > 0 ? existingAuth : success.result.auth
-      }));
-      break;
+  if (raw.operations[0].type === 'invokeHostFunction') {
+    var _invokeOp$auth;
+    txnBuilder.clearOperations();
+    var invokeOp = raw.operations[0];
+    var existingAuth = (_invokeOp$auth = invokeOp.auth) !== null && _invokeOp$auth !== void 0 ? _invokeOp$auth : [];
+    txnBuilder.addOperation(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.Operation.invokeHostFunction({
+      source: invokeOp.source,
+      func: invokeOp.func,
+      auth: existingAuth.length > 0 ? existingAuth : success.result.auth
+    }));
   }
   return txnBuilder;
-}
-function isSorobanTransaction(tx) {
-  if (tx.operations.length !== 1) {
-    return false;
-  }
-  switch (tx.operations[0].type) {
-    case 'invokeHostFunction':
-    case 'extendFootprintTtl':
-    case 'restoreFootprint':
-      return true;
-    default:
-      return false;
-  }
 }
 
 /***/ }),
