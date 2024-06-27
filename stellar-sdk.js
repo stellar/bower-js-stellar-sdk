@@ -28182,6 +28182,46 @@ var Server = function () {
       return submitTransaction;
     }())
   }, {
+    key: "submitAsyncTransaction",
+    value: (function () {
+      var _submitAsyncTransaction = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee5(transaction) {
+        var opts,
+          tx,
+          _args5 = arguments;
+        return server_regeneratorRuntime().wrap(function _callee5$(_context5) {
+          while (1) switch (_context5.prev = _context5.next) {
+            case 0:
+              opts = _args5.length > 1 && _args5[1] !== undefined ? _args5[1] : {
+                skipMemoRequiredCheck: false
+              };
+              if (opts.skipMemoRequiredCheck) {
+                _context5.next = 4;
+                break;
+              }
+              _context5.next = 4;
+              return this.checkMemoRequired(transaction);
+            case 4:
+              tx = encodeURIComponent(transaction.toEnvelope().toXDR().toString("base64"));
+              return _context5.abrupt("return", horizon_axios_client.post(URI_default()(this.serverURL).segment("transactions_async").toString(), "tx=".concat(tx)).then(function (response) {
+                return response.data;
+              }).catch(function (response) {
+                if (response instanceof Error) {
+                  return Promise.reject(response);
+                }
+                return Promise.reject(new errors/* BadResponseError */.nS("Transaction submission failed. Server responded: ".concat(response.status, " ").concat(response.statusText), response.data));
+              }));
+            case 6:
+            case "end":
+              return _context5.stop();
+          }
+        }, _callee5, this);
+      }));
+      function submitAsyncTransaction(_x3) {
+        return _submitAsyncTransaction.apply(this, arguments);
+      }
+      return submitAsyncTransaction;
+    }())
+  }, {
     key: "accounts",
     value: function accounts() {
       return new AccountCallBuilder(URI_default()(this.serverURL));
@@ -28259,23 +28299,23 @@ var Server = function () {
   }, {
     key: "loadAccount",
     value: (function () {
-      var _loadAccount = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee5(accountId) {
+      var _loadAccount = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee6(accountId) {
         var res;
-        return server_regeneratorRuntime().wrap(function _callee5$(_context5) {
-          while (1) switch (_context5.prev = _context5.next) {
+        return server_regeneratorRuntime().wrap(function _callee6$(_context6) {
+          while (1) switch (_context6.prev = _context6.next) {
             case 0:
-              _context5.next = 2;
+              _context6.next = 2;
               return this.accounts().accountId(accountId).call();
             case 2:
-              res = _context5.sent;
-              return _context5.abrupt("return", new AccountResponse(res));
+              res = _context6.sent;
+              return _context6.abrupt("return", new AccountResponse(res));
             case 4:
             case "end":
-              return _context5.stop();
+              return _context6.stop();
           }
-        }, _callee5, this);
+        }, _callee6, this);
       }));
-      function loadAccount(_x3) {
+      function loadAccount(_x4) {
         return _loadAccount.apply(this, arguments);
       }
       return loadAccount;
@@ -28288,90 +28328,90 @@ var Server = function () {
   }, {
     key: "checkMemoRequired",
     value: (function () {
-      var _checkMemoRequired = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee6(transaction) {
+      var _checkMemoRequired = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee7(transaction) {
         var destinations, i, operation, destination, account;
-        return server_regeneratorRuntime().wrap(function _callee6$(_context6) {
-          while (1) switch (_context6.prev = _context6.next) {
+        return server_regeneratorRuntime().wrap(function _callee7$(_context7) {
+          while (1) switch (_context7.prev = _context7.next) {
             case 0:
               if (transaction instanceof lib.FeeBumpTransaction) {
                 transaction = transaction.innerTransaction;
               }
               if (!(transaction.memo.type !== "none")) {
-                _context6.next = 3;
+                _context7.next = 3;
                 break;
               }
-              return _context6.abrupt("return");
+              return _context7.abrupt("return");
             case 3:
               destinations = new Set();
               i = 0;
             case 5:
               if (!(i < transaction.operations.length)) {
-                _context6.next = 36;
+                _context7.next = 36;
                 break;
               }
               operation = transaction.operations[i];
-              _context6.t0 = operation.type;
-              _context6.next = _context6.t0 === "payment" ? 10 : _context6.t0 === "pathPaymentStrictReceive" ? 10 : _context6.t0 === "pathPaymentStrictSend" ? 10 : _context6.t0 === "accountMerge" ? 10 : 11;
+              _context7.t0 = operation.type;
+              _context7.next = _context7.t0 === "payment" ? 10 : _context7.t0 === "pathPaymentStrictReceive" ? 10 : _context7.t0 === "pathPaymentStrictSend" ? 10 : _context7.t0 === "accountMerge" ? 10 : 11;
               break;
             case 10:
-              return _context6.abrupt("break", 12);
+              return _context7.abrupt("break", 12);
             case 11:
-              return _context6.abrupt("continue", 33);
+              return _context7.abrupt("continue", 33);
             case 12:
               destination = operation.destination;
               if (!destinations.has(destination)) {
-                _context6.next = 15;
+                _context7.next = 15;
                 break;
               }
-              return _context6.abrupt("continue", 33);
+              return _context7.abrupt("continue", 33);
             case 15:
               destinations.add(destination);
               if (!destination.startsWith("M")) {
-                _context6.next = 18;
+                _context7.next = 18;
                 break;
               }
-              return _context6.abrupt("continue", 33);
+              return _context7.abrupt("continue", 33);
             case 18:
-              _context6.prev = 18;
-              _context6.next = 21;
+              _context7.prev = 18;
+              _context7.next = 21;
               return this.loadAccount(destination);
             case 21:
-              account = _context6.sent;
+              account = _context7.sent;
               if (!(account.data_attr["config.memo_required"] === ACCOUNT_REQUIRES_MEMO)) {
-                _context6.next = 24;
+                _context7.next = 24;
                 break;
               }
               throw new errors/* AccountRequiresMemoError */.Cu("account requires memo", destination, i);
             case 24:
-              _context6.next = 33;
+              _context7.next = 33;
               break;
             case 26:
-              _context6.prev = 26;
-              _context6.t1 = _context6["catch"](18);
-              if (!(_context6.t1 instanceof errors/* AccountRequiresMemoError */.Cu)) {
-                _context6.next = 30;
+              _context7.prev = 26;
+              _context7.t1 = _context7["catch"](18);
+              if (!(_context7.t1 instanceof errors/* AccountRequiresMemoError */.Cu)) {
+                _context7.next = 30;
                 break;
               }
-              throw _context6.t1;
+              throw _context7.t1;
             case 30:
-              if (_context6.t1 instanceof errors/* NotFoundError */.m_) {
-                _context6.next = 32;
+              if (_context7.t1 instanceof errors/* NotFoundError */.m_) {
+                _context7.next = 32;
                 break;
               }
-              throw _context6.t1;
+              throw _context7.t1;
             case 32:
-              return _context6.abrupt("continue", 33);
+              return _context7.abrupt("continue", 33);
             case 33:
               i += 1;
-              _context6.next = 5;
+              _context7.next = 5;
               break;
             case 36:
             case "end":
-              return _context6.stop();
+              return _context7.stop();
           }
-        }, _callee6, this, [[18, 26]]);
+        }, _callee7, this, [[18, 26]]);
       }));
-      function checkMemoRequired(_x4) {
+      function checkMemoRequired(_x5) {
         return _checkMemoRequired.apply(this, arguments);
       }
       return checkMemoRequired;
