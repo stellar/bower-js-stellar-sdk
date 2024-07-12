@@ -29888,7 +29888,7 @@ function verifyChallengeTxSigners(challengeTx, serverAccountID, networkPassphras
   try {
     serverKP = lib.Keypair.fromPublicKey(serverAccountID);
   } catch (err) {
-    throw new Error("Couldn't infer keypair from the provided 'serverAccountID': " + err.message);
+    throw new Error("Couldn't infer keypair from the provided 'serverAccountID': ".concat(err.message));
   }
   var clientSigners = new Set();
   var _iterator2 = _createForOfIteratorHelper(signers),
@@ -29947,7 +29947,7 @@ function verifyChallengeTxSigners(challengeTx, serverAccountID, networkPassphras
     }
   }
   if (!serverSignatureFound) {
-    throw new InvalidChallengeError("Transaction not signed by server: '" + serverKP.publicKey() + "'");
+    throw new InvalidChallengeError("Transaction not signed by server: '".concat(serverKP.publicKey(), "'"));
   }
   if (clientSigningKey && !clientSigningKeySignatureFound) {
     throw new InvalidChallengeError("Transaction not signed by the source account of the 'client_domain' " + "ManageData operation");
@@ -29983,7 +29983,7 @@ function gatherTxSigners(transaction, signers) {
       try {
         keypair = lib.Keypair.fromPublicKey(signer);
       } catch (err) {
-        throw new InvalidChallengeError("Signer is not a valid address: " + err.message);
+        throw new InvalidChallengeError("Signer is not a valid address: ".concat(err.message));
       }
       for (var i = 0; i < txSignatures.length; i++) {
         var decSig = txSignatures[i];
