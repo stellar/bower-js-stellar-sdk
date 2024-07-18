@@ -29438,6 +29438,25 @@ var Server = function () {
       }
       return requestAirdrop;
     }())
+  }, {
+    key: "getFeeStats",
+    value: (function () {
+      var _getFeeStats = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee20() {
+        return server_regeneratorRuntime().wrap(function _callee20$(_context20) {
+          while (1) switch (_context20.prev = _context20.next) {
+            case 0:
+              return _context20.abrupt("return", postObject(this.serverURL.toString(), 'getFeeStats'));
+            case 1:
+            case "end":
+              return _context20.stop();
+          }
+        }, _callee20, this);
+      }));
+      function getFeeStats() {
+        return _getFeeStats.apply(this, arguments);
+      }
+      return getFeeStats;
+    }())
   }]);
 }();
 
