@@ -29503,6 +29503,25 @@ var Server = function () {
       }
       return getFeeStats;
     }())
+  }, {
+    key: "getVersionInfo",
+    value: (function () {
+      var _getVersionInfo = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee21() {
+        return server_regeneratorRuntime().wrap(function _callee21$(_context21) {
+          while (1) switch (_context21.prev = _context21.next) {
+            case 0:
+              return _context21.abrupt("return", postObject(this.serverURL.toString(), 'getVersionInfo'));
+            case 1:
+            case "end":
+              return _context21.stop();
+          }
+        }, _callee21, this);
+      }));
+      function getVersionInfo() {
+        return _getVersionInfo.apply(this, arguments);
+      }
+      return getVersionInfo;
+    }())
   }]);
 }();
 
