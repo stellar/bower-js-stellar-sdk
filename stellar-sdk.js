@@ -21446,33 +21446,11 @@ var AssembledTransaction = function () {
         }
       }, _callee3);
     })));
-    assembled_transaction_defineProperty(this, "getStorageExpiration", assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee4() {
-      var entryRes;
-      return assembled_transaction_regeneratorRuntime().wrap(function _callee4$(_context4) {
-        while (1) switch (_context4.prev = _context4.next) {
-          case 0:
-            _context4.next = 2;
-            return _this.server.getLedgerEntries(new lib.Contract(_this.options.contractId).getFootprint());
-          case 2:
-            entryRes = _context4.sent;
-            if (!(!entryRes.entries || !entryRes.entries.length || !entryRes.entries[0].liveUntilLedgerSeq)) {
-              _context4.next = 5;
-              break;
-            }
-            throw new Error("failed to get ledger entry");
-          case 5:
-            return _context4.abrupt("return", entryRes.entries[0].liveUntilLedgerSeq);
-          case 6:
-          case "end":
-            return _context4.stop();
-        }
-      }, _callee4);
-    })));
     assembled_transaction_defineProperty(this, "needsNonInvokerSigningBy", function () {
       var _rawInvokeHostFunctio;
-      var _ref8 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref8$includeAlreadyS = _ref8.includeAlreadySigned,
-        includeAlreadySigned = _ref8$includeAlreadyS === void 0 ? false : _ref8$includeAlreadyS;
+      var _ref7 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        _ref7$includeAlreadyS = _ref7.includeAlreadySigned,
+        includeAlreadySigned = _ref7$includeAlreadyS === void 0 ? false : _ref7$includeAlreadyS;
       if (!_this.built) {
         throw new Error("Transaction has not yet been simulated");
       }
@@ -21488,12 +21466,12 @@ var AssembledTransaction = function () {
     });
     assembled_transaction_defineProperty(this, "signAuthEntries", assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee6() {
       var _rawInvokeHostFunctio2;
-      var _ref10,
-        _ref10$expiration,
+      var _ref9,
+        _ref9$expiration,
         expiration,
-        _ref10$signAuthEntry,
+        _ref9$signAuthEntry,
         signAuthEntry,
-        _ref10$publicKey,
+        _ref9$publicKey,
         publicKey,
         needsNonInvokerSigningBy,
         rawInvokeHostFunctionOp,
@@ -21508,7 +21486,21 @@ var AssembledTransaction = function () {
       return assembled_transaction_regeneratorRuntime().wrap(function _callee6$(_context6) {
         while (1) switch (_context6.prev = _context6.next) {
           case 0:
-            _ref10 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, _ref10$expiration = _ref10.expiration, expiration = _ref10$expiration === void 0 ? _this.getStorageExpiration() : _ref10$expiration, _ref10$signAuthEntry = _ref10.signAuthEntry, signAuthEntry = _ref10$signAuthEntry === void 0 ? _this.options.signAuthEntry : _ref10$signAuthEntry, _ref10$publicKey = _ref10.publicKey, publicKey = _ref10$publicKey === void 0 ? _this.options.publicKey : _ref10$publicKey;
+            _ref9 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, _ref9$expiration = _ref9.expiration, expiration = _ref9$expiration === void 0 ? assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee4() {
+              return assembled_transaction_regeneratorRuntime().wrap(function _callee4$(_context4) {
+                while (1) switch (_context4.prev = _context4.next) {
+                  case 0:
+                    _context4.next = 2;
+                    return _this.server.getLatestLedger();
+                  case 2:
+                    _context4.t0 = _context4.sent.sequence;
+                    return _context4.abrupt("return", _context4.t0 + 100);
+                  case 4:
+                  case "end":
+                    return _context4.stop();
+                }
+              }, _callee4);
+            }))() : _ref9$expiration, _ref9$signAuthEntry = _ref9.signAuthEntry, signAuthEntry = _ref9$signAuthEntry === void 0 ? _this.options.signAuthEntry : _ref9$signAuthEntry, _ref9$publicKey = _ref9.publicKey, publicKey = _ref9$publicKey === void 0 ? _this.options.publicKey : _ref9$publicKey;
             if (_this.built) {
               _context6.next = 3;
               break;
