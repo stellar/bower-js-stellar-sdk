@@ -534,7 +534,7 @@ var Asset = exports.Asset = /*#__PURE__*/function () {
      */
   }], [{
     key: "native",
-    value: function native() {
+    value: function _native() {
       return new Asset('XLM');
     }
 
@@ -683,6 +683,10 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
  *    authorization entry that you can pass along to
  *    {@link Operation.invokeHostFunction}
  *
+ * @note If using the `SigningCallback` variation, the signer is assumed to be
+ *    the entry's credential address. If you need a different key to sign the
+ *    entry, you will need to use different method (e.g., fork this code).
+ *
  * @see authorizeInvocation
  * @example
  * import {
@@ -765,7 +769,7 @@ function authorizeEntry(_x, _x2, _x3) {
  * @see authorizeEntry
  */
 function _authorizeEntry() {
-  _authorizeEntry = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(entry, signer, validUntilLedgerSeq) {
+  _authorizeEntry = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(entry, signer, validUntilLedgerSeq) {
     var networkPassphrase,
       clone,
       addrAuth,
@@ -799,7 +803,7 @@ function _authorizeEntry() {
           }));
           payload = (0, _hashing.hash)(preimage.toXDR());
           if (!(typeof signer === 'function')) {
-            _context.next = 17;
+            _context.next = 18;
             break;
           }
           _context.t0 = Buffer;
@@ -808,18 +812,19 @@ function _authorizeEntry() {
         case 13:
           _context.t1 = _context.sent;
           signature = _context.t0.from.call(_context.t0, _context.t1);
-          _context.next = 18;
-          break;
-        case 17:
-          signature = Buffer.from(signer.sign(payload));
-        case 18:
           publicKey = _address.Address.fromScAddress(addrAuth.address()).toString();
+          _context.next = 20;
+          break;
+        case 18:
+          signature = Buffer.from(signer.sign(payload));
+          publicKey = signer.publicKey();
+        case 20:
           if (_keypair.Keypair.fromPublicKey(publicKey).verify(payload, signature)) {
-            _context.next = 21;
+            _context.next = 22;
             break;
           }
           throw new Error("signature doesn't match payload");
-        case 21:
+        case 22:
           // This structure is defined here:
           // https://soroban.stellar.org/docs/fundamentals-and-concepts/invoking-contracts-with-transactions#stellar-account-signatures
           //
@@ -836,7 +841,7 @@ function _authorizeEntry() {
           });
           addrAuth.signature(_xdr["default"].ScVal.scvVec([sigScVal]));
           return _context.abrupt("return", clone);
-        case 24:
+        case 25:
         case "end":
           return _context.stop();
       }
@@ -10593,7 +10598,8 @@ function buildInvocationTree(root) {
  * @param {xdr.SorobanAuthorizedInvocation} [parent]  this `node`s parent node,
  *    if any (i.e. this doesn't exist at the root)
  *
- * @returns {boolean?}   returning `false` is a hint to stop exploring
+ * @returns {boolean|null|void}   returning exactly `false` is a hint to stop
+ *    exploring, other values are ignored
  */
 
 /**
@@ -38716,6 +38722,7 @@ var defaults = {
     parameterLimit: 1000,
     parseArrays: true,
     plainObjects: false,
+    strictDepth: false,
     strictNullHandling: false
 };
 
@@ -38893,9 +38900,12 @@ var parseKeys = function parseQueryStringKeys(givenKey, val, options, valuesPars
         keys.push(segment[1]);
     }
 
-    // If there's a remainder, just add whatever is left
+    // If there's a remainder, check strictDepth option for throw, else just add whatever is left
 
     if (segment) {
+        if (options.strictDepth === true) {
+            throw new RangeError('Input depth exceeded depth option of ' + options.depth + ' and strictDepth is true');
+        }
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
@@ -38952,6 +38962,7 @@ var normalizeParseOptions = function normalizeParseOptions(opts) {
         parameterLimit: typeof opts.parameterLimit === 'number' ? opts.parameterLimit : defaults.parameterLimit,
         parseArrays: opts.parseArrays !== false,
         plainObjects: typeof opts.plainObjects === 'boolean' ? opts.plainObjects : defaults.plainObjects,
+        strictDepth: typeof opts.strictDepth === 'boolean' ? !!opts.strictDepth : defaults.strictDepth,
         strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : defaults.strictNullHandling
     };
 };
@@ -55358,6 +55369,7 @@ __webpack_require__.d(common_utils_namespaceObject, {
   hasBrowserEnv: () => (hasBrowserEnv),
   hasStandardBrowserEnv: () => (hasStandardBrowserEnv),
   hasStandardBrowserWebWorkerEnv: () => (hasStandardBrowserWebWorkerEnv),
+  navigator: () => (_navigator),
   origin: () => (origin)
 });
 
@@ -56162,7 +56174,10 @@ function AxiosError(message, code, config, request, response) {
   code && (this.code = code);
   config && (this.config = config);
   request && (this.request = request);
-  response && (this.response = response);
+  if (response) {
+    this.response = response;
+    this.status = response.status ? response.status : null;
+  }
 }
 
 utils.inherits(AxiosError, Error, {
@@ -56182,7 +56197,7 @@ utils.inherits(AxiosError, Error, {
       // Axios
       config: utils.toJSONObject(this.config),
       code: this.code,
-      status: this.response && this.response.status ? this.response.status : null
+      status: this.status
     };
   }
 });
@@ -56701,6 +56716,8 @@ class InterceptorManager {
 ;// CONCATENATED MODULE: ./node_modules/axios/lib/platform/common/utils.js
 const hasBrowserEnv = typeof window !== 'undefined' && typeof document !== 'undefined';
 
+const _navigator = typeof navigator === 'object' && navigator || undefined;
+
 /**
  * Determine if we're running in a standard browser environment
  *
@@ -56718,10 +56735,8 @@ const hasBrowserEnv = typeof window !== 'undefined' && typeof document !== 'unde
  *
  * @returns {boolean}
  */
-const hasStandardBrowserEnv = (
-  (product) => {
-    return hasBrowserEnv && ['ReactNative', 'NativeScript', 'NS'].indexOf(product) < 0
-  })(typeof navigator !== 'undefined' && navigator.product);
+const hasStandardBrowserEnv = hasBrowserEnv &&
+  (!_navigator || ['ReactNative', 'NativeScript', 'NS'].indexOf(_navigator.product) < 0);
 
 /**
  * Determine if we're running in a standard browser webWorker environment
@@ -57656,7 +57671,7 @@ const asyncDecorator = (fn) => (...args) => utils.asap(() => fn(...args));
 // Standard browser envs have full support of the APIs needed to test
 // whether the request URL is of the same origin as current location.
   (function standardBrowserEnv() {
-    const msie = /(msie|trident)/i.test(navigator.userAgent);
+    const msie = platform.navigator && /(msie|trident)/i.test(platform.navigator.userAgent);
     const urlParsingNode = document.createElement('a');
     let originURL;
 
@@ -58185,46 +58200,48 @@ const isXHRAdapterSupported = typeof XMLHttpRequest !== 'undefined';
 
 
 
+
 const composeSignals = (signals, timeout) => {
-  let controller = new AbortController();
+  const {length} = (signals = signals ? signals.filter(Boolean) : []);
 
-  let aborted;
+  if (timeout || length) {
+    let controller = new AbortController();
 
-  const onabort = function (cancel) {
-    if (!aborted) {
-      aborted = true;
-      unsubscribe();
-      const err = cancel instanceof Error ? cancel : this.reason;
-      controller.abort(err instanceof core_AxiosError ? err : new cancel_CanceledError(err instanceof Error ? err.message : err));
+    let aborted;
+
+    const onabort = function (reason) {
+      if (!aborted) {
+        aborted = true;
+        unsubscribe();
+        const err = reason instanceof Error ? reason : this.reason;
+        controller.abort(err instanceof core_AxiosError ? err : new cancel_CanceledError(err instanceof Error ? err.message : err));
+      }
     }
-  }
 
-  let timer = timeout && setTimeout(() => {
-    onabort(new core_AxiosError(`timeout ${timeout} of ms exceeded`, core_AxiosError.ETIMEDOUT))
-  }, timeout)
-
-  const unsubscribe = () => {
-    if (signals) {
-      timer && clearTimeout(timer);
+    let timer = timeout && setTimeout(() => {
       timer = null;
-      signals.forEach(signal => {
-        signal &&
-        (signal.removeEventListener ? signal.removeEventListener('abort', onabort) : signal.unsubscribe(onabort));
-      });
-      signals = null;
+      onabort(new core_AxiosError(`timeout ${timeout} of ms exceeded`, core_AxiosError.ETIMEDOUT))
+    }, timeout)
+
+    const unsubscribe = () => {
+      if (signals) {
+        timer && clearTimeout(timer);
+        timer = null;
+        signals.forEach(signal => {
+          signal.unsubscribe ? signal.unsubscribe(onabort) : signal.removeEventListener('abort', onabort);
+        });
+        signals = null;
+      }
     }
+
+    signals.forEach((signal) => signal.addEventListener('abort', onabort));
+
+    const {signal} = controller;
+
+    signal.unsubscribe = () => utils.asap(unsubscribe);
+
+    return signal;
   }
-
-  signals.forEach((signal) => signal && signal.addEventListener && signal.addEventListener('abort', onabort));
-
-  const {signal} = controller;
-
-  signal.unsubscribe = unsubscribe;
-
-  return [signal, () => {
-    timer && clearTimeout(timer);
-    timer = null;
-  }];
 }
 
 /* harmony default export */ const helpers_composeSignals = (composeSignals);
@@ -58249,14 +58266,34 @@ const streamChunk = function* (chunk, chunkSize) {
   }
 }
 
-const readBytes = async function* (iterable, chunkSize, encode) {
-  for await (const chunk of iterable) {
-    yield* streamChunk(ArrayBuffer.isView(chunk) ? chunk : (await encode(String(chunk))), chunkSize);
+const readBytes = async function* (iterable, chunkSize) {
+  for await (const chunk of readStream(iterable)) {
+    yield* streamChunk(chunk, chunkSize);
   }
 }
 
-const trackStream = (stream, chunkSize, onProgress, onFinish, encode) => {
-  const iterator = readBytes(stream, chunkSize, encode);
+const readStream = async function* (stream) {
+  if (stream[Symbol.asyncIterator]) {
+    yield* stream;
+    return;
+  }
+
+  const reader = stream.getReader();
+  try {
+    for (;;) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      }
+      yield value;
+    }
+  } finally {
+    await reader.cancel();
+  }
+}
+
+const trackStream = (stream, chunkSize, onProgress, onFinish) => {
+  const iterator = readBytes(stream, chunkSize);
 
   let bytes = 0;
   let done;
@@ -58370,7 +58407,11 @@ const getBodyLength = async (body) => {
   }
 
   if(utils.isSpecCompliantForm(body)) {
-    return (await new Request(body).arrayBuffer()).byteLength;
+    const _request = new Request(platform.origin, {
+      method: 'POST',
+      body,
+    });
+    return (await _request.arrayBuffer()).byteLength;
   }
 
   if(utils.isArrayBufferView(body) || utils.isArrayBuffer(body)) {
@@ -58410,18 +58451,13 @@ const resolveBodyLength = async (headers, body) => {
 
   responseType = responseType ? (responseType + '').toLowerCase() : 'text';
 
-  let [composedSignal, stopTimeout] = (signal || cancelToken || timeout) ?
-    helpers_composeSignals([signal, cancelToken], timeout) : [];
+  let composedSignal = helpers_composeSignals([signal, cancelToken && cancelToken.toAbortSignal()], timeout);
 
-  let finished, request;
+  let request;
 
-  const onFinish = () => {
-    !finished && setTimeout(() => {
-      composedSignal && composedSignal.unsubscribe();
-    });
-
-    finished = true;
-  }
+  const unsubscribe = composedSignal && composedSignal.unsubscribe && (() => {
+      composedSignal.unsubscribe();
+  });
 
   let requestContentLength;
 
@@ -58448,7 +58484,7 @@ const resolveBodyLength = async (headers, body) => {
           progressEventReducer(asyncDecorator(onUploadProgress))
         );
 
-        data = trackStream(_request.body, DEFAULT_CHUNK_SIZE, onProgress, flush, encodeText);
+        data = trackStream(_request.body, DEFAULT_CHUNK_SIZE, onProgress, flush);
       }
     }
 
@@ -58456,6 +58492,9 @@ const resolveBodyLength = async (headers, body) => {
       withCredentials = withCredentials ? 'include' : 'omit';
     }
 
+    // Cloudflare Workers throws when credentials are defined
+    // see https://github.com/cloudflare/workerd/issues/902
+    const isCredentialsSupported = "credentials" in Request.prototype;
     request = new Request(url, {
       ...fetchOptions,
       signal: composedSignal,
@@ -58463,14 +58502,14 @@ const resolveBodyLength = async (headers, body) => {
       headers: headers.normalize().toJSON(),
       body: data,
       duplex: "half",
-      credentials: withCredentials
+      credentials: isCredentialsSupported ? withCredentials : undefined
     });
 
     let response = await fetch(request);
 
     const isStreamResponse = supportsResponseStream && (responseType === 'stream' || responseType === 'response');
 
-    if (supportsResponseStream && (onDownloadProgress || isStreamResponse)) {
+    if (supportsResponseStream && (onDownloadProgress || (isStreamResponse && unsubscribe))) {
       const options = {};
 
       ['status', 'statusText', 'headers'].forEach(prop => {
@@ -58487,8 +58526,8 @@ const resolveBodyLength = async (headers, body) => {
       response = new Response(
         trackStream(response.body, DEFAULT_CHUNK_SIZE, onProgress, () => {
           flush && flush();
-          isStreamResponse && onFinish();
-        }, encodeText),
+          unsubscribe && unsubscribe();
+        }),
         options
       );
     }
@@ -58497,9 +58536,7 @@ const resolveBodyLength = async (headers, body) => {
 
     let responseData = await resolvers[utils.findKey(resolvers, responseType) || 'text'](response, config);
 
-    !isStreamResponse && onFinish();
-
-    stopTimeout && stopTimeout();
+    !isStreamResponse && unsubscribe && unsubscribe();
 
     return await new Promise((resolve, reject) => {
       settle(resolve, reject, {
@@ -58512,7 +58549,7 @@ const resolveBodyLength = async (headers, body) => {
       })
     })
   } catch (err) {
-    onFinish();
+    unsubscribe && unsubscribe();
 
     if (err && err.name === 'TypeError' && /fetch/i.test(err.message)) {
       throw Object.assign(
@@ -58694,7 +58731,7 @@ function dispatchRequest(config) {
 }
 
 ;// CONCATENATED MODULE: ./node_modules/axios/lib/env/data.js
-const VERSION = "1.7.3";
+const VERSION = "1.7.7";
 ;// CONCATENATED MODULE: ./node_modules/axios/lib/helpers/validator.js
 
 
@@ -59123,6 +59160,20 @@ class CancelToken {
     }
   }
 
+  toAbortSignal() {
+    const controller = new AbortController();
+
+    const abort = (err) => {
+      controller.abort(err);
+    };
+
+    this.subscribe(abort);
+
+    controller.signal.unsubscribe = () => this.unsubscribe(abort);
+
+    return controller.signal;
+  }
+
   /**
    * Returns an object that contains a new `CancelToken` and a function that, when called,
    * cancels the `CancelToken`.
@@ -59358,7 +59409,7 @@ axios.default = axios;
 /***/ ((module) => {
 
 "use strict";
-module.exports = {"rE":"12.2.0"};
+module.exports = {"rE":"12.3.0"};
 
 /***/ })
 
