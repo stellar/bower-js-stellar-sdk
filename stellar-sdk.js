@@ -29585,6 +29585,90 @@ var Server = function () {
       }
       return getVersionInfo;
     }())
+  }, {
+    key: "getSACBalance",
+    value: (function () {
+      var _getSACBalance = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee24(contractId, sac, networkPassphrase) {
+        var passphrase, sacId, key, ledgerKey, response, _response$entries$2, lastModifiedLedgerSeq, liveUntilLedgerSeq, val, entry;
+        return server_regeneratorRuntime().wrap(function _callee24$(_context24) {
+          while (1) switch (_context24.prev = _context24.next) {
+            case 0:
+              if (lib.StrKey.isValidContract(contractId)) {
+                _context24.next = 2;
+                break;
+              }
+              throw new TypeError("expected contract ID, got ".concat(contractId));
+            case 2:
+              if (!(networkPassphrase !== null && networkPassphrase !== void 0)) {
+                _context24.next = 6;
+                break;
+              }
+              _context24.t0 = networkPassphrase;
+              _context24.next = 9;
+              break;
+            case 6:
+              _context24.next = 8;
+              return this.getNetwork().then(function (n) {
+                return n.passphrase;
+              });
+            case 8:
+              _context24.t0 = _context24.sent;
+            case 9:
+              passphrase = _context24.t0;
+              sacId = sac.contractId(passphrase);
+              key = lib.xdr.ScVal.scvVec([(0,lib.nativeToScVal)("Balance", {
+                type: "symbol"
+              }), (0,lib.nativeToScVal)(contractId, {
+                type: "address"
+              })]);
+              ledgerKey = lib.xdr.LedgerKey.contractData(new lib.xdr.LedgerKeyContractData({
+                contract: new lib.Address(sacId).toScAddress(),
+                durability: lib.xdr.ContractDataDurability.persistent(),
+                key: key
+              }));
+              _context24.next = 15;
+              return this.getLedgerEntries(ledgerKey);
+            case 15:
+              response = _context24.sent;
+              if (!(response.entries.length === 0)) {
+                _context24.next = 18;
+                break;
+              }
+              return _context24.abrupt("return", {
+                latestLedger: response.latestLedger
+              });
+            case 18:
+              _response$entries$2 = response.entries[0], lastModifiedLedgerSeq = _response$entries$2.lastModifiedLedgerSeq, liveUntilLedgerSeq = _response$entries$2.liveUntilLedgerSeq, val = _response$entries$2.val;
+              if (!(val.switch().value !== lib.xdr.LedgerEntryType.contractData().value)) {
+                _context24.next = 21;
+                break;
+              }
+              return _context24.abrupt("return", {
+                latestLedger: response.latestLedger
+              });
+            case 21:
+              entry = (0,lib.scValToNative)(val.contractData().val());
+              return _context24.abrupt("return", {
+                latestLedger: response.latestLedger,
+                balanceEntry: {
+                  liveUntilLedgerSeq: liveUntilLedgerSeq,
+                  lastModifiedLedgerSeq: lastModifiedLedgerSeq,
+                  amount: entry.amount.toString(),
+                  authorized: entry.authorized,
+                  clawback: entry.clawback
+                }
+              });
+            case 23:
+            case "end":
+              return _context24.stop();
+          }
+        }, _callee24, this);
+      }));
+      function getSACBalance(_x21, _x22, _x23) {
+        return _getSACBalance.apply(this, arguments);
+      }
+      return getSACBalance;
+    }())
   }]);
 }();
 
