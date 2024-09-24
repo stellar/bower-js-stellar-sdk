@@ -29315,7 +29315,7 @@ var Server = function () {
         return server_regeneratorRuntime().wrap(function _callee13$(_context13) {
           while (1) switch (_context13.prev = _context13.next) {
             case 0:
-              return _context13.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', _objectSpread({
+              return _context13.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', _objectSpread(_objectSpread({
                 filters: (_request$filters = request.filters) !== null && _request$filters !== void 0 ? _request$filters : [],
                 pagination: _objectSpread(_objectSpread({}, request.cursor && {
                   cursor: request.cursor
@@ -29324,6 +29324,8 @@ var Server = function () {
                 })
               }, request.startLedger && {
                 startLedger: request.startLedger
+              }), request.endLedger && {
+                endLedger: request.endLedger
               })));
             case 1:
             case "end":
