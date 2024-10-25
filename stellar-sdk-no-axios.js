@@ -21763,7 +21763,7 @@ function sent_transaction_toPrimitive(t, r) { if ("object" != sent_transaction_t
 
 
 var SentTransaction = function () {
-  function SentTransaction(_, assembled) {
+  function SentTransaction(assembled) {
     var _this = this,
       _this$assembled$optio2;
     sent_transaction_classCallCheck(this, SentTransaction);
@@ -21861,12 +21861,12 @@ _defineProperty(SentTransaction, "Errors", {
   }(_wrapNativeSuper(Error))
 });
 _defineProperty(SentTransaction, "init", function () {
-  var _ref2 = sent_transaction_asyncToGenerator(sent_transaction_regeneratorRuntime().mark(function _callee2(_, assembled) {
+  var _ref2 = sent_transaction_asyncToGenerator(sent_transaction_regeneratorRuntime().mark(function _callee2(assembled) {
     var tx, sent;
     return sent_transaction_regeneratorRuntime().wrap(function _callee2$(_context2) {
       while (1) switch (_context2.prev = _context2.next) {
         case 0:
-          tx = new _SentTransaction(undefined, assembled);
+          tx = new _SentTransaction(assembled);
           _context2.next = 3;
           return tx.send();
         case 3:
@@ -21878,7 +21878,7 @@ _defineProperty(SentTransaction, "init", function () {
       }
     }, _callee2);
   }));
-  return function (_x, _x2) {
+  return function (_x) {
     return _ref2.apply(this, arguments);
   };
 }());
@@ -22375,7 +22375,7 @@ var AssembledTransaction = function () {
               throw new Error("The transaction has not yet been signed. Run `sign` first, or use `signAndSend` instead.");
             case 2:
               _context8.next = 4;
-              return SentTransaction.init(undefined, this);
+              return SentTransaction.init(this);
             case 4:
               sent = _context8.sent;
               return _context8.abrupt("return", sent);
@@ -29538,7 +29538,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   Horizon: () => (/* reexport module object */ _horizon__WEBPACK_IMPORTED_MODULE_7__),
 /* harmony export */   NetworkError: () => (/* reexport safe */ _errors__WEBPACK_IMPORTED_MODULE_0__.Dr),
 /* harmony export */   NotFoundError: () => (/* reexport safe */ _errors__WEBPACK_IMPORTED_MODULE_0__.m_),
-/* harmony export */   SorobanRpc: () => (/* reexport module object */ _rpc__WEBPACK_IMPORTED_MODULE_8__),
 /* harmony export */   StellarToml: () => (/* reexport module object */ _stellartoml__WEBPACK_IMPORTED_MODULE_3__),
 /* harmony export */   Utils: () => (/* reexport safe */ _utils__WEBPACK_IMPORTED_MODULE_2__.A),
 /* harmony export */   WebAuth: () => (/* reexport module object */ _webauth__WEBPACK_IMPORTED_MODULE_5__),
@@ -29559,11 +29558,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(356);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(_stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony reexport (unknown) */ var __WEBPACK_REEXPORT_OBJECT__ = {};
-/* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__) if(["default","Config","Utils","StellarToml","Federation","WebAuth","Friendbot","Horizon","rpc","SorobanRpc","contract","AccountRequiresMemoError","BadRequestError","BadResponseError","NetworkError","NotFoundError"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__[__WEBPACK_IMPORT_KEY__]
+/* harmony reexport (unknown) */ for(const __WEBPACK_IMPORT_KEY__ in _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__) if(["default","Config","Utils","StellarToml","Federation","WebAuth","Friendbot","Horizon","rpc","contract","AccountRequiresMemoError","BadRequestError","BadResponseError","NetworkError","NotFoundError"].indexOf(__WEBPACK_IMPORT_KEY__) < 0) __WEBPACK_REEXPORT_OBJECT__[__WEBPACK_IMPORT_KEY__] = () => _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__[__WEBPACK_IMPORT_KEY__]
 /* harmony reexport (unknown) */ __webpack_require__.d(__webpack_exports__, __WEBPACK_REEXPORT_OBJECT__);
 /* module decorator */ module = __webpack_require__.hmd(module);
-
-
 
 
 
