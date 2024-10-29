@@ -29633,7 +29633,9 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.d(__webpack_exports__, {
   Api: () => (/* reexport */ api/* Api */.j),
   AxiosClient: () => (/* reexport */ axios),
+  BasicSleepStrategy: () => (/* reexport */ BasicSleepStrategy),
   Durability: () => (/* reexport */ Durability),
+  LinearSleepStrategy: () => (/* reexport */ LinearSleepStrategy),
   Server: () => (/* reexport */ RpcServer),
   assembleTransaction: () => (/* reexport */ transaction/* assembleTransaction */.X),
   "default": () => (/* binding */ rpc),
@@ -29710,6 +29712,8 @@ function _postObject() {
 var transaction = __webpack_require__(8680);
 // EXTERNAL MODULE: ./src/rpc/parsers.ts
 var parsers = __webpack_require__(784);
+// EXTERNAL MODULE: ./src/utils.ts
+var utils = __webpack_require__(3121);
 ;// ./src/rpc/server.ts
 /* provided dependency */ var Buffer = __webpack_require__(8287)["Buffer"];
 function server_typeof(o) { "@babel/helpers - typeof"; return server_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, server_typeof(o); }
@@ -29731,12 +29735,20 @@ function _toPrimitive(t, r) { if ("object" != server_typeof(t) || !t) return t; 
 
 
 
+
 var SUBMIT_TRANSACTION_TIMEOUT = (/* unused pure expression or super */ null && (60 * 1000));
 var Durability = function (Durability) {
   Durability["Temporary"] = "temporary";
   Durability["Persistent"] = "persistent";
   return Durability;
 }({});
+var DEFAULT_GET_TRANSACTION_TIMEOUT = 30;
+var BasicSleepStrategy = function BasicSleepStrategy(_iter) {
+  return 1000;
+};
+var LinearSleepStrategy = function LinearSleepStrategy(iter) {
+  return 1000 * iter;
+};
 function findCreatedAccountSequenceInTransactionMeta(meta) {
   var _operations$flatMap$f;
   var operations = [];
@@ -30041,13 +30053,58 @@ var RpcServer = function () {
       return _getLedgerEntries;
     }()
   }, {
-    key: "getTransaction",
+    key: "pollTransaction",
     value: (function () {
-      var _getTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee8(hash) {
+      var _pollTransaction = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee8(hash, opts) {
+        var _opts$attempts, _opts$attempts2;
+        var maxAttempts, foundInfo, attempt, _opts$sleepStrategy;
         return server_regeneratorRuntime().wrap(function _callee8$(_context8) {
           while (1) switch (_context8.prev = _context8.next) {
             case 0:
-              return _context8.abrupt("return", this._getTransaction(hash).then(function (raw) {
+              maxAttempts = ((_opts$attempts = opts === null || opts === void 0 ? void 0 : opts.attempts) !== null && _opts$attempts !== void 0 ? _opts$attempts : 0) < 1 ? DEFAULT_GET_TRANSACTION_TIMEOUT : (_opts$attempts2 = opts === null || opts === void 0 ? void 0 : opts.attempts) !== null && _opts$attempts2 !== void 0 ? _opts$attempts2 : DEFAULT_GET_TRANSACTION_TIMEOUT;
+              attempt = 1;
+            case 2:
+              if (!(attempt < maxAttempts)) {
+                _context8.next = 13;
+                break;
+              }
+              _context8.next = 5;
+              return this.getTransaction(hash);
+            case 5:
+              foundInfo = _context8.sent;
+              if (!(foundInfo.status !== api/* Api */.j.GetTransactionStatus.NOT_FOUND)) {
+                _context8.next = 8;
+                break;
+              }
+              return _context8.abrupt("return", foundInfo);
+            case 8:
+              _context8.next = 10;
+              return utils/* Utils */.A.sleep(((_opts$sleepStrategy = opts === null || opts === void 0 ? void 0 : opts.sleepStrategy) !== null && _opts$sleepStrategy !== void 0 ? _opts$sleepStrategy : BasicSleepStrategy)(attempt));
+            case 10:
+              attempt++;
+              _context8.next = 2;
+              break;
+            case 13:
+              return _context8.abrupt("return", foundInfo);
+            case 14:
+            case "end":
+              return _context8.stop();
+          }
+        }, _callee8, this);
+      }));
+      function pollTransaction(_x6, _x7) {
+        return _pollTransaction.apply(this, arguments);
+      }
+      return pollTransaction;
+    }())
+  }, {
+    key: "getTransaction",
+    value: (function () {
+      var _getTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee9(hash) {
+        return server_regeneratorRuntime().wrap(function _callee9$(_context9) {
+          while (1) switch (_context9.prev = _context9.next) {
+            case 0:
+              return _context9.abrupt("return", this._getTransaction(hash).then(function (raw) {
                 var foundInfo = {};
                 if (raw.status !== api/* Api */.j.GetTransactionStatus.NOT_FOUND) {
                   Object.assign(foundInfo, (0,parsers/* parseTransactionInfo */.WC)(raw));
@@ -30063,11 +30120,11 @@ var RpcServer = function () {
               }));
             case 1:
             case "end":
-              return _context8.stop();
+              return _context9.stop();
           }
-        }, _callee8, this);
+        }, _callee9, this);
       }));
-      function getTransaction(_x6) {
+      function getTransaction(_x8) {
         return _getTransaction2.apply(this, arguments);
       }
       return getTransaction;
@@ -30075,20 +30132,20 @@ var RpcServer = function () {
   }, {
     key: "_getTransaction",
     value: function () {
-      var _getTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee9(hash) {
-        return server_regeneratorRuntime().wrap(function _callee9$(_context9) {
-          while (1) switch (_context9.prev = _context9.next) {
+      var _getTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee10(hash) {
+        return server_regeneratorRuntime().wrap(function _callee10$(_context10) {
+          while (1) switch (_context10.prev = _context10.next) {
             case 0:
-              return _context9.abrupt("return", postObject(this.serverURL.toString(), 'getTransaction', {
+              return _context10.abrupt("return", postObject(this.serverURL.toString(), 'getTransaction', {
                 hash: hash
               }));
             case 1:
             case "end":
-              return _context9.stop();
+              return _context10.stop();
           }
-        }, _callee9, this);
+        }, _callee10, this);
       }));
-      function _getTransaction(_x7) {
+      function _getTransaction(_x9) {
         return _getTransaction3.apply(this, arguments);
       }
       return _getTransaction;
@@ -30096,11 +30153,11 @@ var RpcServer = function () {
   }, {
     key: "getTransactions",
     value: (function () {
-      var _getTransactions2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee10(request) {
-        return server_regeneratorRuntime().wrap(function _callee10$(_context10) {
-          while (1) switch (_context10.prev = _context10.next) {
+      var _getTransactions2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee11(request) {
+        return server_regeneratorRuntime().wrap(function _callee11$(_context11) {
+          while (1) switch (_context11.prev = _context11.next) {
             case 0:
-              return _context10.abrupt("return", this._getTransactions(request).then(function (raw) {
+              return _context11.abrupt("return", this._getTransactions(request).then(function (raw) {
                 var result = {
                   transactions: raw.transactions.map(parsers/* parseRawTransactions */.tR),
                   latestLedger: raw.latestLedger,
@@ -30113,11 +30170,11 @@ var RpcServer = function () {
               }));
             case 1:
             case "end":
-              return _context10.stop();
+              return _context11.stop();
           }
-        }, _callee10, this);
+        }, _callee11, this);
       }));
-      function getTransactions(_x8) {
+      function getTransactions(_x10) {
         return _getTransactions2.apply(this, arguments);
       }
       return getTransactions;
@@ -30125,18 +30182,18 @@ var RpcServer = function () {
   }, {
     key: "_getTransactions",
     value: function () {
-      var _getTransactions3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee11(request) {
-        return server_regeneratorRuntime().wrap(function _callee11$(_context11) {
-          while (1) switch (_context11.prev = _context11.next) {
+      var _getTransactions3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee12(request) {
+        return server_regeneratorRuntime().wrap(function _callee12$(_context12) {
+          while (1) switch (_context12.prev = _context12.next) {
             case 0:
-              return _context11.abrupt("return", postObject(this.serverURL.toString(), 'getTransactions', request));
+              return _context12.abrupt("return", postObject(this.serverURL.toString(), 'getTransactions', request));
             case 1:
             case "end":
-              return _context11.stop();
+              return _context12.stop();
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
-      function _getTransactions(_x9) {
+      function _getTransactions(_x11) {
         return _getTransactions3.apply(this, arguments);
       }
       return _getTransactions;
@@ -30144,18 +30201,18 @@ var RpcServer = function () {
   }, {
     key: "getEvents",
     value: (function () {
-      var _getEvents2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee12(request) {
-        return server_regeneratorRuntime().wrap(function _callee12$(_context12) {
-          while (1) switch (_context12.prev = _context12.next) {
+      var _getEvents2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee13(request) {
+        return server_regeneratorRuntime().wrap(function _callee13$(_context13) {
+          while (1) switch (_context13.prev = _context13.next) {
             case 0:
-              return _context12.abrupt("return", this._getEvents(request).then(parsers/* parseRawEvents */.fG));
+              return _context13.abrupt("return", this._getEvents(request).then(parsers/* parseRawEvents */.fG));
             case 1:
             case "end":
-              return _context12.stop();
+              return _context13.stop();
           }
-        }, _callee12, this);
+        }, _callee13, this);
       }));
-      function getEvents(_x10) {
+      function getEvents(_x12) {
         return _getEvents2.apply(this, arguments);
       }
       return getEvents;
@@ -30163,12 +30220,12 @@ var RpcServer = function () {
   }, {
     key: "_getEvents",
     value: function () {
-      var _getEvents3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee13(request) {
+      var _getEvents3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee14(request) {
         var _request$filters;
-        return server_regeneratorRuntime().wrap(function _callee13$(_context13) {
-          while (1) switch (_context13.prev = _context13.next) {
+        return server_regeneratorRuntime().wrap(function _callee14$(_context14) {
+          while (1) switch (_context14.prev = _context14.next) {
             case 0:
-              return _context13.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', _objectSpread(_objectSpread({
+              return _context14.abrupt("return", postObject(this.serverURL.toString(), 'getEvents', _objectSpread(_objectSpread({
                 filters: (_request$filters = request.filters) !== null && _request$filters !== void 0 ? _request$filters : [],
                 pagination: _objectSpread(_objectSpread({}, request.cursor && {
                   cursor: request.cursor
@@ -30182,11 +30239,11 @@ var RpcServer = function () {
               })));
             case 1:
             case "end":
-              return _context13.stop();
+              return _context14.stop();
           }
-        }, _callee13, this);
+        }, _callee14, this);
       }));
-      function _getEvents(_x11) {
+      function _getEvents(_x13) {
         return _getEvents3.apply(this, arguments);
       }
       return _getEvents;
@@ -30194,16 +30251,16 @@ var RpcServer = function () {
   }, {
     key: "getNetwork",
     value: (function () {
-      var _getNetwork = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee14() {
-        return server_regeneratorRuntime().wrap(function _callee14$(_context14) {
-          while (1) switch (_context14.prev = _context14.next) {
+      var _getNetwork = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee15() {
+        return server_regeneratorRuntime().wrap(function _callee15$(_context15) {
+          while (1) switch (_context15.prev = _context15.next) {
             case 0:
-              return _context14.abrupt("return", postObject(this.serverURL.toString(), 'getNetwork'));
+              return _context15.abrupt("return", postObject(this.serverURL.toString(), 'getNetwork'));
             case 1:
             case "end":
-              return _context14.stop();
+              return _context15.stop();
           }
-        }, _callee14, this);
+        }, _callee15, this);
       }));
       function getNetwork() {
         return _getNetwork.apply(this, arguments);
@@ -30213,16 +30270,16 @@ var RpcServer = function () {
   }, {
     key: "getLatestLedger",
     value: (function () {
-      var _getLatestLedger = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee15() {
-        return server_regeneratorRuntime().wrap(function _callee15$(_context15) {
-          while (1) switch (_context15.prev = _context15.next) {
+      var _getLatestLedger = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee16() {
+        return server_regeneratorRuntime().wrap(function _callee16$(_context16) {
+          while (1) switch (_context16.prev = _context16.next) {
             case 0:
-              return _context15.abrupt("return", postObject(this.serverURL.toString(), 'getLatestLedger'));
+              return _context16.abrupt("return", postObject(this.serverURL.toString(), 'getLatestLedger'));
             case 1:
             case "end":
-              return _context15.stop();
+              return _context16.stop();
           }
-        }, _callee15, this);
+        }, _callee16, this);
       }));
       function getLatestLedger() {
         return _getLatestLedger.apply(this, arguments);
@@ -30232,18 +30289,18 @@ var RpcServer = function () {
   }, {
     key: "simulateTransaction",
     value: (function () {
-      var _simulateTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee16(tx, addlResources) {
-        return server_regeneratorRuntime().wrap(function _callee16$(_context16) {
-          while (1) switch (_context16.prev = _context16.next) {
+      var _simulateTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee17(tx, addlResources) {
+        return server_regeneratorRuntime().wrap(function _callee17$(_context17) {
+          while (1) switch (_context17.prev = _context17.next) {
             case 0:
-              return _context16.abrupt("return", this._simulateTransaction(tx, addlResources).then(parsers/* parseRawSimulation */.jr));
+              return _context17.abrupt("return", this._simulateTransaction(tx, addlResources).then(parsers/* parseRawSimulation */.jr));
             case 1:
             case "end":
-              return _context16.stop();
+              return _context17.stop();
           }
-        }, _callee16, this);
+        }, _callee17, this);
       }));
-      function simulateTransaction(_x12, _x13) {
+      function simulateTransaction(_x14, _x15) {
         return _simulateTransaction2.apply(this, arguments);
       }
       return simulateTransaction;
@@ -30251,11 +30308,11 @@ var RpcServer = function () {
   }, {
     key: "_simulateTransaction",
     value: function () {
-      var _simulateTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee17(transaction, addlResources) {
-        return server_regeneratorRuntime().wrap(function _callee17$(_context17) {
-          while (1) switch (_context17.prev = _context17.next) {
+      var _simulateTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee18(transaction, addlResources) {
+        return server_regeneratorRuntime().wrap(function _callee18$(_context18) {
+          while (1) switch (_context18.prev = _context18.next) {
             case 0:
-              return _context17.abrupt("return", postObject(this.serverURL.toString(), 'simulateTransaction', _objectSpread({
+              return _context18.abrupt("return", postObject(this.serverURL.toString(), 'simulateTransaction', _objectSpread({
                 transaction: transaction.toXDR()
               }, addlResources !== undefined && {
                 resourceConfig: {
@@ -30264,11 +30321,11 @@ var RpcServer = function () {
               })));
             case 1:
             case "end":
-              return _context17.stop();
+              return _context18.stop();
           }
-        }, _callee17, this);
+        }, _callee18, this);
       }));
-      function _simulateTransaction(_x14, _x15) {
+      function _simulateTransaction(_x16, _x17) {
         return _simulateTransaction3.apply(this, arguments);
       }
       return _simulateTransaction;
@@ -30276,29 +30333,29 @@ var RpcServer = function () {
   }, {
     key: "prepareTransaction",
     value: (function () {
-      var _prepareTransaction = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee18(tx) {
+      var _prepareTransaction = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee19(tx) {
         var simResponse;
-        return server_regeneratorRuntime().wrap(function _callee18$(_context18) {
-          while (1) switch (_context18.prev = _context18.next) {
+        return server_regeneratorRuntime().wrap(function _callee19$(_context19) {
+          while (1) switch (_context19.prev = _context19.next) {
             case 0:
-              _context18.next = 2;
+              _context19.next = 2;
               return this.simulateTransaction(tx);
             case 2:
-              simResponse = _context18.sent;
+              simResponse = _context19.sent;
               if (!api/* Api */.j.isSimulationError(simResponse)) {
-                _context18.next = 5;
+                _context19.next = 5;
                 break;
               }
               throw new Error(simResponse.error);
             case 5:
-              return _context18.abrupt("return", (0,transaction/* assembleTransaction */.X)(tx, simResponse).build());
+              return _context19.abrupt("return", (0,transaction/* assembleTransaction */.X)(tx, simResponse).build());
             case 6:
             case "end":
-              return _context18.stop();
+              return _context19.stop();
           }
-        }, _callee18, this);
+        }, _callee19, this);
       }));
-      function prepareTransaction(_x16) {
+      function prepareTransaction(_x18) {
         return _prepareTransaction.apply(this, arguments);
       }
       return prepareTransaction;
@@ -30306,18 +30363,18 @@ var RpcServer = function () {
   }, {
     key: "sendTransaction",
     value: (function () {
-      var _sendTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee19(transaction) {
-        return server_regeneratorRuntime().wrap(function _callee19$(_context19) {
-          while (1) switch (_context19.prev = _context19.next) {
+      var _sendTransaction2 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee20(transaction) {
+        return server_regeneratorRuntime().wrap(function _callee20$(_context20) {
+          while (1) switch (_context20.prev = _context20.next) {
             case 0:
-              return _context19.abrupt("return", this._sendTransaction(transaction).then(parsers/* parseRawSendTransaction */.Af));
+              return _context20.abrupt("return", this._sendTransaction(transaction).then(parsers/* parseRawSendTransaction */.Af));
             case 1:
             case "end":
-              return _context19.stop();
+              return _context20.stop();
           }
-        }, _callee19, this);
+        }, _callee20, this);
       }));
-      function sendTransaction(_x17) {
+      function sendTransaction(_x19) {
         return _sendTransaction2.apply(this, arguments);
       }
       return sendTransaction;
@@ -30325,20 +30382,20 @@ var RpcServer = function () {
   }, {
     key: "_sendTransaction",
     value: function () {
-      var _sendTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee20(transaction) {
-        return server_regeneratorRuntime().wrap(function _callee20$(_context20) {
-          while (1) switch (_context20.prev = _context20.next) {
+      var _sendTransaction3 = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee21(transaction) {
+        return server_regeneratorRuntime().wrap(function _callee21$(_context21) {
+          while (1) switch (_context21.prev = _context21.next) {
             case 0:
-              return _context20.abrupt("return", postObject(this.serverURL.toString(), 'sendTransaction', {
+              return _context21.abrupt("return", postObject(this.serverURL.toString(), 'sendTransaction', {
                 transaction: transaction.toXDR()
               }));
             case 1:
             case "end":
-              return _context20.stop();
+              return _context21.stop();
           }
-        }, _callee20, this);
+        }, _callee21, this);
       }));
-      function _sendTransaction(_x18) {
+      function _sendTransaction(_x20) {
         return _sendTransaction3.apply(this, arguments);
       }
       return _sendTransaction;
@@ -30346,58 +30403,58 @@ var RpcServer = function () {
   }, {
     key: "requestAirdrop",
     value: (function () {
-      var _requestAirdrop = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee21(address, friendbotUrl) {
+      var _requestAirdrop = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee22(address, friendbotUrl) {
         var account, response, meta, sequence, _error$response, _error$response$detai;
-        return server_regeneratorRuntime().wrap(function _callee21$(_context21) {
-          while (1) switch (_context21.prev = _context21.next) {
+        return server_regeneratorRuntime().wrap(function _callee22$(_context22) {
+          while (1) switch (_context22.prev = _context22.next) {
             case 0:
               account = typeof address === 'string' ? address : address.accountId();
-              _context21.t0 = friendbotUrl;
-              if (_context21.t0) {
-                _context21.next = 6;
+              _context22.t0 = friendbotUrl;
+              if (_context22.t0) {
+                _context22.next = 6;
                 break;
               }
-              _context21.next = 5;
+              _context22.next = 5;
               return this.getNetwork();
             case 5:
-              _context21.t0 = _context21.sent.friendbotUrl;
+              _context22.t0 = _context22.sent.friendbotUrl;
             case 6:
-              friendbotUrl = _context21.t0;
+              friendbotUrl = _context22.t0;
               if (friendbotUrl) {
-                _context21.next = 9;
+                _context22.next = 9;
                 break;
               }
               throw new Error('No friendbot URL configured for current network');
             case 9:
-              _context21.prev = 9;
-              _context21.next = 12;
+              _context22.prev = 9;
+              _context22.next = 12;
               return axios.post("".concat(friendbotUrl, "?addr=").concat(encodeURIComponent(account)));
             case 12:
-              response = _context21.sent;
+              response = _context22.sent;
               meta = lib.xdr.TransactionMeta.fromXDR(response.data.result_meta_xdr, 'base64');
               sequence = findCreatedAccountSequenceInTransactionMeta(meta);
-              return _context21.abrupt("return", new lib.Account(account, sequence));
+              return _context22.abrupt("return", new lib.Account(account, sequence));
             case 18:
-              _context21.prev = 18;
-              _context21.t1 = _context21["catch"](9);
-              if (!(((_error$response = _context21.t1.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400)) {
-                _context21.next = 23;
+              _context22.prev = 18;
+              _context22.t1 = _context22["catch"](9);
+              if (!(((_error$response = _context22.t1.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400)) {
+                _context22.next = 23;
                 break;
               }
-              if (!((_error$response$detai = _context21.t1.response.detail) !== null && _error$response$detai !== void 0 && _error$response$detai.includes('createAccountAlreadyExist'))) {
-                _context21.next = 23;
+              if (!((_error$response$detai = _context22.t1.response.detail) !== null && _error$response$detai !== void 0 && _error$response$detai.includes('createAccountAlreadyExist'))) {
+                _context22.next = 23;
                 break;
               }
-              return _context21.abrupt("return", this.getAccount(account));
+              return _context22.abrupt("return", this.getAccount(account));
             case 23:
-              throw _context21.t1;
+              throw _context22.t1;
             case 24:
             case "end":
-              return _context21.stop();
+              return _context22.stop();
           }
-        }, _callee21, this, [[9, 18]]);
+        }, _callee22, this, [[9, 18]]);
       }));
-      function requestAirdrop(_x19, _x20) {
+      function requestAirdrop(_x21, _x22) {
         return _requestAirdrop.apply(this, arguments);
       }
       return requestAirdrop;
@@ -30405,16 +30462,16 @@ var RpcServer = function () {
   }, {
     key: "getFeeStats",
     value: (function () {
-      var _getFeeStats = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee22() {
-        return server_regeneratorRuntime().wrap(function _callee22$(_context22) {
-          while (1) switch (_context22.prev = _context22.next) {
+      var _getFeeStats = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee23() {
+        return server_regeneratorRuntime().wrap(function _callee23$(_context23) {
+          while (1) switch (_context23.prev = _context23.next) {
             case 0:
-              return _context22.abrupt("return", postObject(this.serverURL.toString(), 'getFeeStats'));
+              return _context23.abrupt("return", postObject(this.serverURL.toString(), 'getFeeStats'));
             case 1:
             case "end":
-              return _context22.stop();
+              return _context23.stop();
           }
-        }, _callee22, this);
+        }, _callee23, this);
       }));
       function getFeeStats() {
         return _getFeeStats.apply(this, arguments);
@@ -30424,16 +30481,16 @@ var RpcServer = function () {
   }, {
     key: "getVersionInfo",
     value: (function () {
-      var _getVersionInfo = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee23() {
-        return server_regeneratorRuntime().wrap(function _callee23$(_context23) {
-          while (1) switch (_context23.prev = _context23.next) {
+      var _getVersionInfo = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee24() {
+        return server_regeneratorRuntime().wrap(function _callee24$(_context24) {
+          while (1) switch (_context24.prev = _context24.next) {
             case 0:
-              return _context23.abrupt("return", postObject(this.serverURL.toString(), 'getVersionInfo'));
+              return _context24.abrupt("return", postObject(this.serverURL.toString(), 'getVersionInfo'));
             case 1:
             case "end":
-              return _context23.stop();
+              return _context24.stop();
           }
-        }, _callee23, this);
+        }, _callee24, this);
       }));
       function getVersionInfo() {
         return _getVersionInfo.apply(this, arguments);
@@ -30443,33 +30500,33 @@ var RpcServer = function () {
   }, {
     key: "getSACBalance",
     value: (function () {
-      var _getSACBalance = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee24(contractId, sac, networkPassphrase) {
+      var _getSACBalance = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee25(contractId, sac, networkPassphrase) {
         var passphrase, sacId, key, ledgerKey, response, _response$entries$2, lastModifiedLedgerSeq, liveUntilLedgerSeq, val, entry;
-        return server_regeneratorRuntime().wrap(function _callee24$(_context24) {
-          while (1) switch (_context24.prev = _context24.next) {
+        return server_regeneratorRuntime().wrap(function _callee25$(_context25) {
+          while (1) switch (_context25.prev = _context25.next) {
             case 0:
               if (lib.StrKey.isValidContract(contractId)) {
-                _context24.next = 2;
+                _context25.next = 2;
                 break;
               }
               throw new TypeError("expected contract ID, got ".concat(contractId));
             case 2:
               if (!(networkPassphrase !== null && networkPassphrase !== void 0)) {
-                _context24.next = 6;
+                _context25.next = 6;
                 break;
               }
-              _context24.t0 = networkPassphrase;
-              _context24.next = 9;
+              _context25.t0 = networkPassphrase;
+              _context25.next = 9;
               break;
             case 6:
-              _context24.next = 8;
+              _context25.next = 8;
               return this.getNetwork().then(function (n) {
                 return n.passphrase;
               });
             case 8:
-              _context24.t0 = _context24.sent;
+              _context25.t0 = _context25.sent;
             case 9:
-              passphrase = _context24.t0;
+              passphrase = _context25.t0;
               sacId = sac.contractId(passphrase);
               key = lib.xdr.ScVal.scvVec([(0,lib.nativeToScVal)("Balance", {
                 type: "symbol"
@@ -30481,29 +30538,29 @@ var RpcServer = function () {
                 durability: lib.xdr.ContractDataDurability.persistent(),
                 key: key
               }));
-              _context24.next = 15;
+              _context25.next = 15;
               return this.getLedgerEntries(ledgerKey);
             case 15:
-              response = _context24.sent;
+              response = _context25.sent;
               if (!(response.entries.length === 0)) {
-                _context24.next = 18;
+                _context25.next = 18;
                 break;
               }
-              return _context24.abrupt("return", {
+              return _context25.abrupt("return", {
                 latestLedger: response.latestLedger
               });
             case 18:
               _response$entries$2 = response.entries[0], lastModifiedLedgerSeq = _response$entries$2.lastModifiedLedgerSeq, liveUntilLedgerSeq = _response$entries$2.liveUntilLedgerSeq, val = _response$entries$2.val;
               if (!(val.switch().value !== lib.xdr.LedgerEntryType.contractData().value)) {
-                _context24.next = 21;
+                _context25.next = 21;
                 break;
               }
-              return _context24.abrupt("return", {
+              return _context25.abrupt("return", {
                 latestLedger: response.latestLedger
               });
             case 21:
               entry = (0,lib.scValToNative)(val.contractData().val());
-              return _context24.abrupt("return", {
+              return _context25.abrupt("return", {
                 latestLedger: response.latestLedger,
                 balanceEntry: {
                   liveUntilLedgerSeq: liveUntilLedgerSeq,
@@ -30515,11 +30572,11 @@ var RpcServer = function () {
               });
             case 23:
             case "end":
-              return _context24.stop();
+              return _context25.stop();
           }
-        }, _callee24, this);
+        }, _callee25, this);
       }));
-      function getSACBalance(_x21, _x22, _x23) {
+      function getSACBalance(_x23, _x24, _x25) {
         return _getSACBalance.apply(this, arguments);
       }
       return getSACBalance;
@@ -30876,6 +30933,13 @@ var Utils = function () {
         minTime = _transaction$timeBoun.minTime,
         maxTime = _transaction$timeBoun.maxTime;
       return now >= Number.parseInt(minTime, 10) - gracePeriod && now <= Number.parseInt(maxTime, 10) + gracePeriod;
+    }
+  }, {
+    key: "sleep",
+    value: function sleep(ms) {
+      return new Promise(function (resolve) {
+        return setTimeout(resolve, ms);
+      });
     }
   }]);
 }();
