@@ -33927,6 +33927,7 @@ var RpcServer = function () {
                 }
                 var result = _objectSpread({
                   status: raw.status,
+                  txHash: hash,
                   latestLedger: raw.latestLedger,
                   latestLedgerCloseTime: raw.latestLedgerCloseTime,
                   oldestLedger: raw.oldestLedger,
@@ -34473,7 +34474,8 @@ function parseTransactionInfo(raw) {
 }
 function parseRawTransactions(r) {
   return _objectSpread({
-    status: r.status
+    status: r.status,
+    txHash: r.txHash
   }, parseTransactionInfo(r));
 }
 function parseRawEvents(raw) {
@@ -34516,8 +34518,7 @@ function parseSuccessful(sim, partial) {
   var _sim$results$length, _sim$results, _sim$stateChanges$len, _sim$stateChanges, _sim$stateChanges2;
   var success = _objectSpread(_objectSpread(_objectSpread({}, partial), {}, {
     transactionData: new _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_0__.SorobanDataBuilder(sim.transactionData),
-    minResourceFee: sim.minResourceFee,
-    cost: sim.cost
+    minResourceFee: sim.minResourceFee
   }, ((_sim$results$length = (_sim$results = sim.results) === null || _sim$results === void 0 ? void 0 : _sim$results.length) !== null && _sim$results$length !== void 0 ? _sim$results$length : 0 > 0) && {
     result: sim.results.map(function (row) {
       var _row$auth;
