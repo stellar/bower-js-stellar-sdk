@@ -22319,7 +22319,7 @@ var AssembledTransaction = function () {
         throw new AssembledTransaction.Errors.NotYetSimulated("Transaction has not yet been simulated");
       }
       if (api/* Api */.j.isSimulationError(simulation)) {
-        throw new Error("Transaction simulation failed: \"".concat(simulation.error, "\""));
+        throw new AssembledTransaction.Errors.SimulationFailed("Transaction simulation failed: \"".concat(simulation.error, "\""));
       }
       if (api/* Api */.j.isSimulationRestore(simulation)) {
         throw new AssembledTransaction.Errors.ExpiredState("You need to restore some contract state before you can invoke this method.\n" + 'You can set `restore` to true in the method options in order to ' + 'automatically restore the contract state when needed.');
@@ -22495,41 +22495,47 @@ var AssembledTransaction = function () {
     }
   }, {
     key: "build",
+    value: function build(options) {
+      var _options$args;
+      var contract = new lib.Contract(options.contractId);
+      return AssembledTransaction.buildWithOp(contract.call.apply(contract, [options.method].concat(_toConsumableArray((_options$args = options.args) !== null && _options$args !== void 0 ? _options$args : []))), options);
+    }
+  }, {
+    key: "buildWithOp",
     value: (function () {
-      var _build = assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee9(options) {
-        var _options$fee, _options$args, _options$timeoutInSec;
-        var tx, contract, account;
+      var _buildWithOp = assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee9(operation, options) {
+        var _options$fee, _options$timeoutInSec;
+        var tx, account;
         return assembled_transaction_regeneratorRuntime().wrap(function _callee9$(_context10) {
           while (1) switch (_context10.prev = _context10.next) {
             case 0:
               tx = new AssembledTransaction(options);
-              contract = new lib.Contract(options.contractId);
-              _context10.next = 4;
+              _context10.next = 3;
               return getAccount(options, tx.server);
-            case 4:
+            case 3:
               account = _context10.sent;
               tx.raw = new lib.TransactionBuilder(account, {
                 fee: (_options$fee = options.fee) !== null && _options$fee !== void 0 ? _options$fee : lib.BASE_FEE,
                 networkPassphrase: options.networkPassphrase
-              }).addOperation(contract.call.apply(contract, [options.method].concat(_toConsumableArray((_options$args = options.args) !== null && _options$args !== void 0 ? _options$args : [])))).setTimeout((_options$timeoutInSec = options.timeoutInSeconds) !== null && _options$timeoutInSec !== void 0 ? _options$timeoutInSec : DEFAULT_TIMEOUT);
+              }).setTimeout((_options$timeoutInSec = options.timeoutInSeconds) !== null && _options$timeoutInSec !== void 0 ? _options$timeoutInSec : DEFAULT_TIMEOUT).addOperation(operation);
               if (!options.simulate) {
-                _context10.next = 9;
+                _context10.next = 8;
                 break;
               }
-              _context10.next = 9;
+              _context10.next = 8;
               return tx.simulate();
-            case 9:
+            case 8:
               return _context10.abrupt("return", tx);
-            case 10:
+            case 9:
             case "end":
               return _context10.stop();
           }
         }, _callee9);
       }));
-      function build(_x4) {
-        return _build.apply(this, arguments);
+      function buildWithOp(_x4, _x5) {
+        return _buildWithOp.apply(this, arguments);
       }
-      return build;
+      return buildWithOp;
     }())
   }, {
     key: "buildFootprintRestoreTransaction",
@@ -22557,7 +22563,7 @@ var AssembledTransaction = function () {
           }
         }, _callee10);
       }));
-      function buildFootprintRestoreTransaction(_x5, _x6, _x7, _x8) {
+      function buildFootprintRestoreTransaction(_x6, _x7, _x8, _x9) {
         return _buildFootprintRestoreTransaction.apply(this, arguments);
       }
       return buildFootprintRestoreTransaction;
@@ -22628,6 +22634,14 @@ assembled_transaction_defineProperty(AssembledTransaction, "Errors", {
     }
     assembled_transaction_inherits(FakeAccountError, _Error8);
     return assembled_transaction_createClass(FakeAccountError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  SimulationFailed: function (_Error9) {
+    function SimulationFailedError() {
+      assembled_transaction_classCallCheck(this, SimulationFailedError);
+      return assembled_transaction_callSuper(this, SimulationFailedError, arguments);
+    }
+    assembled_transaction_inherits(SimulationFailedError, _Error9);
+    return assembled_transaction_createClass(SimulationFailedError);
   }(assembled_transaction_wrapNativeSuper(Error))
 });
 ;// ./src/contract/basic_node_signer.ts
@@ -23696,11 +23710,10 @@ var Spec = function () {
 }();
 ;// ./src/contract/client.ts
 /* provided dependency */ var client_Buffer = __webpack_require__(8287)["Buffer"];
-var _excluded = ["method"];
 function client_typeof(o) { "@babel/helpers - typeof"; return client_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, client_typeof(o); }
+var _excluded = ["method"],
+  _excluded2 = ["wasmHash", "salt", "format", "fee", "timeoutInSeconds", "simulate"];
 function client_regeneratorRuntime() { "use strict"; client_regeneratorRuntime = function _regeneratorRuntime() { return e; }; var t, e = {}, r = Object.prototype, n = r.hasOwnProperty, o = Object.defineProperty || function (t, e, r) { t[e] = r.value; }, i = "function" == typeof Symbol ? Symbol : {}, a = i.iterator || "@@iterator", c = i.asyncIterator || "@@asyncIterator", u = i.toStringTag || "@@toStringTag"; function define(t, e, r) { return Object.defineProperty(t, e, { value: r, enumerable: !0, configurable: !0, writable: !0 }), t[e]; } try { define({}, ""); } catch (t) { define = function define(t, e, r) { return t[e] = r; }; } function wrap(t, e, r, n) { var i = e && e.prototype instanceof Generator ? e : Generator, a = Object.create(i.prototype), c = new Context(n || []); return o(a, "_invoke", { value: makeInvokeMethod(t, r, c) }), a; } function tryCatch(t, e, r) { try { return { type: "normal", arg: t.call(e, r) }; } catch (t) { return { type: "throw", arg: t }; } } e.wrap = wrap; var h = "suspendedStart", l = "suspendedYield", f = "executing", s = "completed", y = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} var p = {}; define(p, a, function () { return this; }); var d = Object.getPrototypeOf, v = d && d(d(values([]))); v && v !== r && n.call(v, a) && (p = v); var g = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(p); function defineIteratorMethods(t) { ["next", "throw", "return"].forEach(function (e) { define(t, e, function (t) { return this._invoke(e, t); }); }); } function AsyncIterator(t, e) { function invoke(r, o, i, a) { var c = tryCatch(t[r], t, o); if ("throw" !== c.type) { var u = c.arg, h = u.value; return h && "object" == client_typeof(h) && n.call(h, "__await") ? e.resolve(h.__await).then(function (t) { invoke("next", t, i, a); }, function (t) { invoke("throw", t, i, a); }) : e.resolve(h).then(function (t) { u.value = t, i(u); }, function (t) { return invoke("throw", t, i, a); }); } a(c.arg); } var r; o(this, "_invoke", { value: function value(t, n) { function callInvokeWithMethodAndArg() { return new e(function (e, r) { invoke(t, n, e, r); }); } return r = r ? r.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg(); } }); } function makeInvokeMethod(e, r, n) { var o = h; return function (i, a) { if (o === f) throw Error("Generator is already running"); if (o === s) { if ("throw" === i) throw a; return { value: t, done: !0 }; } for (n.method = i, n.arg = a;;) { var c = n.delegate; if (c) { var u = maybeInvokeDelegate(c, n); if (u) { if (u === y) continue; return u; } } if ("next" === n.method) n.sent = n._sent = n.arg;else if ("throw" === n.method) { if (o === h) throw o = s, n.arg; n.dispatchException(n.arg); } else "return" === n.method && n.abrupt("return", n.arg); o = f; var p = tryCatch(e, r, n); if ("normal" === p.type) { if (o = n.done ? s : l, p.arg === y) continue; return { value: p.arg, done: n.done }; } "throw" === p.type && (o = s, n.method = "throw", n.arg = p.arg); } }; } function maybeInvokeDelegate(e, r) { var n = r.method, o = e.iterator[n]; if (o === t) return r.delegate = null, "throw" === n && e.iterator.return && (r.method = "return", r.arg = t, maybeInvokeDelegate(e, r), "throw" === r.method) || "return" !== n && (r.method = "throw", r.arg = new TypeError("The iterator does not provide a '" + n + "' method")), y; var i = tryCatch(o, e.iterator, r.arg); if ("throw" === i.type) return r.method = "throw", r.arg = i.arg, r.delegate = null, y; var a = i.arg; return a ? a.done ? (r[e.resultName] = a.value, r.next = e.nextLoc, "return" !== r.method && (r.method = "next", r.arg = t), r.delegate = null, y) : a : (r.method = "throw", r.arg = new TypeError("iterator result is not an object"), r.delegate = null, y); } function pushTryEntry(t) { var e = { tryLoc: t[0] }; 1 in t && (e.catchLoc = t[1]), 2 in t && (e.finallyLoc = t[2], e.afterLoc = t[3]), this.tryEntries.push(e); } function resetTryEntry(t) { var e = t.completion || {}; e.type = "normal", delete e.arg, t.completion = e; } function Context(t) { this.tryEntries = [{ tryLoc: "root" }], t.forEach(pushTryEntry, this), this.reset(!0); } function values(e) { if (e || "" === e) { var r = e[a]; if (r) return r.call(e); if ("function" == typeof e.next) return e; if (!isNaN(e.length)) { var o = -1, i = function next() { for (; ++o < e.length;) if (n.call(e, o)) return next.value = e[o], next.done = !1, next; return next.value = t, next.done = !0, next; }; return i.next = i; } } throw new TypeError(client_typeof(e) + " is not iterable"); } return GeneratorFunction.prototype = GeneratorFunctionPrototype, o(g, "constructor", { value: GeneratorFunctionPrototype, configurable: !0 }), o(GeneratorFunctionPrototype, "constructor", { value: GeneratorFunction, configurable: !0 }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, u, "GeneratorFunction"), e.isGeneratorFunction = function (t) { var e = "function" == typeof t && t.constructor; return !!e && (e === GeneratorFunction || "GeneratorFunction" === (e.displayName || e.name)); }, e.mark = function (t) { return Object.setPrototypeOf ? Object.setPrototypeOf(t, GeneratorFunctionPrototype) : (t.__proto__ = GeneratorFunctionPrototype, define(t, u, "GeneratorFunction")), t.prototype = Object.create(g), t; }, e.awrap = function (t) { return { __await: t }; }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, c, function () { return this; }), e.AsyncIterator = AsyncIterator, e.async = function (t, r, n, o, i) { void 0 === i && (i = Promise); var a = new AsyncIterator(wrap(t, r, n, o), i); return e.isGeneratorFunction(r) ? a : a.next().then(function (t) { return t.done ? t.value : a.next(); }); }, defineIteratorMethods(g), define(g, u, "Generator"), define(g, a, function () { return this; }), define(g, "toString", function () { return "[object Generator]"; }), e.keys = function (t) { var e = Object(t), r = []; for (var n in e) r.push(n); return r.reverse(), function next() { for (; r.length;) { var t = r.pop(); if (t in e) return next.value = t, next.done = !1, next; } return next.done = !0, next; }; }, e.values = values, Context.prototype = { constructor: Context, reset: function reset(e) { if (this.prev = 0, this.next = 0, this.sent = this._sent = t, this.done = !1, this.delegate = null, this.method = "next", this.arg = t, this.tryEntries.forEach(resetTryEntry), !e) for (var r in this) "t" === r.charAt(0) && n.call(this, r) && !isNaN(+r.slice(1)) && (this[r] = t); }, stop: function stop() { this.done = !0; var t = this.tryEntries[0].completion; if ("throw" === t.type) throw t.arg; return this.rval; }, dispatchException: function dispatchException(e) { if (this.done) throw e; var r = this; function handle(n, o) { return a.type = "throw", a.arg = e, r.next = n, o && (r.method = "next", r.arg = t), !!o; } for (var o = this.tryEntries.length - 1; o >= 0; --o) { var i = this.tryEntries[o], a = i.completion; if ("root" === i.tryLoc) return handle("end"); if (i.tryLoc <= this.prev) { var c = n.call(i, "catchLoc"), u = n.call(i, "finallyLoc"); if (c && u) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } else if (c) { if (this.prev < i.catchLoc) return handle(i.catchLoc, !0); } else { if (!u) throw Error("try statement without catch or finally"); if (this.prev < i.finallyLoc) return handle(i.finallyLoc); } } } }, abrupt: function abrupt(t, e) { for (var r = this.tryEntries.length - 1; r >= 0; --r) { var o = this.tryEntries[r]; if (o.tryLoc <= this.prev && n.call(o, "finallyLoc") && this.prev < o.finallyLoc) { var i = o; break; } } i && ("break" === t || "continue" === t) && i.tryLoc <= e && e <= i.finallyLoc && (i = null); var a = i ? i.completion : {}; return a.type = t, a.arg = e, i ? (this.method = "next", this.next = i.finallyLoc, y) : this.complete(a); }, complete: function complete(t, e) { if ("throw" === t.type) throw t.arg; return "break" === t.type || "continue" === t.type ? this.next = t.arg : "return" === t.type ? (this.rval = this.arg = t.arg, this.method = "return", this.next = "end") : "normal" === t.type && e && (this.next = e), y; }, finish: function finish(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.finallyLoc === t) return this.complete(r.completion, r.afterLoc), resetTryEntry(r), y; } }, catch: function _catch(t) { for (var e = this.tryEntries.length - 1; e >= 0; --e) { var r = this.tryEntries[e]; if (r.tryLoc === t) { var n = r.completion; if ("throw" === n.type) { var o = n.arg; resetTryEntry(r); } return o; } } throw Error("illegal catch attempt"); }, delegateYield: function delegateYield(e, r, n) { return this.delegate = { iterator: values(e), resultName: r, nextLoc: n }, "next" === this.method && (this.arg = t), y; } }, e; }
-function client_asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function client_asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { client_asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { client_asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function client_ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function client_objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? client_ownKeys(Object(t), !0).forEach(function (r) { client_defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : client_ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var s = Object.getOwnPropertySymbols(e); for (r = 0; r < s.length; r++) o = s[r], t.includes(o) || {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
@@ -23711,10 +23724,86 @@ function client_createClass(e, r, t) { return r && client_defineProperties(e.pro
 function client_defineProperty(e, r, t) { return (r = client_toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function client_toPropertyKey(t) { var i = client_toPrimitive(t, "string"); return "symbol" == client_typeof(i) ? i : i + ""; }
 function client_toPrimitive(t, r) { if ("object" != client_typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != client_typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function client_asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function client_asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { client_asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { client_asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 
 
 
 
+
+var CONSTRUCTOR_FUNC = "__constructor";
+function specFromWasm(_x) {
+  return _specFromWasm.apply(this, arguments);
+}
+function _specFromWasm() {
+  _specFromWasm = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee5(wasm) {
+    var wasmModule, xdrSections, bufferSection, specEntryArray, spec;
+    return client_regeneratorRuntime().wrap(function _callee5$(_context5) {
+      while (1) switch (_context5.prev = _context5.next) {
+        case 0:
+          _context5.next = 2;
+          return WebAssembly.compile(wasm);
+        case 2:
+          wasmModule = _context5.sent;
+          xdrSections = WebAssembly.Module.customSections(wasmModule, "contractspecv0");
+          if (!(xdrSections.length === 0)) {
+            _context5.next = 6;
+            break;
+          }
+          throw new Error("Could not obtain contract spec from wasm");
+        case 6:
+          bufferSection = client_Buffer.from(xdrSections[0]);
+          specEntryArray = processSpecEntryStream(bufferSection);
+          spec = new Spec(specEntryArray);
+          return _context5.abrupt("return", spec);
+        case 10:
+        case "end":
+          return _context5.stop();
+      }
+    }, _callee5);
+  }));
+  return _specFromWasm.apply(this, arguments);
+}
+function specFromWasmHash(_x2, _x3) {
+  return _specFromWasmHash.apply(this, arguments);
+}
+function _specFromWasmHash() {
+  _specFromWasmHash = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee6(wasmHash, options) {
+    var format,
+      rpcUrl,
+      allowHttp,
+      serverOpts,
+      server,
+      wasm,
+      _args6 = arguments;
+    return client_regeneratorRuntime().wrap(function _callee6$(_context6) {
+      while (1) switch (_context6.prev = _context6.next) {
+        case 0:
+          format = _args6.length > 2 && _args6[2] !== undefined ? _args6[2] : "hex";
+          if (!(!options || !options.rpcUrl)) {
+            _context6.next = 3;
+            break;
+          }
+          throw new TypeError("options must contain rpcUrl");
+        case 3:
+          rpcUrl = options.rpcUrl, allowHttp = options.allowHttp;
+          serverOpts = {
+            allowHttp: allowHttp
+          };
+          server = new rpc.Server(rpcUrl, serverOpts);
+          _context6.next = 8;
+          return server.getContractWasmByHash(wasmHash, format);
+        case 8:
+          wasm = _context6.sent;
+          return _context6.abrupt("return", specFromWasm(wasm));
+        case 10:
+        case "end":
+          return _context6.stop();
+      }
+    }, _callee6);
+  }));
+  return _specFromWasmHash.apply(this, arguments);
+}
 var Client = function () {
   function Client(spec, options) {
     var _this = this;
@@ -23737,6 +23826,9 @@ var Client = function () {
     this.options = options;
     this.spec.funcs().forEach(function (xdrFn) {
       var method = xdrFn.name().toString();
+      if (method === CONSTRUCTOR_FUNC) {
+        return;
+      }
       var assembleTransaction = function assembleTransaction(args, methodOptions) {
         return AssembledTransaction.build(client_objectSpread(client_objectSpread(client_objectSpread({
           method: method,
@@ -23758,22 +23850,65 @@ var Client = function () {
     });
   }
   return client_createClass(Client, null, [{
+    key: "deploy",
+    value: function () {
+      var _deploy = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee(args, options) {
+        var wasmHash, salt, format, fee, timeoutInSeconds, simulate, clientOptions, spec, operation;
+        return client_regeneratorRuntime().wrap(function _callee$(_context) {
+          while (1) switch (_context.prev = _context.next) {
+            case 0:
+              wasmHash = options.wasmHash, salt = options.salt, format = options.format, fee = options.fee, timeoutInSeconds = options.timeoutInSeconds, simulate = options.simulate, clientOptions = _objectWithoutProperties(options, _excluded2);
+              _context.next = 3;
+              return specFromWasmHash(wasmHash, clientOptions, format);
+            case 3:
+              spec = _context.sent;
+              operation = lib.Operation.createCustomContract({
+                address: new lib.Address(options.publicKey),
+                wasmHash: typeof wasmHash === "string" ? client_Buffer.from(wasmHash, format !== null && format !== void 0 ? format : "hex") : wasmHash,
+                salt: salt,
+                constructorArgs: args ? spec.funcArgsToScVals(CONSTRUCTOR_FUNC, args) : []
+              });
+              return _context.abrupt("return", AssembledTransaction.buildWithOp(operation, client_objectSpread(client_objectSpread({
+                fee: fee,
+                timeoutInSeconds: timeoutInSeconds,
+                simulate: simulate
+              }, clientOptions), {}, {
+                contractId: "ignored",
+                method: CONSTRUCTOR_FUNC,
+                parseResultXdr: function parseResultXdr(result) {
+                  return new Client(spec, client_objectSpread(client_objectSpread({}, clientOptions), {}, {
+                    contractId: lib.Address.fromScVal(result).toString()
+                  }));
+                }
+              })));
+            case 6:
+            case "end":
+              return _context.stop();
+          }
+        }, _callee);
+      }));
+      function deploy(_x4, _x5) {
+        return _deploy.apply(this, arguments);
+      }
+      return deploy;
+    }()
+  }, {
     key: "fromWasmHash",
     value: (function () {
-      var _fromWasmHash = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee(wasmHash, options) {
+      var _fromWasmHash = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee2(wasmHash, options) {
         var format,
           rpcUrl,
           allowHttp,
           serverOpts,
           server,
           wasm,
-          _args = arguments;
-        return client_regeneratorRuntime().wrap(function _callee$(_context) {
-          while (1) switch (_context.prev = _context.next) {
+          _args2 = arguments;
+        return client_regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) switch (_context2.prev = _context2.next) {
             case 0:
-              format = _args.length > 2 && _args[2] !== undefined ? _args[2] : "hex";
+              format = _args2.length > 2 && _args2[2] !== undefined ? _args2[2] : "hex";
               if (!(!options || !options.rpcUrl)) {
-                _context.next = 3;
+                _context2.next = 3;
                 break;
               }
               throw new TypeError('options must contain rpcUrl');
@@ -23783,18 +23918,18 @@ var Client = function () {
                 allowHttp: allowHttp
               };
               server = new rpc.Server(rpcUrl, serverOpts);
-              _context.next = 8;
+              _context2.next = 8;
               return server.getContractWasmByHash(wasmHash, format);
             case 8:
-              wasm = _context.sent;
-              return _context.abrupt("return", Client.fromWasm(wasm, options));
+              wasm = _context2.sent;
+              return _context2.abrupt("return", Client.fromWasm(wasm, options));
             case 10:
             case "end":
-              return _context.stop();
+              return _context2.stop();
           }
-        }, _callee);
+        }, _callee2);
       }));
-      function fromWasmHash(_x, _x2) {
+      function fromWasmHash(_x6, _x7) {
         return _fromWasmHash.apply(this, arguments);
       }
       return fromWasmHash;
@@ -23802,33 +23937,23 @@ var Client = function () {
   }, {
     key: "fromWasm",
     value: (function () {
-      var _fromWasm = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee2(wasm, options) {
-        var wasmModule, xdrSections, bufferSection, specEntryArray, spec;
-        return client_regeneratorRuntime().wrap(function _callee2$(_context2) {
-          while (1) switch (_context2.prev = _context2.next) {
+      var _fromWasm = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee3(wasm, options) {
+        var spec;
+        return client_regeneratorRuntime().wrap(function _callee3$(_context3) {
+          while (1) switch (_context3.prev = _context3.next) {
             case 0:
-              _context2.next = 2;
-              return WebAssembly.compile(wasm);
+              _context3.next = 2;
+              return specFromWasm(wasm);
             case 2:
-              wasmModule = _context2.sent;
-              xdrSections = WebAssembly.Module.customSections(wasmModule, "contractspecv0");
-              if (!(xdrSections.length === 0)) {
-                _context2.next = 6;
-                break;
-              }
-              throw new Error('Could not obtain contract spec from wasm');
-            case 6:
-              bufferSection = client_Buffer.from(xdrSections[0]);
-              specEntryArray = processSpecEntryStream(bufferSection);
-              spec = new Spec(specEntryArray);
-              return _context2.abrupt("return", new Client(spec, options));
-            case 10:
+              spec = _context3.sent;
+              return _context3.abrupt("return", new Client(spec, options));
+            case 4:
             case "end":
-              return _context2.stop();
+              return _context3.stop();
           }
-        }, _callee2);
+        }, _callee3);
       }));
-      function fromWasm(_x3, _x4) {
+      function fromWasm(_x8, _x9) {
         return _fromWasm.apply(this, arguments);
       }
       return fromWasm;
@@ -23836,13 +23961,13 @@ var Client = function () {
   }, {
     key: "from",
     value: (function () {
-      var _from = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee3(options) {
+      var _from = client_asyncToGenerator(client_regeneratorRuntime().mark(function _callee4(options) {
         var rpcUrl, contractId, allowHttp, serverOpts, server, wasm;
-        return client_regeneratorRuntime().wrap(function _callee3$(_context3) {
-          while (1) switch (_context3.prev = _context3.next) {
+        return client_regeneratorRuntime().wrap(function _callee4$(_context4) {
+          while (1) switch (_context4.prev = _context4.next) {
             case 0:
               if (!(!options || !options.rpcUrl || !options.contractId)) {
-                _context3.next = 2;
+                _context4.next = 2;
                 break;
               }
               throw new TypeError('options must contain rpcUrl and contractId');
@@ -23852,18 +23977,18 @@ var Client = function () {
                 allowHttp: allowHttp
               };
               server = new rpc.Server(rpcUrl, serverOpts);
-              _context3.next = 7;
+              _context4.next = 7;
               return server.getContractWasmByContractId(contractId);
             case 7:
-              wasm = _context3.sent;
-              return _context3.abrupt("return", Client.fromWasm(wasm, options));
+              wasm = _context4.sent;
+              return _context4.abrupt("return", Client.fromWasm(wasm, options));
             case 9:
             case "end":
-              return _context3.stop();
+              return _context4.stop();
           }
-        }, _callee3);
+        }, _callee4);
       }));
-      function from(_x5) {
+      function from(_x10) {
         return _from.apply(this, arguments);
       }
       return from;
