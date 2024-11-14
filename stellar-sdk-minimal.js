@@ -21620,6 +21620,7 @@ var Err = function () {
   }]);
 }();
 ;// ./src/contract/types.ts
+
 var DEFAULT_TIMEOUT = 5 * 60;
 var NULL_ACCOUNT = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF";
 ;// ./src/contract/utils.ts
@@ -22012,7 +22013,10 @@ var AssembledTransaction = function () {
         signTransaction,
         sigsNeeded,
         timeoutInSeconds,
+        signOpts,
+        _yield$signTransactio,
         signature,
+        error,
         _args2 = arguments;
       return assembled_transaction_regeneratorRuntime().wrap(function _callee2$(_context2) {
         while (1) switch (_context2.prev = _context2.next) {
@@ -22051,14 +22055,21 @@ var AssembledTransaction = function () {
               timebounds: undefined,
               sorobanData: _this.simulationData.transactionData
             }).setTimeout(timeoutInSeconds).build();
-            _context2.next = 14;
-            return signTransaction(_this.built.toXDR(), {
+            signOpts = {
               networkPassphrase: _this.options.networkPassphrase
-            });
-          case 14:
-            signature = _context2.sent;
+            };
+            if (_this.options.address) signOpts.address = _this.options.address;
+            if (_this.options.submit !== undefined) signOpts.submit = _this.options.submit;
+            if (_this.options.submitUrl) signOpts.submitUrl = _this.options.submitUrl;
+            _context2.next = 18;
+            return signTransaction(_this.built.toXDR(), signOpts);
+          case 18:
+            _yield$signTransactio = _context2.sent;
+            signature = _yield$signTransactio.signedTxXdr;
+            error = _yield$signTransactio.error;
+            _this.handleWalletError(error);
             _this.signed = lib.TransactionBuilder.fromXDR(signature, _this.options.networkPassphrase);
-          case 16:
+          case 23:
           case "end":
             return _context2.stop();
         }
@@ -22070,27 +22081,37 @@ var AssembledTransaction = function () {
         force,
         _ref6$signTransaction,
         signTransaction,
+        originalSubmit,
         _args3 = arguments;
       return assembled_transaction_regeneratorRuntime().wrap(function _callee3$(_context3) {
         while (1) switch (_context3.prev = _context3.next) {
           case 0:
             _ref6 = _args3.length > 0 && _args3[0] !== undefined ? _args3[0] : {}, _ref6$force = _ref6.force, force = _ref6$force === void 0 ? false : _ref6$force, _ref6$signTransaction = _ref6.signTransaction, signTransaction = _ref6$signTransaction === void 0 ? _this.options.signTransaction : _ref6$signTransaction;
             if (_this.signed) {
-              _context3.next = 4;
+              _context3.next = 10;
               break;
             }
-            _context3.next = 4;
+            originalSubmit = _this.options.submit;
+            if (_this.options.submit) {
+              _this.options.submit = false;
+            }
+            _context3.prev = 4;
+            _context3.next = 7;
             return _this.sign({
               force: force,
               signTransaction: signTransaction
             });
-          case 4:
+          case 7:
+            _context3.prev = 7;
+            _this.options.submit = originalSubmit;
+            return _context3.finish(7);
+          case 10:
             return _context3.abrupt("return", _this.send());
-          case 5:
+          case 11:
           case "end":
             return _context3.stop();
         }
-      }, _callee3);
+      }, _callee3, null, [[4,, 7, 10]]);
     })));
     assembled_transaction_defineProperty(this, "needsNonInvokerSigningBy", function () {
       var _rawInvokeHostFunctio;
@@ -22205,18 +22226,21 @@ var AssembledTransaction = function () {
                     _context6.t1 = entry;
                     _context6.t2 = function () {
                       var _ref11 = assembled_transaction_asyncToGenerator(assembled_transaction_regeneratorRuntime().mark(function _callee5(preimage) {
+                        var _yield$sign, signedAuthEntry, error;
                         return assembled_transaction_regeneratorRuntime().wrap(function _callee5$(_context5) {
                           while (1) switch (_context5.prev = _context5.next) {
                             case 0:
-                              _context5.t0 = Buffer;
-                              _context5.next = 3;
+                              _context5.next = 2;
                               return sign(preimage.toXDR("base64"), {
-                                accountToSign: address
+                                address: address
                               });
-                            case 3:
-                              _context5.t1 = _context5.sent;
-                              return _context5.abrupt("return", _context5.t0.from.call(_context5.t0, _context5.t1, "base64"));
-                            case 5:
+                            case 2:
+                              _yield$sign = _context5.sent;
+                              signedAuthEntry = _yield$sign.signedAuthEntry;
+                              error = _yield$sign.error;
+                              _this.handleWalletError(error);
+                              return _context5.abrupt("return", Buffer.from(signedAuthEntry, "base64"));
+                            case 7:
                             case "end":
                               return _context5.stop();
                           }
@@ -22303,6 +22327,26 @@ var AssembledTransaction = function () {
       var _this$built2;
       if (!this.built) throw new Error("Transaction has not yet been simulated; " + "call `AssembledTransaction.simulate` first.");
       return (_this$built2 = this.built) === null || _this$built2 === void 0 ? void 0 : _this$built2.toEnvelope().toXDR('base64');
+    }
+  }, {
+    key: "handleWalletError",
+    value: function handleWalletError(error) {
+      if (!error) return;
+      var message = error.message,
+        code = error.code;
+      var fullMessage = "".concat(message).concat(error.ext ? " (".concat(error.ext.join(', '), ")") : '');
+      switch (code) {
+        case -1:
+          throw new AssembledTransaction.Errors.InternalWalletError(fullMessage);
+        case -2:
+          throw new AssembledTransaction.Errors.ExternalServiceError(fullMessage);
+        case -3:
+          throw new AssembledTransaction.Errors.InvalidClientRequest(fullMessage);
+        case -4:
+          throw new AssembledTransaction.Errors.UserRejected(fullMessage);
+        default:
+          throw new Error("Unhandled error: ".concat(fullMessage));
+      }
     }
   }, {
     key: "simulationData",
@@ -22642,6 +22686,38 @@ assembled_transaction_defineProperty(AssembledTransaction, "Errors", {
     }
     assembled_transaction_inherits(SimulationFailedError, _Error9);
     return assembled_transaction_createClass(SimulationFailedError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  InternalWalletError: function (_Error10) {
+    function InternalWalletError() {
+      assembled_transaction_classCallCheck(this, InternalWalletError);
+      return assembled_transaction_callSuper(this, InternalWalletError, arguments);
+    }
+    assembled_transaction_inherits(InternalWalletError, _Error10);
+    return assembled_transaction_createClass(InternalWalletError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  ExternalServiceError: function (_Error11) {
+    function ExternalServiceError() {
+      assembled_transaction_classCallCheck(this, ExternalServiceError);
+      return assembled_transaction_callSuper(this, ExternalServiceError, arguments);
+    }
+    assembled_transaction_inherits(ExternalServiceError, _Error11);
+    return assembled_transaction_createClass(ExternalServiceError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  InvalidClientRequest: function (_Error12) {
+    function InvalidClientRequestError() {
+      assembled_transaction_classCallCheck(this, InvalidClientRequestError);
+      return assembled_transaction_callSuper(this, InvalidClientRequestError, arguments);
+    }
+    assembled_transaction_inherits(InvalidClientRequestError, _Error12);
+    return assembled_transaction_createClass(InvalidClientRequestError);
+  }(assembled_transaction_wrapNativeSuper(Error)),
+  UserRejected: function (_Error13) {
+    function UserRejectedError() {
+      assembled_transaction_classCallCheck(this, UserRejectedError);
+      return assembled_transaction_callSuper(this, UserRejectedError, arguments);
+    }
+    assembled_transaction_inherits(UserRejectedError, _Error13);
+    return assembled_transaction_createClass(UserRejectedError);
   }(assembled_transaction_wrapNativeSuper(Error))
 });
 ;// ./src/contract/basic_node_signer.ts
@@ -22654,38 +22730,46 @@ function basic_node_signer_asyncToGenerator(n) { return function () { var t = th
 var basicNodeSigner = function basicNodeSigner(keypair, networkPassphrase) {
   return {
     signTransaction: function () {
-      var _signTransaction = basic_node_signer_asyncToGenerator(basic_node_signer_regeneratorRuntime().mark(function _callee(tx) {
+      var _signTransaction = basic_node_signer_asyncToGenerator(basic_node_signer_regeneratorRuntime().mark(function _callee(xdr, opts) {
         var t;
         return basic_node_signer_regeneratorRuntime().wrap(function _callee$(_context) {
           while (1) switch (_context.prev = _context.next) {
             case 0:
-              t = lib.TransactionBuilder.fromXDR(tx, networkPassphrase);
+              t = lib.TransactionBuilder.fromXDR(xdr, (opts === null || opts === void 0 ? void 0 : opts.networkPassphrase) || networkPassphrase);
               t.sign(keypair);
-              return _context.abrupt("return", t.toXDR());
+              return _context.abrupt("return", {
+                signedTxXdr: t.toXDR(),
+                signerAddress: keypair.publicKey()
+              });
             case 3:
             case "end":
               return _context.stop();
           }
         }, _callee);
       }));
-      function signTransaction(_x) {
+      function signTransaction(_x, _x2) {
         return _signTransaction.apply(this, arguments);
       }
       return signTransaction;
     }(),
     signAuthEntry: function () {
-      var _signAuthEntry = basic_node_signer_asyncToGenerator(basic_node_signer_regeneratorRuntime().mark(function _callee2(entryXdr) {
+      var _signAuthEntry = basic_node_signer_asyncToGenerator(basic_node_signer_regeneratorRuntime().mark(function _callee2(authEntry) {
+        var signedAuthEntry;
         return basic_node_signer_regeneratorRuntime().wrap(function _callee2$(_context2) {
           while (1) switch (_context2.prev = _context2.next) {
             case 0:
-              return _context2.abrupt("return", keypair.sign((0,lib.hash)(basic_node_signer_Buffer.from(entryXdr, "base64"))).toString("base64"));
-            case 1:
+              signedAuthEntry = keypair.sign((0,lib.hash)(basic_node_signer_Buffer.from(authEntry, "base64"))).toString("base64");
+              return _context2.abrupt("return", {
+                signedAuthEntry: signedAuthEntry,
+                signerAddress: keypair.publicKey()
+              });
+            case 2:
             case "end":
               return _context2.stop();
           }
         }, _callee2);
       }));
-      function signAuthEntry(_x2) {
+      function signAuthEntry(_x3) {
         return _signAuthEntry.apply(this, arguments);
       }
       return signAuthEntry;
@@ -24478,7 +24562,7 @@ var Api;
 
 /***/ }),
 
-/***/ 2731:
+/***/ 8733:
 /***/ ((module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -24588,10 +24672,69 @@ var HorizonApi;
   }({});
   _HorizonApi.TransactionFailedResultCodes = TransactionFailedResultCodes;
 })(HorizonApi || (HorizonApi = {}));
+;// ./src/horizon/types/effects.ts
+var effects_EffectType = function (EffectType) {
+  EffectType[EffectType["account_created"] = 0] = "account_created";
+  EffectType[EffectType["account_removed"] = 1] = "account_removed";
+  EffectType[EffectType["account_credited"] = 2] = "account_credited";
+  EffectType[EffectType["account_debited"] = 3] = "account_debited";
+  EffectType[EffectType["account_thresholds_updated"] = 4] = "account_thresholds_updated";
+  EffectType[EffectType["account_home_domain_updated"] = 5] = "account_home_domain_updated";
+  EffectType[EffectType["account_flags_updated"] = 6] = "account_flags_updated";
+  EffectType[EffectType["account_inflation_destination_updated"] = 7] = "account_inflation_destination_updated";
+  EffectType[EffectType["signer_created"] = 10] = "signer_created";
+  EffectType[EffectType["signer_removed"] = 11] = "signer_removed";
+  EffectType[EffectType["signer_updated"] = 12] = "signer_updated";
+  EffectType[EffectType["trustline_created"] = 20] = "trustline_created";
+  EffectType[EffectType["trustline_removed"] = 21] = "trustline_removed";
+  EffectType[EffectType["trustline_updated"] = 22] = "trustline_updated";
+  EffectType[EffectType["trustline_authorized"] = 23] = "trustline_authorized";
+  EffectType[EffectType["trustline_deauthorized"] = 24] = "trustline_deauthorized";
+  EffectType[EffectType["trustline_authorized_to_maintain_liabilities"] = 25] = "trustline_authorized_to_maintain_liabilities";
+  EffectType[EffectType["trustline_flags_updated"] = 26] = "trustline_flags_updated";
+  EffectType[EffectType["offer_created"] = 30] = "offer_created";
+  EffectType[EffectType["offer_removed"] = 31] = "offer_removed";
+  EffectType[EffectType["offer_updated"] = 32] = "offer_updated";
+  EffectType[EffectType["trade"] = 33] = "trade";
+  EffectType[EffectType["data_created"] = 40] = "data_created";
+  EffectType[EffectType["data_removed"] = 41] = "data_removed";
+  EffectType[EffectType["data_updated"] = 42] = "data_updated";
+  EffectType[EffectType["sequence_bumped"] = 43] = "sequence_bumped";
+  EffectType[EffectType["claimable_balance_created"] = 50] = "claimable_balance_created";
+  EffectType[EffectType["claimable_balance_claimant_created"] = 51] = "claimable_balance_claimant_created";
+  EffectType[EffectType["claimable_balance_claimed"] = 52] = "claimable_balance_claimed";
+  EffectType[EffectType["account_sponsorship_created"] = 60] = "account_sponsorship_created";
+  EffectType[EffectType["account_sponsorship_updated"] = 61] = "account_sponsorship_updated";
+  EffectType[EffectType["account_sponsorship_removed"] = 62] = "account_sponsorship_removed";
+  EffectType[EffectType["trustline_sponsorship_created"] = 63] = "trustline_sponsorship_created";
+  EffectType[EffectType["trustline_sponsorship_updated"] = 64] = "trustline_sponsorship_updated";
+  EffectType[EffectType["trustline_sponsorship_removed"] = 65] = "trustline_sponsorship_removed";
+  EffectType[EffectType["data_sponsorship_created"] = 66] = "data_sponsorship_created";
+  EffectType[EffectType["data_sponsorship_updated"] = 67] = "data_sponsorship_updated";
+  EffectType[EffectType["data_sponsorship_removed"] = 68] = "data_sponsorship_removed";
+  EffectType[EffectType["claimable_balance_sponsorship_created"] = 69] = "claimable_balance_sponsorship_created";
+  EffectType[EffectType["claimable_balance_sponsorship_updated"] = 70] = "claimable_balance_sponsorship_updated";
+  EffectType[EffectType["claimable_balance_sponsorship_removed"] = 71] = "claimable_balance_sponsorship_removed";
+  EffectType[EffectType["signer_sponsorship_created"] = 72] = "signer_sponsorship_created";
+  EffectType[EffectType["signer_sponsorship_updated"] = 73] = "signer_sponsorship_updated";
+  EffectType[EffectType["signer_sponsorship_removed"] = 74] = "signer_sponsorship_removed";
+  EffectType[EffectType["claimable_balance_clawed_back"] = 80] = "claimable_balance_clawed_back";
+  EffectType[EffectType["liquidity_pool_deposited"] = 90] = "liquidity_pool_deposited";
+  EffectType[EffectType["liquidity_pool_withdrew"] = 91] = "liquidity_pool_withdrew";
+  EffectType[EffectType["liquidity_pool_trade"] = 92] = "liquidity_pool_trade";
+  EffectType[EffectType["liquidity_pool_created"] = 93] = "liquidity_pool_created";
+  EffectType[EffectType["liquidity_pool_removed"] = 94] = "liquidity_pool_removed";
+  EffectType[EffectType["liquidity_pool_revoked"] = 95] = "liquidity_pool_revoked";
+  EffectType[EffectType["contract_credited"] = 96] = "contract_credited";
+  EffectType[EffectType["contract_debited"] = 97] = "contract_debited";
+  return EffectType;
+}({});
 ;// ./src/horizon/server_api.ts
+
 
 var ServerApi;
 (function (_ServerApi) {
+  var EffectType = _ServerApi.EffectType = effects_EffectType;
   var TradeType = function (TradeType) {
     TradeType["all"] = "all";
     TradeType["liquidityPools"] = "liquidity_pool";
@@ -27571,7 +27714,7 @@ var http_client = __webpack_require__(6371);
 function horizon_axios_client_typeof(o) { "@babel/helpers - typeof"; return horizon_axios_client_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, horizon_axios_client_typeof(o); }
 
 
-var version = "13.0.0-rc.1";
+var version = "13.0.0-rc.2";
 var SERVER_TIME_MAP = {};
 var AxiosClient = (0,http_client/* create */.vt)({
   headers: {
@@ -29674,7 +29817,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _federation__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7600);
 /* harmony import */ var _webauth__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(5479);
 /* harmony import */ var _friendbot__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(8242);
-/* harmony import */ var _horizon__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(2731);
+/* harmony import */ var _horizon__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(8733);
 /* harmony import */ var _rpc__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(3496);
 /* harmony import */ var _contract__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(6299);
 /* harmony import */ var _stellar_stellar_base__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(356);
@@ -29779,7 +29922,7 @@ var lib = __webpack_require__(356);
 var http_client = __webpack_require__(6371);
 ;// ./src/rpc/axios.ts
 
-var version = "13.0.0-rc.1";
+var version = "13.0.0-rc.2";
 var AxiosClient = (0,http_client/* create */.vt)({
   headers: {
     'X-Client-Name': 'js-soroban-client',
@@ -30979,6 +31122,7 @@ var Resolver = function () {
     key: "resolve",
     value: (function () {
       var _resolve = _asyncToGenerator(_regeneratorRuntime().mark(function _callee(domain) {
+        var _opts$allowedRedirect;
         var opts,
           allowHttp,
           timeout,
@@ -30992,6 +31136,7 @@ var Resolver = function () {
               timeout = typeof opts.timeout === "undefined" ? _config__WEBPACK_IMPORTED_MODULE_2__/* .Config */ .T.getTimeout() : opts.timeout;
               protocol = allowHttp ? "http" : "https";
               return _context.abrupt("return", _http_client__WEBPACK_IMPORTED_MODULE_1__/* .httpClient */ .ok.get("".concat(protocol, "://").concat(domain, "/.well-known/stellar.toml"), {
+                maxRedirects: (_opts$allowedRedirect = opts.allowedRedirects) !== null && _opts$allowedRedirect !== void 0 ? _opts$allowedRedirect : 0,
                 maxContentLength: STELLAR_TOML_MAX_SIZE,
                 cancelToken: timeout ? new CancelToken(function (cancel) {
                   return setTimeout(function () {
