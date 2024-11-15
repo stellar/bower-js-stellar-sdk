@@ -11063,6 +11063,12 @@ exports.walkInvocationTree = walkInvocationTree;
 var _asset = __webpack_require__(1764);
 var _address = __webpack_require__(1180);
 var _scval = __webpack_require__(7177);
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 /**
  * @typedef CreateInvocation
  *
@@ -11076,6 +11082,9 @@ var _scval = __webpack_require__(7177);
  * @prop {string} wasm.address  contract address of this deployment
  * @prop {string} wasm.salt     hex salt that the user consumed when creating
  *    this contract (encoded in the resulting address)
+ * @prop {any[]}  [wasm.constructorArgs] a list of natively-represented values
+ *    (see {@link scValToNative}) that are passed to the constructor when
+ *    creating this contract
  */
 
 /**
@@ -11084,8 +11093,8 @@ var _scval = __webpack_require__(7177);
  * @prop {string} source    the strkey of the contract (C...) being invoked
  * @prop {string} function  the name of the function being invoked
  * @prop {any[]}  args      the natively-represented parameters to the function
- *    invocation (see {@link scValToNative}) for rules on how they're
- *    represented a JS types
+ *    invocation (see {@link scValToNative} for rules on how they're
+ *    represented a JS types)
  */
 
 /**
@@ -11146,7 +11155,7 @@ function buildInvocationTree(root) {
   /** @type {InvocationTree} */
   var output = {};
 
-  /** @type {xdr.CreateContractArgs | xdr.InvokeContractArgs} */
+  /** @type {xdr.CreateContractArgs|xdr.CreateContractArgsV2|xdr.InvokeContractArgs} */
   var inner = fn.value();
   switch (fn["switch"]().value) {
     // sorobanAuthorizedFunctionTypeContractFn
@@ -11162,8 +11171,11 @@ function buildInvocationTree(root) {
       break;
 
     // sorobanAuthorizedFunctionTypeCreateContractHostFn
-    case 1:
+    // sorobanAuthorizedFunctionTypeCreateContractV2HostFn
+    case 1: // fallthrough: just no ctor args in V1
+    case 2:
       {
+        var createV2 = fn["switch"]().value === 2;
         output.type = 'create';
         output.args = {};
 
@@ -11187,11 +11199,15 @@ function buildInvocationTree(root) {
               /** @type {xdr.ContractIdPreimageFromAddress} */
               var details = preimage.fromAddress();
               output.args.type = 'wasm';
-              output.args.wasm = {
+              output.args.wasm = _objectSpread({
                 salt: details.salt().toString('hex'),
                 hash: exec.wasmHash().toString('hex'),
                 address: _address.Address.fromScAddress(details.address()).toString()
-              };
+              }, createV2 && {
+                constructorArgs: inner.constructorArgs().map(function (arg) {
+                  return (0, _scval.scValToNative)(arg);
+                })
+              });
               break;
             }
 
@@ -27714,7 +27730,7 @@ var http_client = __webpack_require__(6371);
 function horizon_axios_client_typeof(o) { "@babel/helpers - typeof"; return horizon_axios_client_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, horizon_axios_client_typeof(o); }
 
 
-var version = "13.0.0-rc.2";
+var version = "13.0.0";
 var SERVER_TIME_MAP = {};
 var AxiosClient = (0,http_client/* create */.vt)({
   headers: {
@@ -29922,7 +29938,7 @@ var lib = __webpack_require__(356);
 var http_client = __webpack_require__(6371);
 ;// ./src/rpc/axios.ts
 
-var version = "13.0.0-rc.2";
+var version = "13.0.0";
 var AxiosClient = (0,http_client/* create */.vt)({
   headers: {
     'X-Client-Name': 'js-soroban-client',
