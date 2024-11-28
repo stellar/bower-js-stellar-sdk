@@ -29519,7 +29519,321 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 ;// ./node_modules/feaxios/dist/index.mjs
-async function e(e,t){const r={config:e};return r.status=t.status,r.statusText=t.statusText,r.headers=t.headers,"stream"===e.responseType?(r.data=t.body,r):t[e.responseType||"text"]().then((s=>{e.transformResponse?(Array.isArray(e.transformResponse)?e.transformResponse.map((r=>s=r.call(e,s,t?.headers,t?.status))):s=e.transformResponse(s,t?.headers,t?.status),r.data=s):(r.data=s,r.data=JSON.parse(s))})).catch(Object).then((()=>r))}function t(e){let t=e.url||"";return e.baseURL&&e.url&&(t=e.url.replace(/^(?!.*\/\/)\/?/,`${e.baseURL}/`)),e.params&&Object.keys(e.params).length>0&&e.url&&(t+=(~e.url.indexOf("?")?"&":"?")+(e.paramsSerializer?e.paramsSerializer(e.params):new URLSearchParams(e.params))),t}function r(e,t){const r={...t,...e};if(t?.params&&e?.params&&(r.params={...t?.params,...e?.params}),t?.headers&&e?.headers){r.headers=new Headers(t.headers||{});new Headers(e.headers||{}).forEach(((e,t)=>{r.headers.set(t,e)}))}return r}async function s(s,a,n,c,u,h){"string"==typeof s?(a=a||{}).url=s:a=s||{};const d=r(a,n||{});if(d.fetchOptions=d.fetchOptions||{},d.timeout=d.timeout||0,d.headers=new Headers(d.headers||{}),h=h||d.data,d.transformRequest&&(Array.isArray(d.transformRequest)?d.transformRequest.map((e=>h=e.call(d,h,d.headers))):d.transformRequest(h,d.headers)),h&&"application/x-www-form-urlencoded"!==d.headers.get("content-type")&&"object"==typeof h&&"function"!=typeof h.append&&"function"!=typeof h.text&&(h=JSON.stringify(h),d.headers.set("content-type","application/json")),h&&"application/x-www-form-urlencoded"===d.headers.get("content-type")&&(h=new URLSearchParams(h)),d.url=t(d),d.method=c||d.method||"get",u&&u.request.handlers.length>0){const e=u.request.handlers.filter((e=>!e?.runWhen||"function"==typeof e.runWhen&&e.runWhen(d))).flatMap((e=>[e.fulfilled,e.rejected]));let t=d;for(let r=0,s=e.length;r<s;r+=2){const s=e[r],a=e[r+1];try{s&&(t=s(t))}catch(e){a&&a?.(e);break}}}const l=function(e,t){const r={...t,...e};t?.headers&&e?.headers&&(r.headers=new Headers(t.headers||{}),new Headers(e.headers||{}).forEach(((e,t)=>{r.headers.set(t,e)})));return r}({method:d.method?.toUpperCase(),body:h,headers:d.headers,credentials:d.withCredentials?"include":void 0,signal:d.signal},d.fetchOptions);let p=async function(t,r){let s=null;if("any"in AbortSignal){const e=[];t.timeout&&e.push(AbortSignal.timeout(t.timeout)),t.signal&&e.push(t.signal),e.length>0&&(r.signal=AbortSignal.any(e))}else t.timeout&&(r.signal=AbortSignal.timeout(t.timeout));const a=new Request(t.url,r);try{return s=await fetch(a),(t.validateStatus?t.validateStatus(s.status):s.ok)?await e(t,s):Promise.reject(new o(`Request failed with status code ${s?.status}`,[o.ERR_BAD_REQUEST,o.ERR_BAD_RESPONSE][Math.floor(s?.status/100)-4],t,a,await e(t,s)))}catch(e){if("AbortError"===e.name||"TimeoutError"===e.name){const r="TimeoutError"===e.name;return Promise.reject(r?new o(t.timeoutErrorMessage||`timeout of ${t.timeout} ms exceeded`,o.ECONNABORTED,t,a):new i(null,t))}return Promise.reject(new o(e.message,void 0,t,a,void 0))}}(d,l);if(u&&u.response.handlers.length>0){const e=u.response.handlers.flatMap((e=>[e.fulfilled,e.rejected]));for(let t=0,r=e.length;t<r;t+=2)p=p.then(e[t],e[t+1])}return p}var a=class{handlers=[];constructor(){this.handlers=[]}use=(e,t,r)=>(this.handlers.push({fulfilled:e,rejected:t,runWhen:r?.runWhen}),this.handlers.length-1);eject=e=>{this.handlers[e]&&(this.handlers[e]=null)};clear=()=>{this.handlers=[]}};function n(e){e=e||{};const n={request:new a,response:new a},o=(t,r)=>s(t,r,e,void 0,n);return o.defaults=e,o.interceptors=n,o.getUri=s=>t(r(s||{},e)),o.request=t=>s(t,void 0,e,void 0,n),["get","delete","head","options"].forEach((t=>{o[t]=(r,a)=>s(r,a,e,t,n)})),["post","put","patch"].forEach((t=>{o[t]=(r,a,o)=>s(r,o,e,t,n,a)})),["postForm","putForm","patchForm"].forEach((t=>{o[t]=(r,a,o)=>((o=o||{}).headers=new Headers(o.headers||{}),o.headers.set("content-type","application/x-www-form-urlencoded"),s(r,o,e,t.replace("Form",""),n,a))})),o}var o=class extends Error{config;code;request;response;status;isAxiosError;constructor(e,t,r,s,a){super(e),Error.captureStackTrace?Error.captureStackTrace(this,this.constructor):this.stack=(new Error).stack,this.name="AxiosError",this.code=t,this.config=r,this.request=s,this.response=a,this.isAxiosError=!0}static ERR_BAD_OPTION_VALUE="ERR_BAD_OPTION_VALUE";static ERR_BAD_OPTION="ERR_BAD_OPTION";static ERR_NETWORK="ERR_NETWORK";static ERR_BAD_RESPONSE="ERR_BAD_RESPONSE";static ERR_BAD_REQUEST="ERR_BAD_REQUEST";static ERR_INVALID_URL="ERR_INVALID_URL";static ERR_CANCELED="ERR_CANCELED";static ECONNABORTED="ECONNABORTED";static ETIMEDOUT="ETIMEDOUT"},i=class extends o{constructor(e,t,r){super(e||"canceled",o.ERR_CANCELED,t,r),this.name="CanceledError"}};function c(e){return null!==e&&"object"==typeof e&&e.isAxiosError}var u=n();u.create=e=>n(e);var h=u;
+// src/client.ts
+async function prepareAxiosResponse(options, res) {
+  const response = { config: options };
+  response.status = res.status;
+  response.statusText = res.statusText;
+  response.headers = res.headers;
+  if (options.responseType === "stream") {
+    response.data = res.body;
+    return response;
+  }
+  return res[options.responseType || "text"]().then((data) => {
+    if (options.transformResponse) {
+      Array.isArray(options.transformResponse) ? options.transformResponse.map(
+        (fn) => data = fn.call(options, data, res?.headers, res?.status)
+      ) : data = options.transformResponse(data, res?.headers, res?.status);
+      response.data = data;
+    } else {
+      response.data = data;
+      response.data = JSON.parse(data);
+    }
+  }).catch(Object).then(() => response);
+}
+async function handleFetch(options, fetchOptions) {
+  let res = null;
+  if ("any" in AbortSignal) {
+    const signals = [];
+    if (options.timeout) {
+      signals.push(AbortSignal.timeout(options.timeout));
+    }
+    if (options.signal) {
+      signals.push(options.signal);
+    }
+    if (signals.length > 0) {
+      fetchOptions.signal = AbortSignal.any(signals);
+    }
+  } else {
+    if (options.timeout) {
+      fetchOptions.signal = AbortSignal.timeout(options.timeout);
+    }
+  }
+  try {
+    res = await fetch(options.url, fetchOptions);
+    const ok = options.validateStatus ? options.validateStatus(res.status) : res.ok;
+    if (!ok) {
+      return Promise.reject(
+        new AxiosError(
+          `Request failed with status code ${res?.status}`,
+          [AxiosError.ERR_BAD_REQUEST, AxiosError.ERR_BAD_RESPONSE][Math.floor(res?.status / 100) - 4],
+          options,
+          new Request(options.url, fetchOptions),
+          await prepareAxiosResponse(options, res)
+        )
+      );
+    }
+    return await prepareAxiosResponse(options, res);
+  } catch (error) {
+    if (error.name === "AbortError" || error.name === "TimeoutError") {
+      const isTimeoutError = error.name === "TimeoutError";
+      return Promise.reject(
+        isTimeoutError ? new AxiosError(
+          options.timeoutErrorMessage || `timeout of ${options.timeout} ms exceeded`,
+          AxiosError.ECONNABORTED,
+          options,
+          request
+        ) : new CanceledError(null, options)
+      );
+    }
+    return Promise.reject(
+      new AxiosError(
+        error.message,
+        void 0,
+        options,
+        request,
+        void 0
+      )
+    );
+  }
+}
+function buildURL(options) {
+  let url = options.url || "";
+  if (options.baseURL && options.url) {
+    url = options.url.replace(/^(?!.*\/\/)\/?/, `${options.baseURL}/`);
+  }
+  if (options.params && Object.keys(options.params).length > 0 && options.url) {
+    url += (~options.url.indexOf("?") ? "&" : "?") + (options.paramsSerializer ? options.paramsSerializer(options.params) : new URLSearchParams(options.params));
+  }
+  return url;
+}
+function mergeAxiosOptions(input, defaults) {
+  const merged = {
+    ...defaults,
+    ...input
+  };
+  if (defaults?.params && input?.params) {
+    merged.params = {
+      ...defaults?.params,
+      ...input?.params
+    };
+  }
+  if (defaults?.headers && input?.headers) {
+    merged.headers = new Headers(defaults.headers || {});
+    const headers = new Headers(input.headers || {});
+    headers.forEach((value, key) => {
+      merged.headers.set(key, value);
+    });
+  }
+  return merged;
+}
+function mergeFetchOptions(input, defaults) {
+  const merged = {
+    ...defaults,
+    ...input
+  };
+  if (defaults?.headers && input?.headers) {
+    merged.headers = new Headers(defaults.headers || {});
+    const headers = new Headers(input.headers || {});
+    headers.forEach((value, key) => {
+      merged.headers.set(key, value);
+    });
+  }
+  return merged;
+}
+function defaultTransformer(data, headers) {
+  const contentType = headers.get("content-type");
+  if (!contentType) {
+    if (typeof data === "string") {
+      headers.set("content-type", "text/plain");
+    } else if (data instanceof URLSearchParams) {
+      headers.set("content-type", "application/x-www-form-urlencoded");
+    } else if (data instanceof Blob || data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
+      headers.set("content-type", "application/octet-stream");
+    } else if (typeof data === "object" && typeof data.append !== "function" && typeof data.text !== "function") {
+      data = JSON.stringify(data);
+      headers.set("content-type", "application/json");
+    }
+  } else {
+    if (contentType === "application/x-www-form-urlencoded" && !(data instanceof URLSearchParams)) {
+      data = new URLSearchParams(data);
+    } else if (contentType === "application/json" && typeof data === "object") {
+      data = JSON.stringify(data);
+    }
+  }
+  return data;
+}
+async function request(configOrUrl, config, defaults, method, interceptors, data) {
+  if (typeof configOrUrl === "string") {
+    config = config || {};
+    config.url = configOrUrl;
+  } else
+    config = configOrUrl || {};
+  const options = mergeAxiosOptions(config, defaults || {});
+  options.fetchOptions = options.fetchOptions || {};
+  options.timeout = options.timeout || 0;
+  options.headers = new Headers(options.headers || {});
+  options.transformRequest = options.transformRequest ?? defaultTransformer;
+  data = data || options.data;
+  if (options.transformRequest && data) {
+    Array.isArray(options.transformRequest) ? options.transformRequest.map(
+      (fn) => data = fn.call(options, data, options.headers)
+    ) : data = options.transformRequest(data, options.headers);
+  }
+  options.url = buildURL(options);
+  options.method = method || options.method || "get";
+  if (interceptors && interceptors.request.handlers.length > 0) {
+    const chain = interceptors.request.handlers.filter(
+      (interceptor) => !interceptor?.runWhen || typeof interceptor.runWhen === "function" && interceptor.runWhen(options)
+    ).flatMap((interceptor) => [interceptor.fulfilled, interceptor.rejected]);
+    let result = options;
+    for (let i = 0, len = chain.length; i < len; i += 2) {
+      const onFulfilled = chain[i];
+      const onRejected = chain[i + 1];
+      try {
+        if (onFulfilled)
+          result = onFulfilled(result);
+      } catch (error) {
+        if (onRejected)
+          onRejected?.(error);
+        break;
+      }
+    }
+  }
+  const init = mergeFetchOptions(
+    {
+      method: options.method?.toUpperCase(),
+      body: data,
+      headers: options.headers,
+      credentials: options.withCredentials ? "include" : void 0,
+      signal: options.signal
+    },
+    options.fetchOptions
+  );
+  let resp = handleFetch(options, init);
+  if (interceptors && interceptors.response.handlers.length > 0) {
+    const chain = interceptors.response.handlers.flatMap((interceptor) => [
+      interceptor.fulfilled,
+      interceptor.rejected
+    ]);
+    for (let i = 0, len = chain.length; i < len; i += 2) {
+      resp = resp.then(chain[i], chain[i + 1]);
+    }
+  }
+  return resp;
+}
+var AxiosInterceptorManager = class {
+  handlers = [];
+  constructor() {
+    this.handlers = [];
+  }
+  use = (onFulfilled, onRejected, options) => {
+    this.handlers.push({
+      fulfilled: onFulfilled,
+      rejected: onRejected,
+      runWhen: options?.runWhen
+    });
+    return this.handlers.length - 1;
+  };
+  eject = (id) => {
+    if (this.handlers[id]) {
+      this.handlers[id] = null;
+    }
+  };
+  clear = () => {
+    this.handlers = [];
+  };
+};
+function createAxiosInstance(defaults) {
+  defaults = defaults || {};
+  const interceptors = {
+    request: new AxiosInterceptorManager(),
+    response: new AxiosInterceptorManager()
+  };
+  const axios2 = (url, config) => request(url, config, defaults, void 0, interceptors);
+  axios2.defaults = defaults;
+  axios2.interceptors = interceptors;
+  axios2.getUri = (config) => {
+    const merged = mergeAxiosOptions(config || {}, defaults);
+    return buildURL(merged);
+  };
+  axios2.request = (config) => request(config, void 0, defaults, void 0, interceptors);
+  ["get", "delete", "head", "options"].forEach((method) => {
+    axios2[method] = (url, config) => request(url, config, defaults, method, interceptors);
+  });
+  ["post", "put", "patch"].forEach((method) => {
+    axios2[method] = (url, data, config) => request(url, config, defaults, method, interceptors, data);
+  });
+  ["postForm", "putForm", "patchForm"].forEach((method) => {
+    axios2[method] = (url, data, config) => {
+      config = config || {};
+      config.headers = new Headers(config.headers || {});
+      config.headers.set("content-type", "application/x-www-form-urlencoded");
+      return request(
+        url,
+        config,
+        defaults,
+        method.replace("Form", ""),
+        interceptors,
+        data
+      );
+    };
+  });
+  return axios2;
+}
+var AxiosError = class extends Error {
+  config;
+  code;
+  request;
+  response;
+  status;
+  isAxiosError;
+  constructor(message, code, config, request2, response) {
+    super(message);
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    } else {
+      this.stack = new Error().stack;
+    }
+    this.name = "AxiosError";
+    this.code = code;
+    this.config = config;
+    this.request = request2;
+    this.response = response;
+    this.isAxiosError = true;
+  }
+  static ERR_BAD_OPTION_VALUE = "ERR_BAD_OPTION_VALUE";
+  static ERR_BAD_OPTION = "ERR_BAD_OPTION";
+  static ERR_NETWORK = "ERR_NETWORK";
+  static ERR_BAD_RESPONSE = "ERR_BAD_RESPONSE";
+  static ERR_BAD_REQUEST = "ERR_BAD_REQUEST";
+  static ERR_INVALID_URL = "ERR_INVALID_URL";
+  static ERR_CANCELED = "ERR_CANCELED";
+  static ECONNABORTED = "ECONNABORTED";
+  static ETIMEDOUT = "ETIMEDOUT";
+};
+var CanceledError = class extends AxiosError {
+  constructor(message, config, request2) {
+    super(
+      !message ? "canceled" : message,
+      AxiosError.ERR_CANCELED,
+      config,
+      request2
+    );
+    this.name = "CanceledError";
+  }
+};
+function isAxiosError(payload) {
+  return payload !== null && typeof payload === "object" && payload.isAxiosError;
+}
+var axios = createAxiosInstance();
+axios.create = (defaults) => createAxiosInstance(defaults);
+
+// src/index.ts
+var src_default = axios;
+
+
+
 // EXTERNAL MODULE: ./src/http-client/types.ts
 var types = __webpack_require__(5798);
 ;// ./src/http-client/fetch-client.ts
@@ -29577,7 +29891,7 @@ function createFetchClient() {
   var defaults = _objectSpread(_objectSpread({}, fetchConfig), {}, {
     headers: fetchConfig.headers || {}
   });
-  var instance = h.create(defaults);
+  var instance = src_default.create(defaults);
   var requestInterceptors = new InterceptorManager();
   var responseInterceptors = new InterceptorManager();
   var httpClient = {
@@ -30692,7 +31006,7 @@ var RpcServer = function () {
     key: "requestAirdrop",
     value: (function () {
       var _requestAirdrop = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee22(address, friendbotUrl) {
-        var account, response, meta, sequence, _error$response, _error$response$detai;
+        var account, response, meta, txMeta, sequence, _error$response, _error$response$detai;
         return server_regeneratorRuntime().wrap(function _callee22$(_context22) {
           while (1) switch (_context22.prev = _context22.next) {
             case 0:
@@ -30719,28 +31033,47 @@ var RpcServer = function () {
               return axios.post("".concat(friendbotUrl, "?addr=").concat(encodeURIComponent(account)));
             case 12:
               response = _context22.sent;
+              if (response.data.result_meta_xdr) {
+                _context22.next = 22;
+                break;
+              }
+              _context22.next = 16;
+              return this.getTransaction(response.data.hash);
+            case 16:
+              txMeta = _context22.sent;
+              if (!(txMeta.status !== api/* Api */.j.GetTransactionStatus.SUCCESS)) {
+                _context22.next = 19;
+                break;
+              }
+              throw new Error("Funding account ".concat(address, " failed"));
+            case 19:
+              meta = txMeta.resultMetaXdr;
+              _context22.next = 23;
+              break;
+            case 22:
               meta = lib.xdr.TransactionMeta.fromXDR(response.data.result_meta_xdr, 'base64');
+            case 23:
               sequence = findCreatedAccountSequenceInTransactionMeta(meta);
               return _context22.abrupt("return", new lib.Account(account, sequence));
-            case 18:
-              _context22.prev = 18;
+            case 27:
+              _context22.prev = 27;
               _context22.t1 = _context22["catch"](9);
               if (!(((_error$response = _context22.t1.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400)) {
-                _context22.next = 23;
+                _context22.next = 32;
                 break;
               }
               if (!((_error$response$detai = _context22.t1.response.detail) !== null && _error$response$detai !== void 0 && _error$response$detai.includes('createAccountAlreadyExist'))) {
-                _context22.next = 23;
+                _context22.next = 32;
                 break;
               }
               return _context22.abrupt("return", this.getAccount(account));
-            case 23:
+            case 32:
               throw _context22.t1;
-            case 24:
+            case 33:
             case "end":
               return _context22.stop();
           }
-        }, _callee22, this, [[9, 18]]);
+        }, _callee22, this, [[9, 27]]);
       }));
       function requestAirdrop(_x21, _x22) {
         return _requestAirdrop.apply(this, arguments);

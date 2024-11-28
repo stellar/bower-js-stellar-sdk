@@ -34502,7 +34502,7 @@ var RpcServer = function () {
     key: "requestAirdrop",
     value: (function () {
       var _requestAirdrop = server_asyncToGenerator(server_regeneratorRuntime().mark(function _callee22(address, friendbotUrl) {
-        var account, response, meta, sequence, _error$response, _error$response$detai;
+        var account, response, meta, txMeta, sequence, _error$response, _error$response$detai;
         return server_regeneratorRuntime().wrap(function _callee22$(_context22) {
           while (1) switch (_context22.prev = _context22.next) {
             case 0:
@@ -34529,28 +34529,47 @@ var RpcServer = function () {
               return axios.post("".concat(friendbotUrl, "?addr=").concat(encodeURIComponent(account)));
             case 12:
               response = _context22.sent;
+              if (response.data.result_meta_xdr) {
+                _context22.next = 22;
+                break;
+              }
+              _context22.next = 16;
+              return this.getTransaction(response.data.hash);
+            case 16:
+              txMeta = _context22.sent;
+              if (!(txMeta.status !== api/* Api */.j.GetTransactionStatus.SUCCESS)) {
+                _context22.next = 19;
+                break;
+              }
+              throw new Error("Funding account ".concat(address, " failed"));
+            case 19:
+              meta = txMeta.resultMetaXdr;
+              _context22.next = 23;
+              break;
+            case 22:
               meta = lib.xdr.TransactionMeta.fromXDR(response.data.result_meta_xdr, 'base64');
+            case 23:
               sequence = findCreatedAccountSequenceInTransactionMeta(meta);
               return _context22.abrupt("return", new lib.Account(account, sequence));
-            case 18:
-              _context22.prev = 18;
+            case 27:
+              _context22.prev = 27;
               _context22.t1 = _context22["catch"](9);
               if (!(((_error$response = _context22.t1.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400)) {
-                _context22.next = 23;
+                _context22.next = 32;
                 break;
               }
               if (!((_error$response$detai = _context22.t1.response.detail) !== null && _error$response$detai !== void 0 && _error$response$detai.includes('createAccountAlreadyExist'))) {
-                _context22.next = 23;
+                _context22.next = 32;
                 break;
               }
               return _context22.abrupt("return", this.getAccount(account));
-            case 23:
+            case 32:
               throw _context22.t1;
-            case 24:
+            case 33:
             case "end":
               return _context22.stop();
           }
-        }, _callee22, this, [[9, 18]]);
+        }, _callee22, this, [[9, 27]]);
       }));
       function requestAirdrop(_x21, _x22) {
         return _requestAirdrop.apply(this, arguments);
