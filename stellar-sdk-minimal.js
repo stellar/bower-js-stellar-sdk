@@ -27730,7 +27730,7 @@ var http_client = __webpack_require__(6371);
 function horizon_axios_client_typeof(o) { "@babel/helpers - typeof"; return horizon_axios_client_typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, horizon_axios_client_typeof(o); }
 
 
-var version = "13.0.0";
+var version = "13.1.0";
 var SERVER_TIME_MAP = {};
 var AxiosClient = (0,http_client/* create */.vt)({
   headers: {
@@ -30273,7 +30273,7 @@ var lib = __webpack_require__(356);
 var http_client = __webpack_require__(6371);
 ;// ./src/rpc/axios.ts
 
-var version = "13.0.0";
+var version = "13.1.0";
 var AxiosClient = (0,http_client/* create */.vt)({
   headers: {
     'X-Client-Name': 'js-soroban-client',
@@ -31304,6 +31304,7 @@ function parseRawEvents(raw) {
   var _raw$events;
   return {
     latestLedger: raw.latestLedger,
+    cursor: raw.cursor,
     events: ((_raw$events = raw.events) !== null && _raw$events !== void 0 ? _raw$events : []).map(function (evt) {
       var clone = _objectSpread({}, evt);
       delete clone.contractId;
